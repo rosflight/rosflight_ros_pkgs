@@ -63,16 +63,19 @@ class Joy {
  private:
   ros::NodeHandle nh_;
   ros::Publisher command_pub_;
+  ros::Subscriber autopilot_command_sub_;
   ros::Subscriber joy_sub_;
 
   std::string namespace_;
   std::string command_topic_;
+  std::string autopilot_command_topic_;
 
   Axes axes_;
 
   bool fly_mav_;
 
   fcu_common::Command command_msg_;
+  fcu_common::Command autopilot_command_;
   sensor_msgs::Joy current_joy_;
 
   Max max_;
@@ -85,6 +88,7 @@ class Joy {
   void StopMav();
 
   void JoyCallback(const sensor_msgs::JoyConstPtr& msg);
+  void APCommandCallback(const fcu_common::CommandConstPtr& msg);
   void Publish();
 
  public:

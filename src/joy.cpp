@@ -27,6 +27,7 @@ Joy::Joy() {
   ros::NodeHandle pnh("~");
 
   pnh.param<std::string>("command_topic", command_topic_, "command");
+  pnh.param<std::string>("autopilot_command_topic", autopilot_command_topic_, "autopilot_command");
 
   pnh.param<int>("x_axis", axes_.roll, 2);
   pnh.param<int>("y_axis", axes_.pitch, 3);
@@ -62,6 +63,7 @@ Joy::Joy() {
   current_yaw_vel_ = 0;
 
   namespace_ = nh_.getNamespace();
+  autopilot_command_sub_ = nh_.subscribe(autopilot_command_topic_, 10, &Joy::APCommandCallback, this);
   joy_sub_ = nh_.subscribe("joy", 10, &Joy::JoyCallback, this);
   fly_mav_ = false;
 }
@@ -74,14 +76,29 @@ void Joy::StopMav() {
   command_msg_.normalized_throttle = 0;
 }
 
+void Joy::APCommandCallback(const fcu_common::CommandConstPtr &msg)
+{
+    autopilot_command_ = *msg;
+    autopilot_command_.normalized_pitch = -1.0*autopilot_command_.normalized_pitch;
+}
+
 void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
   if(fly_mav_){
     current_joy_ = *msg;
 
     command_msg_.normalized_throttle = 0.5*(msg->axes[axes_.thrust] + 1.0);
-    command_msg_.normalized_roll = -1.0*msg->axes[axes_.roll] * max_.aileron * axes_.pitch_direction;
+    command_msg_.normalized_roll = -1.0*msg->axes[axes_.roll] * max_.aileron * axes_.roll_direction;
     command_msg_.normalized_pitch = -1.0*msg->axes[axes_.pitch] * max_.elevator * axes_.pitch_direction;
     command_msg_.normalized_yaw = msg->axes[axes_.yaw] * max_.rudder * axes_.yaw_direction;
+
+    if(msg->buttons[1] == 1)
+    {
+        command_msg_ = autopilot_command_;
+        command_msg_.normalized_throttle = 0.5*(msg->axes[axes_.thrust] + 1.0);
+        //command_msg_.normalized_roll = -1.0*msg->axes[axes_.roll] * max_.aileron * axes_.roll_direction;
+        command_msg_.normalized_pitch = -1.0*msg->axes[axes_.pitch] * max_.elevator * axes_.pitch_direction;
+        command_msg_.normalized_yaw = msg->axes[axes_.yaw] * max_.rudder * axes_.yaw_direction;
+    }
 
   } else{
     StopMav();
