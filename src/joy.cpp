@@ -94,10 +94,10 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
     if(msg->buttons[1] == 1)
     {
         command_msg_ = autopilot_command_;
-        command_msg_.normalized_throttle = 0.5*(msg->axes[axes_.thrust] + 1.0);
+        //command_msg_.normalized_throttle = 0.5*(msg->axes[axes_.thrust] + 1.0);
         //command_msg_.normalized_roll = -1.0*msg->axes[axes_.roll] * max_.aileron * axes_.roll_direction;
-        command_msg_.normalized_pitch = -1.0*msg->axes[axes_.pitch] * max_.elevator * axes_.pitch_direction;
-        command_msg_.normalized_yaw = msg->axes[axes_.yaw] * max_.rudder * axes_.yaw_direction;
+        //command_msg_.normalized_pitch = -1.0*msg->axes[axes_.pitch] * max_.elevator * axes_.pitch_direction;
+        //command_msg_.normalized_yaw = msg->axes[axes_.yaw] * max_.rudder * axes_.yaw_direction;
     }
 
   } else{
