@@ -80,3 +80,6 @@ include_directories(
 
 add_executable(fcu_common_joy src/joy.cpp)
 target_link_libraries(fcu_common_joy ${catkin_LIBRARIES})
+
+add_executable(fcu_common_gps src/gps.cpp)
+target_link_libraries(fcu_common_gps ${catkin_LIBRARIES})
