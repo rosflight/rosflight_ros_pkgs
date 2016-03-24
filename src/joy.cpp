@@ -79,7 +79,6 @@ void Joy::StopMav() {
 void Joy::APCommandCallback(const fcu_common::CommandConstPtr &msg)
 {
     autopilot_command_ = *msg;
-    autopilot_command_.normalized_pitch = -1.0*autopilot_command_.normalized_pitch;
 }
 
 void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
