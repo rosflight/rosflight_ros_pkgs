@@ -25,7 +25,8 @@ void GPS::NavSatCallback(const sensor_msgs::NavSatFix &msg)
         gps_msg.ground_course = atan2(vel_msgs_.twist.linear.y,vel_msgs_.twist.linear.x);
     else
         gps_msg.ground_course = 0;
-    gps_msg_pub_.publish(gps_msg);
+    if(std::isfinite(gps_msg.latitude))
+    	gps_msg_pub_.publish(gps_msg);
 }
 
 void GPS::TwistCallback(const geometry_msgs::TwistStamped msg)
