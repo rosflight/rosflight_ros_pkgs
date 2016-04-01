@@ -2,12 +2,12 @@ cmake_minimum_required(VERSION 2.8.3)
 project(fcu_common)
 
 find_package(catkin REQUIRED COMPONENTS
-        roscpp
-        std_msgs
-        sensor_msgs
-        geometry_msgs
-        nav_msgs
-        message_generation
+  roscpp
+  std_msgs
+  sensor_msgs
+  geometry_msgs
+  nav_msgs
+  message_generation
 )
 
 add_message_files(
@@ -18,11 +18,13 @@ add_message_files(
   FW_Controller_Commands.msg
   FW_Current_Path.msg
   FW_Waypoint.msg
+  MR_Controller_Commands.msg
 )
 
 generate_messages(
   DEPENDENCIES
   std_msgs
+  geometry_msgs
 )
 
 catkin_package(
