@@ -53,7 +53,7 @@ Joy::Joy() {
 
   command_pub_ = nh_.advertise<fcu_common::Command>(command_topic_,10);
 
-  ROS_ERROR_STREAM("mass = " << mass_ <<" max_thrust = " << max_.thrust);
+//  ROS_ERROR_STREAM("mass = " << mass_ <<" max_thrust = " << max_.thrust);
 
   command_msg_.normalized_roll = 0;
   command_msg_.normalized_pitch = 0;
