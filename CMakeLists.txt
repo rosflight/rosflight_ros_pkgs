@@ -27,13 +27,14 @@ add_message_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
+  sensor_msgs
   geometry_msgs
 )
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES fcu_common
-  CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs
+  CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs geometry_msgs
 )
 
 add_definitions(-std=c++11)
