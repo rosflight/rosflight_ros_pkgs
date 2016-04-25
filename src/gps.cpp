@@ -17,7 +17,10 @@ void GPS::NavSatCallback(const sensor_msgs::NavSatFix &msg)
     fcu_common::GPS gps_msg;
     gps_msg.altitude = msg.altitude;
     if(msg.status.status >= 0)
-        gps_msg.fix = true;
+    {    
+	gps_msg.fix = true;
+    	gps_msg.NumSat = 4;
+    }
     gps_msg.latitude = msg.latitude;
     gps_msg.longitude = msg.longitude;
     gps_msg.speed = sqrt(vel_msgs_.twist.linear.x*vel_msgs_.twist.linear.x + vel_msgs_.twist.linear.y*vel_msgs_.twist.linear.y);
@@ -25,6 +28,10 @@ void GPS::NavSatCallback(const sensor_msgs::NavSatFix &msg)
         gps_msg.ground_course = atan2(vel_msgs_.twist.linear.y,vel_msgs_.twist.linear.x);
     else
         gps_msg.ground_course = 0;
+
+    if(!std::isfinite(gps_msg.speed))  // the velocity message can output nan
+    {  gps_msg.speed = 0; gps_msg.ground_course = 0; }
+
     if(std::isfinite(gps_msg.latitude))
     	gps_msg_pub_.publish(gps_msg);
 }
