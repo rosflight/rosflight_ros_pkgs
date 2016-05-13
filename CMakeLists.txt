@@ -21,6 +21,7 @@ add_message_files(
   FW_Controller_Commands.msg
   FW_Current_Path.msg
   FW_Waypoint.msg
+  FW_Attitude_Commands.msg
 )
 
 generate_messages(
