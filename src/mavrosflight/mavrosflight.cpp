@@ -15,16 +15,15 @@ namespace mavrosflight
 
 using boost::asio::serial_port_base;
 
-MavROSflight::MavROSflight(std::string port, int baud_rate) :
+MavROSflight::MavROSflight(std::string port, int baud_rate, uint8_t sysid /* = 1 */, uint8_t compid /* = 50 */) :
   io_service_(),
   serial_port_(io_service_),
+  sysid_(sysid),
+  compid_(compid),
   heartbeat_callback_registered_(false),
-  imu_callback_registered_(false)
+  imu_callback_registered_(false),
+  write_in_progress_(false)
 {
-  // setup mavlink
-//  mavlink_system.sysid = 1;
-//  mavlink_system.compid = 0;
-
   // setup serial port
   try
   {
@@ -117,6 +116,70 @@ void MavROSflight::async_read_end(const boost::system::error_code &error, size_t
   }
 
   do_async_read();
+}
+
+void MavROSflight::send_message(const mavlink_message_t &msg)
+{
+  WriteBuffer *buffer = new WriteBuffer();
+  buffer->len = mavlink_msg_to_send_buffer(buffer->data, &msg);
+  assert(buffer->len <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
+
+  {
+    mutex_lock lock(mutex_);
+    write_queue_.push_back(buffer);
+  }
+
+  do_async_write(true);
+}
+
+void MavROSflight::do_async_write(bool check_write_state)
+{
+  if (check_write_state && write_in_progress_)
+    return;
+
+  mutex_lock lock(mutex_);
+  if (write_queue_.empty())
+    return;
+
+  write_in_progress_ = true;
+  WriteBuffer *buffer = write_queue_.front();
+  serial_port_.async_write_some(
+        boost::asio::buffer(buffer->dpos(), buffer->nbytes()),
+        boost::bind(
+          &MavROSflight::async_write_end,
+          this,
+          boost::asio::placeholders::error,
+          boost::asio::placeholders::bytes_transferred));
+
+}
+
+void MavROSflight::async_write_end(const boost::system::error_code &error, std::size_t bytes_transferred)
+{
+  if (error)
+  {
+    close();
+    return;
+  }
+
+  mutex_lock lock(mutex_);
+  if (write_queue_.empty())
+  {
+    write_in_progress_ = false;
+    return;
+  }
+
+  WriteBuffer *buffer = write_queue_.front();
+  buffer->pos += bytes_transferred;
+  if (buffer->nbytes() == 0)
+  {
+    write_queue_.pop_front();
+    delete buffer;
+  }
+
+  if (write_queue_.empty())
+    write_in_progress_ = false;
+  else
+    do_async_write(false);
 }
 
 void MavROSflight::handle_message()

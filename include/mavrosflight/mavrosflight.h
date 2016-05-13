@@ -31,7 +31,7 @@ public:
    * \param port Name of the serial port (e.g. "/dev/ttyUSB0")
    * \param baud_rate Serial communication baud rate
    */
-  MavROSflight(std::string port, int baud_rate);
+  MavROSflight(std::string port, int baud_rate, uint8_t sysid = 1, uint8_t compid = 50);
 
   /**
    * \brief Stops communication and closes the serial port before the object is destroyed
@@ -55,6 +55,31 @@ private:
   // definitions
   //===========================================================================
 
+  struct WriteBuffer
+  {
+    uint8_t data[MAVLINK_MAX_PACKET_LEN];
+    size_t len;
+    size_t pos;
+
+    WriteBuffer() : len(0), pos(0) {}
+
+    WriteBuffer(const uint8_t * buf, uint16_t len) : len(len), pos(0)
+    {
+      assert(len <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
+      memcpy(data, buf, len);
+    }
+
+    uint8_t * dpos()
+    {
+      return data + pos;
+    }
+
+    size_t nbytes()
+    {
+      return len - pos;
+    }
+  };
+
   /**
    * \brief Convenience typedef for mutex lock
    */
@@ -76,6 +101,10 @@ private:
    */
   void async_read_end(const boost::system::error_code& error, size_t bytes_transferred);
 
+  void send_message(const mavlink_message_t &msg);
+  void do_async_write(bool check_write_state);
+  void async_write_end(const boost::system::error_code& error, size_t bytes_transferred);
+
   /**
    * \brief Handle a received mavlink message
    */
@@ -90,6 +119,9 @@ private:
   boost::thread io_thread_; //!< thread on which the io service runs
   boost::mutex mutex_; //!< mutex for threadsafe operation
 
+  uint8_t sysid_;
+  uint8_t compid_;
+
   uint8_t read_buf_raw_[MAVROSFLIGHT_READ_BUF_SIZE];
 
   mavlink_message_t msg_in_;
@@ -100,6 +132,9 @@ private:
 
   bool imu_callback_registered_;
   boost::function<void (double, double, double, double, double, double)> imu_callback_;
+
+  std::list<WriteBuffer*> write_queue_; //!< queue of buffers to be written to the serial port
+  bool write_in_progress_; //!< flag for whether async_write is already running
 };
 
 } // namespace mavrosflight
