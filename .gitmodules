@@ -1,0 +1,3 @@
+[submodule "include/mavlink/v1.0"]
+	path = include/mavlink/v1.0
+	url = https://github.com/BYU-MAGICC/mavlink_c_library.git
