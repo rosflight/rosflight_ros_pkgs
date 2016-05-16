@@ -1,24 +1,24 @@
 /**
- * \file mavrosflight_ros.h
+ * \file fcu_io.h
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#ifndef MAVROSFLIGHT_MAVROSFLIGHT_ROS_H
-#define MAVROSFLIGHT_MAVROSFLIGHT_ROS_H
+#ifndef FCU_IO_MAVROSFLIGHT_ROS_H
+#define FCU_IO_MAVROSFLIGHT_ROS_H
 
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
 
 #include <mavrosflight/mavrosflight.h>
 
-namespace mavrosflight
+namespace fcu_io
 {
 
-class MavrosflightROS
+class fcuIO
 {
 public:
-  MavrosflightROS();
-  ~MavrosflightROS();
+  fcuIO();
+  ~fcuIO();
 
 private:
 
@@ -28,9 +28,9 @@ private:
 
   ros::Publisher imu_pub_;
 
-  MavROSflight* mavrosflight_;
+  mavrosflight::MavROSflight* mavrosflight_;
 };
 
-} // namespace mavrosflight
+} // namespace fcu_io
 
-#endif // MAVROSFLIGHT_MAVROSFLIGHT_ROS_H
+#endif // FCU_IO_MAVROSFLIGHT_ROS_H

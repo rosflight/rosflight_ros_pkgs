@@ -1,5 +1,5 @@
 /**
- * \file mavrosflight_ros.cpp
+ * \file fcu_io.cpp
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
@@ -7,12 +7,12 @@
 #include <string>
 #include <stdint.h>
 
-#include "mavrosflight_ros.h"
+#include "fcu_io.h"
 
-namespace mavrosflight
+namespace fcu_io
 {
 
-MavrosflightROS::MavrosflightROS()
+fcuIO::fcuIO()
 {
   ros::NodeHandle nh;
   imu_pub_ = nh.advertise<sensor_msgs::Imu>("imu/data", 1);
@@ -23,27 +23,27 @@ MavrosflightROS::MavrosflightROS()
 
   try
   {
-    mavrosflight_ = new MavROSflight(port, baud_rate);
+    mavrosflight_ = new mavrosflight::MavROSflight(port, baud_rate);
   }
-  catch (SerialException e)
+  catch (mavrosflight::SerialException e)
   {
     ROS_FATAL("%s", e.what());
     ros::shutdown();
   }
 
-  mavrosflight_->register_param_value_callback(boost::bind(&MavrosflightROS::paramCallback, this, _1, _2, _3));
-  mavrosflight_->register_heartbeat_callback(boost::bind(&MavrosflightROS::heartbeatCallback, this));
-  mavrosflight_->register_imu_callback(boost::bind(&MavrosflightROS::imuCallback, this, _1, _2, _3, _4, _5, _6));
+  mavrosflight_->register_param_value_callback(boost::bind(&fcuIO::paramCallback, this, _1, _2, _3));
+  mavrosflight_->register_heartbeat_callback(boost::bind(&fcuIO::heartbeatCallback, this));
+  mavrosflight_->register_imu_callback(boost::bind(&fcuIO::imuCallback, this, _1, _2, _3, _4, _5, _6));
 
   mavrosflight_->send_param_request_list(1);
 }
 
-MavrosflightROS::~MavrosflightROS()
+fcuIO::~fcuIO()
 {
   delete mavrosflight_;
 }
 
-void MavrosflightROS::paramCallback(char param_id[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN], float param_value, MAV_PARAM_TYPE param_type)
+void fcuIO::paramCallback(char param_id[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN], float param_value, MAV_PARAM_TYPE param_type)
 {
   bool have_uint(false);
   uint32_t uint_value;
@@ -94,12 +94,12 @@ void MavrosflightROS::paramCallback(char param_id[MAVLINK_MSG_PARAM_VALUE_FIELD_
     ROS_INFO("Got parameter %s with value %f", param_id, param_value);
 }
 
-void MavrosflightROS::heartbeatCallback()
+void fcuIO::heartbeatCallback()
 {
   ROS_INFO_ONCE("Got HEARTBEAT, connected.");
 }
 
-void MavrosflightROS::imuCallback(double xacc, double yacc, double zacc, double xgyro, double ygyro, double zgyro)
+void fcuIO::imuCallback(double xacc, double yacc, double zacc, double xgyro, double ygyro, double zgyro)
 {
   sensor_msgs::Imu msg;
 
@@ -114,4 +114,4 @@ void MavrosflightROS::imuCallback(double xacc, double yacc, double zacc, double 
   imu_pub_.publish(msg);
 }
 
-} // namespace mavrosflight
+} // namespace fcu_io

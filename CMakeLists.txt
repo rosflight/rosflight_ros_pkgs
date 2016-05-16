@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(mavrosflight)
+project(fcu_io)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -31,7 +31,7 @@ include_directories(
 
 # mavrosflight library
 add_library(mavrosflight
-  src/${PROJECT_NAME}/mavrosflight.cpp
+  src/mavrosflight/mavrosflight.cpp
 )
 add_dependencies(mavrosflight ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(mavrosflight
@@ -39,13 +39,13 @@ target_link_libraries(mavrosflight
   ${Boost_LIBRARIES}
 )
 
-# mavrosflight_node
-add_executable(mavrosflight_node
-  src/mavrosflight_node.cpp
-  src/mavrosflight_ros.cpp
+# fcu_io_node
+add_executable(fcu_io_node
+  src/fcu_io_node.cpp
+  src/fcu_io.cpp
 )
-add_dependencies(mavrosflight_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(mavrosflight_node
+add_dependencies(fcu_io_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(fcu_io_node
   mavrosflight
   ${catkin_LIBRARIES}
   ${Boost_LIBRARES}
@@ -56,14 +56,14 @@ target_link_libraries(mavrosflight_node
 #############
 
 # Mark executables and libraries for installation
-install(TARGETS mavrosflight mavrosflight_node
+install(TARGETS mavrosflight fcu_io_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 # Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
+install(DIRECTORY include/mavrosflight/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE

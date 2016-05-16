@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>mavrosflight</name>
+  <name>fcu_io</name>
   <version>0.0.0</version>
   <description>The mavrosflight package</description>
 
