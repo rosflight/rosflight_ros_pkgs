@@ -20,8 +20,6 @@ MavROSflight::MavROSflight(std::string port, int baud_rate, uint8_t sysid /* = 1
   serial_port_(io_service_),
   sysid_(sysid),
   compid_(compid),
-  heartbeat_callback_registered_(false),
-  imu_callback_registered_(false),
   write_in_progress_(false)
 {
   // setup serial port
@@ -62,26 +60,49 @@ void MavROSflight::close()
   }
 }
 
+void MavROSflight::register_param_value_callback(boost::function<void (char[], float, MAV_PARAM_TYPE)> f)
+{
+  param_value_callback_ = f;
+}
+
+void MavROSflight::unregister_param_value_callback()
+{
+  param_value_callback_ = NULL;
+}
+
 void MavROSflight::register_heartbeat_callback(boost::function<void (void)> f)
 {
   heartbeat_callback_ = f;
-  heartbeat_callback_registered_ = true;
 }
 
 void MavROSflight::unregister_heartbeat_callback()
 {
-  heartbeat_callback_registered_ = false;
+  heartbeat_callback_ = NULL;
 }
 
 void MavROSflight::register_imu_callback(boost::function<void (double, double, double, double, double, double)> f)
 {
   imu_callback_ = f;
-  imu_callback_registered_ = true;
 }
 
 void MavROSflight::unregister_imu_callback()
 {
-  imu_callback_registered_ = false;
+  imu_callback_ = NULL;
+}
+
+void MavROSflight::send_param_request_list(uint8_t target_system, uint8_t target_component)
+{
+  mavlink_message_t msg;
+  mavlink_msg_param_request_list_pack(sysid_, compid_, &msg, target_system, target_component);
+  send_message(msg);
+}
+
+void MavROSflight::send_param_set(uint8_t target_system, uint8_t target_component, const char * param_id, int32_t param_value)
+{
+  mavlink_message_t msg;
+  mavlink_msg_param_set_pack(sysid_, compid_, &msg,
+                             target_system, target_component, param_id, *(float*) &param_value, MAV_PARAM_TYPE_INT32);
+  send_message(msg);
 }
 
 void MavROSflight::do_async_read()
@@ -186,12 +207,20 @@ void MavROSflight::handle_message()
 {
   switch (msg_in_.msgid)
   {
+  case MAVLINK_MSG_ID_PARAM_VALUE:
+    if (!param_value_callback_.empty())
+    {
+      mavlink_param_value_t msg;
+      mavlink_msg_param_value_decode(&msg_in_, &msg);
+      param_value_callback_(msg.param_id, msg.param_value, (MAV_PARAM_TYPE) msg.param_type);
+    }
+    break;
   case MAVLINK_MSG_ID_HEARTBEAT:
-    if (heartbeat_callback_registered_)
+    if (!heartbeat_callback_.empty())
       heartbeat_callback_();
     break;
   case MAVLINK_MSG_ID_SMALL_IMU:
-    if (imu_callback_registered_)
+    if (!imu_callback_.empty())
     {
       mavlink_small_imu_t msg;
       mavlink_msg_small_imu_decode(&msg_in_, &msg);

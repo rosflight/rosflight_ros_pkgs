@@ -22,6 +22,7 @@ public:
 
 private:
 
+  void paramCallback(char param_id[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN], float param_value, MAV_PARAM_TYPE param_type);
   void heartbeatCallback();
   void imuCallback(double xacc, double yacc, double zacc, double xgyro, double ygyro, double zgyro);
 

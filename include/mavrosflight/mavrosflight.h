@@ -39,15 +39,23 @@ public:
   ~MavROSflight();
 
   /**
-   * \brief Stops communcation and closes the serial port
+   * \brief Stops communication and closes the serial port
    */
   void close();
+
+  // callback functions
+  void register_param_value_callback(boost::function<void (char[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN], float, MAV_PARAM_TYPE)> f); //! \todo use boost::variant to handle multiple param types
+  void unregister_param_value_callback();
 
   void register_heartbeat_callback(boost::function<void (void)> f);
   void unregister_heartbeat_callback();
 
   void register_imu_callback(boost::function<void (double, double, double, double, double, double)> f);
   void unregister_imu_callback();
+
+  // send functions
+  void send_param_request_list(uint8_t target_system, uint8_t target_component = MAV_COMP_ID_ALL);
+  void send_param_set(uint8_t target_system, uint8_t target_component, const char * name, int32_t value);
 
 private:
 
@@ -127,10 +135,8 @@ private:
   mavlink_message_t msg_in_;
   mavlink_status_t status_in_;
 
-  bool heartbeat_callback_registered_;
+  boost::function<void (char[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN], float, MAV_PARAM_TYPE)> param_value_callback_;
   boost::function<void (void)> heartbeat_callback_;
-
-  bool imu_callback_registered_;
   boost::function<void (double, double, double, double, double, double)> imu_callback_;
 
   std::list<WriteBuffer*> write_queue_; //!< queue of buffers to be written to the serial port
