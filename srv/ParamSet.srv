@@ -1,7 +1,7 @@
 # Set a parameter value
 #
-# Set either the integer, unsigned, or float field
-# depending on the the parameter type
+# Set either the integer_value, unsigned_value, or
+# float_value field depending on the the parameter type
 
 # see enum MAV_PARAM_TYPE
 uint8 MAV_PARAM_TYPE_UINT8  = 1
@@ -13,9 +13,9 @@ uint8 MAV_PARAM_TYPE_INT32  = 6
 uint8 MAV_PARAM_TYPE_REAL32 = 9
 
 string param_id
-uint8_t param_type
+uint8 param_type
 
-int32 integer
-uint32 unsigned
-float32 float
+int32 integer_value
+uint32 unsigned_value
+float32 float_value
 ---

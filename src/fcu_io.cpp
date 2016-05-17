@@ -16,6 +16,8 @@ fcuIO::fcuIO()
 {
   ros::NodeHandle nh;
   imu_pub_ = nh.advertise<sensor_msgs::Imu>("imu/data", 1);
+  param_request_list_srv_ = nh.advertiseService("param_request_list", &fcuIO::paramRequestListSrvCallback, this);
+  param_set_srv_ = nh.advertiseService("param_set", &fcuIO::paramSetSrvCallback, this);
 
   ros::NodeHandle nh_private("~");
   std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
@@ -41,6 +43,26 @@ fcuIO::fcuIO()
 fcuIO::~fcuIO()
 {
   delete mavrosflight_;
+}
+
+bool fcuIO::paramRequestListSrvCallback(fcu_io::ParamRequestList::Request &req, fcu_io::ParamRequestList::Response &res)
+{
+  mavrosflight_->send_param_request_list(1);
+  return true;
+}
+
+bool fcuIO::paramSetSrvCallback(fcu_io::ParamSet::Request &req, fcu_io::ParamSet::Response &res)
+{
+  switch (req.param_type)
+  {
+  case MAV_PARAM_TYPE_INT32:
+    mavrosflight_->send_param_set(1, MAV_COMP_ID_ALL, req.param_id.c_str(), req.integer_value);
+    return true;
+  default:
+    ROS_ERROR("Currently only params of type int32 are supported");
+    return false;
+  }
+
 }
 
 void fcuIO::paramCallback(char param_id[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN], float param_value, MAV_PARAM_TYPE param_type)

@@ -9,6 +9,9 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
 
+#include <fcu_io/ParamRequestList.h>
+#include <fcu_io/ParamSet.h>
+
 #include <mavrosflight/mavrosflight.h>
 
 namespace fcu_io
@@ -26,7 +29,13 @@ private:
   void heartbeatCallback();
   void imuCallback(double xacc, double yacc, double zacc, double xgyro, double ygyro, double zgyro);
 
+  bool paramRequestListSrvCallback(fcu_io::ParamRequestList::Request &req, fcu_io::ParamRequestList::Response &res);
+  bool paramSetSrvCallback(fcu_io::ParamSet::Request &req, fcu_io::ParamSet::Response &res);
+
   ros::Publisher imu_pub_;
+
+  ros::ServiceServer param_request_list_srv_;
+  ros::ServiceServer param_set_srv_;
 
   mavrosflight::MavROSflight* mavrosflight_;
 };
