@@ -2,8 +2,10 @@ cmake_minimum_required(VERSION 2.8.3)
 project(fcu_io)
 
 find_package(catkin REQUIRED COMPONENTS
+  message_generation
   roscpp
   sensor_msgs
+  std_msgs
 )
 
 find_package(Boost REQUIRED COMPONENTS system thread)
@@ -12,10 +14,21 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 ## catkin specific configuration ##
 ###################################
 
+add_service_files(
+  FILES
+  ParamRequest.srv
+  ParamSet.srv
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
+
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES mavrosflight
-  CATKIN_DEPENDS roscpp sensor_msgs
+  CATKIN_DEPENDS roscpp sensor_msgs std_msgs
   DEPENDS Boost
 )
 
