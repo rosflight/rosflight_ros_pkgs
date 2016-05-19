@@ -39,11 +39,13 @@ class state_subscriber():
 		self.thetaC = 0.
 		self.chiC = 0.
 
+		self.startTime = None
+
 		#------------------------------------------------------------
 		rospy.Subscriber("/state", FW_State, self.callbackState)
 		rospy.Subscriber("/controller_commands", FW_Controller_Commands, self.callbackCommand)
 		rospy.Subscriber("/attitude_commands", FW_Attitude_Commands, self.callbackAttCmd)
-		rospy.Subscriber("/clock", Clock, self.callback_time)
+		# rospy.Subscriber("/clock", Clock, self.callback_time)
 		self.rate = 100 # 100 hz
 
 	def callbackState(self, FW_State):
@@ -63,6 +65,12 @@ class state_subscriber():
 		self.Vg = FW_State.Vg
 		self.wn = FW_State.wn
 		self.we = FW_State.we
+		if self.startTime == None:
+			self.startTime = rospy.Time.now().to_sec()
+			self.time = 0.
+		else:
+			self.time = rospy.Time.now().to_sec() - self.startTime
+
 
 	def callbackCommand(self, FW_Controller_Commands):
 		self.pdC = -FW_Controller_Commands.h_c
@@ -142,7 +150,7 @@ we_min	=-7.0
 fig_plots1 = plt.figure()
 #fig_plots2 = plt.figure()
 
-ax_pn	= fig_plots1.add_subplot(811, xlim=(0, 4), ylim=(pn_min, pn_max))
+ax_pn	= fig_plots1.add_subplot(811, xlim=(0.0, 4.0), ylim=(pn_min, pn_max))
 ax_pe	= fig_plots1.add_subplot(812, sharex=ax_pn, ylim=(pe_min, pe_max))
 ax_pd	= fig_plots1.add_subplot(813, sharex=ax_pn, ylim=(pd_min, pd_max))
 ax_Va	= fig_plots1.add_subplot(814, sharex=ax_pn, ylim=(Va_min, Va_max))
