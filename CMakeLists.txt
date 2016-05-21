@@ -17,6 +17,7 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 add_service_files(
   FILES
   ParamRequestList.srv
+  ParamRequestRead.srv
   ParamSet.srv
 )
 

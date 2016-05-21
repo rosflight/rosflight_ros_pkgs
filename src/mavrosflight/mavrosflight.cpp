@@ -97,6 +97,13 @@ void MavROSflight::send_param_request_list(uint8_t target_system, uint8_t target
   send_message(msg);
 }
 
+void MavROSflight::send_param_request_read(uint8_t target_system, uint8_t target_component, const char * name)
+{
+  mavlink_message_t msg;
+  mavlink_msg_param_request_read_pack(sysid_, compid_, &msg, target_system, target_component, name, -1);
+  send_message(msg);
+}
+
 void MavROSflight::send_param_set(uint8_t target_system, uint8_t target_component, const char * param_id, int32_t param_value)
 {
   mavlink_message_t msg;

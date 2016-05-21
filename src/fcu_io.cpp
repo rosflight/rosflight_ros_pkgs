@@ -17,6 +17,7 @@ fcuIO::fcuIO()
   ros::NodeHandle nh;
   imu_pub_ = nh.advertise<sensor_msgs::Imu>("imu/data", 1);
   param_request_list_srv_ = nh.advertiseService("param_request_list", &fcuIO::paramRequestListSrvCallback, this);
+  param_request_read_srv_ = nh.advertiseService("param_request_read", &fcuIO::paramRequestReadSrvCallback, this);
   param_set_srv_ = nh.advertiseService("param_set", &fcuIO::paramSetSrvCallback, this);
 
   ros::NodeHandle nh_private("~");
@@ -48,6 +49,12 @@ fcuIO::~fcuIO()
 bool fcuIO::paramRequestListSrvCallback(fcu_io::ParamRequestList::Request &req, fcu_io::ParamRequestList::Response &res)
 {
   mavrosflight_->send_param_request_list(1);
+  return true;
+}
+
+bool fcuIO::paramRequestReadSrvCallback(ParamRequestRead::Request &req, ParamRequestRead::Response &res)
+{
+  mavrosflight_->send_param_request_read(1, MAV_COMP_ID_ALL, req.param_id.c_str());
   return true;
 }
 

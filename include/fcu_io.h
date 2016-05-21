@@ -10,6 +10,7 @@
 #include <sensor_msgs/Imu.h>
 
 #include <fcu_io/ParamRequestList.h>
+#include <fcu_io/ParamRequestRead.h>
 #include <fcu_io/ParamSet.h>
 
 #include <mavrosflight/mavrosflight.h>
@@ -30,11 +31,13 @@ private:
   void imuCallback(double xacc, double yacc, double zacc, double xgyro, double ygyro, double zgyro);
 
   bool paramRequestListSrvCallback(fcu_io::ParamRequestList::Request &req, fcu_io::ParamRequestList::Response &res);
+  bool paramRequestReadSrvCallback(fcu_io::ParamRequestRead::Request &req, fcu_io::ParamRequestRead::Response &res);
   bool paramSetSrvCallback(fcu_io::ParamSet::Request &req, fcu_io::ParamSet::Response &res);
 
   ros::Publisher imu_pub_;
 
   ros::ServiceServer param_request_list_srv_;
+  ros::ServiceServer param_request_read_srv_;
   ros::ServiceServer param_set_srv_;
 
   mavrosflight::MavROSflight* mavrosflight_;

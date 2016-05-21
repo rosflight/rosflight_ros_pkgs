@@ -55,6 +55,7 @@ public:
 
   // send functions
   void send_param_request_list(uint8_t target_system, uint8_t target_component = MAV_COMP_ID_ALL);
+  void send_param_request_read(uint8_t target_system, uint8_t target_component, const char * name);
   void send_param_set(uint8_t target_system, uint8_t target_component, const char * name, int32_t value);
 
 private:
