@@ -19,6 +19,7 @@ fcuIO::fcuIO()
   param_request_list_srv_ = nh.advertiseService("param_request_list", &fcuIO::paramRequestListSrvCallback, this);
   param_request_read_srv_ = nh.advertiseService("param_request_read", &fcuIO::paramRequestReadSrvCallback, this);
   param_set_srv_ = nh.advertiseService("param_set", &fcuIO::paramSetSrvCallback, this);
+  param_write_srv_ = nh.advertiseService("param_write", &fcuIO::paramWriteSrvCallback, this);
 
   ros::NodeHandle nh_private("~");
   std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
@@ -37,6 +38,7 @@ fcuIO::fcuIO()
   mavrosflight_->register_param_value_callback(boost::bind(&fcuIO::paramCallback, this, _1, _2, _3));
   mavrosflight_->register_heartbeat_callback(boost::bind(&fcuIO::heartbeatCallback, this));
   mavrosflight_->register_imu_callback(boost::bind(&fcuIO::imuCallback, this, _1, _2, _3, _4, _5, _6));
+  mavrosflight_->register_command_ack_callback(boost::bind(&fcuIO::commandAckCallback, this, _1, _2));
 
   mavrosflight_->send_param_request_list(1);
 }
@@ -70,6 +72,12 @@ bool fcuIO::paramSetSrvCallback(fcu_io::ParamSet::Request &req, fcu_io::ParamSet
     return false;
   }
 
+}
+
+bool fcuIO::paramWriteSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
+{
+  mavrosflight_->send_param_write(1);
+  return true;
 }
 
 void fcuIO::paramCallback(char param_id[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN], float param_value, MAV_PARAM_TYPE param_type)
@@ -141,6 +149,11 @@ void fcuIO::imuCallback(double xacc, double yacc, double zacc, double xgyro, dou
   msg.angular_velocity.z = zgyro;
 
   imu_pub_.publish(msg);
+}
+
+void fcuIO::commandAckCallback(uint16_t command, uint8_t result)
+{
+  ROS_INFO("Acknowledged command %d with result %d", command, result);
 }
 
 } // namespace fcu_io

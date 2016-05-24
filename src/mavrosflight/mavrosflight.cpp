@@ -90,6 +90,16 @@ void MavROSflight::unregister_imu_callback()
   imu_callback_ = NULL;
 }
 
+void MavROSflight::register_command_ack_callback(boost::function<void (uint16_t, uint8_t)> f)
+{
+  command_ack_callback_ = f;
+}
+
+void MavROSflight::unregister_command_ack_callback()
+{
+  command_ack_callback_ = NULL;
+}
+
 void MavROSflight::send_param_request_list(uint8_t target_system, uint8_t target_component)
 {
   mavlink_message_t msg;
@@ -109,6 +119,14 @@ void MavROSflight::send_param_set(uint8_t target_system, uint8_t target_componen
   mavlink_message_t msg;
   mavlink_msg_param_set_pack(sysid_, compid_, &msg,
                              target_system, target_component, param_id, *(float*) &param_value, MAV_PARAM_TYPE_INT32);
+  send_message(msg);
+}
+
+void MavROSflight::send_param_write(uint8_t target_system, uint8_t target_component)
+{
+  mavlink_message_t msg;
+  mavlink_msg_command_int_pack(sysid_, compid_, &msg,
+                               target_system, target_component, 0, MAV_CMD_PREFLIGHT_STORAGE, 0, 0, 1, 0, 0, 0, 0, 0, 0);
   send_message(msg);
 }
 
@@ -234,6 +252,14 @@ void MavROSflight::handle_message()
 
       //TODO convert units
       imu_callback_(msg.xacc, msg.yacc, msg.zacc, msg.xgyro, msg.ygyro, msg.zgyro);
+    }
+    break;
+  case MAVLINK_MSG_ID_COMMAND_ACK:
+    if (!command_ack_callback_.empty())
+    {
+      mavlink_command_ack_t msg;
+      mavlink_msg_command_ack_decode(&msg_in_, &msg);
+      command_ack_callback_(msg.command, msg.result);
     }
     break;
   default:

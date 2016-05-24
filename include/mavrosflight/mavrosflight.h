@@ -53,10 +53,14 @@ public:
   void register_imu_callback(boost::function<void (double, double, double, double, double, double)> f);
   void unregister_imu_callback();
 
+  void register_command_ack_callback(boost::function<void (uint16_t, uint8_t)> f);
+  void unregister_command_ack_callback();
+
   // send functions
   void send_param_request_list(uint8_t target_system, uint8_t target_component = MAV_COMP_ID_ALL);
   void send_param_request_read(uint8_t target_system, uint8_t target_component, const char * name);
   void send_param_set(uint8_t target_system, uint8_t target_component, const char * name, int32_t value);
+  void send_param_write(uint8_t target_system, uint8_t target_component = MAV_COMP_ID_ALL);
 
 private:
 
@@ -139,6 +143,7 @@ private:
   boost::function<void (char[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN], float, MAV_PARAM_TYPE)> param_value_callback_;
   boost::function<void (void)> heartbeat_callback_;
   boost::function<void (double, double, double, double, double, double)> imu_callback_;
+  boost::function<void (uint16_t, uint8_t)> command_ack_callback_;
 
   std::list<WriteBuffer*> write_queue_; //!< queue of buffers to be written to the serial port
   bool write_in_progress_; //!< flag for whether async_write is already running

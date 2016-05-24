@@ -7,6 +7,7 @@
 #define FCU_IO_MAVROSFLIGHT_ROS_H
 
 #include <ros/ros.h>
+#include <std_srvs/Empty.h>
 #include <sensor_msgs/Imu.h>
 
 #include <fcu_io/ParamRequestList.h>
@@ -29,16 +30,19 @@ private:
   void paramCallback(char param_id[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN], float param_value, MAV_PARAM_TYPE param_type);
   void heartbeatCallback();
   void imuCallback(double xacc, double yacc, double zacc, double xgyro, double ygyro, double zgyro);
+  void commandAckCallback(uint16_t command, uint8_t result);
 
   bool paramRequestListSrvCallback(fcu_io::ParamRequestList::Request &req, fcu_io::ParamRequestList::Response &res);
   bool paramRequestReadSrvCallback(fcu_io::ParamRequestRead::Request &req, fcu_io::ParamRequestRead::Response &res);
   bool paramSetSrvCallback(fcu_io::ParamSet::Request &req, fcu_io::ParamSet::Response &res);
+  bool paramWriteSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
   ros::Publisher imu_pub_;
 
   ros::ServiceServer param_request_list_srv_;
   ros::ServiceServer param_request_read_srv_;
   ros::ServiceServer param_set_srv_;
+  ros::ServiceServer param_write_srv_;
 
   mavrosflight::MavROSflight* mavrosflight_;
 };
