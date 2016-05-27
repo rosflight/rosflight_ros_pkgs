@@ -145,7 +145,7 @@ void fcuIO::imuCallback(double xacc, double yacc, double zacc, double xgyro, dou
   msg.linear_acceleration.z = zacc*.002349;
 
   msg.angular_velocity.x = xgyro*.004256;
-  msg.angular_velocity.y = ygyro*004256;
+  msg.angular_velocity.y = ygyro*.004256;
   msg.angular_velocity.z = zgyro*.004256;
 
   imu_pub_.publish(msg);
