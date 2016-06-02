@@ -144,13 +144,13 @@ void fcuIO::imuCallback(double xacc, double yacc, double zacc, double xgyro, dou
 {
   sensor_msgs::Imu msg;
 
-  msg.linear_acceleration.x = xacc;
-  msg.linear_acceleration.y = yacc;
-  msg.linear_acceleration.z = zacc;
+  msg.linear_acceleration.x = xacc*.002349;
+  msg.linear_acceleration.y = yacc*.002349;
+  msg.linear_acceleration.z = zacc*.002349;
 
-  msg.angular_velocity.x = xgyro;
-  msg.angular_velocity.y = ygyro;
-  msg.angular_velocity.z = zgyro;
+  msg.angular_velocity.x = xgyro*.004256;
+  msg.angular_velocity.y = ygyro*.004256;
+  msg.angular_velocity.z = zgyro*.004256;
 
   imu_pub_.publish(msg);
 }
