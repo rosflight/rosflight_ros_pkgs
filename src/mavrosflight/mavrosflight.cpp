@@ -90,6 +90,16 @@ void MavROSflight::unregister_imu_callback()
   imu_callback_ = NULL;
 }
 
+void MavROSflight::register_servo_output_raw_callback(boost::function<void (uint32_t, uint8_t, uint16_t[])> f)
+{
+  servo_output_raw_callback_ = f;
+}
+
+void MavROSflight::unregister_servo_output_raw_callback()
+{
+  servo_output_raw_callback_ = NULL;
+}
+
 void MavROSflight::register_command_ack_callback(boost::function<void (uint16_t, uint8_t)> f)
 {
   command_ack_callback_ = f;
@@ -252,6 +262,24 @@ void MavROSflight::handle_message()
 
       //TODO convert units
       imu_callback_(msg.xacc, msg.yacc, msg.zacc, msg.xgyro, msg.ygyro, msg.zgyro);
+    }
+    break;
+  case MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:
+    if (!servo_output_raw_callback_.empty())
+    {
+      mavlink_servo_output_raw_t msg;
+      mavlink_msg_servo_output_raw_decode(&msg_in_, &msg);
+
+      uint16_t outputs[8] = {
+        msg.servo1_raw,
+        msg.servo2_raw,
+        msg.servo3_raw,
+        msg.servo4_raw,
+        msg.servo5_raw,
+        msg.servo6_raw,
+        msg.servo7_raw };
+
+      servo_output_raw_callback_(msg.time_usec, msg.port, outputs);
     }
     break;
   case MAVLINK_MSG_ID_COMMAND_ACK:

@@ -53,6 +53,9 @@ public:
   void register_imu_callback(boost::function<void (double, double, double, double, double, double)> f);
   void unregister_imu_callback();
 
+  void register_servo_output_raw_callback(boost::function<void (uint32_t, uint8_t, uint16_t[8])> f);
+  void unregister_servo_output_raw_callback();
+
   void register_command_ack_callback(boost::function<void (uint16_t, uint8_t)> f);
   void unregister_command_ack_callback();
 
@@ -143,6 +146,7 @@ private:
   boost::function<void (char[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN], float, MAV_PARAM_TYPE)> param_value_callback_;
   boost::function<void (void)> heartbeat_callback_;
   boost::function<void (double, double, double, double, double, double)> imu_callback_;
+  boost::function<void (uint32_t, uint8_t, uint16_t[8])> servo_output_raw_callback_;
   boost::function<void (uint16_t, uint8_t)> command_ack_callback_;
 
   std::list<WriteBuffer*> write_queue_; //!< queue of buffers to be written to the serial port
