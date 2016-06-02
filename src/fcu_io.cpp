@@ -15,7 +15,10 @@ namespace fcu_io
 fcuIO::fcuIO()
 {
   ros::NodeHandle nh;
+
   imu_pub_ = nh.advertise<sensor_msgs::Imu>("imu/data", 1);
+  servo_output_raw_pub_ = nh.advertise<fcu_io::ServoOutputRaw>("servo_output_raw", 1);
+
   param_request_list_srv_ = nh.advertiseService("param_request_list", &fcuIO::paramRequestListSrvCallback, this);
   param_request_read_srv_ = nh.advertiseService("param_request_read", &fcuIO::paramRequestReadSrvCallback, this);
   param_set_srv_ = nh.advertiseService("param_set", &fcuIO::paramSetSrvCallback, this);
@@ -38,6 +41,7 @@ fcuIO::fcuIO()
   mavrosflight_->register_param_value_callback(boost::bind(&fcuIO::paramCallback, this, _1, _2, _3));
   mavrosflight_->register_heartbeat_callback(boost::bind(&fcuIO::heartbeatCallback, this));
   mavrosflight_->register_imu_callback(boost::bind(&fcuIO::imuCallback, this, _1, _2, _3, _4, _5, _6));
+  mavrosflight_->register_servo_output_raw_callback(boost::bind(&fcuIO::servoOutputRawCallback, this, _1, _2, _3));
   mavrosflight_->register_command_ack_callback(boost::bind(&fcuIO::commandAckCallback, this, _1, _2));
 
   mavrosflight_->send_param_request_list(1);
@@ -149,6 +153,19 @@ void fcuIO::imuCallback(double xacc, double yacc, double zacc, double xgyro, dou
   msg.angular_velocity.z = zgyro;
 
   imu_pub_.publish(msg);
+}
+
+void fcuIO::servoOutputRawCallback(uint32_t time_usec, uint8_t port, uint16_t values[8])
+{
+  fcu_io::ServoOutputRaw msg;
+
+  msg.port = port;
+  for (int i = 0; i < 8; i++)
+  {
+    msg.values[i] = values[i];
+  }
+
+  servo_output_raw_pub_.publish(msg);
 }
 
 void fcuIO::commandAckCallback(uint16_t command, uint8_t result)

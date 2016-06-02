@@ -14,6 +14,11 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 ## catkin specific configuration ##
 ###################################
 
+add_message_files(
+  FILES
+  ServoOutputRaw.msg
+)
+
 add_service_files(
   FILES
   ParamRequestList.srv
