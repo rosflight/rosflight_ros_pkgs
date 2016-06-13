@@ -144,6 +144,8 @@ void fcuIO::imuCallback(double xacc, double yacc, double zacc, double xgyro, dou
 {
   sensor_msgs::Imu msg;
 
+  msg.header.stamp = ros::Time::now();
+
   msg.linear_acceleration.x = xacc*.002349;
   msg.linear_acceleration.y = yacc*.002349;
   msg.linear_acceleration.z = zacc*.002349;
