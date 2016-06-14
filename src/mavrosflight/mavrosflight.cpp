@@ -140,6 +140,36 @@ void MavROSflight::send_param_write(uint8_t target_system, uint8_t target_compon
   send_message(msg);
 }
 
+void MavROSflight::send_command(OFFBOARD_CONTROL_MODE mode, OFFBOARD_CONTROL_IGNORE ignore,
+                                float value1, float value2, float value3, float value4)
+{
+  int v1 = (int) value1 * 1000;
+  int v2 = (int) value2 * 1000;
+  int v3 = (int) value3 * 1000;
+  int v4 = (int) value4 * 1000;
+
+  switch (mode)
+  {
+  case MODE_PASS_THROUGH:
+    v1 = saturate(v1, -1000, 1000);
+    v2 = saturate(v2, -1000, 1000);
+    v3 = saturate(v3, -1000, 1000);
+    v4 = saturate(v4, -1000, 1000);
+    break;
+  case MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
+  case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
+    v4 = saturate(v4, 0, 1000);
+    break;
+  case MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
+    break;
+  }
+
+  mavlink_message_t msg;
+  mavlink_msg_offboard_control_pack(sysid_, compid_, &msg, mode, ignore,
+                                    (int16_t)v1, (int16_t)v2, (int16_t)v3, (int16_t)v4);
+  send_message(msg);
+}
+
 void MavROSflight::do_async_read()
 {
   if (!serial_port_.is_open()) return;

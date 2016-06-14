@@ -64,6 +64,9 @@ public:
   void send_param_request_read(uint8_t target_system, uint8_t target_component, const char * name);
   void send_param_set(uint8_t target_system, uint8_t target_component, const char * name, int32_t value);
   void send_param_write(uint8_t target_system, uint8_t target_component = MAV_COMP_ID_ALL);
+  void send_command(OFFBOARD_CONTROL_MODE mode,
+                    OFFBOARD_CONTROL_IGNORE ignore,
+                    float value1, float value2, float value3, float value4);
 
 private:
 
@@ -125,6 +128,18 @@ private:
    * \brief Handle a received mavlink message
    */
   void handle_message();
+
+  /**
+   * \brief Saturate a value between lower and upper limits
+   * \param value The raw value
+   * \param min The lower limit
+   * \param max The upper limit
+   * \returns The saturated value
+   */
+  template<class T> inline T saturate(T value, T min, T max)
+  {
+    return value < min ? min : (value > max ? max : value);
+  }
 
   //===========================================================================
   // member variables
