@@ -59,6 +59,12 @@ public:
   void register_command_ack_callback(boost::function<void (uint16_t, uint8_t)> f);
   void unregister_command_ack_callback();
 
+  void register_named_value_int_callback(boost::function<void (uint32_t, std::string, int32_t)> f);
+  void unregister_named_value_int_callback();
+
+  void register_named_value_float_callback(boost::function<void (uint32_t, std::string, float)> f);
+  void unregister_named_value_float_callback();
+
   // send functions
   void send_param_request_list(uint8_t target_system, uint8_t target_component = MAV_COMP_ID_ALL);
   void send_param_request_read(uint8_t target_system, uint8_t target_component, const char * name);
@@ -163,6 +169,8 @@ private:
   boost::function<void (double, double, double, double, double, double)> imu_callback_;
   boost::function<void (uint32_t, uint8_t, uint16_t[8])> servo_output_raw_callback_;
   boost::function<void (uint16_t, uint8_t)> command_ack_callback_;
+  boost::function<void (uint32_t, std::string, int32_t)> named_value_int_callback_;
+  boost::function<void (uint32_t, std::string, float)> named_value_float_callback_;
 
   std::list<WriteBuffer*> write_queue_; //!< queue of buffers to be written to the serial port
   bool write_in_progress_; //!< flag for whether async_write is already running
