@@ -6,8 +6,12 @@
 #ifndef FCU_IO_MAVROSFLIGHT_ROS_H
 #define FCU_IO_MAVROSFLIGHT_ROS_H
 
+#include <map>
+
 #include <ros/ros.h>
 
+#include <std_msgs/Float32.h>
+#include <std_msgs/Int32.h>
 #include <sensor_msgs/Imu.h>
 #include <std_srvs/Empty.h>
 
@@ -37,6 +41,7 @@ private:
   void imuCallback(double xacc, double yacc, double zacc, double xgyro, double ygyro, double zgyro);
   void servoOutputRawCallback(uint32_t time_usec, uint8_t port, uint16_t values[8]);
   void commandAckCallback(uint16_t command, uint8_t result);
+  void namedValueIntCallback(uint32_t time, std::string name, int32_t value);
 
   // ROS message callbacks
   void commandCallback(fcu_io::Command::ConstPtr msg);
@@ -48,6 +53,8 @@ private:
   bool paramWriteSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
   ros::Subscriber command_sub_;
+  std::map<std::string, ros::Subscriber> named_value_int_pubs_;
+  std::map<std::string, ros::Subscriber> named_value_float_pubs_;
 
   ros::Publisher imu_pub_;
   ros::Publisher servo_output_raw_pub_;

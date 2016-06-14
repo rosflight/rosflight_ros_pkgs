@@ -177,6 +177,21 @@ void fcuIO::commandAckCallback(uint16_t command, uint8_t result)
   ROS_INFO("Acknowledged command %d with result %d", command, result);
 }
 
+void fcuIO::namedValueIntCallback(uint32_t time, std::string name, int32_t value)
+{
+  if (named_value_int_pubs_.find(name) == named_value_int_pubs_.end())
+  {
+    ros::NodeHandle nh;
+//    named_value_int_pubs_[name] = nh.advertise<std_msgs::Int32>("named_value/" + name, 1);
+    named_value_int_pubs_.insert(std::pair<std::string, ros::Subscriber>(name, nh.advertise<std_msgs::Int32>("named_value/" + name, 1)));
+  }
+
+  std_msgs::Int32 msg;
+  msg.data = value;
+
+  named_value_int_pubs_[name].publish(msg);
+}
+
 void fcuIO::commandCallback(fcu_io::Command::ConstPtr msg)
 {
   //! \todo these are hard-coded to match right now; may want to replace with something more robust
