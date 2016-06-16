@@ -9,6 +9,7 @@
 #include "mavrosflight/mavrosflight.h"
 
 #include <boost/thread.hpp>
+#include <ros/ros.h>
 
 namespace mavrosflight
 {
@@ -88,6 +89,16 @@ void MavROSflight::register_imu_callback(boost::function<void (double, double, d
 void MavROSflight::unregister_imu_callback()
 {
   imu_callback_ = NULL;
+}
+
+void MavROSflight::register_rc_raw_callback(boost::function<void (uint32_t, uint8_t, uint16_t[])> f)
+{
+  rc_raw_callback_ = f;
+}
+
+void MavROSflight::unregister_rc_raw_callback()
+{
+  rc_raw_callback_ = NULL;
 }
 
 void MavROSflight::register_servo_output_raw_callback(boost::function<void (uint32_t, uint8_t, uint16_t[])> f)
@@ -334,6 +345,23 @@ void MavROSflight::handle_message()
       servo_output_raw_callback_(msg.time_usec, msg.port, outputs);
     }
     break;
+  case MAVLINK_MSG_ID_RC_CHANNELS:
+    if(!rc_raw_callback_.empty())
+    {
+      mavlink_rc_channels_raw_t msg;
+      mavlink_msg_rc_channels_raw_decode(&msg_in_, &msg);
+
+      uint16_t rc[8] = {
+        msg.chan1_raw,
+        msg.chan2_raw,
+        msg.chan3_raw,
+        msg.chan4_raw,
+        msg.chan5_raw,
+        msg.chan6_raw,
+        msg.chan7_raw,
+        msg.chan8_raw };
+      rc_raw_callback_(msg.time_boot_ms, msg.port, rc);
+    }
   case MAVLINK_MSG_ID_COMMAND_ACK:
     if (!command_ack_callback_.empty())
     {
@@ -359,6 +387,7 @@ void MavROSflight::handle_message()
     }
     break;
   default:
+    ROS_ERROR_STREAM("Received unhandled mavlink message ID = "<< msg_in_.msgid);
     break;
   }
 }
