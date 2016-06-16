@@ -64,7 +64,7 @@ bool fcuIO::paramRequestListSrvCallback(fcu_io::ParamRequestList::Request &req, 
 
 bool fcuIO::paramRequestReadSrvCallback(ParamRequestRead::Request &req, ParamRequestRead::Response &res)
 {
-  mavrosflight_->send_param_request_read(1, MAV_COMP_ID_ALL, req.param_id.c_str());
+  mavrosflight_->send_param_request_read(1, MAV_COMP_ID_ALL, req.param_id);
   return true;
 }
 
@@ -73,7 +73,7 @@ bool fcuIO::paramSetSrvCallback(fcu_io::ParamSet::Request &req, fcu_io::ParamSet
   switch (req.param_type)
   {
   case MAV_PARAM_TYPE_INT32:
-    mavrosflight_->send_param_set(1, MAV_COMP_ID_ALL, req.param_id.c_str(), req.integer_value);
+    mavrosflight_->send_param_set(1, MAV_COMP_ID_ALL, req.param_id, req.integer_value);
     return true;
   default:
     ROS_ERROR("Currently only params of type int32 are supported");

@@ -137,18 +137,18 @@ void MavROSflight::send_param_request_list(uint8_t target_system, uint8_t target
   send_message(msg);
 }
 
-void MavROSflight::send_param_request_read(uint8_t target_system, uint8_t target_component, const char * name)
+void MavROSflight::send_param_request_read(uint8_t target_system, uint8_t target_component, std::string name)
 {
   mavlink_message_t msg;
-  mavlink_msg_param_request_read_pack(sysid_, compid_, &msg, target_system, target_component, name, -1);
+  mavlink_msg_param_request_read_pack(sysid_, compid_, &msg, target_system, target_component, name.c_str(), -1);
   send_message(msg);
 }
 
-void MavROSflight::send_param_set(uint8_t target_system, uint8_t target_component, const char * param_id, int32_t param_value)
+void MavROSflight::send_param_set(uint8_t target_system, uint8_t target_component, std::string param_id, int32_t param_value)
 {
   mavlink_message_t msg;
   mavlink_msg_param_set_pack(sysid_, compid_, &msg,
-                             target_system, target_component, param_id, *(float*) &param_value, MAV_PARAM_TYPE_INT32);
+                             target_system, target_component, param_id.c_str(), *(float*) &param_value, MAV_PARAM_TYPE_INT32);
   send_message(msg);
 }
 
