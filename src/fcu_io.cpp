@@ -16,6 +16,8 @@ fcuIO::fcuIO()
 {
   ros::NodeHandle nh;
 
+  command_sub_ = nh.subscribe("command", 1, &fcuIO::commandCallback, this);
+
   imu_pub_ = nh.advertise<sensor_msgs::Imu>("imu/data", 1);
   servo_output_raw_pub_ = nh.advertise<fcu_io::ServoOutputRaw>("servo_output_raw", 1);
 
@@ -173,6 +175,15 @@ void fcuIO::servoOutputRawCallback(uint32_t time_usec, uint8_t port, uint16_t va
 void fcuIO::commandAckCallback(uint16_t command, uint8_t result)
 {
   ROS_INFO("Acknowledged command %d with result %d", command, result);
+}
+
+void fcuIO::commandCallback(fcu_io::Command::ConstPtr msg)
+{
+  //! \todo these are hard-coded to match right now; may want to replace with something more robust
+  OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE) msg->mode;
+  OFFBOARD_CONTROL_IGNORE ignore = (OFFBOARD_CONTROL_IGNORE) msg->ignore;
+
+  mavrosflight_->send_command(mode, ignore, msg->value1, msg->value2, msg->value3, msg->value4);
 }
 
 } // namespace fcu_io
