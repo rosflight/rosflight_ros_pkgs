@@ -7,6 +7,7 @@
 #define FCU_IO_MAVROSFLIGHT_ROS_H
 
 #include <map>
+#include <string>
 
 #include <ros/ros.h>
 
@@ -36,7 +37,7 @@ public:
 private:
 
   // mavrosflight callbacks
-  void paramCallback(char param_id[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN], float param_value, MAV_PARAM_TYPE param_type);
+  void paramCallback(std::string param_id, float param_value, MAV_PARAM_TYPE param_type);
   void heartbeatCallback();
   void imuCallback(double xacc, double yacc, double zacc, double xgyro, double ygyro, double zgyro);
   void servoOutputRawCallback(uint32_t time_usec, uint8_t port, uint16_t values[8]);

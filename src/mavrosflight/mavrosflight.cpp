@@ -60,7 +60,7 @@ void MavROSflight::close()
   }
 }
 
-void MavROSflight::register_param_value_callback(boost::function<void (char[], float, MAV_PARAM_TYPE)> f)
+void MavROSflight::register_param_value_callback(boost::function<void (std::string, float, MAV_PARAM_TYPE)> f)
 {
   param_value_callback_ = f;
 }
@@ -297,7 +297,9 @@ void MavROSflight::handle_message()
     {
       mavlink_param_value_t msg;
       mavlink_msg_param_value_decode(&msg_in_, &msg);
-      param_value_callback_(msg.param_id, msg.param_value, (MAV_PARAM_TYPE) msg.param_type);
+      param_value_callback_(std::string(msg.param_id, MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN),
+                            msg.param_value,
+                            (MAV_PARAM_TYPE) msg.param_type);
     }
     break;
   case MAVLINK_MSG_ID_HEARTBEAT:
