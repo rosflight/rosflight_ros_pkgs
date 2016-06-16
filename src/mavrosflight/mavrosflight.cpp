@@ -110,6 +110,26 @@ void MavROSflight::unregister_command_ack_callback()
   command_ack_callback_ = NULL;
 }
 
+void MavROSflight::register_named_value_int_callback(boost::function<void (uint32_t, std::string, int32_t)> f)
+{
+  named_value_int_callback_ = f;
+}
+
+void MavROSflight::unregister_named_value_int_callback()
+{
+  named_value_int_callback_ = NULL;
+}
+
+void MavROSflight::register_named_value_float_callback(boost::function<void (uint32_t, std::string, float)> f)
+{
+  named_value_float_callback_ = f;
+}
+
+void MavROSflight::unregister_named_value_float_callback()
+{
+  named_value_float_callback_ = NULL;
+}
+
 void MavROSflight::send_param_request_list(uint8_t target_system, uint8_t target_component)
 {
   mavlink_message_t msg;
@@ -318,6 +338,22 @@ void MavROSflight::handle_message()
       mavlink_command_ack_t msg;
       mavlink_msg_command_ack_decode(&msg_in_, &msg);
       command_ack_callback_(msg.command, msg.result);
+    }
+    break;
+  case MAVLINK_MSG_ID_NAMED_VALUE_INT:
+    if (!named_value_int_callback_.empty())
+    {
+      mavlink_named_value_int_t msg;
+      mavlink_msg_named_value_int_decode(&msg_in_, &msg);
+      named_value_int_callback_(msg.time_boot_ms, msg.name, msg.value);
+    }
+    break;
+  case MAVLINK_MSG_ID_NAMED_VALUE_FLOAT:
+    if (!named_value_float_callback_.empty())
+    {
+      mavlink_named_value_float_t msg;
+      mavlink_msg_named_value_float_decode(&msg_in_, &msg);
+      named_value_float_callback_(msg.time_boot_ms, msg.name, msg.value);
     }
     break;
   default:
