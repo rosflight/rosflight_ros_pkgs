@@ -347,6 +347,7 @@ void MavROSflight::handle_message()
       mavlink_msg_named_value_int_decode(&msg_in_, &msg);
       named_value_int_callback_(msg.time_boot_ms, msg.name, msg.value);
     }
+    break;
   case MAVLINK_MSG_ID_NAMED_VALUE_FLOAT:
     if (!named_value_float_callback_.empty())
     {
@@ -354,6 +355,7 @@ void MavROSflight::handle_message()
       mavlink_msg_named_value_float_decode(&msg_in_, &msg);
       named_value_float_callback_(msg.time_boot_ms, msg.name, msg.value);
     }
+    break;
   default:
     break;
   }

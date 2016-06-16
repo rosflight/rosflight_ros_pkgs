@@ -45,6 +45,8 @@ fcuIO::fcuIO()
   mavrosflight_->register_imu_callback(boost::bind(&fcuIO::imuCallback, this, _1, _2, _3, _4, _5, _6));
   mavrosflight_->register_servo_output_raw_callback(boost::bind(&fcuIO::servoOutputRawCallback, this, _1, _2, _3));
   mavrosflight_->register_command_ack_callback(boost::bind(&fcuIO::commandAckCallback, this, _1, _2));
+  mavrosflight_->register_named_value_int_callback(boost::bind(&fcuIO::namedValueIntCallback, this, _1, _2, _3));
+  mavrosflight_->register_named_value_float_callback(boost::bind(&fcuIO::namedValueFloatCallback, this, _1, _2, _3));
 
   mavrosflight_->send_param_request_list(1);
 }
@@ -182,14 +184,27 @@ void fcuIO::namedValueIntCallback(uint32_t time, std::string name, int32_t value
   if (named_value_int_pubs_.find(name) == named_value_int_pubs_.end())
   {
     ros::NodeHandle nh;
-//    named_value_int_pubs_[name] = nh.advertise<std_msgs::Int32>("named_value/" + name, 1);
-    named_value_int_pubs_.insert(std::pair<std::string, ros::Subscriber>(name, nh.advertise<std_msgs::Int32>("named_value/" + name, 1)));
+    named_value_int_pubs_[name] = nh.advertise<std_msgs::Int32>("named_value/int/" + name, 1);
   }
 
   std_msgs::Int32 msg;
   msg.data = value;
 
   named_value_int_pubs_[name].publish(msg);
+}
+
+void fcuIO::namedValueFloatCallback(uint32_t time, std::string name, float value)
+{
+  if (named_value_float_pubs_.find(name) == named_value_float_pubs_.end())
+  {
+    ros::NodeHandle nh;
+    named_value_float_pubs_[name] = nh.advertise<std_msgs::Float32>("named_value/float/" + name, 1);
+  }
+
+  std_msgs::Float32 msg;
+  msg.data = value;
+
+  named_value_float_pubs_[name].publish(msg);
 }
 
 void fcuIO::commandCallback(fcu_io::Command::ConstPtr msg)
