@@ -88,7 +88,7 @@ bool fcuIO::paramWriteSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty
   return true;
 }
 
-void fcuIO::paramCallback(char param_id[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN], float param_value, MAV_PARAM_TYPE param_type)
+void fcuIO::paramCallback(std::string param_id, float param_value, MAV_PARAM_TYPE param_type)
 {
   bool have_uint(false);
   uint32_t uint_value;
@@ -132,11 +132,11 @@ void fcuIO::paramCallback(char param_id[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_L
   }
 
   if (have_uint)
-    ROS_INFO("Got parameter %s with value %u", param_id, uint_value);
+    ROS_INFO("Got parameter %s with value %u", param_id.c_str(), uint_value);
   else if (have_int)
-    ROS_INFO("Got parameter %s with value %d", param_id, int_value);
+    ROS_INFO("Got parameter %s with value %d", param_id.c_str(), int_value);
   else if (have_float)
-    ROS_INFO("Got parameter %s with value %f", param_id, param_value);
+    ROS_INFO("Got parameter %s with value %f", param_id.c_str(), param_value);
 }
 
 void fcuIO::heartbeatCallback()

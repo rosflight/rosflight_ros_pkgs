@@ -44,7 +44,7 @@ public:
   void close();
 
   // callback functions
-  void register_param_value_callback(boost::function<void (char[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN], float, MAV_PARAM_TYPE)> f); //! \todo use boost::variant to handle multiple param types
+  void register_param_value_callback(boost::function<void (std::string, float, MAV_PARAM_TYPE)> f); //! \todo use boost::variant to handle multiple param types
   void unregister_param_value_callback();
 
   void register_heartbeat_callback(boost::function<void (void)> f);
@@ -164,7 +164,7 @@ private:
   mavlink_message_t msg_in_;
   mavlink_status_t status_in_;
 
-  boost::function<void (char[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN], float, MAV_PARAM_TYPE)> param_value_callback_;
+  boost::function<void (std::string, float, MAV_PARAM_TYPE)> param_value_callback_;
   boost::function<void (void)> heartbeat_callback_;
   boost::function<void (double, double, double, double, double, double)> imu_callback_;
   boost::function<void (uint32_t, uint8_t, uint16_t[8])> servo_output_raw_callback_;
