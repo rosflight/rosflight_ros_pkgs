@@ -16,11 +16,11 @@ fcuIO::fcuIO()
 {
   ros::NodeHandle nh;
 
-  command_sub_ = nh.subscribe("command", 1, &fcuIO::commandCallback, this);
+  command_sub_ = nh.subscribe("extended_command", 1, &fcuIO::commandCallback, this);
 
   imu_pub_ = nh.advertise<sensor_msgs::Imu>("imu/data", 1);
-  servo_output_raw_pub_ = nh.advertise<fcu_io::ServoOutputRaw>("servo_output_raw", 1);
-  rc_raw_pub_ = nh.advertise<fcu_io::ServoOutputRaw>("rc_raw", 1);
+  servo_output_raw_pub_ = nh.advertise<fcu_common::ServoOutputRaw>("servo_output_raw", 1);
+  rc_raw_pub_ = nh.advertise<fcu_common::ServoOutputRaw>("rc_raw", 1);
 
   param_request_list_srv_ = nh.advertiseService("param_request_list", &fcuIO::paramRequestListSrvCallback, this);
   param_request_read_srv_ = nh.advertiseService("param_request_read", &fcuIO::paramRequestReadSrvCallback, this);
@@ -165,7 +165,7 @@ void fcuIO::imuCallback(double xacc, double yacc, double zacc, double xgyro, dou
 
 void fcuIO::servoOutputRawCallback(uint32_t time_usec, uint8_t port, uint16_t values[8])
 {
-  fcu_io::ServoOutputRaw msg;
+  fcu_common::ServoOutputRaw msg;
 
   msg.port = port;
   for (int i = 0; i < 8; i++)
@@ -178,7 +178,7 @@ void fcuIO::servoOutputRawCallback(uint32_t time_usec, uint8_t port, uint16_t va
 
 void fcuIO::rcRawCallback(uint32_t time_usec, uint8_t port, uint16_t values[8])
 {
-  fcu_io::ServoOutputRaw msg;
+  fcu_common::ServoOutputRaw msg;
 
   msg.port = port;
   for (int i = 0; i < 8; i++)
@@ -222,7 +222,7 @@ void fcuIO::namedValueFloatCallback(uint32_t time, std::string name, float value
   named_value_float_pubs_[name].publish(msg);
 }
 
-void fcuIO::commandCallback(fcu_io::Command::ConstPtr msg)
+void fcuIO::commandCallback(fcu_common::ExtendedCommand::ConstPtr msg)
 {
   //! \todo these are hard-coded to match right now; may want to replace with something more robust
   OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE) msg->mode;

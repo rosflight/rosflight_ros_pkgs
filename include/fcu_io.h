@@ -16,8 +16,8 @@
 #include <sensor_msgs/Imu.h>
 #include <std_srvs/Empty.h>
 
-#include <fcu_io/Command.h>
-#include <fcu_io/ServoOutputRaw.h>
+#include <fcu_common/ExtendedCommand.h>
+#include <fcu_common/ServoOutputRaw.h>
 
 #include <fcu_io/ParamRequestList.h>
 #include <fcu_io/ParamRequestRead.h>
@@ -47,7 +47,7 @@ private:
   void namedValueFloatCallback(uint32_t time, std::string name, float value);
 
   // ROS message callbacks
-  void commandCallback(fcu_io::Command::ConstPtr msg);
+  void commandCallback(fcu_common::ExtendedCommand::ConstPtr msg);
 
   // ROS service callbacks
   bool paramRequestListSrvCallback(fcu_io::ParamRequestList::Request &req, fcu_io::ParamRequestList::Response &res);
