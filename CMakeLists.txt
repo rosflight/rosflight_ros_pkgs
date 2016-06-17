@@ -54,7 +54,3 @@ include_directories(${catkin_INCLUDE_DIRS})
 add_executable(fcu_common_joy src/joy.cpp)
 add_dependencies(fcu_common_joy fcu_common_generate_messages_cpp)
 target_link_libraries(fcu_common_joy ${catkin_LIBRARIES})
-
-add_executable(fcu_common_gps src/gps.cpp)
-add_dependencies(fcu_common_gps fcu_common_generate_messages_cpp)
-target_link_libraries(fcu_common_gps ${catkin_LIBRARIES})
