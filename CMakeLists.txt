@@ -30,13 +30,14 @@ add_message_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
+  sensor_msgs
   geometry_msgs
 )
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES fcu_common
-  CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs
+  CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs geometry_msgs
 )
 
 add_definitions(-std=c++11)
@@ -50,6 +51,6 @@ target_link_libraries(fcu_common ${catkin_LIBRARIES})
 include_directories(include)
 include_directories(${catkin_INCLUDE_DIRS})
 
-
 add_executable(fcu_common_joy src/joy.cpp)
+add_dependencies(fcu_common_joy fcu_common_generate_messages_cpp)
 target_link_libraries(fcu_common_joy ${catkin_LIBRARIES})
