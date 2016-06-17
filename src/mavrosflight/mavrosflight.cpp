@@ -9,6 +9,7 @@
 #include "mavrosflight/mavrosflight.h"
 
 #include <boost/thread.hpp>
+#include <ros/ros.h>
 
 namespace mavrosflight
 {
@@ -90,6 +91,16 @@ void MavROSflight::unregister_imu_callback()
   imu_callback_ = NULL;
 }
 
+void MavROSflight::register_rc_raw_callback(boost::function<void (uint32_t, uint8_t, uint16_t[])> f)
+{
+  rc_raw_callback_ = f;
+}
+
+void MavROSflight::unregister_rc_raw_callback()
+{
+  rc_raw_callback_ = NULL;
+}
+
 void MavROSflight::register_servo_output_raw_callback(boost::function<void (uint32_t, uint8_t, uint16_t[])> f)
 {
   servo_output_raw_callback_ = f;
@@ -163,10 +174,10 @@ void MavROSflight::send_param_write(uint8_t target_system, uint8_t target_compon
 void MavROSflight::send_command(OFFBOARD_CONTROL_MODE mode, OFFBOARD_CONTROL_IGNORE ignore,
                                 float value1, float value2, float value3, float value4)
 {
-  int v1 = (int) value1 * 1000;
-  int v2 = (int) value2 * 1000;
-  int v3 = (int) value3 * 1000;
-  int v4 = (int) value4 * 1000;
+  int v1 = (int) (value1 * 1000);
+  int v2 = (int) (value2 * 1000);
+  int v3 = (int) (value3 * 1000);
+  int v4 = (int) (value4 * 1000);
 
   switch (mode)
   {
@@ -334,6 +345,24 @@ void MavROSflight::handle_message()
       servo_output_raw_callback_(msg.time_usec, msg.port, outputs);
     }
     break;
+  case MAVLINK_MSG_ID_RC_CHANNELS:
+    if(!rc_raw_callback_.empty())
+    {
+      mavlink_rc_channels_raw_t msg;
+      mavlink_msg_rc_channels_raw_decode(&msg_in_, &msg);
+
+      uint16_t rc[8] = {
+        msg.chan1_raw,
+        msg.chan2_raw,
+        msg.chan3_raw,
+        msg.chan4_raw,
+        msg.chan5_raw,
+        msg.chan6_raw,
+        msg.chan7_raw,
+        msg.chan8_raw };
+      rc_raw_callback_(msg.time_boot_ms, msg.port, rc);
+      break;
+    }
   case MAVLINK_MSG_ID_COMMAND_ACK:
     if (!command_ack_callback_.empty())
     {
@@ -359,6 +388,7 @@ void MavROSflight::handle_message()
     }
     break;
   default:
+    ROS_WARN_ONCE("Received unhandled mavlink message (ID = %d)", msg_in_.msgid);
     break;
   }
 }
