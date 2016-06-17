@@ -34,8 +34,8 @@ Joy::Joy() {
   pnh.param<int>("axis_thrust_", axes_.thrust, 1);
   pnh.param<int>("yaw_axis", axes_.yaw, 0);
 
-  pnh.param<int>("x_sign", axes_.roll_direction, -1);
-  pnh.param<int>("y_sign", axes_.pitch_direction, -1);
+  pnh.param<int>("x_sign", axes_.roll_direction, 1);
+  pnh.param<int>("y_sign", axes_.pitch_direction, 1);
   pnh.param<int>("axis_direction_thrust", axes_.thrust_direction, 1);
   pnh.param<int>("yaw_sign", axes_.yaw_direction, -1);
 
@@ -86,9 +86,9 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
     current_joy_ = *msg;
 
     command_msg_.normalized_throttle = 0.5*(msg->axes[axes_.thrust] + 1.0);
-    command_msg_.normalized_roll = -1.0*msg->axes[axes_.roll] * max_.aileron * axes_.roll_direction;
-    command_msg_.normalized_pitch = -1.0*msg->axes[axes_.pitch] * max_.elevator * axes_.pitch_direction;
-    command_msg_.normalized_yaw = msg->axes[axes_.yaw] * max_.rudder * axes_.yaw_direction;
+    command_msg_.normalized_roll = -1.0*msg->axes[axes_.roll] * axes_.roll_direction;
+    command_msg_.normalized_pitch = -1.0*msg->axes[axes_.pitch] * axes_.pitch_direction;
+    command_msg_.normalized_yaw = msg->axes[axes_.yaw] * axes_.yaw_direction;
 
     if(msg->buttons[1] == 1)
     {

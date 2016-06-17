@@ -23,6 +23,7 @@ add_message_files(
   FW_Controller_Commands.msg
   FW_Current_Path.msg
   FW_Waypoint.msg
+  FW_Attitude_Commands.msg
   MR_Controller_Commands.msg
 )
 
@@ -52,8 +53,3 @@ include_directories(${catkin_INCLUDE_DIRS})
 
 add_executable(fcu_common_joy src/joy.cpp)
 target_link_libraries(fcu_common_joy ${catkin_LIBRARIES})
-add_dependencies(fcu_common_joy ${catkin_EXPORTED_TARGETS})
-
-add_executable(fcu_common_gps src/gps.cpp)
-target_link_libraries(fcu_common_gps ${catkin_LIBRARIES})
-add_dependencies(fcu_common_gps ${catkin_EXPORTED_TARGETS})
