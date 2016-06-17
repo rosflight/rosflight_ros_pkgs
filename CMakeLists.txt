@@ -16,11 +16,14 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   GPS.msg
+  ExtendedCommand.msg
+  ServoOutputRaw.msg
   Command.msg
   FW_State.msg
   FW_Controller_Commands.msg
   FW_Current_Path.msg
   FW_Waypoint.msg
+  FW_Attitude_Commands.msg
   MR_Controller_Commands.msg
 )
 
@@ -47,7 +50,6 @@ target_link_libraries(fcu_common ${catkin_LIBRARIES})
 
 include_directories(include)
 include_directories(${catkin_INCLUDE_DIRS})
-
 
 add_executable(fcu_common_joy src/joy.cpp)
 add_dependencies(fcu_common_joy fcu_common_generate_messages_cpp)
