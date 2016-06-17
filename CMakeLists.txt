@@ -16,6 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   GPS.msg
+  ExtendedCommand.msg
+  ServoOutputRaw.msg
   Command.msg
   FW_State.msg
   FW_Controller_Commands.msg
