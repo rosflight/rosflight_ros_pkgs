@@ -70,8 +70,8 @@ public:
 
   // send functions
   void send_param_request_list(uint8_t target_system, uint8_t target_component = MAV_COMP_ID_ALL);
-  void send_param_request_read(uint8_t target_system, uint8_t target_component, const char * name);
-  void send_param_set(uint8_t target_system, uint8_t target_component, const char * name, int32_t value);
+  void send_param_request_read(uint8_t target_system, uint8_t target_component, std::string name);
+  void send_param_set(uint8_t target_system, uint8_t target_component, std::string name, int32_t value);
   void send_param_write(uint8_t target_system, uint8_t target_component = MAV_COMP_ID_ALL);
   void send_command(OFFBOARD_CONTROL_MODE mode,
                     OFFBOARD_CONTROL_IGNORE ignore,
