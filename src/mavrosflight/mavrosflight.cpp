@@ -388,7 +388,7 @@ void MavROSflight::handle_message()
     }
     break;
   default:
-    ROS_ERROR_STREAM("Received unhandled mavlink message ID = "<< msg_in_.msgid);
+    ROS_WARN_ONCE("Received unhandled mavlink message (ID = %d)", msg_in_.msgid);
     break;
   }
 }
