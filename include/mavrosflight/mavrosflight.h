@@ -53,6 +53,9 @@ public:
   void register_imu_callback(boost::function<void (double, double, double, double, double, double)> f);
   void unregister_imu_callback();
 
+  void register_diff_press_callback(boost::function<void (int16_t, int16_t)> f);
+  void unregister_diff_press_callback();
+
   void register_rc_raw_callback(boost::function<void (uint32_t, uint8_t, uint16_t[8])> f);
   void unregister_rc_raw_callback();
 
@@ -173,6 +176,7 @@ private:
   boost::function<void (uint32_t, uint8_t, uint16_t[8])> servo_output_raw_callback_;
   boost::function<void (uint32_t, uint8_t, uint16_t[8])> rc_raw_callback_;
   boost::function<void (uint16_t, uint8_t)> command_ack_callback_;
+  boost::function<void (int16_t, int16_t)> diff_press_callback_;
   boost::function<void (uint32_t, std::string, int32_t)> named_value_int_callback_;
   boost::function<void (uint32_t, std::string, float)> named_value_float_callback_;
 

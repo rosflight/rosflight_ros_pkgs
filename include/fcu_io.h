@@ -14,6 +14,8 @@
 #include <std_msgs/Float32.h>
 #include <std_msgs/Int32.h>
 #include <sensor_msgs/Imu.h>
+#include <sensor_msgs/FluidPressure.h>
+#include <sensor_msgs/Temperature.h>
 #include <std_srvs/Empty.h>
 
 #include <fcu_common/ExtendedCommand.h>
@@ -42,6 +44,7 @@ private:
   void imuCallback(double xacc, double yacc, double zacc, double xgyro, double ygyro, double zgyro);
   void servoOutputRawCallback(uint32_t time_usec, uint8_t port, uint16_t values[8]);
   void rcRawCallback(uint32_t time_usec, uint8_t port, uint16_t values[8]);
+  void diffPressCallback(int16_t diff_pressure, int16_t temperature);
   void commandAckCallback(uint16_t command, uint8_t result);
   void namedValueIntCallback(uint32_t time, std::string name, int32_t value);
   void namedValueFloatCallback(uint32_t time, std::string name, float value);
@@ -60,6 +63,8 @@ private:
   ros::Publisher imu_pub_;
   ros::Publisher servo_output_raw_pub_;
   ros::Publisher rc_raw_pub_;
+  ros::Publisher diff_pressure_pub_;
+  ros::Publisher temperature_pub_;
   std::map<std::string, ros::Publisher> named_value_int_pubs_;
   std::map<std::string, ros::Publisher> named_value_float_pubs_;
 
