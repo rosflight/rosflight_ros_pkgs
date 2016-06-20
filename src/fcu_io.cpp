@@ -77,12 +77,12 @@ bool fcuIO::paramSetSrvCallback(fcu_io::ParamSet::Request &req, fcu_io::ParamSet
 {
   switch (req.param_type)
   {
-    case MAV_PARAM_TYPE_INT32:
-      mavrosflight_->send_param_set(1, MAV_COMP_ID_ALL, req.param_id, req.integer_value);
-      return true;
-    default:
-      ROS_ERROR("Currently only params of type int32 are supported");
-      return false;
+  case MAV_PARAM_TYPE_INT32:
+    mavrosflight_->send_param_set(1, MAV_COMP_ID_ALL, req.param_id, req.integer_value);
+    return true;
+  default:
+    ROS_ERROR("Currently only params of type int32 are supported");
+    return false;
   }
 
 }
@@ -105,35 +105,35 @@ void fcuIO::paramCallback(std::string param_id, float param_value, MAV_PARAM_TYP
 
   switch (param_type)
   {
-    case MAV_PARAM_TYPE_UINT8:
-      uint_value = (uint32_t) (*(uint8_t*) &param_value);
-      have_uint = true;
-      break;
-    case MAV_PARAM_TYPE_UINT16:
-      uint_value = (uint32_t) (*(uint16_t*) &param_value);
-      have_uint = true;
-      break;
-    case MAV_PARAM_TYPE_UINT32:
-      uint_value = *(uint32_t*) &param_value;
-      have_uint = true;
-      break;
-    case MAV_PARAM_TYPE_INT8:
-      int_value = (int32_t) (*(uint8_t*) &param_value);
-      have_int = true;
-      break;
-    case MAV_PARAM_TYPE_INT16:
-      int_value = (int32_t) (*(uint16_t*) &param_value);
-      have_int = true;
-      break;
-    case MAV_PARAM_TYPE_INT32:
-      int_value = *(uint32_t*) &param_value;
-      have_int = true;
-      break;
-    case MAV_PARAM_TYPE_REAL32:
-      have_float = true;
-      break;
-    default:
-      break;
+  case MAV_PARAM_TYPE_UINT8:
+    uint_value = (uint32_t) (*(uint8_t*) &param_value);
+    have_uint = true;
+    break;
+  case MAV_PARAM_TYPE_UINT16:
+    uint_value = (uint32_t) (*(uint16_t*) &param_value);
+    have_uint = true;
+    break;
+  case MAV_PARAM_TYPE_UINT32:
+    uint_value = *(uint32_t*) &param_value;
+    have_uint = true;
+    break;
+  case MAV_PARAM_TYPE_INT8:
+    int_value = (int32_t) (*(uint8_t*) &param_value);
+    have_int = true;
+    break;
+  case MAV_PARAM_TYPE_INT16:
+    int_value = (int32_t) (*(uint16_t*) &param_value);
+    have_int = true;
+    break;
+  case MAV_PARAM_TYPE_INT32:
+    int_value = *(uint32_t*) &param_value;
+    have_int = true;
+    break;
+  case MAV_PARAM_TYPE_REAL32:
+    have_float = true;
+    break;
+  default:
+    break;
   }
 
   if (have_uint)
@@ -218,7 +218,7 @@ void fcuIO::diffPressCallback(int16_t diff_pressure, int16_t temperature)
    */
   double diff_press_PSI = -((diff_pressure - 0.1f*16383) * (P_max-P_min)/(0.8f*16383) + P_min);
   double diff_press_pa_raw = diff_press_PSI * PSI_to_Pa;
-  if(calibration_counter > calibration_count)
+  if (calibration_counter > calibration_count)
   {
     diff_press_pa_raw -= _diff_pres_offset;
     sensor_msgs::FluidPressure pressure_msg;
@@ -226,7 +226,7 @@ void fcuIO::diffPressCallback(int16_t diff_pressure, int16_t temperature)
     pressure_msg.fluid_pressure = diff_press_pa_raw;
     diff_pressure_pub_.publish(pressure_msg);
   }
-  else if(calibration_counter == calibration_count)
+  else if (calibration_counter == calibration_count)
   {
     _diff_pres_offset = _diff_pres_offset/calibration_count;
     calibration_counter++;

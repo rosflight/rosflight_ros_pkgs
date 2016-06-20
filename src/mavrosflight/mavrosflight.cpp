@@ -371,18 +371,18 @@ void MavROSflight::handle_message()
         msg.chan7_raw,
         msg.chan8_raw };
       rc_raw_callback_(msg.time_boot_ms, msg.port, rc);
-    }      
+    }
     break;
   case MAVLINK_MSG_ID_DIFF_PRESSURE:
-      if(!diff_press_callback_.empty())
-      {
-        mavlink_diff_pressure_t msg;
-        mavlink_msg_diff_pressure_decode(&msg_in_, &msg);
-        int16_t diff_press = msg.diff_pressure;
-        int16_t temperature = msg.temperature;
-        diff_press_callback_(msg.diff_pressure, msg.temperature);
-      }
-      break;
+    if(!diff_press_callback_.empty())
+    {
+      mavlink_diff_pressure_t msg;
+      mavlink_msg_diff_pressure_decode(&msg_in_, &msg);
+      int16_t diff_press = msg.diff_pressure;
+      int16_t temperature = msg.temperature;
+      diff_press_callback_(msg.diff_pressure, msg.temperature);
+    }
+    break;
   case MAVLINK_MSG_ID_COMMAND_ACK:
     if (!command_ack_callback_.empty())
     {
