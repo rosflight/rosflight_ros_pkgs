@@ -111,6 +111,16 @@ void MavROSflight::unregister_servo_output_raw_callback()
   servo_output_raw_callback_ = NULL;
 }
 
+void MavROSflight::register_diff_press_callback(boost::function<void (int16_t, int16_t)> f)
+{
+  diff_press_callback_ = f;
+}
+
+void MavROSflight::unregister_diff_press_callback()
+{
+  diff_press_callback_ = NULL;
+}
+
 void MavROSflight::register_command_ack_callback(boost::function<void (uint16_t, uint8_t)> f)
 {
   command_ack_callback_ = f;
@@ -361,8 +371,18 @@ void MavROSflight::handle_message()
         msg.chan7_raw,
         msg.chan8_raw };
       rc_raw_callback_(msg.time_boot_ms, msg.port, rc);
-      break;
     }
+    break;
+  case MAVLINK_MSG_ID_DIFF_PRESSURE:
+    if(!diff_press_callback_.empty())
+    {
+      mavlink_diff_pressure_t msg;
+      mavlink_msg_diff_pressure_decode(&msg_in_, &msg);
+      int16_t diff_press = msg.diff_pressure;
+      int16_t temperature = msg.temperature;
+      diff_press_callback_(msg.diff_pressure, msg.temperature);
+    }
+    break;
   case MAVLINK_MSG_ID_COMMAND_ACK:
     if (!command_ack_callback_.empty())
     {

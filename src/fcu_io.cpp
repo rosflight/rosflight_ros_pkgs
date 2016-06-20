@@ -16,11 +16,13 @@ fcuIO::fcuIO()
 {
   ros::NodeHandle nh;
 
-  command_sub_ = nh.subscribe("command", 1, &fcuIO::commandCallback, this);
+  command_sub_ = nh.subscribe("extended_command", 1, &fcuIO::commandCallback, this);
 
   imu_pub_ = nh.advertise<sensor_msgs::Imu>("imu/data", 1);
-  servo_output_raw_pub_ = nh.advertise<fcu_io::ServoOutputRaw>("servo_output_raw", 1);
-  rc_raw_pub_ = nh.advertise<fcu_io::ServoOutputRaw>("rc_raw", 1);
+  servo_output_raw_pub_ = nh.advertise<fcu_common::ServoOutputRaw>("servo_output_raw", 1);
+  rc_raw_pub_ = nh.advertise<fcu_common::ServoOutputRaw>("rc_raw", 1);
+  diff_pressure_pub_ = nh.advertise<sensor_msgs::FluidPressure>("diff_pressure", 1);
+  temperature_pub_ = nh.advertise<sensor_msgs::Temperature>("temperature", 1);
 
   param_request_list_srv_ = nh.advertiseService("param_request_list", &fcuIO::paramRequestListSrvCallback, this);
   param_request_read_srv_ = nh.advertiseService("param_request_read", &fcuIO::paramRequestReadSrvCallback, this);
@@ -46,6 +48,7 @@ fcuIO::fcuIO()
   mavrosflight_->register_imu_callback(boost::bind(&fcuIO::imuCallback, this, _1, _2, _3, _4, _5, _6));
   mavrosflight_->register_servo_output_raw_callback(boost::bind(&fcuIO::servoOutputRawCallback, this, _1, _2, _3));
   mavrosflight_->register_rc_raw_callback(boost::bind(&fcuIO::rcRawCallback, this, _1, _2, _3));
+  mavrosflight_->register_diff_press_callback(boost::bind(&fcuIO::diffPressCallback, this, _1, _2));
   mavrosflight_->register_command_ack_callback(boost::bind(&fcuIO::commandAckCallback, this, _1, _2));
   mavrosflight_->register_named_value_int_callback(boost::bind(&fcuIO::namedValueIntCallback, this, _1, _2, _3));
   mavrosflight_->register_named_value_float_callback(boost::bind(&fcuIO::namedValueFloatCallback, this, _1, _2, _3));
@@ -165,7 +168,7 @@ void fcuIO::imuCallback(double xacc, double yacc, double zacc, double xgyro, dou
 
 void fcuIO::servoOutputRawCallback(uint32_t time_usec, uint8_t port, uint16_t values[8])
 {
-  fcu_io::ServoOutputRaw msg;
+  fcu_common::ServoOutputRaw msg;
 
   msg.port = port;
   for (int i = 0; i < 8; i++)
@@ -178,7 +181,7 @@ void fcuIO::servoOutputRawCallback(uint32_t time_usec, uint8_t port, uint16_t va
 
 void fcuIO::rcRawCallback(uint32_t time_usec, uint8_t port, uint16_t values[8])
 {
-  fcu_io::ServoOutputRaw msg;
+  fcu_common::ServoOutputRaw msg;
 
   msg.port = port;
   for (int i = 0; i < 8; i++)
@@ -187,6 +190,52 @@ void fcuIO::rcRawCallback(uint32_t time_usec, uint8_t port, uint16_t values[8])
   }
 
   rc_raw_pub_.publish(msg);
+}
+
+void fcuIO::diffPressCallback(int16_t diff_pressure, int16_t temperature)
+{
+  const double P_min = -1.0f;
+  const double P_max = 1.0f;
+  const double PSI_to_Pa = 6894.757f;
+
+  static int calibration_counter = 0;
+  static int calibration_count = 100;
+  static double _diff_pres_offset = 0.0;
+
+  // conversion from pixhawk source code
+  double temp = ((200.0f * temperature) / 2047) - 50;
+  sensor_msgs::Temperature temp_msg;
+  temp_msg.header.stamp = ros::Time::now();
+  temp_msg.temperature = temp;
+  temperature_pub_.publish(temp_msg);
+
+  /*
+   * this equation is an inversion of the equation in the
+   * pressure transfer function figure on page 4 of the datasheet
+   * We negate the result so that positive differential pressures
+   * are generated when the bottom port is used as the static
+   * port on the pitot and top port is used as the dynamic port
+   */
+  double diff_press_PSI = -((diff_pressure - 0.1f*16383) * (P_max-P_min)/(0.8f*16383) + P_min);
+  double diff_press_pa_raw = diff_press_PSI * PSI_to_Pa;
+  if (calibration_counter > calibration_count)
+  {
+    diff_press_pa_raw -= _diff_pres_offset;
+    sensor_msgs::FluidPressure pressure_msg;
+    pressure_msg.header.stamp = ros::Time::now();
+    pressure_msg.fluid_pressure = diff_press_pa_raw;
+    diff_pressure_pub_.publish(pressure_msg);
+  }
+  else if (calibration_counter == calibration_count)
+  {
+    _diff_pres_offset = _diff_pres_offset/calibration_count;
+    calibration_counter++;
+  }
+  else
+  {
+    _diff_pres_offset += diff_press_pa_raw;
+    calibration_counter++;
+  }
 }
 
 void fcuIO::commandAckCallback(uint16_t command, uint8_t result)
@@ -222,7 +271,7 @@ void fcuIO::namedValueFloatCallback(uint32_t time, std::string name, float value
   named_value_float_pubs_[name].publish(msg);
 }
 
-void fcuIO::commandCallback(fcu_io::Command::ConstPtr msg)
+void fcuIO::commandCallback(fcu_common::ExtendedCommand::ConstPtr msg)
 {
   //! \todo these are hard-coded to match right now; may want to replace with something more robust
   OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE) msg->mode;

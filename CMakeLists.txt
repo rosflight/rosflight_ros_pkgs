@@ -2,10 +2,11 @@ cmake_minimum_required(VERSION 2.8.3)
 project(fcu_io)
 
 find_package(catkin REQUIRED COMPONENTS
-  message_generation
   roscpp
+  fcu_common
   sensor_msgs
   std_msgs
+  fcu_common
 )
 
 find_package(Boost REQUIRED COMPONENTS system thread)
@@ -14,22 +15,11 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 ## catkin specific configuration ##
 ###################################
 
-add_message_files(
-  FILES
-  Command.msg
-  ServoOutputRaw.msg
-)
-
 add_service_files(
   FILES
   ParamRequestList.srv
   ParamRequestRead.srv
   ParamSet.srv
-)
-
-generate_messages(
-  DEPENDENCIES
-  std_msgs
 )
 
 catkin_package(
@@ -88,4 +78,3 @@ install(DIRECTORY include/mavrosflight/
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
-
