@@ -17,6 +17,7 @@ using boost::asio::serial_port_base;
 
 MavROSflight::MavROSflight(std::string port, int baud_rate, uint8_t sysid /* = 1 */, uint8_t compid /* = 50 */) :
   serial(port, baud_rate),
+  param(&serial),
   sysid_(sysid),
   compid_(compid)
 {}
