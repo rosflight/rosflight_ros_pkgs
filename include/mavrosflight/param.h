@@ -7,6 +7,7 @@
 #define MAVROSFLIGHT_PARAM_H
 
 #include <mavrosflight/mavlink_bridge.h>
+#include <mavrosflight/mavlink_serial.h>
 
 namespace mavrosflight
 {
@@ -27,25 +28,31 @@ public:
   double getValue();
   bool getSetInProgress();
 
-  void initializeSet(double value);
-  bool confirmSet();
+  void requestSet(double value, mavlink_message_t *msg);
+  bool handleUpdate(const mavlink_param_value_t &msg);
 
 private:
   void init(std::string name, int index, MAV_PARAM_TYPE type, float raw_value);
 
+  void setFromRawValue(float raw_value);
+  float getRawValue();
+  float getRawValue(double value);
+
   template<typename T>
-  double fromParamValue(float value)
+  double fromRawValue(float value)
   {
     T t_value = *(T*) &value;
     return (double) t_value;
   }
 
   template<typename T>
-  float toParamValue(double value)
+  float toRawValue(double value)
   {
     T t_value = (T) value;
     return *(float*) &t_value;
   }
+
+  MavlinkSerial *serial_;
 
   std::string name_;
   int index_;
@@ -53,7 +60,8 @@ private:
   double value_;
 
   bool set_in_progress_;
-  float requested_value_;
+  double new_value_;
+  float expected_raw_value_;
 };
 
 } // namespace mavrosflight

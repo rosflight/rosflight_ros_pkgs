@@ -16,13 +16,12 @@
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/FluidPressure.h>
 #include <sensor_msgs/Temperature.h>
-#include <std_srvs/Empty.h>
+#include <std_srvs/Trigger.h>
 
 #include <fcu_common/ExtendedCommand.h>
 #include <fcu_common/ServoOutputRaw.h>
 
-#include <fcu_io/ParamRequestList.h>
-#include <fcu_io/ParamRequestRead.h>
+#include <fcu_io/ParamGet.h>
 #include <fcu_io/ParamSet.h>
 
 #include <mavrosflight/mavrosflight.h>
@@ -55,10 +54,9 @@ private:
   void commandCallback(fcu_common::ExtendedCommand::ConstPtr msg);
 
   // ROS service callbacks
-  bool paramRequestListSrvCallback(fcu_io::ParamRequestList::Request &req, fcu_io::ParamRequestList::Response &res);
-  bool paramRequestReadSrvCallback(fcu_io::ParamRequestRead::Request &req, fcu_io::ParamRequestRead::Response &res);
+  bool paramGetSrvCallback(fcu_io::ParamGet::Request &req, fcu_io::ParamGet::Response &res);
   bool paramSetSrvCallback(fcu_io::ParamSet::Request &req, fcu_io::ParamSet::Response &res);
-  bool paramWriteSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+  bool paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
 
   ros::Subscriber command_sub_;
 
@@ -70,8 +68,7 @@ private:
   std::map<std::string, ros::Publisher> named_value_int_pubs_;
   std::map<std::string, ros::Publisher> named_value_float_pubs_;
 
-  ros::ServiceServer param_request_list_srv_;
-  ros::ServiceServer param_request_read_srv_;
+  ros::ServiceServer param_get_srv_;
   ros::ServiceServer param_set_srv_;
   ros::ServiceServer param_write_srv_;
 

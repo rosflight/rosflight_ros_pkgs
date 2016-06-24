@@ -1,3 +1,8 @@
+/**
+ * \file param_manager.h
+ * \author Daniel Koch <daniel.koch@byu.edu>
+ */
+
 #ifndef MAVROSFLIGHT_PARAM_MANAGER_H
 #define MAVROSFLIGHT_PARAM_MANAGER_H
 
@@ -20,15 +25,18 @@ public:
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
 
-  bool is_param_id(std::string name);
   bool unsaved_changes();
 
-  void handle_param_value_msg(const mavlink_message_t &msg);
-  void handle_command_ack_msg(const mavlink_message_t &msg);
+  bool get_param_value(std::string name, double *value);
   bool set_param_value(std::string name, double value);
-  void write_params();
+  bool write_params();
 
 private:
+  void handle_param_value_msg(const mavlink_message_t &msg);
+  void handle_command_ack_msg(const mavlink_message_t &msg);
+
+  bool is_param_id(std::string name);
+
   MavlinkSerial *serial_;
   std::map<std::string, Param> params_;
 

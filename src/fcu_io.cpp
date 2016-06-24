@@ -24,8 +24,7 @@ fcuIO::fcuIO()
   diff_pressure_pub_ = nh.advertise<sensor_msgs::FluidPressure>("diff_pressure", 1);
   temperature_pub_ = nh.advertise<sensor_msgs::Temperature>("temperature", 1);
 
-  param_request_list_srv_ = nh.advertiseService("param_request_list", &fcuIO::paramRequestListSrvCallback, this);
-  param_request_read_srv_ = nh.advertiseService("param_request_read", &fcuIO::paramRequestReadSrvCallback, this);
+  param_get_srv_ = nh.advertiseService("param_get", &fcuIO::paramGetSrvCallback, this);
   param_set_srv_ = nh.advertiseService("param_set", &fcuIO::paramSetSrvCallback, this);
   param_write_srv_ = nh.advertiseService("param_write", &fcuIO::paramWriteSrvCallback, this);
 
@@ -322,34 +321,26 @@ void fcuIO::commandCallback(fcu_common::ExtendedCommand::ConstPtr msg)
   mavrosflight_->send_command(mode, ignore, msg->value1, msg->value2, msg->value3, msg->value4);
 }
 
-bool fcuIO::paramRequestListSrvCallback(fcu_io::ParamRequestList::Request &req, fcu_io::ParamRequestList::Response &res)
+bool fcuIO::paramGetSrvCallback(fcu_io::ParamGet::Request &req, fcu_io::ParamGet::Response &res)
 {
-  mavrosflight_->send_param_request_list(1);
-  return true;
-}
-
-bool fcuIO::paramRequestReadSrvCallback(ParamRequestRead::Request &req, ParamRequestRead::Response &res)
-{
-  mavrosflight_->send_param_request_read(1, MAV_COMP_ID_ALL, req.param_id);
+  res.exists = mavrosflight_->param.get_param_value(req.name, &res.value);
   return true;
 }
 
 bool fcuIO::paramSetSrvCallback(fcu_io::ParamSet::Request &req, fcu_io::ParamSet::Response &res)
 {
-  switch (req.param_type)
-  {
-  case MAV_PARAM_TYPE_INT32:
-    mavrosflight_->send_param_set(1, MAV_COMP_ID_ALL, req.param_id, req.integer_value);
-    return true;
-  default:
-    ROS_ERROR("Currently only params of type int32 are supported");
-    return false;
-  }
+  res.exists = mavrosflight_->param.set_param_value(req.name, req.value);
+  return true;
 }
 
-bool fcuIO::paramWriteSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
+bool fcuIO::paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
-  mavrosflight_->send_param_write(1);
+  res.success = mavrosflight_->param.write_params();
+  if (!res.success)
+  {
+    res.message = "Request rejected: write already in progress";
+  }
+
   return true;
 }
 

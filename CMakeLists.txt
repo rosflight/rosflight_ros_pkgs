@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 2.8.3)
 project(fcu_io)
 
 find_package(catkin REQUIRED COMPONENTS
+  fcu_common
   message_generation
   roscpp
   sensor_msgs
   std_msgs
-  fcu_common
 )
 
 find_package(Boost REQUIRED COMPONENTS system thread)
@@ -23,8 +23,7 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 
 add_service_files(
   FILES
-  ParamRequestList.srv
-  ParamRequestRead.srv
+  ParamGet.srv
   ParamSet.srv
 )
 
