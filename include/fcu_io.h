@@ -30,24 +30,26 @@
 namespace fcu_io
 {
 
-class fcuIO
+class fcuIO : public mavrosflight::MavlinkListenerInterface
 {
 public:
   fcuIO();
   ~fcuIO();
 
+  virtual void handle_mavlink_message(const mavlink_message_t &msg);
+
 private:
 
-  // mavrosflight callbacks
-  void paramCallback(std::string param_id, float param_value, MAV_PARAM_TYPE param_type);
-  void heartbeatCallback();
-  void imuCallback(double xacc, double yacc, double zacc, double xgyro, double ygyro, double zgyro);
-  void servoOutputRawCallback(uint32_t time_usec, uint8_t port, uint16_t values[8]);
-  void rcRawCallback(uint32_t time_usec, uint8_t port, uint16_t values[8]);
-  void diffPressCallback(int16_t diff_pressure, int16_t temperature);
-  void commandAckCallback(uint16_t command, uint8_t result);
-  void namedValueIntCallback(uint32_t time, std::string name, int32_t value);
-  void namedValueFloatCallback(uint32_t time, std::string name, float value);
+  // handle mavlink messages
+  void handle_heartbeat_msg();
+  void handle_param_value_msg(const mavlink_message_t &msg);
+  void handle_small_imu_msg(const mavlink_message_t &msg);
+  void handle_servo_output_raw_msg(const mavlink_message_t &msg);
+  void handle_rc_channels_raw_msg(const mavlink_message_t &msg);
+  void handle_diff_pressure_msg(const mavlink_message_t &msg);
+  void handle_command_ack_msg(const mavlink_message_t &msg);
+  void handle_named_value_int_msg(const mavlink_message_t &msg);
+  void handle_named_value_float_msg(const mavlink_message_t &msg);
 
   // ROS message callbacks
   void commandCallback(fcu_common::ExtendedCommand::ConstPtr msg);

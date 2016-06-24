@@ -53,6 +53,7 @@ include_directories(
 # mavrosflight library
 add_library(mavrosflight
   src/mavrosflight/mavrosflight.cpp
+  src/mavrosflight/mavlink_serial.cpp
 )
 add_dependencies(mavrosflight ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(mavrosflight
