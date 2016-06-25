@@ -18,6 +18,7 @@ fcuIO::fcuIO()
 
   command_sub_ = nh.subscribe("extended_command", 1, &fcuIO::commandCallback, this);
 
+  unsaved_params_pub_ = nh.advertise<std_msgs::Bool>("unsaved_params", 1, true);
   imu_pub_ = nh.advertise<sensor_msgs::Imu>("imu/data", 1);
   servo_output_raw_pub_ = nh.advertise<fcu_common::ServoOutputRaw>("servo_output_raw", 1);
   rc_raw_pub_ = nh.advertise<fcu_common::ServoOutputRaw>("rc_raw", 1);
@@ -43,8 +44,13 @@ fcuIO::fcuIO()
   }
 
   mavrosflight_->serial.register_mavlink_listener(this);
+  mavrosflight_->param.register_param_listener(this);
 
-  mavrosflight_->send_param_request_list(1);
+  std_msgs::Bool unsaved_msg;
+  unsaved_msg.data = false;
+  unsaved_params_pub_.publish(unsaved_msg);
+
+//  mavrosflight_->send_param_request_list(1);
 }
 
 fcuIO::~fcuIO()
@@ -58,9 +64,6 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
   {
   case MAVLINK_MSG_ID_HEARTBEAT:
     handle_heartbeat_msg();
-    break;
-  case MAVLINK_MSG_ID_PARAM_VALUE:
-    handle_param_value_msg(msg);
     break;
   case MAVLINK_MSG_ID_SMALL_IMU:
     handle_small_imu_msg(msg);
@@ -89,68 +92,35 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
   }
 }
 
+void fcuIO::on_new_param_received(std::string name, double value)
+{
+  ROS_INFO("Got parameter %s with value %g", name.c_str(), value);
+}
+
+void fcuIO::on_param_value_updated(std::string name, double value)
+{
+  ROS_INFO("Parameter %s has new value %g", name.c_str(), value);
+}
+
+void fcuIO::on_params_saved_change(bool unsaved_changes)
+{
+  std_msgs::Bool msg;
+  msg.data = unsaved_changes;
+  unsaved_params_pub_.publish(msg);
+
+  if (unsaved_changes)
+  {
+    ROS_WARN("There are unsaved changes to onboard parameters");
+  }
+  else
+  {
+    ROS_INFO("Onboard parameters have been saved");
+  }
+}
+
 void fcuIO::handle_heartbeat_msg()
 {
   ROS_INFO_ONCE("Got HEARTBEAT, connected.");
-}
-
-void fcuIO::handle_param_value_msg(const mavlink_message_t &msg)
-{
-  mavlink_param_value_t param;
-  mavlink_msg_param_value_decode(&msg, &param);
-
-  bool have_uint(false);
-  uint32_t uint_value;
-
-  bool have_int(false);
-  int32_t int_value;
-
-  bool have_float(false);
-
-  switch (param.param_type)
-  {
-  case MAV_PARAM_TYPE_UINT8:
-    uint_value = (uint32_t) (*(uint8_t*) &param.param_value);
-    have_uint = true;
-    break;
-  case MAV_PARAM_TYPE_UINT16:
-    uint_value = (uint32_t) (*(uint16_t*) &param.param_value);
-    have_uint = true;
-    break;
-  case MAV_PARAM_TYPE_UINT32:
-    uint_value = *(uint32_t*) &param.param_value;
-    have_uint = true;
-    break;
-  case MAV_PARAM_TYPE_INT8:
-    int_value = (int32_t) (*(uint8_t*) &param.param_value);
-    have_int = true;
-    break;
-  case MAV_PARAM_TYPE_INT16:
-    int_value = (int32_t) (*(uint16_t*) &param.param_value);
-    have_int = true;
-    break;
-  case MAV_PARAM_TYPE_INT32:
-    int_value = *(uint32_t*) &param.param_value;
-    have_int = true;
-    break;
-  case MAV_PARAM_TYPE_REAL32:
-    have_float = true;
-    break;
-  default:
-    break;
-  }
-
-  // ensure null termination on param name
-  char param_id[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN + 1];
-  memcpy(param_id, param.param_id, MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN);
-  param_id[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN] = '\0';
-
-  if (have_uint)
-    ROS_INFO("Got parameter %s with value %u", param_id, uint_value);
-  else if (have_int)
-    ROS_INFO("Got parameter %s with value %d", param_id, int_value);
-  else if (have_float)
-    ROS_INFO("Got parameter %s with value %f", param_id, param.param_value);
 }
 
 void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)

@@ -10,9 +10,11 @@
 #include <mavrosflight/mavlink_listener_interface.h>
 #include <mavrosflight/mavlink_serial.h>
 #include <mavrosflight/param.h>
+#include <mavrosflight/param_listener_interface.h>
 
-#include <string>
 #include <map>
+#include <string>
+#include <vector>
 
 namespace mavrosflight
 {
@@ -31,11 +33,16 @@ public:
   bool set_param_value(std::string name, double value);
   bool write_params();
 
+  void register_param_listener(ParamListenerInterface *listener);
+  void unregister_param_listener(ParamListenerInterface *listener);
+
 private:
   void handle_param_value_msg(const mavlink_message_t &msg);
   void handle_command_ack_msg(const mavlink_message_t &msg);
 
   bool is_param_id(std::string name);
+
+  std::vector<ParamListenerInterface*> listeners_;
 
   MavlinkSerial *serial_;
   std::map<std::string, Param> params_;

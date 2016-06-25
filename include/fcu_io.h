@@ -11,6 +11,7 @@
 
 #include <ros/ros.h>
 
+#include <std_msgs/Bool.h>
 #include <std_msgs/Float32.h>
 #include <std_msgs/Int32.h>
 #include <sensor_msgs/Imu.h>
@@ -25,11 +26,15 @@
 #include <fcu_io/ParamSet.h>
 
 #include <mavrosflight/mavrosflight.h>
+#include <mavrosflight/mavlink_listener_interface.h>
+#include <mavrosflight/param_listener_interface.h>
 
 namespace fcu_io
 {
 
-class fcuIO : public mavrosflight::MavlinkListenerInterface
+class fcuIO :
+    public mavrosflight::MavlinkListenerInterface,
+    public mavrosflight::ParamListenerInterface
 {
 public:
   fcuIO();
@@ -37,11 +42,14 @@ public:
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
 
+  virtual void on_new_param_received(std::string name, double value);
+  virtual void on_param_value_updated(std::string name, double value);
+  virtual void on_params_saved_change(bool unsaved_changes);
+
 private:
 
   // handle mavlink messages
   void handle_heartbeat_msg();
-  void handle_param_value_msg(const mavlink_message_t &msg);
   void handle_small_imu_msg(const mavlink_message_t &msg);
   void handle_servo_output_raw_msg(const mavlink_message_t &msg);
   void handle_rc_channels_raw_msg(const mavlink_message_t &msg);
@@ -60,6 +68,7 @@ private:
 
   ros::Subscriber command_sub_;
 
+  ros::Publisher unsaved_params_pub_;
   ros::Publisher imu_pub_;
   ros::Publisher servo_output_raw_pub_;
   ros::Publisher rc_raw_pub_;

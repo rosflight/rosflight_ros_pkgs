@@ -4,7 +4,7 @@
  */
 
 #include <mavrosflight/param_manager.h>
-
+#include <ros/ros.h>
 namespace mavrosflight
 {
 
@@ -17,6 +17,10 @@ ParamManager::ParamManager(MavlinkSerial * const serial) :
   initialized_(false)
 {
   serial_->register_mavlink_listener(this);
+
+  mavlink_message_t param_list_msg;
+  mavlink_msg_param_request_list_pack(1, 50, &param_list_msg, 1, MAV_COMP_ID_ALL);
+  serial_->send_message(param_list_msg);
 }
 
 ParamManager::~ParamManager()
@@ -95,8 +99,43 @@ bool ParamManager::write_params()
   }
 }
 
+void ParamManager::register_param_listener(ParamListenerInterface *listener)
+{
+  if (listener == NULL)
+    return;
+
+  bool already_registered = false;
+  for (int i = 0; i < listeners_.size(); i++)
+  {
+    if (listener == listeners_[i])
+    {
+      already_registered = true;
+      break;
+    }
+  }
+
+  if (!already_registered)
+    listeners_.push_back(listener);
+}
+
+void ParamManager::unregister_param_listener(ParamListenerInterface *listener)
+{
+  if (listener == NULL)
+    return;
+
+  for (int i = 0; i < listeners_.size(); i++)
+  {
+    if (listener == listeners_[i])
+    {
+      listeners_.erase(listeners_.begin() + i);
+      i--;
+    }
+  }
+}
+
 void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
 {
+  ROS_INFO("Here");
   mavlink_param_value_t param;
   mavlink_msg_param_value_decode(&msg, &param);
 
@@ -117,11 +156,21 @@ void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
   {
     params_[name] = Param(param);
     received_[param.param_index] = true; //! \todo Implement check that all parameters have been received
+
+    for (int i = 0; i < listeners_.size(); i++)
+      listeners_[i]->on_new_param_received(name, params_[name].getValue());
   }
   else // otherwise check if we have new unsaved changes as a result of a param set request
   {
     if (params_[name].handleUpdate(param))
+    {
       unsaved_changes_ = true;
+      for (int i = 0; i < listeners_.size(); i++)
+      {
+        listeners_[i]->on_param_value_updated(name, params_[name].getValue());
+        listeners_[i]->on_params_saved_change(unsaved_changes_);
+      }
+    }
   }
 }
 
@@ -136,6 +185,9 @@ void ParamManager::handle_command_ack_msg(const mavlink_message_t &msg)
     {
       write_request_in_progress_ = false;
       unsaved_changes_ = false;
+
+      for (int i = 0; i < listeners_.size(); i++)
+        listeners_[i]->on_params_saved_change(unsaved_changes_);
     }
   }
 }
