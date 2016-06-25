@@ -49,8 +49,6 @@ fcuIO::fcuIO()
   std_msgs::Bool unsaved_msg;
   unsaved_msg.data = false;
   unsaved_params_pub_.publish(unsaved_msg);
-
-//  mavrosflight_->send_param_request_list(1);
 }
 
 fcuIO::~fcuIO()
@@ -77,17 +75,11 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
   case MAVLINK_MSG_ID_DIFF_PRESSURE:
     handle_diff_pressure_msg(msg);
     break;
-  case MAVLINK_MSG_ID_COMMAND_ACK:
-    handle_command_ack_msg(msg);
-    break;
   case MAVLINK_MSG_ID_NAMED_VALUE_INT:
     handle_named_value_int_msg(msg);
     break;
   case MAVLINK_MSG_ID_NAMED_VALUE_FLOAT:
     handle_named_value_float_msg(msg);
-    break;
-  default:
-    ROS_WARN_ONCE("Received unhandled mavlink message (ID = %d)", msg.msgid);
     break;
   }
 }
@@ -238,14 +230,6 @@ void fcuIO::handle_diff_pressure_msg(const mavlink_message_t &msg)
   }
 }
 
-void fcuIO::handle_command_ack_msg(const mavlink_message_t &msg)
-{
-  mavlink_command_ack_t ack;
-  mavlink_msg_command_ack_decode(&msg, &ack);
-
-  ROS_INFO("Acknowledged command %d with result %d", ack.command, ack.result);
-}
-
 void fcuIO::handle_named_value_int_msg(const mavlink_message_t &msg)
 {
   mavlink_named_value_int_t val;
@@ -288,7 +272,31 @@ void fcuIO::commandCallback(fcu_common::ExtendedCommand::ConstPtr msg)
   OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE) msg->mode;
   OFFBOARD_CONTROL_IGNORE ignore = (OFFBOARD_CONTROL_IGNORE) msg->ignore;
 
-  mavrosflight_->send_command(mode, ignore, msg->value1, msg->value2, msg->value3, msg->value4);
+  int v1 = (int) (msg->value1 * 1000);
+  int v2 = (int) (msg->value2 * 1000);
+  int v3 = (int) (msg->value3 * 1000);
+  int v4 = (int) (msg->value4 * 1000);
+
+  switch (mode)
+  {
+  case MODE_PASS_THROUGH:
+    v1 = saturate(v1, -1000, 1000);
+    v2 = saturate(v2, -1000, 1000);
+    v3 = saturate(v3, -1000, 1000);
+    v4 = saturate(v4, -1000, 1000);
+    break;
+  case MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
+  case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
+    v4 = saturate(v4, 0, 1000);
+    break;
+  case MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
+    break;
+  }
+
+  mavlink_message_t mavlink_msg;
+  mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg,
+                                    mode, ignore, (int16_t)v1, (int16_t)v2, (int16_t)v3, (int16_t)v4);
+  mavrosflight_->serial.send_message(mavlink_msg);
 }
 
 bool fcuIO::paramGetSrvCallback(fcu_io::ParamGet::Request &req, fcu_io::ParamGet::Response &res)

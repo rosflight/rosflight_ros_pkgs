@@ -4,7 +4,7 @@
  */
 
 #include <mavrosflight/param_manager.h>
-#include <ros/ros.h>
+
 namespace mavrosflight
 {
 
@@ -17,10 +17,7 @@ ParamManager::ParamManager(MavlinkSerial * const serial) :
   initialized_(false)
 {
   serial_->register_mavlink_listener(this);
-
-  mavlink_message_t param_list_msg;
-  mavlink_msg_param_request_list_pack(1, 50, &param_list_msg, 1, MAV_COMP_ID_ALL);
-  serial_->send_message(param_list_msg);
+  request_param_list();
 }
 
 ParamManager::~ParamManager()
@@ -133,9 +130,15 @@ void ParamManager::unregister_param_listener(ParamListenerInterface *listener)
   }
 }
 
+void ParamManager::request_param_list()
+{
+  mavlink_message_t param_list_msg;
+  mavlink_msg_param_request_list_pack(1, 50, &param_list_msg, 1, MAV_COMP_ID_ALL);
+  serial_->send_message(param_list_msg);
+}
+
 void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
 {
-  ROS_INFO("Here");
   mavlink_param_value_t param;
   mavlink_msg_param_value_decode(&msg, &param);
 

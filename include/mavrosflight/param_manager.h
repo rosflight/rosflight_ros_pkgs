@@ -37,6 +37,8 @@ public:
   void unregister_param_listener(ParamListenerInterface *listener);
 
 private:
+  void request_param_list();
+
   void handle_param_value_msg(const mavlink_message_t &msg);
   void handle_command_ack_msg(const mavlink_message_t &msg);
 
