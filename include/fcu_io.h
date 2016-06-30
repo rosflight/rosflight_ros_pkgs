@@ -76,6 +76,7 @@ private:
 
   ros::Publisher unsaved_params_pub_;
   ros::Publisher imu_pub_;
+  ros::Publisher imu_temp_pub_;
   ros::Publisher servo_output_raw_pub_;
   ros::Publisher rc_raw_pub_;
   ros::Publisher diff_pressure_pub_;
@@ -89,9 +90,14 @@ private:
   ros::ServiceServer param_write_srv_;
 
   mavrosflight::MavROSflight* mavrosflight_;
+//<<<<<<< HEAD
 
-  double start_time_;
-  double temperature_;
+//  double start_time_;
+//  double temperature_;
+//=======
+  mavrosflight::sensors::DifferentialPressure diff_pressure_;
+  mavrosflight::sensors::Imu imu_;
+//>>>>>>> master
 };
 
 } // namespace fcu_io

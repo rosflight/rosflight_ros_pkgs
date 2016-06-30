@@ -22,6 +22,7 @@ fcuIO::fcuIO()
 
   unsaved_params_pub_ = nh.advertise<std_msgs::Bool>("unsaved_params", 1, true);
   imu_pub_ = nh.advertise<sensor_msgs::Imu>("imu/data", 1);
+  imu_temp_pub_ = nh.advertise<sensor_msgs::Temperature>("imu/temperature", 1);
   servo_output_raw_pub_ = nh.advertise<fcu_common::ServoOutputRaw>("servo_output_raw", 1);
   rc_raw_pub_ = nh.advertise<fcu_common::ServoOutputRaw>("rc_raw", 1);
   diff_pressure_pub_ = nh.advertise<sensor_msgs::FluidPressure>("diff_pressure", 1);
@@ -54,7 +55,7 @@ fcuIO::fcuIO()
   unsaved_msg.data = false;
   unsaved_params_pub_.publish(unsaved_msg);
 
-  start_time_ = ros::Time::now().toSec();
+//  start_time_ = ros::Time::now().toSec();
 }
 
 fcuIO::~fcuIO()
@@ -89,6 +90,13 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
       break;
     case MAVLINK_MSG_ID_SMALL_BARO:
       handle_small_baro_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_TIMESYNC: // <-- This is handled by the time_manager
+      break;
+    case MAVLINK_MSG_ID_PARAM_VALUE: // <-- This is handled by the param_manager
+      break;
+    default:
+      ROS_ERROR("fcu_io:Got unsupported message ID %d", msg.msgid);
       break;
   }
 }
@@ -126,82 +134,35 @@ void fcuIO::handle_heartbeat_msg()
 
 void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
 {
+  static bool calibrated = false;
   mavlink_small_imu_t imu;
   mavlink_msg_small_imu_decode(&msg, &imu);
-  double now = ros::Time::now().toSec() - start_time_;
-  static bool calibrated = false;
 
-  // read temperature of accel chip for temperature compensation calibration
-  double temperature = ((float)imu.temp/340.0 + 36.53);
+  sensor_msgs::Imu imu_msg;
+  imu_msg.header.stamp = mavrosflight_->time.get_ros_time_us(imu.time_boot_us);
 
-  static double calibration_time = 5.0; // seconds to record data for temperature compensation
-  static double deltaT = 1.0; // number of degrees required for a temperature calibration
+  sensor_msgs::Temperature temp_msg;
+  temp_msg.header.stamp = imu_msg.header.stamp;
 
-  static double Tmin = 1000; // minimum temperature seen
-  static double Tmax = -1000; // maximum temperature seen
-
-  // one for each accel axis
-  static std::deque<Eigen::Vector3d> A(0);
-  static std::deque<double> B(0);
-  static Eigen::Vector2d x[3];
-
-  // if still in calibration mode
-  if(now < calibration_time || (Tmax - Tmin) < deltaT)
+  // This is so we can eventually make calibrating the IMU an external service
+  if(!calibrated)
   {
-    ROS_INFO("IMU CALIBRATING, time %f, deltaT %f", now, Tmax-Tmin);
-    Eigen::Vector3d measurement;
-    measurement << imu.xacc, imu.yacc, imu.zacc - 4096; // need a better way to know the z-axis offset
-    A.push_back(measurement);
-    B.push_back(temperature);
-    if(temperature < Tmin)
-    {
-      Tmin = temperature;
-    }
-    if(temperature > Tmax)
-    {
-      Tmax = temperature;
-    }
+    calibrated = imu_.calibrate(imu);
   }
-  else if(!calibrated)
+
+  bool valid = imu_.correct(imu,
+                            &imu_msg.linear_acceleration.x,
+                            &imu_msg.linear_acceleration.y,
+                            &imu_msg.linear_acceleration.z,
+                            &imu_msg.angular_velocity.x,
+                            &imu_msg.angular_velocity.y,
+                            &imu_msg.angular_velocity.z,
+                            &temp_msg.temperature);
+
+  if (valid)
   {
-    ROS_INFO("IMU DONE CALIBRATING, current time = %f, start = %f", now, calibration_time);
-    for(int i = 0; i < 3; i++)
-    {
-      Eigen::MatrixX2d Amat;
-      Eigen::VectorXd Bmat;
-      Amat.resize(A.size(),2);
-      Bmat.resize(B.size());
-
-      // put the data into and Eigen Matrix for linear algebra
-      for(int j = 0; j<A.size(); j++)
-      {
-        Amat(j,0) = A[j](i);
-        Amat(j,1) = 1.0;
-        Bmat(j) = B[j];
-      }
-
-      // Perform Least-Squares on the data
-      x[i] = Amat.jacobiSvd(Eigen::ComputeFullU | Eigen::ComputeFullV).solve(Bmat);
-    }
-    calibrated = true;
-  }
-  else
-  {
-    sensor_msgs::Imu out_msg;
-
-    out_msg.header.stamp = ros::Time::now(); //! \todo time synchronization
-
-    float accel_scale = 0.002349f;
-    out_msg.linear_acceleration.x = (imu.xacc - (temperature)*x[0](0) - x[0](1)) * accel_scale;
-    out_msg.linear_acceleration.y = (imu.yacc - (temperature)*x[1](0) - x[1](1)) * accel_scale;
-    out_msg.linear_acceleration.z = (imu.zacc - (temperature)*x[2](0) - x[2](1)) * accel_scale;
-
-    float gyro_scale = .004256f;
-    out_msg.angular_velocity.x = imu.xgyro * gyro_scale;
-    out_msg.angular_velocity.y = imu.ygyro * gyro_scale;
-    out_msg.angular_velocity.z = imu.zgyro * gyro_scale;
-
-    imu_pub_.publish(out_msg);
+    imu_pub_.publish(imu_msg);
+    imu_temp_pub_.publish(temp_msg);
   }
 }
 
@@ -211,7 +172,7 @@ void fcuIO::handle_servo_output_raw_msg(const mavlink_message_t &msg)
   mavlink_msg_servo_output_raw_decode(&msg, &servo);
 
   fcu_common::ServoOutputRaw out_msg;
-  out_msg.header.stamp = ros::Time::now(); //! \todo time synchronization
+  out_msg.header.stamp = mavrosflight_->time.get_ros_time_us(servo.time_usec);
   out_msg.port = servo.port;
 
   out_msg.values[0] = servo.servo1_raw;
@@ -232,7 +193,7 @@ void fcuIO::handle_rc_channels_raw_msg(const mavlink_message_t &msg)
   mavlink_msg_rc_channels_raw_decode(&msg, &rc);
 
   fcu_common::ServoOutputRaw out_msg;
-  out_msg.header.stamp = ros::Time::now();
+  out_msg.header.stamp = mavrosflight_->time.get_ros_time_ms(rc.time_boot_ms);
   out_msg.port = rc.port;
 
   out_msg.values[0] = rc.chan1_raw;
@@ -252,49 +213,20 @@ void fcuIO::handle_diff_pressure_msg(const mavlink_message_t &msg)
   mavlink_diff_pressure_t diff;
   mavlink_msg_diff_pressure_decode(&msg, &diff);
 
-  const double P_min = -1.0f;
-  const double P_max = 1.0f;
-  const double PSI_to_Pa = 6894.757f;
-
-  static int calibration_counter = 0;
-  static int calibration_count = 100;
-  static double _diff_pres_offset = 0.0;
-
-  // conversion from pixhawk source code
-  double temp = ((200.0f * diff.temperature) / 2047) - 50;
-
   sensor_msgs::Temperature temp_msg;
-  temp_msg.header.stamp = ros::Time::now();
-  temp_msg.temperature = temp;
-  temperature_pub_.publish(temp_msg);
+  temp_msg.header.stamp = ros::Time::now(); //! \todo time synchronization
 
-  /*
-   * this equation is an inversion of the equation in the
-   * pressure transfer function figure on page 4 of the datasheet
-   * We negate the result so that positive differential pressures
-   * are generated when the bottom port is used as the static
-   * port on the pitot and top port is used as the dynamic port
-   */
-  double diff_press_PSI = -((diff.diff_pressure - 0.1f*16383) * (P_max-P_min)/(0.8f*16383) + P_min);
-  double diff_press_pa_raw = diff_press_PSI * PSI_to_Pa;
-  if (calibration_counter > calibration_count)
+  sensor_msgs::FluidPressure pressure_msg;
+  pressure_msg.header.stamp = ros::Time::now(); //! \todo time synchronization
+
+  bool valid = diff_pressure_.correct(diff,
+                                               &pressure_msg.fluid_pressure,
+                                               &temp_msg.temperature);
+
+  if (valid)
   {
-    diff_press_pa_raw -= _diff_pres_offset;
-
-    sensor_msgs::FluidPressure pressure_msg;
-    pressure_msg.header.stamp = ros::Time::now();
-    pressure_msg.fluid_pressure = diff_press_pa_raw;
+    temperature_pub_.publish(temp_msg);
     diff_pressure_pub_.publish(pressure_msg);
-  }
-  else if (calibration_counter == calibration_count)
-  {
-    _diff_pres_offset = _diff_pres_offset/calibration_count;
-    calibration_counter++;
-  }
-  else
-  {
-    _diff_pres_offset += diff_press_pa_raw;
-    calibration_counter++;
   }
 }
 
