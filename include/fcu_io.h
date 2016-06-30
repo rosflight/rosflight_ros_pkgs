@@ -89,6 +89,9 @@ private:
   ros::ServiceServer param_write_srv_;
 
   mavrosflight::MavROSflight* mavrosflight_;
+
+  double start_time_;
+  double temperature_;
 };
 
 } // namespace fcu_io

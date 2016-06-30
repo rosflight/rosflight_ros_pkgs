@@ -6,6 +6,8 @@
 #include <mavrosflight/serial_exception.h>
 #include <string>
 #include <stdint.h>
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Dense>
 
 #include "fcu_io.h"
 
@@ -34,6 +36,7 @@ fcuIO::fcuIO()
   std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
   int baud_rate = nh_private.param<int>("baud_rate", 115200);
 
+
   try
   {
     mavrosflight_ = new mavrosflight::MavROSflight(port, baud_rate);
@@ -50,6 +53,8 @@ fcuIO::fcuIO()
   std_msgs::Bool unsaved_msg;
   unsaved_msg.data = false;
   unsaved_params_pub_.publish(unsaved_msg);
+
+  start_time_ = ros::Time::now().toSec();
 }
 
 fcuIO::~fcuIO()
@@ -122,16 +127,68 @@ void fcuIO::handle_heartbeat_msg()
 void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
 {
   mavlink_small_imu_t imu;
-  mavlink_msg_small_imu_decode(&msg, &imu);https://github.com/simondlevy/
+  mavlink_msg_small_imu_decode(&msg, &imu);
+  double now = ros::Time::now().toSec() - start_time_;
+  static bool calibrated = false;
 
-    sensor_msgs::Imu out_msg;
+  static double calibration_time = 5.0; // seconds to record data for temperature compensation
+  static double deltaT = 1.0; // number of degrees required for a temperature calibration
+
+  static double Tmin = 1000; // minimum temperature seen
+  static double Tmax = -1000; // maximum temperature seen
+
+  // one for each accel axis
+  static std::deque<Eigen::Vector3d> A(0);
+  static std::deque<double> B(0);
+  static Eigen::Vector2d x[3];
+
+  // if still in calibration mode
+  if(now < calibration_time && (Tmax - Tmin) > deltaT && !calibrated)
+  {
+    Eigen::Vector3d measurement;
+    measurement << imu.xacc, imu.yacc, imu.zacc - 4096; // need a better way to know the z-axis offset
+    A.push_back(measurement);
+    B.push_back(temperature_);
+    if(temperature_ < Tmin)
+    {
+      Tmin = temperature_;
+    }
+    if(temperature_ > Tmax)
+    {
+      Tmax = temperature_;
+    }
+  }
+  else if(!calibrated)
+  {
+    for(int i = 0; i < 3; i++)
+    {
+      Eigen::MatrixX2d Amat;
+      Eigen::VectorXd Bmat;
+      Amat.resize(A.size(),2);
+      Bmat.resize(B.size());
+
+      // put the data into and Eigen Matrix for linear algebra
+      for(int j = 0; j<A.size(); j++)
+      {
+        Amat(j,0) = A[j](i);
+        Amat(j,1) = 1.0;
+        Bmat(j) = B[j];
+      }
+
+      // Perform Least-Squares on the data
+      x[i] = Amat.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(Bmat);
+    }
+    calibrated = true;
+  }
+
+  sensor_msgs::Imu out_msg;
 
   out_msg.header.stamp = ros::Time::now(); //! \todo time synchronization
 
   float accel_scale = 0.002349f;
-  out_msg.linear_acceleration.x = imu.xacc * accel_scale;
-  out_msg.linear_acceleration.y = imu.yacc * accel_scale;
-  out_msg.linear_acceleration.z = imu.zacc * accel_scale;
+  out_msg.linear_acceleration.x = (imu.xacc - (temperature_)*x[0](0) - x[0](1)) * accel_scale;
+  out_msg.linear_acceleration.y = (imu.yacc - (temperature_)*x[1](0) - x[1](1)) * accel_scale;
+  out_msg.linear_acceleration.z = (imu.zacc - (temperature_)*x[2](0) - x[2](1)) * accel_scale;
 
   float gyro_scale = .004256f;
   out_msg.angular_velocity.x = imu.xgyro * gyro_scale;

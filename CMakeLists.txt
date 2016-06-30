@@ -7,8 +7,9 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   std_msgs
+  cmake_modules
 )
-
+find_package(Eigen REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
 
 ###################################
