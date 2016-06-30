@@ -9,6 +9,7 @@
 #include <mavrosflight/mavlink_bridge.h>
 #include <mavrosflight/mavlink_serial.h>
 #include <mavrosflight/param_manager.h>
+#include <mavrosflight/time_manager.h>
 
 #include <mavrosflight/mavlink_listener_interface.h>
 #include <mavrosflight/param_listener_interface.h>
@@ -43,6 +44,7 @@ public:
   // public member objects
   MavlinkSerial serial;
   ParamManager param;
+  TimeManager time;
 
 private:
 

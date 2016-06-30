@@ -121,7 +121,7 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
   mavlink_msg_small_imu_decode(&msg, &imu);
 
   sensor_msgs::Imu out_msg;
-  out_msg.header.stamp = ros::Time::now(); //! \todo time synchronization
+  out_msg.header.stamp = mavrosflight_->time.get_ros_time_us(imu.time_boot_us);
 
   bool valid = imu_.correct(imu,
                    &out_msg.linear_acceleration.x,
@@ -141,7 +141,7 @@ void fcuIO::handle_servo_output_raw_msg(const mavlink_message_t &msg)
   mavlink_msg_servo_output_raw_decode(&msg, &servo);
 
   fcu_common::ServoOutputRaw out_msg;
-  out_msg.header.stamp = ros::Time::now(); //! \todo time synchronization
+  out_msg.header.stamp = mavrosflight_->time.get_ros_time_us(servo.time_usec);
   out_msg.port = servo.port;
 
   out_msg.values[0] = servo.servo1_raw;
@@ -162,7 +162,7 @@ void fcuIO::handle_rc_channels_raw_msg(const mavlink_message_t &msg)
   mavlink_msg_rc_channels_raw_decode(&msg, &rc);
 
   fcu_common::ServoOutputRaw out_msg;
-  out_msg.header.stamp = ros::Time::now();
+  out_msg.header.stamp = mavrosflight_->time.get_ros_time_ms(rc.time_boot_ms);
   out_msg.port = rc.port;
 
   out_msg.values[0] = rc.chan1_raw;
@@ -183,10 +183,10 @@ void fcuIO::handle_diff_pressure_msg(const mavlink_message_t &msg)
   mavlink_msg_diff_pressure_decode(&msg, &diff);
 
   sensor_msgs::Temperature temp_msg;
-  temp_msg.header.stamp = ros::Time::now();
+  temp_msg.header.stamp = ros::Time::now(); //! \todo time synchronization
 
   sensor_msgs::FluidPressure pressure_msg;
-  pressure_msg.header.stamp = ros::Time::now();
+  pressure_msg.header.stamp = ros::Time::now(); //! \todo time synchronization
 
   bool valid = diff_pressure_.correct(diff,
                                                &pressure_msg.fluid_pressure,
