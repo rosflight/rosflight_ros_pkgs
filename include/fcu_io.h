@@ -90,14 +90,9 @@ private:
   ros::ServiceServer param_write_srv_;
 
   mavrosflight::MavROSflight* mavrosflight_;
-//<<<<<<< HEAD
-
-//  double start_time_;
-//  double temperature_;
-//=======
   mavrosflight::sensors::DifferentialPressure diff_pressure_;
   mavrosflight::sensors::Imu imu_;
-//>>>>>>> master
+  mavrosflight::sensors::Baro baro_;
 };
 
 } // namespace fcu_io

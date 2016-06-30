@@ -16,6 +16,7 @@
 
 #include <mavrosflight/sensors/differential_pressure.h>
 #include <mavrosflight/sensors/imu.h>
+#include <mavrosflight/sensors/baro.h>
 
 #include <boost/function.hpp>
 

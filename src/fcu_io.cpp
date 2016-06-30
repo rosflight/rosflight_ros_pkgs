@@ -271,51 +271,13 @@ void fcuIO::handle_small_baro_msg(const mavlink_message_t &msg)
   mavlink_small_baro_t baro;
   mavlink_msg_small_baro_decode(&msg, &baro);
 
-  double pressure = baro.pressure;
-  double temperature = baro.temperature;
+  double alt = 0;
 
-  // calibration variables
-  static int calibration_counter = 0;
-  static double calibration_sum = 0;
-  static int settling_count = 20; // settle for a second or so
-  static int calibration_count = 20;
-
-  // offsets and filters
-  static double prev_alt = 0.0;
-  static double alt_alpha_ = 0.3; // really slow
-  static double alt_ground = 0;
-
-  if( calibration_counter > calibration_count + settling_count)
+  if(baro_.correct(baro, &alt))
   {
-    double alt_tmp = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 4430.0f; // in meters
-
-    // offset calculated ground altitude
-    alt_tmp -= alt_ground;
-
-    // LPF measurements
-    double altitude = alt_alpha_*alt_tmp + (1.0 - alt_alpha_)*prev_alt;
-    prev_alt = altitude;
-
-    // publish measurement
     std_msgs::Float32 alt_msg;
-    alt_msg.data = altitude;
+    alt_msg.data = alt;
     baro_pub_.publish(alt_msg);
-  }
-  if (calibration_counter < settling_count)
-  {
-    calibration_counter++;
-  }
-  else if (calibration_counter < settling_count + calibration_count)
-  {
-    double measurement = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 4430.0f;
-    calibration_sum += measurement;
-    calibration_counter++;
-  }
-  else if(calibration_counter == settling_count + calibration_count)
-  {
-    alt_ground = calibration_sum/calibration_count;
-    ROS_INFO_STREAM("BARO CALIBRATED " << alt_ground << " meters above sea level");
-    calibration_counter++;
   }
 }
 
