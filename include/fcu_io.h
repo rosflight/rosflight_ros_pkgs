@@ -54,6 +54,7 @@ private:
   void handle_servo_output_raw_msg(const mavlink_message_t &msg);
   void handle_rc_channels_raw_msg(const mavlink_message_t &msg);
   void handle_diff_pressure_msg(const mavlink_message_t &msg);
+  void handle_small_baro_msg(const mavlink_message_t &msg);
   void handle_named_value_int_msg(const mavlink_message_t &msg);
   void handle_named_value_float_msg(const mavlink_message_t &msg);
 
@@ -79,6 +80,7 @@ private:
   ros::Publisher rc_raw_pub_;
   ros::Publisher diff_pressure_pub_;
   ros::Publisher temperature_pub_;
+  ros::Publisher baro_pub_;
   std::map<std::string, ros::Publisher> named_value_int_pubs_;
   std::map<std::string, ros::Publisher> named_value_float_pubs_;
 

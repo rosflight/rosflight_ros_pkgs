@@ -24,6 +24,7 @@ fcuIO::fcuIO()
   rc_raw_pub_ = nh.advertise<fcu_common::ServoOutputRaw>("rc_raw", 1);
   diff_pressure_pub_ = nh.advertise<sensor_msgs::FluidPressure>("diff_pressure", 1);
   temperature_pub_ = nh.advertise<sensor_msgs::Temperature>("temperature", 1);
+  baro_pub_ = nh.advertise<std_msgs::Float32>("baro/alt", 1);
 
   param_get_srv_ = nh.advertiseService("param_get", &fcuIO::paramGetSrvCallback, this);
   param_set_srv_ = nh.advertiseService("param_set", &fcuIO::paramSetSrvCallback, this);
@@ -60,33 +61,36 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
 {
   switch (msg.msgid)
   {
-  case MAVLINK_MSG_ID_HEARTBEAT:
-    handle_heartbeat_msg();
-    break;
-  case MAVLINK_MSG_ID_SMALL_IMU:
-    handle_small_imu_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:
-    handle_servo_output_raw_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_RC_CHANNELS:
-    handle_rc_channels_raw_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_DIFF_PRESSURE:
-    handle_diff_pressure_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_NAMED_VALUE_INT:
-    handle_named_value_int_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_NAMED_VALUE_FLOAT:
-    handle_named_value_float_msg(msg);
-    break;
+    case MAVLINK_MSG_ID_HEARTBEAT:
+      handle_heartbeat_msg();
+      break;
+    case MAVLINK_MSG_ID_SMALL_IMU:
+      handle_small_imu_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:
+      handle_servo_output_raw_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_RC_CHANNELS:
+      handle_rc_channels_raw_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_DIFF_PRESSURE:
+      handle_diff_pressure_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_NAMED_VALUE_INT:
+      handle_named_value_int_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_NAMED_VALUE_FLOAT:
+      handle_named_value_float_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_SMALL_BARO:
+      handle_small_baro_msg(msg);
+      break;
   }
 }
 
 void fcuIO::on_new_param_received(std::string name, double value)
-{
-  ROS_INFO("Got parameter %s with value %g", name.c_str(), value);
+{https://github.com/simondlevy/
+    ROS_INFO("Got parameter %s with value %g", name.c_str(), value);
 }
 
 void fcuIO::on_param_value_updated(std::string name, double value)
@@ -118,9 +122,9 @@ void fcuIO::handle_heartbeat_msg()
 void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
 {
   mavlink_small_imu_t imu;
-  mavlink_msg_small_imu_decode(&msg, &imu);
+  mavlink_msg_small_imu_decode(&msg, &imu);https://github.com/simondlevy/
 
-  sensor_msgs::Imu out_msg;
+    sensor_msgs::Imu out_msg;
 
   out_msg.header.stamp = ros::Time::now(); //! \todo time synchronization
 
@@ -266,6 +270,59 @@ void fcuIO::handle_named_value_float_msg(const mavlink_message_t &msg)
   named_value_float_pubs_[name].publish(out_msg);
 }
 
+void fcuIO::handle_small_baro_msg(const mavlink_message_t &msg)
+{
+  mavlink_small_baro_t baro;
+  mavlink_msg_small_baro_decode(&msg, &baro);
+
+  double pressure = baro.pressure;
+  double temperature = baro.temperature;
+
+  // calibration variables
+  static int calibration_counter = 0;
+  static double calibration_sum = 0;
+  static int settling_count = 20; // settle for a second or so
+  static int calibration_count = 20;
+
+  // offsets and filters
+  static double prev_alt = 0.0;
+  static double alt_alpha_ = 0.3; // really slow
+  static double alt_ground = 0;
+
+  if( calibration_counter > calibration_count + settling_count)
+  {
+    double alt_tmp = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 4430.0f; // in meters
+
+    // offset calculated ground altitude
+    alt_tmp -= alt_ground;
+
+    // LPF measurements
+    double altitude = alt_alpha_*alt_tmp + (1.0 - alt_alpha_)*prev_alt;
+    prev_alt = altitude;
+
+    // publish measurement
+    std_msgs::Float32 alt_msg;
+    alt_msg.data = altitude;
+    baro_pub_.publish(alt_msg);
+  }
+  if (calibration_counter < settling_count)
+  {
+    calibration_counter++;
+  }
+  else if (calibration_counter < settling_count + calibration_count)
+  {
+    double measurement = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 4430.0f;
+    calibration_sum += measurement;
+    calibration_counter++;
+  }
+  else if(calibration_counter == settling_count + calibration_count)
+  {
+    alt_ground = calibration_sum/calibration_count;
+    ROS_INFO_STREAM("BARO CALIBRATED " << alt_ground << " meters above sea level");
+    calibration_counter++;
+  }
+}
+
 void fcuIO::commandCallback(fcu_common::ExtendedCommand::ConstPtr msg)
 {
   //! \todo these are hard-coded to match right now; may want to replace with something more robust
@@ -279,18 +336,18 @@ void fcuIO::commandCallback(fcu_common::ExtendedCommand::ConstPtr msg)
 
   switch (mode)
   {
-  case MODE_PASS_THROUGH:
-    v1 = saturate(v1, -1000, 1000);
-    v2 = saturate(v2, -1000, 1000);
-    v3 = saturate(v3, -1000, 1000);
-    v4 = saturate(v4, -1000, 1000);
-    break;
-  case MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
-  case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
-    v4 = saturate(v4, 0, 1000);
-    break;
-  case MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
-    break;
+    case MODE_PASS_THROUGH:
+      v1 = saturate(v1, -1000, 1000);
+      v2 = saturate(v2, -1000, 1000);
+      v3 = saturate(v3, -1000, 1000);
+      v4 = saturate(v4, -1000, 1000);
+      break;
+    case MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
+    case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
+      v4 = saturate(v4, 0, 1000);
+      break;
+    case MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
+      break;
   }
 
   mavlink_message_t mavlink_msg;
