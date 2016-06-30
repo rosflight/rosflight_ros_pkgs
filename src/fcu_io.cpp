@@ -131,6 +131,9 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
   double now = ros::Time::now().toSec() - start_time_;
   static bool calibrated = false;
 
+  // read temperature of accel chip for temperature compensation calibration
+  double temperature = ((float)imu.temp/340.0 + 36.53);
+
   static double calibration_time = 5.0; // seconds to record data for temperature compensation
   static double deltaT = 1.0; // number of degrees required for a temperature calibration
 
@@ -143,23 +146,25 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
   static Eigen::Vector2d x[3];
 
   // if still in calibration mode
-  if(now < calibration_time && (Tmax - Tmin) > deltaT && !calibrated)
+  if(now < calibration_time || (Tmax - Tmin) < deltaT)
   {
+    ROS_INFO("IMU CALIBRATING, time %f, deltaT %f", now, Tmax-Tmin);
     Eigen::Vector3d measurement;
     measurement << imu.xacc, imu.yacc, imu.zacc - 4096; // need a better way to know the z-axis offset
     A.push_back(measurement);
-    B.push_back(temperature_);
-    if(temperature_ < Tmin)
+    B.push_back(temperature);
+    if(temperature < Tmin)
     {
-      Tmin = temperature_;
+      Tmin = temperature;
     }
-    if(temperature_ > Tmax)
+    if(temperature > Tmax)
     {
-      Tmax = temperature_;
+      Tmax = temperature;
     }
   }
   else if(!calibrated)
   {
+    ROS_INFO("IMU DONE CALIBRATING, current time = %f, start = %f", now, calibration_time);
     for(int i = 0; i < 3; i++)
     {
       Eigen::MatrixX2d Amat;
@@ -176,26 +181,28 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
       }
 
       // Perform Least-Squares on the data
-      x[i] = Amat.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(Bmat);
+      x[i] = Amat.jacobiSvd(Eigen::ComputeFullU | Eigen::ComputeFullV).solve(Bmat);
     }
     calibrated = true;
   }
+  else
+  {
+    sensor_msgs::Imu out_msg;
 
-  sensor_msgs::Imu out_msg;
+    out_msg.header.stamp = ros::Time::now(); //! \todo time synchronization
 
-  out_msg.header.stamp = ros::Time::now(); //! \todo time synchronization
+    float accel_scale = 0.002349f;
+    out_msg.linear_acceleration.x = (imu.xacc - (temperature)*x[0](0) - x[0](1)) * accel_scale;
+    out_msg.linear_acceleration.y = (imu.yacc - (temperature)*x[1](0) - x[1](1)) * accel_scale;
+    out_msg.linear_acceleration.z = (imu.zacc - (temperature)*x[2](0) - x[2](1)) * accel_scale;
 
-  float accel_scale = 0.002349f;
-  out_msg.linear_acceleration.x = (imu.xacc - (temperature_)*x[0](0) - x[0](1)) * accel_scale;
-  out_msg.linear_acceleration.y = (imu.yacc - (temperature_)*x[1](0) - x[1](1)) * accel_scale;
-  out_msg.linear_acceleration.z = (imu.zacc - (temperature_)*x[2](0) - x[2](1)) * accel_scale;
+    float gyro_scale = .004256f;
+    out_msg.angular_velocity.x = imu.xgyro * gyro_scale;
+    out_msg.angular_velocity.y = imu.ygyro * gyro_scale;
+    out_msg.angular_velocity.z = imu.zgyro * gyro_scale;
 
-  float gyro_scale = .004256f;
-  out_msg.angular_velocity.x = imu.xgyro * gyro_scale;
-  out_msg.angular_velocity.y = imu.ygyro * gyro_scale;
-  out_msg.angular_velocity.z = imu.zgyro * gyro_scale;
-
-  imu_pub_.publish(out_msg);
+    imu_pub_.publish(out_msg);
+  }
 }
 
 void fcuIO::handle_servo_output_raw_msg(const mavlink_message_t &msg)
