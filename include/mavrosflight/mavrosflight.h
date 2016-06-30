@@ -7,9 +7,15 @@
 #define MAVROSFLIGHT_MAVROSFLIGHT_H
 
 #include <mavrosflight/mavlink_bridge.h>
-#include <mavrosflight/mavlink_listener_interface.h>
 #include <mavrosflight/mavlink_serial.h>
 #include <mavrosflight/param_manager.h>
+#include <mavrosflight/time_manager.h>
+
+#include <mavrosflight/mavlink_listener_interface.h>
+#include <mavrosflight/param_listener_interface.h>
+
+#include <mavrosflight/sensors/differential_pressure.h>
+#include <mavrosflight/sensors/imu.h>
 
 #include <boost/function.hpp>
 
@@ -38,6 +44,7 @@ public:
   // public member objects
   MavlinkSerial serial;
   ParamManager param;
+  TimeManager time;
 
 private:
 
