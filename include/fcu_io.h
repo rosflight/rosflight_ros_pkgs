@@ -87,6 +87,8 @@ private:
   ros::ServiceServer param_write_srv_;
 
   mavrosflight::MavROSflight* mavrosflight_;
+  mavrosflight::sensors::DifferentialPressure diff_pressure_;
+  mavrosflight::sensors::Imu imu_;
 };
 
 } // namespace fcu_io

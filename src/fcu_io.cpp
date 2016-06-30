@@ -121,20 +121,18 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
   mavlink_msg_small_imu_decode(&msg, &imu);
 
   sensor_msgs::Imu out_msg;
-
   out_msg.header.stamp = ros::Time::now(); //! \todo time synchronization
 
-  float accel_scale = 0.002349f;
-  out_msg.linear_acceleration.x = imu.xacc * accel_scale;
-  out_msg.linear_acceleration.y = imu.yacc * accel_scale;
-  out_msg.linear_acceleration.z = imu.zacc * accel_scale;
+  bool valid = imu_.correct(imu,
+                   &out_msg.linear_acceleration.x,
+                   &out_msg.linear_acceleration.y,
+                   &out_msg.linear_acceleration.z,
+                   &out_msg.angular_velocity.x,
+                   &out_msg.angular_velocity.y,
+                   &out_msg.angular_velocity.z);
 
-  float gyro_scale = .004256f;
-  out_msg.angular_velocity.x = imu.xgyro * gyro_scale;
-  out_msg.angular_velocity.y = imu.ygyro * gyro_scale;
-  out_msg.angular_velocity.z = imu.zgyro * gyro_scale;
-
-  imu_pub_.publish(out_msg);
+  if (valid)
+    imu_pub_.publish(out_msg);
 }
 
 void fcuIO::handle_servo_output_raw_msg(const mavlink_message_t &msg)
@@ -184,49 +182,20 @@ void fcuIO::handle_diff_pressure_msg(const mavlink_message_t &msg)
   mavlink_diff_pressure_t diff;
   mavlink_msg_diff_pressure_decode(&msg, &diff);
 
-  const double P_min = -1.0f;
-  const double P_max = 1.0f;
-  const double PSI_to_Pa = 6894.757f;
-
-  static int calibration_counter = 0;
-  static int calibration_count = 100;
-  static double _diff_pres_offset = 0.0;
-
-  // conversion from pixhawk source code
-  double temp = ((200.0f * diff.temperature) / 2047) - 50;
-
   sensor_msgs::Temperature temp_msg;
   temp_msg.header.stamp = ros::Time::now();
-  temp_msg.temperature = temp;
-  temperature_pub_.publish(temp_msg);
 
-  /*
-   * this equation is an inversion of the equation in the
-   * pressure transfer function figure on page 4 of the datasheet
-   * We negate the result so that positive differential pressures
-   * are generated when the bottom port is used as the static
-   * port on the pitot and top port is used as the dynamic port
-   */
-  double diff_press_PSI = -((diff.diff_pressure - 0.1f*16383) * (P_max-P_min)/(0.8f*16383) + P_min);
-  double diff_press_pa_raw = diff_press_PSI * PSI_to_Pa;
-  if (calibration_counter > calibration_count)
+  sensor_msgs::FluidPressure pressure_msg;
+  pressure_msg.header.stamp = ros::Time::now();
+
+  bool valid = diff_pressure_.correct(diff,
+                                               &pressure_msg.fluid_pressure,
+                                               &temp_msg.temperature);
+
+  if (valid)
   {
-    diff_press_pa_raw -= _diff_pres_offset;
-
-    sensor_msgs::FluidPressure pressure_msg;
-    pressure_msg.header.stamp = ros::Time::now();
-    pressure_msg.fluid_pressure = diff_press_pa_raw;
+    temperature_pub_.publish(temp_msg);
     diff_pressure_pub_.publish(pressure_msg);
-  }
-  else if (calibration_counter == calibration_count)
-  {
-    _diff_pres_offset = _diff_pres_offset/calibration_count;
-    calibration_counter++;
-  }
-  else
-  {
-    _diff_pres_offset += diff_press_pa_raw;
-    calibration_counter++;
   }
 }
 
