@@ -54,8 +54,6 @@ fcuIO::fcuIO()
   std_msgs::Bool unsaved_msg;
   unsaved_msg.data = false;
   unsaved_params_pub_.publish(unsaved_msg);
-
-//  start_time_ = ros::Time::now().toSec();
 }
 
 fcuIO::~fcuIO()
@@ -67,43 +65,43 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
 {
   switch (msg.msgid)
   {
-    case MAVLINK_MSG_ID_HEARTBEAT:
-      handle_heartbeat_msg();
-      break;
-    case MAVLINK_MSG_ID_SMALL_IMU:
-      handle_small_imu_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:
-      handle_servo_output_raw_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_RC_CHANNELS:
-      handle_rc_channels_raw_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_DIFF_PRESSURE:
-      handle_diff_pressure_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_NAMED_VALUE_INT:
-      handle_named_value_int_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_NAMED_VALUE_FLOAT:
-      handle_named_value_float_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_SMALL_BARO:
-      handle_small_baro_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_TIMESYNC: // <-- This is handled by the time_manager
-      break;
-    case MAVLINK_MSG_ID_PARAM_VALUE: // <-- This is handled by the param_manager
-      break;
-    default:
-      ROS_ERROR("fcu_io:Got unsupported message ID %d", msg.msgid);
-      break;
+  case MAVLINK_MSG_ID_HEARTBEAT:
+    handle_heartbeat_msg();
+    break;
+  case MAVLINK_MSG_ID_SMALL_IMU:
+    handle_small_imu_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:
+    handle_servo_output_raw_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_RC_CHANNELS:
+    handle_rc_channels_raw_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_DIFF_PRESSURE:
+    handle_diff_pressure_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_NAMED_VALUE_INT:
+    handle_named_value_int_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_NAMED_VALUE_FLOAT:
+    handle_named_value_float_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_SMALL_BARO:
+    handle_small_baro_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_TIMESYNC: // <-- This is handled by the time_manager
+    break;
+  case MAVLINK_MSG_ID_PARAM_VALUE: // <-- This is handled by the param_manager
+    break;
+  default:
+    ROS_ERROR("fcu_io:Got unsupported message ID %d", msg.msgid);
+    break;
   }
 }
 
 void fcuIO::on_new_param_received(std::string name, double value)
-{https://github.com/simondlevy/
-    ROS_INFO("Got parameter %s with value %g", name.c_str(), value);
+{
+  ROS_INFO("Got parameter %s with value %g", name.c_str(), value);
 }
 
 void fcuIO::on_param_value_updated(std::string name, double value)
@@ -134,7 +132,6 @@ void fcuIO::handle_heartbeat_msg()
 
 void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
 {
-  static bool calibrated = false;
   mavlink_small_imu_t imu;
   mavlink_msg_small_imu_decode(&msg, &imu);
 
@@ -145,9 +142,9 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
   temp_msg.header.stamp = imu_msg.header.stamp;
 
   // This is so we can eventually make calibrating the IMU an external service
-  if(!calibrated)
+  if (!imu_.calibrated)
   {
-    calibrated = imu_.calibrate(imu);
+    imu_.calibrate(imu);
   }
 
   bool valid = imu_.correct(imu,
@@ -220,8 +217,8 @@ void fcuIO::handle_diff_pressure_msg(const mavlink_message_t &msg)
   pressure_msg.header.stamp = ros::Time::now(); //! \todo time synchronization
 
   bool valid = diff_pressure_.correct(diff,
-                                               &pressure_msg.fluid_pressure,
-                                               &temp_msg.temperature);
+                                      &pressure_msg.fluid_pressure,
+                                      &temp_msg.temperature);
 
   if (valid)
   {
@@ -273,7 +270,7 @@ void fcuIO::handle_small_baro_msg(const mavlink_message_t &msg)
 
   double alt = 0;
 
-  if(baro_.correct(baro, &alt))
+  if (baro_.correct(baro, &alt))
   {
     std_msgs::Float32 alt_msg;
     alt_msg.data = alt;
@@ -287,25 +284,25 @@ void fcuIO::commandCallback(fcu_common::ExtendedCommand::ConstPtr msg)
   OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE) msg->mode;
   OFFBOARD_CONTROL_IGNORE ignore = (OFFBOARD_CONTROL_IGNORE) msg->ignore;
 
-  int v1 = (int) (msg->value1 * 1000);
-  int v2 = (int) (msg->value2 * 1000);
-  int v3 = (int) (msg->value3 * 1000);
-  int v4 = (int) (msg->value4 * 1000);
+  int v1 = (int)(msg->value1 * 1000);
+  int v2 = (int)(msg->value2 * 1000);
+  int v3 = (int)(msg->value3 * 1000);
+  int v4 = (int)(msg->value4 * 1000);
 
   switch (mode)
   {
-    case MODE_PASS_THROUGH:
-      v1 = saturate(v1, -1000, 1000);
-      v2 = saturate(v2, -1000, 1000);
-      v3 = saturate(v3, -1000, 1000);
-      v4 = saturate(v4, -1000, 1000);
-      break;
-    case MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
-    case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
-      v4 = saturate(v4, 0, 1000);
-      break;
-    case MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
-      break;
+  case MODE_PASS_THROUGH:
+    v1 = saturate(v1, -1000, 1000);
+    v2 = saturate(v2, -1000, 1000);
+    v3 = saturate(v3, -1000, 1000);
+    v4 = saturate(v4, -1000, 1000);
+    break;
+  case MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
+  case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
+    v4 = saturate(v4, 0, 1000);
+    break;
+  case MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
+    break;
   }
 
   mavlink_message_t mavlink_msg;

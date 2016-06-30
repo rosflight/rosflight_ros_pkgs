@@ -23,6 +23,8 @@ public:
 
   Imu();
 
+  bool calibrated;
+
   /**
    * \brief Calibrate the IMU for temperature and bias compensation
    * \param msg The raw IMU message

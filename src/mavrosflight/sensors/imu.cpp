@@ -20,6 +20,7 @@ Imu::Imu()
   x_[0] << 0, 0;
   x_[1] << 0, 0;
   x_[2] << 0, 0;
+  calibrated = false;
 }
 
 bool Imu::calibrate(mavlink_small_imu_t msg)
@@ -37,7 +38,6 @@ bool Imu::calibrate(mavlink_small_imu_t msg)
   static std::deque<Eigen::Vector3d> A(0);
   static std::deque<double> B(0);
   static bool first_time = true;
-  static bool calibrated = false;
 
   static double start_time = 0;
 

@@ -33,8 +33,8 @@ namespace fcu_io
 {
 
 class fcuIO :
-    public mavrosflight::MavlinkListenerInterface,
-    public mavrosflight::ParamListenerInterface
+  public mavrosflight::MavlinkListenerInterface,
+  public mavrosflight::ParamListenerInterface
 {
 public:
   fcuIO();
@@ -89,7 +89,7 @@ private:
   ros::ServiceServer param_set_srv_;
   ros::ServiceServer param_write_srv_;
 
-  mavrosflight::MavROSflight* mavrosflight_;
+  mavrosflight::MavROSflight *mavrosflight_;
   mavrosflight::sensors::DifferentialPressure diff_pressure_;
   mavrosflight::sensors::Imu imu_;
   mavrosflight::sensors::Baro baro_;
