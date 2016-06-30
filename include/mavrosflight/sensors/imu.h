@@ -32,7 +32,7 @@ public:
    * \return True if the measurement is valid
    */
   bool correct(mavlink_small_imu_t msg,
-               double *xacc, double *yacc, double *zacc, double *xgyro, double *ygyro, double *zgyro);
+               double *xacc, double *yacc, double *zacc, double *xgyro, double *ygyro, double *zgyro, double *temperature);
 
 private:
   //! \todo explicitly compute these so it's clear where they come from

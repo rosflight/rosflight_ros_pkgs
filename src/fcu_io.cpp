@@ -20,6 +20,7 @@ fcuIO::fcuIO()
 
   unsaved_params_pub_ = nh.advertise<std_msgs::Bool>("unsaved_params", 1, true);
   imu_pub_ = nh.advertise<sensor_msgs::Imu>("imu/data", 1);
+  imu_temp_pub_ = nh.advertise<sensor_msgs::Temperature>("imu/temperature", 1);
   servo_output_raw_pub_ = nh.advertise<fcu_common::ServoOutputRaw>("servo_output_raw", 1);
   rc_raw_pub_ = nh.advertise<fcu_common::ServoOutputRaw>("rc_raw", 1);
   diff_pressure_pub_ = nh.advertise<sensor_msgs::FluidPressure>("diff_pressure", 1);
@@ -120,19 +121,26 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
   mavlink_small_imu_t imu;
   mavlink_msg_small_imu_decode(&msg, &imu);
 
-  sensor_msgs::Imu out_msg;
-  out_msg.header.stamp = mavrosflight_->time.get_ros_time_us(imu.time_boot_us);
+  sensor_msgs::Imu imu_msg;
+  imu_msg.header.stamp = mavrosflight_->time.get_ros_time_us(imu.time_boot_us);
+
+  sensor_msgs::Temperature temp_msg;
+  temp_msg.header.stamp = imu_msg.header.stamp;
 
   bool valid = imu_.correct(imu,
-                   &out_msg.linear_acceleration.x,
-                   &out_msg.linear_acceleration.y,
-                   &out_msg.linear_acceleration.z,
-                   &out_msg.angular_velocity.x,
-                   &out_msg.angular_velocity.y,
-                   &out_msg.angular_velocity.z);
+                            &imu_msg.linear_acceleration.x,
+                            &imu_msg.linear_acceleration.y,
+                            &imu_msg.linear_acceleration.z,
+                            &imu_msg.angular_velocity.x,
+                            &imu_msg.angular_velocity.y,
+                            &imu_msg.angular_velocity.z,
+                            &temp_msg.temperature);
 
   if (valid)
-    imu_pub_.publish(out_msg);
+  {
+    imu_pub_.publish(imu_msg);
+    imu_temp_pub_.publish(temp_msg);
+  }
 }
 
 void fcuIO::handle_servo_output_raw_msg(const mavlink_message_t &msg)
