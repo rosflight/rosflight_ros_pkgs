@@ -20,7 +20,7 @@ Imu::Imu()
   x_[0] << 0, 0;
   x_[1] << 0, 0;
   x_[2] << 0, 0;
-  calibrated = false;
+  calibrated = true;
 }
 
 bool Imu::calibrate(mavlink_small_imu_t msg)
@@ -91,7 +91,6 @@ bool Imu::calibrate(mavlink_small_imu_t msg)
 
       // Perform Least-Squares on the data
       x_[i] = Amat.jacobiSvd(Eigen::ComputeFullU | Eigen::ComputeFullV).solve(Bmat);
-      ROS_INFO_STREAM("x" << i <<" = " << x_[i]); // <-- These should get saved in the parameter server
     }
     calibrated = true;
   }
@@ -101,10 +100,9 @@ bool Imu::calibrate(mavlink_small_imu_t msg)
 bool Imu::correct(mavlink_small_imu_t msg,
                   double *xacc, double *yacc, double *zacc, double *xgyro, double *ygyro, double *zgyro, double *temp)
 {
-  double temperature = ((double)msg.temperature/340.0 + 36.53);
-  *xacc = (msg.xacc - (temperature)*x_[0](0) - x_[0](1)) * ACCEL_SCALE;
-  *yacc = (msg.yacc - (temperature)*x_[1](0) - x_[1](1)) * ACCEL_SCALE;
-  *zacc = (msg.zacc - (temperature)*x_[2](0) - x_[2](1)) * ACCEL_SCALE;
+  *xacc = msg.xacc * ACCEL_SCALE;
+  *yacc = msg.yacc * ACCEL_SCALE;
+  *zacc = msg.zacc * ACCEL_SCALE;
 
   *xgyro = msg.xgyro * GYRO_SCALE;
   *ygyro = msg.ygyro * GYRO_SCALE;

@@ -46,6 +46,15 @@ public:
   bool correct(mavlink_small_imu_t msg,
                double *xacc, double *yacc, double *zacc, double *xgyro, double *ygyro, double *zgyro, double *temperature);
 
+  /// These are the publicly available versions of the accel calibration
+  /// The const stuff is to make it read-only
+  const double xm() const {return x_[0](0);}
+  const double ym() const {return x_[1](0);}
+  const double zm() const {return x_[2](0);}
+  const double xb() const {return x_[0](1);}
+  const double yb() const {return x_[1](1);}
+  const double zb() const {return x_[2](1);}
+
 private:
   //! \todo explicitly compute these so it's clear where they come from
   static const double ACCEL_SCALE = 0.002349;

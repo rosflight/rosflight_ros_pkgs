@@ -32,6 +32,7 @@ fcuIO::fcuIO()
   param_get_srv_ = nh.advertiseService("param_get", &fcuIO::paramGetSrvCallback, this);
   param_set_srv_ = nh.advertiseService("param_set", &fcuIO::paramSetSrvCallback, this);
   param_write_srv_ = nh.advertiseService("param_write", &fcuIO::paramWriteSrvCallback, this);
+  imu_calibrate_srv_ = nh.advertiseService("calibrate_imu", &fcuIO::calibrateIMUCallback, this);
 
   ros::NodeHandle nh_private("~");
   std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
@@ -141,11 +142,27 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
   sensor_msgs::Temperature temp_msg;
   temp_msg.header.stamp = imu_msg.header.stamp;
 
+  static int send_throttle = 0;
+
   // This is so we can eventually make calibrating the IMU an external service
   if (!imu_.calibrated)
   {
-    imu_.calibrate(imu);
+    if(imu_.calibrate(imu))
+    {
+      ROS_INFO("accel parameters found\n xm = %f, ym = %f, zm = %f xb = %f yb = %f, zb = %f",
+               imu_.xm(),imu_.ym(),imu_.zm(),imu_.xb(),imu_.yb(),imu_.zb());
+        // calibration is done, send params to the param server and save them
+        /// DOING IT THIS WAY ENSURES THAT FCU_IO WILL CRASH -- I THINK WE ARE OVERFLOWING A BUFFER SOMEWHERE
+        mavrosflight_->param.set_param_value("ACC_X_TEMP_COMP", 1000.0*imu_.xm());
+        mavrosflight_->param.set_param_value("ACC_Y_TEMP_COMP", 1000.0*imu_.ym());
+        mavrosflight_->param.set_param_value("ACC_Z_TEMP_COMP", 1000.0*imu_.zm());
+        mavrosflight_->param.set_param_value("ACC_X_BIAS", 1000.0*imu_.xb());
+        mavrosflight_->param.set_param_value("ACC_Y_BIAS", 1000.0*imu_.yb());
+        mavrosflight_->param.set_param_value("ACC_Z_BIAS", 1000.0*imu_.zb());
+        mavrosflight_->param.write_params();
+    }
   }
+
 
   bool valid = imu_.correct(imu,
                             &imu_msg.linear_acceleration.x,
@@ -332,6 +349,13 @@ bool fcuIO::paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Tri
   }
 
   return true;
+}
+
+bool fcuIO::calibrateIMUCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+{
+  // tell the IMU to calibrate itself
+  imu_.calibrated = false;
+  res.success = true;
 }
 
 } // namespace fcu_io
