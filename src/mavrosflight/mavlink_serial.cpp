@@ -11,6 +11,10 @@
 #include <boost/thread.hpp>
 #include <ros/ros.h>
 
+#include <iostream>
+
+using namespace std;
+
 namespace mavrosflight
 {
 
@@ -135,7 +139,7 @@ void MavlinkSerial::send_message(const mavlink_message_t &msg)
   WriteBuffer *buffer = new WriteBuffer();
   buffer->len = mavlink_msg_to_send_buffer(buffer->data, &msg);
   assert(buffer->len <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
-
+  // is there supposed to be a condition here?
   {
     mutex_lock lock(mutex_);
     write_queue_.push_back(buffer);
@@ -152,7 +156,6 @@ void MavlinkSerial::do_async_write(bool check_write_state)
   mutex_lock lock(mutex_);
   if (write_queue_.empty())
     return;
-
   write_in_progress_ = true;
   WriteBuffer *buffer = write_queue_.front();
   serial_port_.async_write_some(

@@ -60,6 +60,7 @@ private:
   static const double ACCEL_SCALE = 0.002349;
   static const double GYRO_SCALE = 0.004256;
   Eigen::Vector2d x_[3];
+  double calibration_time_;
 };
 
 } // namespace sensors

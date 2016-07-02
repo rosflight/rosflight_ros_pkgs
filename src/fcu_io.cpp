@@ -152,7 +152,6 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
       ROS_INFO("accel parameters found\n xm = %f, ym = %f, zm = %f xb = %f yb = %f, zb = %f",
                imu_.xm(),imu_.ym(),imu_.zm(),imu_.xb(),imu_.yb(),imu_.zb());
         // calibration is done, send params to the param server and save them
-        /// DOING IT THIS WAY ENSURES THAT FCU_IO WILL CRASH -- I THINK WE ARE OVERFLOWING A BUFFER SOMEWHERE
         mavrosflight_->param.set_param_value("ACC_X_TEMP_COMP", 1000.0*imu_.xm());
         mavrosflight_->param.set_param_value("ACC_Y_TEMP_COMP", 1000.0*imu_.ym());
         mavrosflight_->param.set_param_value("ACC_Z_TEMP_COMP", 1000.0*imu_.zm());

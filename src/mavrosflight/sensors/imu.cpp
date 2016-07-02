@@ -29,7 +29,7 @@ bool Imu::calibrate(mavlink_small_imu_t msg)
   double temperature = ((double)msg.temperature/340.0 + 36.53);
 
   static double calibration_time = 5.0; // seconds to record data for temperature compensation
-  static double deltaT = 1.0; // number of degrees required for a temperature calibration
+  static double deltaT = 0.0005; // number of degrees required for a temperature calibration
 
   static double Tmin = 1000; // minimum temperature seen
   static double Tmax = -1000; // maximum temperature seen
