@@ -36,7 +36,7 @@ fcuIO::fcuIO()
 
   ros::NodeHandle nh_private("~");
   std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
-  int baud_rate = nh_private.param<int>("baud_rate", 115200);
+  int baud_rate = nh_private.param<int>("baud_rate", 921600);
 
 
   try
