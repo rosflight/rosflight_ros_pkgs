@@ -11,10 +11,6 @@
 #include <boost/thread.hpp>
 #include <ros/ros.h>
 
-#include <iostream>
-
-using namespace std;
-
 namespace mavrosflight
 {
 
@@ -23,8 +19,7 @@ using boost::asio::serial_port_base;
 MavlinkSerial::MavlinkSerial(std::string port, int baud_rate) :
   io_service_(),
   serial_port_(io_service_),
-  write_in_progress_(false),
-  write_queue_(100)
+  write_in_progress_(false)
 {
   // setup serial port
   try
@@ -87,6 +82,8 @@ void MavlinkSerial::unregister_mavlink_listener(MavlinkListenerInterface * const
 
 void MavlinkSerial::close()
 {
+  mutex_lock lock(mutex_);
+
   io_service_.stop();
   serial_port_.close();
 
@@ -138,7 +135,12 @@ void MavlinkSerial::send_message(const mavlink_message_t &msg)
   WriteBuffer *buffer = new WriteBuffer();
   buffer->len = mavlink_msg_to_send_buffer(buffer->data, &msg);
   assert(buffer->len <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
-  write_queue_.push(buffer);
+
+  {
+    mutex_lock lock(mutex_);
+    write_queue_.push_back(buffer);
+  }
+
   do_async_write(true);
 }
 
@@ -147,11 +149,12 @@ void MavlinkSerial::do_async_write(bool check_write_state)
   if (check_write_state && write_in_progress_)
     return;
 
+  mutex_lock lock(mutex_);
   if (write_queue_.empty())
     return;
+
   write_in_progress_ = true;
-  WriteBuffer *buffer;
-  write_queue_.pop(buffer);
+  WriteBuffer *buffer = write_queue_.front();
   serial_port_.async_write_some(
         boost::asio::buffer(buffer->dpos(), buffer->nbytes()),
         boost::bind(
@@ -159,6 +162,7 @@ void MavlinkSerial::do_async_write(bool check_write_state)
           this,
           boost::asio::placeholders::error,
           boost::asio::placeholders::bytes_transferred));
+
 }
 
 void MavlinkSerial::async_write_end(const boost::system::error_code &error, std::size_t bytes_transferred)
@@ -168,14 +172,26 @@ void MavlinkSerial::async_write_end(const boost::system::error_code &error, std:
     close();
     return;
   }
-  else if (write_queue_.empty())
+
+  mutex_lock lock(mutex_);
+  if (write_queue_.empty())
   {
     write_in_progress_ = false;
+    return;
   }
-  else
+
+  WriteBuffer *buffer = write_queue_.front();
+  buffer->pos += bytes_transferred;
+  if (buffer->nbytes() == 0)
   {
-    do_async_write(false);
+    write_queue_.pop_front();
+    delete buffer;
   }
+
+  if (write_queue_.empty())
+    write_in_progress_ = false;
+  else
+    do_async_write(false);
 }
 
 } // namespace mavrosflight

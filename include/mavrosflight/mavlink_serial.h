@@ -13,7 +13,6 @@
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 #include <boost/function.hpp>
-#include <boost/lockfree/spsc_queue.hpp>
 
 #include <list>
 #include <string>
@@ -146,7 +145,7 @@ private:
   mavlink_message_t msg_in_;
   mavlink_status_t status_in_;
 
-  boost::lockfree::spsc_queue<WriteBuffer*> write_queue_;
+  std::list<WriteBuffer*> write_queue_; //!< queue of buffers to be written to the serial port
   bool write_in_progress_; //!< flag for whether async_write is already running
 };
 
