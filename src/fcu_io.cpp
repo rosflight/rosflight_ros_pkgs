@@ -32,7 +32,8 @@ fcuIO::fcuIO()
   param_get_srv_ = nh.advertiseService("param_get", &fcuIO::paramGetSrvCallback, this);
   param_set_srv_ = nh.advertiseService("param_set", &fcuIO::paramSetSrvCallback, this);
   param_write_srv_ = nh.advertiseService("param_write", &fcuIO::paramWriteSrvCallback, this);
-  imu_calibrate_srv_ = nh.advertiseService("calibrate_imu_temp", &fcuIO::calibrateImuTempSrvCallback, this);
+  imu_calibrate_bias_srv_ = nh.advertiseService("calibrate_imu_bias", &fcuIO::calibrateImuBiasSrvCallback, this);
+  imu_calibrate_temp_srv_ = nh.advertiseService("calibrate_imu_temp", &fcuIO::calibrateImuTempSrvCallback, this);
 
   ros::NodeHandle nh_private("~");
   std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
@@ -68,6 +69,9 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
   {
   case MAVLINK_MSG_ID_HEARTBEAT:
     handle_heartbeat_msg();
+    break;
+  case MAVLINK_MSG_ID_COMMAND_ACK:
+    handle_command_ack_msg(msg);
     break;
   case MAVLINK_MSG_ID_SMALL_IMU:
     handle_small_imu_msg(msg);
@@ -125,6 +129,26 @@ void fcuIO::on_params_saved_change(bool unsaved_changes)
 void fcuIO::handle_heartbeat_msg()
 {
   ROS_INFO_ONCE("Got HEARTBEAT, connected.");
+}
+
+void fcuIO::handle_command_ack_msg(const mavlink_message_t &msg)
+{
+  mavlink_command_ack_t ack;
+  mavlink_msg_command_ack_decode(&msg, &ack);
+
+  switch (ack.command)
+  {
+  case MAV_CMD_PREFLIGHT_CALIBRATION:
+    if (ack.result == MAV_RESULT_ACCEPTED)
+    {
+      ROS_INFO("IMU bias calibration complete!");
+    }
+    else
+    {
+      ROS_ERROR("IMU bias calibration failed");
+    }
+    break;
+  }
 }
 
 void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
@@ -342,6 +366,17 @@ bool fcuIO::paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Tri
     res.message = "Request rejected: write already in progress";
   }
 
+  return true;
+}
+
+bool fcuIO::calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+{
+  mavlink_message_t msg;
+  mavlink_msg_command_int_pack(1, 50, &msg, 1, MAV_COMP_ID_ALL,
+                               0, MAV_CMD_PREFLIGHT_CALIBRATION, 0, 0, 1, 0, 0, 0, 1, 0, 0);
+  mavrosflight_->serial.send_message(msg);
+
+  res.success = true;
   return true;
 }
 
