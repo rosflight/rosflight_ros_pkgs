@@ -355,6 +355,7 @@ bool fcuIO::calibrateIMUCallback(std_srvs::Trigger::Request &req, std_srvs::Trig
   // tell the IMU to calibrate itself
   imu_.calibrated = false;
   res.success = true;
+  return true;
 }
 
 } // namespace fcu_io
