@@ -90,7 +90,7 @@ private:
   /**
    * \brief Convenience typedef for mutex lock
    */
-  typedef boost::mutex::scoped_lock mutex_lock;
+  typedef boost::lock_guard<boost::recursive_mutex> mutex_lock;
 
   //===========================================================================
   // methods
@@ -135,7 +135,7 @@ private:
   boost::asio::io_service io_service_; //!< boost io service provider
   boost::asio::serial_port serial_port_; //!< boost serial port object
   boost::thread io_thread_; //!< thread on which the io service runs
-  boost::mutex mutex_; //!< mutex for threadsafe operation
+  boost::recursive_mutex mutex_; //!< mutex for threadsafe operation
 
   uint8_t sysid_;
   uint8_t compid_;
