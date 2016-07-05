@@ -50,7 +50,7 @@ void Param::requestSet(double value, mavlink_message_t *msg)
 {
   if (value != value_)
   {
-    new_value_ = value;
+    new_value_ = getCastValue(value);
     expected_raw_value_ = getRawValue(new_value_);
 
     mavlink_msg_param_set_pack(1, 50, msg,
@@ -149,6 +149,38 @@ float Param::getRawValue(double value)
   }
 
   return raw_value;
+}
+
+double Param::getCastValue(double value)
+{
+  double cast_value;
+
+  switch (type_)
+  {
+  case MAV_PARAM_TYPE_INT8:
+    cast_value = toCastValue<int8_t>(value);
+    break;
+  case MAV_PARAM_TYPE_INT16:
+    cast_value = toCastValue<int16_t>(value);
+    break;
+  case MAV_PARAM_TYPE_INT32:
+    cast_value = toCastValue<int32_t>(value);
+    break;
+  case MAV_PARAM_TYPE_UINT8:
+    cast_value = toCastValue<uint8_t>(value);
+    break;
+  case MAV_PARAM_TYPE_UINT16:
+    cast_value = toCastValue<uint16_t>(value);
+    break;
+  case MAV_PARAM_TYPE_UINT32:
+    cast_value = toCastValue<uint32_t>(value);
+    break;
+  case MAV_PARAM_TYPE_REAL32:
+    cast_value = toCastValue<float>(value);
+    break;
+  }
+
+  return cast_value;
 }
 
 } // namespace mavrosflight

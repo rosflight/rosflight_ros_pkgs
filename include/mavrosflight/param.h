@@ -37,6 +37,7 @@ private:
   void setFromRawValue(float raw_value);
   float getRawValue();
   float getRawValue(double value);
+  double getCastValue(double value);
 
   template<typename T>
   double fromRawValue(float value)
@@ -50,6 +51,12 @@ private:
   {
     T t_value = (T) value;
     return *(float*) &t_value;
+  }
+
+  template<typename T>
+  double toCastValue(double value)
+  {
+    return (double) ((T) value);
   }
 
   MavlinkSerial *serial_;
