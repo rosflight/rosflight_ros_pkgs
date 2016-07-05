@@ -32,7 +32,7 @@ fcuIO::fcuIO()
   param_get_srv_ = nh.advertiseService("param_get", &fcuIO::paramGetSrvCallback, this);
   param_set_srv_ = nh.advertiseService("param_set", &fcuIO::paramSetSrvCallback, this);
   param_write_srv_ = nh.advertiseService("param_write", &fcuIO::paramWriteSrvCallback, this);
-  imu_calibrate_srv_ = nh.advertiseService("calibrate_imu", &fcuIO::calibrateIMUCallback, this);
+  imu_calibrate_srv_ = nh.advertiseService("calibrate_imu_temp", &fcuIO::calibrateImuTempSrvCallback, this);
 
   ros::NodeHandle nh_private("~");
   std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
@@ -345,7 +345,7 @@ bool fcuIO::paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Tri
   return true;
 }
 
-bool fcuIO::calibrateIMUCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+bool fcuIO::calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
   // tell the IMU to start a temperature calibration
   imu_.start_temp_calibration();

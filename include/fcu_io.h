@@ -65,7 +65,7 @@ private:
   bool paramGetSrvCallback(fcu_io::ParamGet::Request &req, fcu_io::ParamGet::Response &res);
   bool paramSetSrvCallback(fcu_io::ParamSet::Request &req, fcu_io::ParamSet::Response &res);
   bool paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool calibrateIMUCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+  bool calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
 
   // helpers
   template<class T> inline T saturate(T value, T min, T max)
