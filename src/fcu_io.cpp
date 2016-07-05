@@ -90,12 +90,8 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
   case MAVLINK_MSG_ID_SMALL_BARO:
     handle_small_baro_msg(msg);
     break;
-  case MAVLINK_MSG_ID_TIMESYNC: // <-- This is handled by the time_manager
-    break;
-  case MAVLINK_MSG_ID_PARAM_VALUE: // <-- This is handled by the param_manager
-    break;
   default:
-    ROS_ERROR("fcu_io:Got unsupported message ID %d", msg.msgid);
+    ROS_DEBUG("fcu_io: Got unhandled mavlink message ID %d", msg.msgid);
     break;
   }
 }
