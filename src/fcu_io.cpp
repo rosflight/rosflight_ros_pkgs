@@ -138,26 +138,25 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
   sensor_msgs::Temperature temp_msg;
   temp_msg.header.stamp = imu_msg.header.stamp;
 
-  static int send_throttle = 0;
-
   // This is so we can eventually make calibrating the IMU an external service
-  if (!imu_.calibrated)
+  if (imu_.is_calibrating())
   {
-    if(imu_.calibrate(imu))
+    if(imu_.calibrate_temp(imu))
     {
-      ROS_INFO("accel parameters found\n xm = %f, ym = %f, zm = %f xb = %f yb = %f, zb = %f",
+      ROS_INFO("IMU temperature calibration complete:\n xm = %f, ym = %f, zm = %f xb = %f yb = %f, zb = %f",
                imu_.xm(),imu_.ym(),imu_.zm(),imu_.xb(),imu_.yb(),imu_.zb());
-        // calibration is done, send params to the param server and save them
-        mavrosflight_->param.set_param_value("ACC_X_TEMP_COMP", 1000.0*imu_.xm());
-        mavrosflight_->param.set_param_value("ACC_Y_TEMP_COMP", 1000.0*imu_.ym());
-        mavrosflight_->param.set_param_value("ACC_Z_TEMP_COMP", 1000.0*imu_.zm());
-        mavrosflight_->param.set_param_value("ACC_X_BIAS", 1000.0*imu_.xb());
-        mavrosflight_->param.set_param_value("ACC_Y_BIAS", 1000.0*imu_.yb());
-        mavrosflight_->param.set_param_value("ACC_Z_BIAS", 1000.0*imu_.zb());
-        mavrosflight_->param.write_params();
+
+      // calibration is done, send params to the param server
+      mavrosflight_->param.set_param_value("ACC_X_TEMP_COMP", 1000.0*imu_.xm());
+      mavrosflight_->param.set_param_value("ACC_Y_TEMP_COMP", 1000.0*imu_.ym());
+      mavrosflight_->param.set_param_value("ACC_Z_TEMP_COMP", 1000.0*imu_.zm());
+      mavrosflight_->param.set_param_value("ACC_X_BIAS", 1000.0*imu_.xb());
+      mavrosflight_->param.set_param_value("ACC_Y_BIAS", 1000.0*imu_.yb());
+      mavrosflight_->param.set_param_value("ACC_Z_BIAS", 1000.0*imu_.zb());
+
+      ROS_WARN("Write params to save new temperature calibration!");
     }
   }
-
 
   bool valid = imu_.correct(imu,
                             &imu_msg.linear_acceleration.x,
@@ -348,8 +347,10 @@ bool fcuIO::paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Tri
 
 bool fcuIO::calibrateIMUCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
-  // tell the IMU to calibrate itself
-  imu_.calibrated = false;
+  // tell the IMU to start a temperature calibration
+  imu_.start_temp_calibration();
+  ROS_INFO("IMU temperature calibration started");
+
   res.success = true;
   return true;
 }

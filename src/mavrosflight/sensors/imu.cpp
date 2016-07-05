@@ -6,7 +6,6 @@
 
 #include <mavrosflight/sensors/imu.h>
 #include <ros/ros.h>
-#include <deque>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
 
@@ -15,86 +14,95 @@ namespace mavrosflight
 namespace sensors
 {
 
-Imu::Imu()
+Imu::Imu() :
+  calibrating_(false),
+  calibration_time_(10.0),
+  deltaT_(1.0)
 {
   x_[0] << 0, 0;
   x_[1] << 0, 0;
   x_[2] << 0, 0;
-  calibrated = true;
 }
 
-bool Imu::calibrate(mavlink_small_imu_t msg)
+void Imu::start_temp_calibration()
+{
+  calibrating_ = true;
+
+  Tmin_ = 1000;
+  Tmax_ = -1000;
+
+  first_time_ = true;
+  start_time_ = 0;
+
+  measurement_throttle_ = 0;
+
+  A_.clear();
+  B_.clear();
+}
+
+bool Imu::calibrate_temp(mavlink_small_imu_t msg)
 {
   // read temperature of accel chip for temperature compensation calibration
   double temperature = ((double)msg.temperature/340.0 + 36.53);
 
-  static double calibration_time = 10.0; // seconds to record data for temperature compensation
-  static double deltaT = 1.0; // number of degrees required for a temperature calibration
-
-  static double Tmin = 1000; // minimum temperature seen
-  static double Tmax = -1000; // maximum temperature seen
-
-  // one for each accel axis
-  static std::deque<Eigen::Vector3d> A(0);
-  static std::deque<double> B(0);
-  static bool first_time = true;
-
-  static double start_time = 0;
-
-  if(first_time)
+  if (first_time_)
   {
-    first_time = false;
-    start_time = ros::Time::now().toSec();
+    first_time_ = false;
+    start_time_ = ros::Time::now().toSec();
   }
 
-  double now = ros::Time::now().toSec() - start_time;
+  double elapsed = ros::Time::now().toSec() - start_time_;
 
   // if still in calibration mode
-  if(now < calibration_time || (Tmax - Tmin) < deltaT)
+  if (elapsed < calibration_time_)
   {
-    static int measurement_throttle = 0;
-    if(measurement_throttle > 20)
+    if (measurement_throttle_ > 20)
     {
       Eigen::Vector3d measurement;
-      measurement << msg.xacc, msg.yacc, msg.zacc - 4096; // need a better way to know the z-axis offset
-      A.push_back(measurement);
-      B.push_back(temperature);
-      if(temperature < Tmin)
+      measurement << msg.xacc, msg.yacc, msg.zacc - 4096; //! \todo need a better way to know the z-axis offset
+      A_.push_back(measurement);
+      B_.push_back(temperature);
+      if (temperature < Tmin_)
       {
-        Tmin = temperature;
+        Tmin_ = temperature;
       }
-      if(temperature > Tmax)
+      if (temperature > Tmax_)
       {
-        Tmax = temperature;
+        Tmax_ = temperature;
       }
-      measurement_throttle = 0;
+      measurement_throttle_ = 0;
     }
-    measurement_throttle++;
+    measurement_throttle_++;
   }
-  else if(!calibrated)
+  else if (calibrating_)
   {
-    for(int i = 0; i < 3; i++)
+    if ((Tmax_ - Tmin_) < deltaT_)
+    {
+      ROS_WARN("Insufficient temperature range (%f degC); calibration may be innaccurate!!!", Tmax_ - Tmin_);
+    }
+
+    for (int i = 0; i < 3; i++)
     {
       Eigen::MatrixX2d Amat;
       Eigen::VectorXd Bmat;
-      Amat.resize(A.size(),2);
-      Bmat.resize(B.size());
+      Amat.resize(A_.size(),2);
+      Bmat.resize(B_.size());
 
-      ROS_INFO("IMU DONE CALIBRATING, current time = %f, start = %f", now, calibration_time);
       // put the data into and Eigen Matrix for linear algebra
-      for(int j = 0; j<A.size(); j++)
+      for (int j = 0; j < A_.size(); j++)
       {
-        Amat(j,0) = A[j](i);
+        Amat(j,0) = A_[j](i);
         Amat(j,1) = 1.0;
-        Bmat(j) = B[j];
+        Bmat(j) = B_[j];
       }
 
       // Perform Least-Squares on the data
       x_[i] = Amat.jacobiSvd(Eigen::ComputeFullU | Eigen::ComputeFullV).solve(Bmat);
     }
-    calibrated = true;
+    calibrating_ = false;
   }
-  return calibrated;
+
+  return !calibrating_;
 }
 
 bool Imu::correct(mavlink_small_imu_t msg,
@@ -111,8 +119,6 @@ bool Imu::correct(mavlink_small_imu_t msg,
   *temp = msg.temperature/340.0 + 36.53;
   return true;
 }
-
-
 
 } // namespace sensors
 } // namespace mavrosflight
