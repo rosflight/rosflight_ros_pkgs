@@ -9,6 +9,8 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
 
+#include <fstream>
+
 namespace mavrosflight
 {
 namespace sensors
@@ -42,6 +44,7 @@ void Imu::start_temp_calibration()
 
 bool Imu::calibrate_temp(mavlink_small_imu_t msg)
 {
+  static std::ofstream file("/home/capn/test.csv", std::ofstream::out);
   // read temperature of accel chip for temperature compensation calibration
   double temperature = ((double)msg.temperature/340.0 + 36.53);
 
@@ -61,7 +64,8 @@ bool Imu::calibrate_temp(mavlink_small_imu_t msg)
       Eigen::Vector3d measurement;
       measurement << msg.xacc, msg.yacc, msg.zacc - 4096; //! \todo need a better way to know the z-axis offset
       A_.push_back(measurement);
-      B_.push_back(temperature);
+      B_.push_back(msg.temperature);
+      file << msg.xacc << ", " << msg.yacc << ", " << msg.zacc << ", " << msg.temperature << "\n";
       if (temperature < Tmin_)
       {
         Tmin_ = temperature;
@@ -89,11 +93,16 @@ bool Imu::calibrate_temp(mavlink_small_imu_t msg)
       Bmat.resize(B_.size());
 
       // put the data into and Eigen Matrix for linear algebra
+      std::deque<Eigen::Vector3d>::iterator A_it = A_.begin();
+      std::deque<double>::iterator B_it = B_.begin();
       for (int j = 0; j < A_.size(); j++)
       {
-        Amat(j,0) = A_[j](i);
+        Eigen::Vector3d temp = *A_it;
+        Amat(j,0) = *B_it;
         Amat(j,1) = 1.0;
-        Bmat(j) = B_[j];
+        Bmat(j) = temp(i);
+        A_it++;
+        B_it++;
       }
 
       // Perform Least-Squares on the data

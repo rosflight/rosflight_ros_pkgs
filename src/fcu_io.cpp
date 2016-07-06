@@ -174,9 +174,9 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
       mavrosflight_->param.set_param_value("ACC_X_TEMP_COMP", 1000.0*imu_.xm());
       mavrosflight_->param.set_param_value("ACC_Y_TEMP_COMP", 1000.0*imu_.ym());
       mavrosflight_->param.set_param_value("ACC_Z_TEMP_COMP", 1000.0*imu_.zm());
-      mavrosflight_->param.set_param_value("ACC_X_BIAS", 1000.0*imu_.xb());
-      mavrosflight_->param.set_param_value("ACC_Y_BIAS", 1000.0*imu_.yb());
-      mavrosflight_->param.set_param_value("ACC_Z_BIAS", 1000.0*imu_.zb());
+      mavrosflight_->param.set_param_value("ACC_X_BIAS", imu_.xb());
+      mavrosflight_->param.set_param_value("ACC_Y_BIAS", imu_.yb());
+      mavrosflight_->param.set_param_value("ACC_Z_BIAS", imu_.zb());
 
       ROS_WARN("Write params to save new temperature calibration!");
     }
@@ -382,9 +382,17 @@ bool fcuIO::calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srv
 
 bool fcuIO::calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
+  // First, reset the previous calibration
+  mavrosflight_->param.set_param_value("ACC_X_TEMP_COMP", 0);
+  mavrosflight_->param.set_param_value("ACC_Y_TEMP_COMP", 0);
+  mavrosflight_->param.set_param_value("ACC_Z_TEMP_COMP", 0);
+  mavrosflight_->param.set_param_value("ACC_X_BIAS", 0);
+  mavrosflight_->param.set_param_value("ACC_Y_BIAS", 0);
+  mavrosflight_->param.set_param_value("ACC_Z_BIAS", 0);
+
   // tell the IMU to start a temperature calibration
   imu_.start_temp_calibration();
-  ROS_INFO("IMU temperature calibration started");
+  ROS_WARN("IMU temperature calibration started");
 
   res.success = true;
   return true;
