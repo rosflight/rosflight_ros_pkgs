@@ -171,9 +171,9 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
                imu_.xm(),imu_.ym(),imu_.zm(),imu_.xb(),imu_.yb(),imu_.zb());
 
       // calibration is done, send params to the param server
-      mavrosflight_->param.set_param_value("ACC_X_TEMP_COMP", 1000.0*imu_.xm());
-      mavrosflight_->param.set_param_value("ACC_Y_TEMP_COMP", 1000.0*imu_.ym());
-      mavrosflight_->param.set_param_value("ACC_Z_TEMP_COMP", 1000.0*imu_.zm());
+      mavrosflight_->param.set_param_value("ACC_X_TEMP_COMP", imu_.xm());
+      mavrosflight_->param.set_param_value("ACC_Y_TEMP_COMP", imu_.ym());
+      mavrosflight_->param.set_param_value("ACC_Z_TEMP_COMP", imu_.zm());
       mavrosflight_->param.set_param_value("ACC_X_BIAS", imu_.xb());
       mavrosflight_->param.set_param_value("ACC_Y_BIAS", imu_.yb());
       mavrosflight_->param.set_param_value("ACC_Z_BIAS", imu_.zb());

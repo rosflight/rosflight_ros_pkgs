@@ -67,10 +67,6 @@ public:
   const double zb() const { return x_[2](1); }
 
 private:
-  //! \todo explicitly compute these so it's clear where they come from
-  static const double ACCEL_SCALE = 0.002349;
-  static const double GYRO_SCALE = 0.004256;
-
   Eigen::Vector2d x_[3];
 
   bool calibrating_; //!< whether a temperature calibration is in progress
