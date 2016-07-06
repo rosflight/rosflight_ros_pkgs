@@ -9,8 +9,6 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
 
-#include <fstream>
-
 namespace mavrosflight
 {
 namespace sensors
@@ -18,7 +16,7 @@ namespace sensors
 
 Imu::Imu() :
   calibrating_(false),
-  calibration_time_(10.0),
+  calibration_time_(60.0),
   deltaT_(1.0)
 {
   x_[0] << 0, 0;
@@ -44,7 +42,6 @@ void Imu::start_temp_calibration()
 
 bool Imu::calibrate_temp(mavlink_small_imu_t msg)
 {
-  static std::ofstream file("/home/capn/test.csv", std::ofstream::out);
   // read temperature of accel chip for temperature compensation calibration
   double temperature = ((double)msg.temperature/340.0 + 36.53);
 
@@ -57,7 +54,7 @@ bool Imu::calibrate_temp(mavlink_small_imu_t msg)
   double elapsed = ros::Time::now().toSec() - start_time_;
 
   // if still in calibration mode
-  if (elapsed < calibration_time_)
+  if (elapsed < calibration_time_ && (Tmax_ - Tmin_) < deltaT_)
   {
     if (measurement_throttle_ > 20)
     {
@@ -65,7 +62,6 @@ bool Imu::calibrate_temp(mavlink_small_imu_t msg)
       measurement << msg.xacc, msg.yacc, msg.zacc - 4096; //! \todo need a better way to know the z-axis offset
       A_.push_back(measurement);
       B_.push_back(msg.temperature);
-      file << msg.xacc << ", " << msg.yacc << ", " << msg.zacc << ", " << msg.temperature << "\n";
       if (temperature < Tmin_)
       {
         Tmin_ = temperature;
