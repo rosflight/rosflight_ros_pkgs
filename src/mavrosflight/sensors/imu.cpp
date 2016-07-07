@@ -56,7 +56,7 @@ bool Imu::calibrate_temp(mavlink_small_imu_t msg)
     if (measurement_throttle_ > 20)
     {
       Eigen::Vector3d measurement;
-      measurement << msg.xacc, msg.yacc, msg.zacc - 9.60665; //! \todo need a better way to know the z-axis offset
+      measurement << msg.xacc, msg.yacc, msg.zacc - 9.80665;
       A_.push_back(measurement);
       B_.push_back(msg.temperature);
       if (msg.temperature < Tmin_)
