@@ -6,6 +6,8 @@
 #include <mavrosflight/serial_exception.h>
 #include <string>
 #include <stdint.h>
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Dense>
 
 #include "fcu_io.h"
 
@@ -25,14 +27,18 @@ fcuIO::fcuIO()
   rc_raw_pub_ = nh.advertise<fcu_common::ServoOutputRaw>("rc_raw", 1);
   diff_pressure_pub_ = nh.advertise<sensor_msgs::FluidPressure>("diff_pressure", 1);
   temperature_pub_ = nh.advertise<sensor_msgs::Temperature>("temperature", 1);
+  baro_pub_ = nh.advertise<std_msgs::Float32>("baro/alt", 1);
 
   param_get_srv_ = nh.advertiseService("param_get", &fcuIO::paramGetSrvCallback, this);
   param_set_srv_ = nh.advertiseService("param_set", &fcuIO::paramSetSrvCallback, this);
   param_write_srv_ = nh.advertiseService("param_write", &fcuIO::paramWriteSrvCallback, this);
+  imu_calibrate_bias_srv_ = nh.advertiseService("calibrate_imu_bias", &fcuIO::calibrateImuBiasSrvCallback, this);
+  imu_calibrate_temp_srv_ = nh.advertiseService("calibrate_imu_temp", &fcuIO::calibrateImuTempSrvCallback, this);
 
   ros::NodeHandle nh_private("~");
   std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
-  int baud_rate = nh_private.param<int>("baud_rate", 115200);
+  int baud_rate = nh_private.param<int>("baud_rate", 921600);
+
 
   try
   {
@@ -64,6 +70,9 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
   case MAVLINK_MSG_ID_HEARTBEAT:
     handle_heartbeat_msg();
     break;
+  case MAVLINK_MSG_ID_COMMAND_ACK:
+    handle_command_ack_msg(msg);
+    break;
   case MAVLINK_MSG_ID_SMALL_IMU:
     handle_small_imu_msg(msg);
     break;
@@ -81,6 +90,12 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
     break;
   case MAVLINK_MSG_ID_NAMED_VALUE_FLOAT:
     handle_named_value_float_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_SMALL_BARO:
+    handle_small_baro_msg(msg);
+    break;
+  default:
+    ROS_DEBUG("fcu_io: Got unhandled mavlink message ID %d", msg.msgid);
     break;
   }
 }
@@ -116,6 +131,26 @@ void fcuIO::handle_heartbeat_msg()
   ROS_INFO_ONCE("Got HEARTBEAT, connected.");
 }
 
+void fcuIO::handle_command_ack_msg(const mavlink_message_t &msg)
+{
+  mavlink_command_ack_t ack;
+  mavlink_msg_command_ack_decode(&msg, &ack);
+
+  switch (ack.command)
+  {
+  case MAV_CMD_PREFLIGHT_CALIBRATION:
+    if (ack.result == MAV_RESULT_ACCEPTED)
+    {
+      ROS_INFO("IMU bias calibration complete!");
+    }
+    else
+    {
+      ROS_ERROR("IMU bias calibration failed");
+    }
+    break;
+  }
+}
+
 void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
 {
   mavlink_small_imu_t imu;
@@ -126,6 +161,26 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
 
   sensor_msgs::Temperature temp_msg;
   temp_msg.header.stamp = imu_msg.header.stamp;
+
+  // This is so we can eventually make calibrating the IMU an external service
+  if (imu_.is_calibrating())
+  {
+    if(imu_.calibrate_temp(imu))
+    {
+      ROS_INFO("IMU temperature calibration complete:\n xm = %f, ym = %f, zm = %f xb = %f yb = %f, zb = %f",
+               imu_.xm(),imu_.ym(),imu_.zm(),imu_.xb(),imu_.yb(),imu_.zb());
+
+      // calibration is done, send params to the param server
+      mavrosflight_->param.set_param_value("ACC_X_TEMP_COMP", 1000.0*imu_.xm());
+      mavrosflight_->param.set_param_value("ACC_Y_TEMP_COMP", 1000.0*imu_.ym());
+      mavrosflight_->param.set_param_value("ACC_Z_TEMP_COMP", 1000.0*imu_.zm());
+      mavrosflight_->param.set_param_value("ACC_X_BIAS", imu_.xb());
+      mavrosflight_->param.set_param_value("ACC_Y_BIAS", imu_.yb());
+      mavrosflight_->param.set_param_value("ACC_Z_BIAS", imu_.zb());
+
+      ROS_WARN("Write params to save new temperature calibration!");
+    }
+  }
 
   bool valid = imu_.correct(imu,
                             &imu_msg.linear_acceleration.x,
@@ -197,8 +252,8 @@ void fcuIO::handle_diff_pressure_msg(const mavlink_message_t &msg)
   pressure_msg.header.stamp = ros::Time::now(); //! \todo time synchronization
 
   bool valid = diff_pressure_.correct(diff,
-                                               &pressure_msg.fluid_pressure,
-                                               &temp_msg.temperature);
+                                      &pressure_msg.fluid_pressure,
+                                      &temp_msg.temperature);
 
   if (valid)
   {
@@ -243,16 +298,31 @@ void fcuIO::handle_named_value_float_msg(const mavlink_message_t &msg)
   named_value_float_pubs_[name].publish(out_msg);
 }
 
+void fcuIO::handle_small_baro_msg(const mavlink_message_t &msg)
+{
+  mavlink_small_baro_t baro;
+  mavlink_msg_small_baro_decode(&msg, &baro);
+
+  double alt = 0;
+
+  if (baro_.correct(baro, &alt))
+  {
+    std_msgs::Float32 alt_msg;
+    alt_msg.data = alt;
+    baro_pub_.publish(alt_msg);
+  }
+}
+
 void fcuIO::commandCallback(fcu_common::ExtendedCommand::ConstPtr msg)
 {
   //! \todo these are hard-coded to match right now; may want to replace with something more robust
   OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE) msg->mode;
   OFFBOARD_CONTROL_IGNORE ignore = (OFFBOARD_CONTROL_IGNORE) msg->ignore;
 
-  int v1 = (int) (msg->value1 * 1000);
-  int v2 = (int) (msg->value2 * 1000);
-  int v3 = (int) (msg->value3 * 1000);
-  int v4 = (int) (msg->value4 * 1000);
+  int v1 = (int)(msg->value1 * 1000);
+  int v2 = (int)(msg->value2 * 1000);
+  int v3 = (int)(msg->value3 * 1000);
+  int v4 = (int)(msg->value4 * 1000);
 
   switch (mode)
   {
@@ -296,6 +366,35 @@ bool fcuIO::paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Tri
     res.message = "Request rejected: write already in progress";
   }
 
+  return true;
+}
+
+bool fcuIO::calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+{
+  mavlink_message_t msg;
+  mavlink_msg_command_int_pack(1, 50, &msg, 1, MAV_COMP_ID_ALL,
+                               0, MAV_CMD_PREFLIGHT_CALIBRATION, 0, 0, 1, 0, 0, 0, 1, 0, 0);
+  mavrosflight_->serial.send_message(msg);
+
+  res.success = true;
+  return true;
+}
+
+bool fcuIO::calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+{
+  // First, reset the previous calibration
+  mavrosflight_->param.set_param_value("ACC_X_TEMP_COMP", 0);
+  mavrosflight_->param.set_param_value("ACC_Y_TEMP_COMP", 0);
+  mavrosflight_->param.set_param_value("ACC_Z_TEMP_COMP", 0);
+  mavrosflight_->param.set_param_value("ACC_X_BIAS", 0);
+  mavrosflight_->param.set_param_value("ACC_Y_BIAS", 0);
+  mavrosflight_->param.set_param_value("ACC_Z_BIAS", 0);
+
+  // tell the IMU to start a temperature calibration
+  imu_.start_temp_calibration();
+  ROS_WARN("IMU temperature calibration started");
+
+  res.success = true;
   return true;
 }
 

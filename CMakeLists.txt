@@ -7,8 +7,9 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   std_msgs
+  cmake_modules
 )
-
+find_package(Eigen REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
 
 ###################################
@@ -58,6 +59,7 @@ add_library(mavrosflight
   src/mavrosflight/time_manager.cpp
   src/mavrosflight/sensors/differential_pressure.cpp
   src/mavrosflight/sensors/imu.cpp
+  src/mavrosflight/sensors/baro.cpp
 )
 add_dependencies(mavrosflight ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(mavrosflight
