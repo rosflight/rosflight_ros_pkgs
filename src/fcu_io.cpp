@@ -267,7 +267,12 @@ void fcuIO::handle_named_value_int_msg(const mavlink_message_t &msg)
   mavlink_named_value_int_t val;
   mavlink_msg_named_value_int_decode(&msg, &val);
 
-  std::string name(val.name);
+  // ensure null termination of name
+  char c_name[MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN + 1];
+  memcpy(c_name, val.name, MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN);
+  c_name[MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN] = '\0';
+  std::string name(c_name);
+
   if (named_value_int_pubs_.find(name) == named_value_int_pubs_.end())
   {
     ros::NodeHandle nh;
@@ -285,7 +290,12 @@ void fcuIO::handle_named_value_float_msg(const mavlink_message_t &msg)
   mavlink_named_value_float_t val;
   mavlink_msg_named_value_float_decode(&msg, &val);
 
-  std::string name(val.name);
+  // ensure null termination of name
+  char c_name[MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN + 1];
+  memcpy(c_name, val.name, MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN);
+  c_name[MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN] = '\0';
+  std::string name(c_name);
+
   if (named_value_float_pubs_.find(name) == named_value_float_pubs_.end())
   {
     ros::NodeHandle nh;
