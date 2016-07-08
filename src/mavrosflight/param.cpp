@@ -62,19 +62,22 @@ void Param::requestSet(double value, mavlink_message_t *msg)
 
 bool Param::handleUpdate(const mavlink_param_value_t &msg)
 {
-  //! \todo check for changes in type, index, etc. and handle appropriately
+  if (msg.param_index != index_)
+    return false;
+
+  if (msg.param_type != type_)
+    return false;
 
   if (set_in_progress_ && msg.param_value == expected_raw_value_)
-  {
-    value_ = new_value_;
     set_in_progress_ = false;
-    return true;
-  }
-  else
+
+  if (msg.param_value != getRawValue())
   {
     setFromRawValue(msg.param_value);
-    return false;
+    return true;
   }
+
+  return false;
 }
 
 void Param::init(std::string name, int index, MAV_PARAM_TYPE type, float raw_value)
