@@ -67,10 +67,6 @@ public:
   const double zb() const { return x_[2](1); }
 
 private:
-  //! \todo explicitly compute these so it's clear where they come from
-  static const double ACCEL_SCALE = 0.002349;
-  static const double GYRO_SCALE = 0.004256;
-
   Eigen::Vector2d x_[3];
 
   bool calibrating_; //!< whether a temperature calibration is in progress
@@ -81,8 +77,8 @@ private:
   bool first_time_; //!< waiting for first measurement for calibration
   double start_time_; //!< timestamp of first calibration measurement
   int measurement_throttle_;
-  std::deque<Eigen::Vector3d> A_;
-  std::deque<double> B_;
+  std::deque<double> A_;
+  std::deque<Eigen::Vector3d> B_;
 };
 
 } // namespace sensors
