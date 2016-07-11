@@ -17,6 +17,7 @@
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/FluidPressure.h>
 #include <sensor_msgs/Temperature.h>
+#include <sensor_msgs/Range.h>
 #include <std_srvs/Trigger.h>
 
 #include <fcu_common/ExtendedCommand.h>
@@ -58,6 +59,7 @@ private:
   void handle_small_baro_msg(const mavlink_message_t &msg);
   void handle_named_value_int_msg(const mavlink_message_t &msg);
   void handle_named_value_float_msg(const mavlink_message_t &msg);
+  void handle_distance_sensor(const mavlink_message_t &msg);
 
   // ROS message callbacks
   void commandCallback(fcu_common::ExtendedCommand::ConstPtr msg);
@@ -85,6 +87,7 @@ private:
   ros::Publisher diff_pressure_pub_;
   ros::Publisher temperature_pub_;
   ros::Publisher baro_pub_;
+  ros::Publisher sonar_pub_;
   std::map<std::string, ros::Publisher> named_value_int_pubs_;
   std::map<std::string, ros::Publisher> named_value_float_pubs_;
 

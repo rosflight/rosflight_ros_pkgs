@@ -28,6 +28,7 @@ fcuIO::fcuIO()
   diff_pressure_pub_ = nh.advertise<sensor_msgs::FluidPressure>("diff_pressure", 1);
   temperature_pub_ = nh.advertise<sensor_msgs::Temperature>("temperature", 1);
   baro_pub_ = nh.advertise<std_msgs::Float32>("baro/alt", 1);
+  sonar_pub_ = nh.advertise<sensor_msgs::Range>("sonar/data", 1);
 
   param_get_srv_ = nh.advertiseService("param_get", &fcuIO::paramGetSrvCallback, this);
   param_set_srv_ = nh.advertiseService("param_set", &fcuIO::paramSetSrvCallback, this);
@@ -93,6 +94,9 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
     break;
   case MAVLINK_MSG_ID_SMALL_BARO:
     handle_small_baro_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_DISTANCE_SENSOR:
+    handle_distance_sensor(msg);
     break;
   default:
     ROS_DEBUG("fcu_io: Got unhandled mavlink message ID %d", msg.msgid);
@@ -267,7 +271,12 @@ void fcuIO::handle_named_value_int_msg(const mavlink_message_t &msg)
   mavlink_named_value_int_t val;
   mavlink_msg_named_value_int_decode(&msg, &val);
 
-  std::string name(val.name);
+  // ensure null termination of name
+  char c_name[MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN + 1];
+  memcpy(c_name, val.name, MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN);
+  c_name[MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN] = '\0';
+  std::string name(c_name);
+
   if (named_value_int_pubs_.find(name) == named_value_int_pubs_.end())
   {
     ros::NodeHandle nh;
@@ -285,7 +294,12 @@ void fcuIO::handle_named_value_float_msg(const mavlink_message_t &msg)
   mavlink_named_value_float_t val;
   mavlink_msg_named_value_float_decode(&msg, &val);
 
-  std::string name(val.name);
+  // ensure null termination of name
+  char c_name[MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN + 1];
+  memcpy(c_name, val.name, MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN);
+  c_name[MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN] = '\0';
+  std::string name(c_name);
+
   if (named_value_float_pubs_.find(name) == named_value_float_pubs_.end())
   {
     ros::NodeHandle nh;
@@ -312,6 +326,26 @@ void fcuIO::handle_small_baro_msg(const mavlink_message_t &msg)
     baro_pub_.publish(alt_msg);
   }
 }
+
+void fcuIO::handle_distance_sensor(const mavlink_message_t &msg)
+{
+  mavlink_distance_sensor_t distance;
+  mavlink_msg_distance_sensor_decode(&msg, &distance);
+
+  sensor_msgs::Range alt_msg;
+  alt_msg.header.stamp = mavrosflight_->time.get_ros_time_us(distance.time_boot_ms);
+
+  // MB1242 returns in cm
+  alt_msg.max_range = distance.max_distance/100.0;
+  alt_msg.min_range = distance.min_distance/100.0;
+  alt_msg.range = distance.current_distance/100.0;
+
+  alt_msg.radiation_type = sensor_msgs::Range::ULTRASOUND;
+  alt_msg.field_of_view = 1.0472; // approx 60 deg
+
+  sonar_pub_.publish(alt_msg);
+}
+
 
 void fcuIO::commandCallback(fcu_common::ExtendedCommand::ConstPtr msg)
 {
