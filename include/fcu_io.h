@@ -77,6 +77,9 @@ private:
     return value < min ? min : (value > max ? max : value);
   }
 
+
+  ros::NodeHandle nh_;
+
   ros::Subscriber command_sub_;
 
   ros::Publisher unsaved_params_pub_;
