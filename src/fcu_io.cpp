@@ -16,25 +16,15 @@ namespace fcu_io
 
 fcuIO::fcuIO()
 {
-  ros::NodeHandle nh;
+  command_sub_ = nh_.subscribe("extended_command", 1, &fcuIO::commandCallback, this);
 
-  command_sub_ = nh.subscribe("extended_command", 1, &fcuIO::commandCallback, this);
+  unsaved_params_pub_ = nh_.advertise<std_msgs::Bool>("unsaved_params", 1, true);
 
-  unsaved_params_pub_ = nh.advertise<std_msgs::Bool>("unsaved_params", 1, true);
-  imu_pub_ = nh.advertise<sensor_msgs::Imu>("imu/data", 1);
-  imu_temp_pub_ = nh.advertise<sensor_msgs::Temperature>("imu/temperature", 1);
-  servo_output_raw_pub_ = nh.advertise<fcu_common::ServoOutputRaw>("servo_output_raw", 1);
-  rc_raw_pub_ = nh.advertise<fcu_common::ServoOutputRaw>("rc_raw", 1);
-  diff_pressure_pub_ = nh.advertise<sensor_msgs::FluidPressure>("diff_pressure", 1);
-  temperature_pub_ = nh.advertise<sensor_msgs::Temperature>("temperature", 1);
-  baro_pub_ = nh.advertise<std_msgs::Float32>("baro/alt", 1);
-  sonar_pub_ = nh.advertise<sensor_msgs::Range>("sonar/data", 1);
-
-  param_get_srv_ = nh.advertiseService("param_get", &fcuIO::paramGetSrvCallback, this);
-  param_set_srv_ = nh.advertiseService("param_set", &fcuIO::paramSetSrvCallback, this);
-  param_write_srv_ = nh.advertiseService("param_write", &fcuIO::paramWriteSrvCallback, this);
-  imu_calibrate_bias_srv_ = nh.advertiseService("calibrate_imu_bias", &fcuIO::calibrateImuBiasSrvCallback, this);
-  imu_calibrate_temp_srv_ = nh.advertiseService("calibrate_imu_temp", &fcuIO::calibrateImuTempSrvCallback, this);
+  param_get_srv_ = nh_.advertiseService("param_get", &fcuIO::paramGetSrvCallback, this);
+  param_set_srv_ = nh_.advertiseService("param_set", &fcuIO::paramSetSrvCallback, this);
+  param_write_srv_ = nh_.advertiseService("param_write", &fcuIO::paramWriteSrvCallback, this);
+  imu_calibrate_bias_srv_ = nh_.advertiseService("calibrate_imu_bias", &fcuIO::calibrateImuBiasSrvCallback, this);
+  imu_calibrate_temp_srv_ = nh_.advertiseService("calibrate_imu_temp", &fcuIO::calibrateImuTempSrvCallback, this);
 
   ros::NodeHandle nh_private("~");
   std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
@@ -197,7 +187,16 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
 
   if (valid)
   {
+    if(imu_pub_.getTopic().empty())
+    {
+      imu_pub_ = nh_.advertise<sensor_msgs::Imu>("imu/data", 1);
+    }
     imu_pub_.publish(imu_msg);
+
+    if(imu_temp_pub_.getTopic().empty())
+    {
+      imu_temp_pub_ = nh_.advertise<sensor_msgs::Temperature>("imu/temperature", 1);
+    }
     imu_temp_pub_.publish(temp_msg);
   }
 }
@@ -220,6 +219,10 @@ void fcuIO::handle_servo_output_raw_msg(const mavlink_message_t &msg)
   out_msg.values[6] = servo.servo7_raw;
   out_msg.values[7] = servo.servo8_raw;
 
+  if(servo_output_raw_pub_.getTopic().empty())
+  {
+    servo_output_raw_pub_ = nh_.advertise<fcu_common::ServoOutputRaw>("servo_output_raw", 1);
+  }
   servo_output_raw_pub_.publish(out_msg);
 }
 
@@ -241,6 +244,10 @@ void fcuIO::handle_rc_channels_raw_msg(const mavlink_message_t &msg)
   out_msg.values[6] = rc.chan7_raw;
   out_msg.values[7] = rc.chan8_raw;
 
+  if(rc_raw_pub_.getTopic().empty())
+  {
+    rc_raw_pub_ = nh_.advertise<fcu_common::ServoOutputRaw>("rc_raw", 1);
+  }
   rc_raw_pub_.publish(out_msg);
 }
 
@@ -261,6 +268,14 @@ void fcuIO::handle_diff_pressure_msg(const mavlink_message_t &msg)
 
   if (valid)
   {
+    if(diff_pressure_pub_.getTopic().empty())
+    {
+      diff_pressure_pub_ = nh_.advertise<sensor_msgs::FluidPressure>("diff_pressure", 1);
+    }
+    if(temperature_pub_.getTopic().empty())
+    {
+      temperature_pub_ = nh_.advertise<sensor_msgs::Temperature>("temperature", 1);
+    }
     temperature_pub_.publish(temp_msg);
     diff_pressure_pub_.publish(pressure_msg);
   }
@@ -323,6 +338,10 @@ void fcuIO::handle_small_baro_msg(const mavlink_message_t &msg)
   {
     std_msgs::Float32 alt_msg;
     alt_msg.data = alt;
+    if(baro_pub_.getTopic().empty())
+    {
+      baro_pub_ = nh_.advertise<std_msgs::Float32>("baro/alt", 1);
+    }
     baro_pub_.publish(alt_msg);
   }
 }
@@ -343,7 +362,12 @@ void fcuIO::handle_distance_sensor(const mavlink_message_t &msg)
   alt_msg.radiation_type = sensor_msgs::Range::ULTRASOUND;
   alt_msg.field_of_view = 1.0472; // approx 60 deg
 
+  if(sonar_pub_.getTopic().empty())
+  {
+    sonar_pub_ = nh_.advertise<sensor_msgs::Range>("sonar/data", 1);
+  }
   sonar_pub_.publish(alt_msg);
+
 }
 
 
