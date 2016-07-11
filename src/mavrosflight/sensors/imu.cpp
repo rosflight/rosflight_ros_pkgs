@@ -36,8 +36,8 @@ void Imu::start_temp_calibration()
 
   measurement_throttle_ = 0;
 
-  A_.clear();
   B_.clear();
+  A_.clear();
 }
 
 bool Imu::calibrate_temp(mavlink_small_imu_t msg)
@@ -57,8 +57,10 @@ bool Imu::calibrate_temp(mavlink_small_imu_t msg)
     {
       Eigen::Vector3d measurement;
       measurement << msg.xacc, msg.yacc, msg.zacc - 9.80665;
-      A_.push_back(measurement);
-      B_.push_back(msg.temperature);
+
+      A_.push_back(msg.temperature);
+      B_.push_back(measurement);
+
       if (msg.temperature < Tmin_)
       {
         Tmin_ = msg.temperature;
@@ -86,16 +88,15 @@ bool Imu::calibrate_temp(mavlink_small_imu_t msg)
       Bmat.resize(B_.size());
 
       // put the data into and Eigen Matrix for linear algebra
-      std::deque<Eigen::Vector3d>::iterator A_it = A_.begin();
-      std::deque<double>::iterator B_it = B_.begin();
+      std::deque<double>::iterator A_it = A_.begin();
+      std::deque<Eigen::Vector3d>::iterator B_it = B_.begin();
       for (int j = 0; j < A_.size(); j++)
       {
-        Eigen::Vector3d temp = *A_it;
-        Amat(j,0) = *B_it;
+        Amat(j,0) = *A_it;
         Amat(j,1) = 1.0;
-        Bmat(j) = temp(i);
-        A_it++;
+        Bmat(j) = (*B_it)(i);
         B_it++;
+        A_it++;
       }
 
       // Perform Least-Squares on the data

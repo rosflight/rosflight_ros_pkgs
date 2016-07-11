@@ -77,8 +77,8 @@ private:
   bool first_time_; //!< waiting for first measurement for calibration
   double start_time_; //!< timestamp of first calibration measurement
   int measurement_throttle_;
-  std::deque<Eigen::Vector3d> A_;
-  std::deque<double> B_;
+  std::deque<double> A_;
+  std::deque<Eigen::Vector3d> B_;
 };
 
 } // namespace sensors
