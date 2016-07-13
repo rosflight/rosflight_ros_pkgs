@@ -64,6 +64,9 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
   case MAVLINK_MSG_ID_COMMAND_ACK:
     handle_command_ack_msg(msg);
     break;
+  case MAVLINK_MSG_ID_STATUSTEXT:
+    handle_statustext_msg(msg);
+    break;
   case MAVLINK_MSG_ID_SMALL_IMU:
     handle_small_imu_msg(msg);
     break;
@@ -141,6 +144,37 @@ void fcuIO::handle_command_ack_msg(const mavlink_message_t &msg)
     {
       ROS_ERROR("IMU bias calibration failed");
     }
+    break;
+  }
+}
+
+void fcuIO::handle_statustext_msg(const mavlink_message_t &msg)
+{
+  mavlink_statustext_t status;
+  mavlink_msg_statustext_decode(&msg, &status);
+
+  // ensure null termination
+  char c_str[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN + 1];
+  memcpy(c_str, status.text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+  c_str[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = '\0';
+
+  switch (status.severity)
+  {
+  case MAV_SEVERITY_EMERGENCY:
+  case MAV_SEVERITY_ALERT:
+  case MAV_SEVERITY_CRITICAL:
+  case MAV_SEVERITY_ERROR:
+    ROS_ERROR("[FCU]: %s", c_str);
+    break;
+  case MAV_SEVERITY_WARNING:
+    ROS_WARN("[FCU]: %s", c_str);
+    break;
+  case MAV_SEVERITY_NOTICE:
+  case MAV_SEVERITY_INFO:
+    ROS_INFO("[FCU]: %s", c_str);
+    break;
+  case MAV_SEVERITY_DEBUG:
+    ROS_DEBUG("[FCU]: %s", c_str);
     break;
   }
 }

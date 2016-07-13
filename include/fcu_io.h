@@ -52,6 +52,7 @@ private:
   // handle mavlink messages
   void handle_heartbeat_msg();
   void handle_command_ack_msg(const mavlink_message_t &msg);
+  void handle_statustext_msg(const mavlink_message_t &msg);
   void handle_small_imu_msg(const mavlink_message_t &msg);
   void handle_servo_output_raw_msg(const mavlink_message_t &msg);
   void handle_rc_channels_raw_msg(const mavlink_message_t &msg);
