@@ -29,10 +29,10 @@ Joy::Joy() {
   pnh.param<std::string>("command_topic", command_topic_, "command");
   pnh.param<std::string>("autopilot_command_topic", autopilot_command_topic_, "autopilot_command");
 
-  pnh.param<int>("x_axis", axes_.roll, 2);
-  pnh.param<int>("y_axis", axes_.pitch, 3);
-  pnh.param<int>("axis_thrust_", axes_.thrust, 1);
-  pnh.param<int>("yaw_axis", axes_.yaw, 0);
+  pnh.param<int>("x_axis", axes_.roll, 0);
+  pnh.param<int>("y_axis", axes_.pitch, 1);
+  pnh.param<int>("axis_thrust_", axes_.thrust, 2);
+  pnh.param<int>("yaw_axis", axes_.yaw, 4);
 
   pnh.param<int>("x_sign", axes_.roll_direction, 1);
   pnh.param<int>("y_sign", axes_.pitch_direction, 1);
@@ -52,12 +52,13 @@ Joy::Joy() {
   pnh.param<int>("button_takeoff_", buttons_.fly.index, 0);
 
   command_pub_ = nh_.advertise<fcu_common::Command>(command_topic_,10);
+  extended_command_pub_ = nh_.advertise<fcu_common::ExtendedCommand>("extended_"+command_topic_, 10);
 
 //  ROS_ERROR_STREAM("mass = " << mass_ <<" max_thrust = " << max_.thrust);
 
   command_msg_.normalized_roll = 0;
   command_msg_.normalized_pitch = 0;
-  command_msg_.normalized_yaw = 0;
+  command_msg_.normalized_yaw = 0;ros::Publisher command_pub_;
   command_msg_.normalized_throttle = 0;
 
   current_yaw_vel_ = 0;
@@ -90,6 +91,12 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
     command_msg_.normalized_pitch = -1.0*msg->axes[axes_.pitch] * axes_.pitch_direction;
     command_msg_.normalized_yaw = msg->axes[axes_.yaw] * axes_.yaw_direction;
 
+    extended_command_msg_.mode = fcu_common::ExtendedCommand::MODE_ROLL_PITCH_YAWRATE_ALTITUDE;
+    extended_command_msg_.value1 = command_msg_.normalized_roll;
+    extended_command_msg_.value2 = command_msg_.normalized_pitch;
+    extended_command_msg_.value3 = command_msg_.normalized_yaw;
+    extended_command_msg_.value4 = 5*command_msg_.normalized_throttle;
+
     if(msg->buttons[1] == 1)
     {
         command_msg_ = autopilot_command_;
@@ -112,6 +119,7 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
 
 void Joy::Publish() {
   command_pub_.publish(command_msg_);
+  extended_command_pub_.publish(extended_command_msg_);
 }
 
 int main(int argc, char** argv) {

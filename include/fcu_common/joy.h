@@ -25,6 +25,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
 #include <fcu_common/Command.h>
+#include <fcu_common/ExtendedCommand.h>
 
 struct Axes {
   int roll;
@@ -63,6 +64,7 @@ class Joy {
  private:
   ros::NodeHandle nh_;
   ros::Publisher command_pub_;
+  ros::Publisher extended_command_pub_;
   ros::Subscriber autopilot_command_sub_;
   ros::Subscriber joy_sub_;
 
@@ -76,6 +78,7 @@ class Joy {
 
   fcu_common::Command command_msg_;
   fcu_common::Command autopilot_command_;
+  fcu_common::ExtendedCommand extended_command_msg_;
   sensor_msgs::Joy current_joy_;
 
   Max max_;
