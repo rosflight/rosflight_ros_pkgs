@@ -67,6 +67,9 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
   case MAVLINK_MSG_ID_STATUSTEXT:
     handle_statustext_msg(msg);
     break;
+  case MAVLINK_MSG_ID_ATTITUDE:
+    handle_attitude_msg(msg);
+    break;
   case MAVLINK_MSG_ID_SMALL_IMU:
     handle_small_imu_msg(msg);
     break;
@@ -177,6 +180,27 @@ void fcuIO::handle_statustext_msg(const mavlink_message_t &msg)
     ROS_DEBUG("[FCU]: %s", c_str);
     break;
   }
+}
+
+void fcuIO::handle_attitude_msg(const mavlink_message_t &msg)
+{
+  mavlink_attitude_t attitude;
+  mavlink_msg_attitude_decode(&msg, &attitude);
+
+  fcu_common::Attitude attitude_msg;
+  attitude_msg.header.stamp = mavrosflight_->time.get_ros_time_ms(attitude.time_boot_ms);
+  attitude_msg.roll = attitude.roll;
+  attitude_msg.pitch = attitude.pitch;
+  attitude_msg.yaw = attitude.yaw;
+  attitude_msg.p = attitude.rollspeed;
+  attitude_msg.q = attitude.pitchspeed;
+  attitude_msg.r = attitude.yawspeed;
+
+  if(attitude_pub_.getTopic().empty())
+  {
+    attitude_pub_ = nh_.advertise<fcu_common::Attitude>("attitude", 1);
+  }
+  attitude_pub_.publish(attitude_msg);
 }
 
 void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
