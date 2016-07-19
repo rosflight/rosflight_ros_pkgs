@@ -435,10 +435,10 @@ void fcuIO::commandCallback(fcu_common::ExtendedCommand::ConstPtr msg)
   OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE) msg->mode;
   OFFBOARD_CONTROL_IGNORE ignore = (OFFBOARD_CONTROL_IGNORE) msg->ignore;
 
-  double x = msg->value1;
-  double y = msg->value2;
-  double z = msg->value3;
-  double F = msg->value4;
+  double x = msg->x;
+  double y = msg->y;
+  double z = msg->z;
+  double F = msg->F;
 
   switch (mode)
   {
