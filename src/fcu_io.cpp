@@ -435,22 +435,22 @@ void fcuIO::commandCallback(fcu_common::ExtendedCommand::ConstPtr msg)
   OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE) msg->mode;
   OFFBOARD_CONTROL_IGNORE ignore = (OFFBOARD_CONTROL_IGNORE) msg->ignore;
 
-  double x = msg->x;
-  double y = msg->y;
-  double z = msg->z;
-  double F = msg->F;
+  float x = msg->x;
+  float y = msg->y;
+  float z = msg->z;
+  float F = msg->F;
 
   switch (mode)
   {
   case MODE_PASS_THROUGH:
-    x = saturate(x, -1.0, 1.0);
-    y = saturate(y, -1.0, 1.0);
-    z = saturate(z, -1.0, 1.0);
-    F = saturate(F, 0.0, 1.0);
+    x = saturate(x, -1.0f, 1.0f);
+    y = saturate(y, -1.0f, 1.0f);
+    z = saturate(z, -1.0f, 1.0f);
+    F = saturate(F, 0.0f, 1.0f);
     break;
   case MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
   case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
-    F = saturate(F, 0.0, 1.0);
+    F = saturate(F, 0.0f, 1.0f);
     break;
   case MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
     break;
