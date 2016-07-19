@@ -443,7 +443,7 @@ void fcuIO::commandCallback(fcu_common::ExtendedCommand::ConstPtr msg)
   switch (mode)
   {
   case MODE_PASS_THROUGH:
-    x = saturate(v1, -1.0, 1.0);
+    x = saturate(x, -1.0, 1.0);
     y = saturate(y, -1.0, 1.0);
     z = saturate(z, -1.0, 1.0);
     F = saturate(F, -1.0, 1.0);
