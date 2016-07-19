@@ -435,22 +435,22 @@ void fcuIO::commandCallback(fcu_common::ExtendedCommand::ConstPtr msg)
   OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE) msg->mode;
   OFFBOARD_CONTROL_IGNORE ignore = (OFFBOARD_CONTROL_IGNORE) msg->ignore;
 
-  int v1 = (int)(msg->value1 * 1000);
-  int v2 = (int)(msg->value2 * 1000);
-  int v3 = (int)(msg->value3 * 1000);
-  int v4 = (int)(msg->value4 * 1000);
+  double x = msg->value1;
+  double y = msg->value2;
+  double z = msg->value3;
+  double F = msg->value4;
 
   switch (mode)
   {
   case MODE_PASS_THROUGH:
-    v1 = saturate(v1, -1000, 1000);
-    v2 = saturate(v2, -1000, 1000);
-    v3 = saturate(v3, -1000, 1000);
-    v4 = saturate(v4, -1000, 1000);
+    x = saturate(v1, -1.0, 1.0);
+    y = saturate(y, -1.0, 1.0);
+    z = saturate(z, -1.0, 1.0);
+    F = saturate(F, -1.0, 1.0);
     break;
   case MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
   case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
-    v4 = saturate(v4, 0, 1000);
+    F = saturate(F, 0.0, 1.0);
     break;
   case MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
     break;
@@ -458,7 +458,7 @@ void fcuIO::commandCallback(fcu_common::ExtendedCommand::ConstPtr msg)
 
   mavlink_message_t mavlink_msg;
   mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg,
-                                    mode, ignore, (int16_t)v1, (int16_t)v2, (int16_t)v3, (int16_t)v4);
+                                    mode, ignore, x, y, z, F);
   mavrosflight_->serial.send_message(mavlink_msg);
 }
 
