@@ -91,11 +91,11 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
     command_msg_.normalized_pitch = -1.0*msg->axes[axes_.pitch] * axes_.pitch_direction;
     command_msg_.normalized_yaw = msg->axes[axes_.yaw] * axes_.yaw_direction;
 
-    extended_command_msg_.mode = fcu_common::ExtendedCommand::MODE_ROLL_PITCH_YAWRATE_ALTITUDE;
-    extended_command_msg_.value1 = command_msg_.normalized_roll;
-    extended_command_msg_.value2 = command_msg_.normalized_pitch;
-    extended_command_msg_.value3 = command_msg_.normalized_yaw;
-    extended_command_msg_.value4 = 5*command_msg_.normalized_throttle;
+    extended_command_msg_.mode = fcu_common::ExtendedCommand::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
+    extended_command_msg_.x = command_msg_.normalized_roll;
+    extended_command_msg_.y = command_msg_.normalized_pitch;
+    extended_command_msg_.z = command_msg_.normalized_yaw;
+    extended_command_msg_.F = command_msg_.normalized_throttle;
 
     if(msg->buttons[1] == 1)
     {
