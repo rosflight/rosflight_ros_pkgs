@@ -446,7 +446,7 @@ void fcuIO::commandCallback(fcu_common::ExtendedCommand::ConstPtr msg)
     x = saturate(x, -1.0, 1.0);
     y = saturate(y, -1.0, 1.0);
     z = saturate(z, -1.0, 1.0);
-    F = saturate(F, -1.0, 1.0);
+    F = saturate(F, 0.0, 1.0);
     break;
   case MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
   case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
