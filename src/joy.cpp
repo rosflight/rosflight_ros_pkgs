@@ -31,13 +31,13 @@ Joy::Joy() {
 
   pnh.param<int>("x_axis", axes_.roll, 0);
   pnh.param<int>("y_axis", axes_.pitch, 1);
-  pnh.param<int>("axis_thrust_", axes_.thrust, 2);
-  pnh.param<int>("yaw_axis", axes_.yaw, 4);
+  pnh.param<int>("F_axis", axes_.thrust, 2);
+  pnh.param<int>("z_axis", axes_.yaw, 4);
 
   pnh.param<int>("x_sign", axes_.roll_direction, 1);
   pnh.param<int>("y_sign", axes_.pitch_direction, 1);
-  pnh.param<int>("axis_direction_thrust", axes_.thrust_direction, 1);
-  pnh.param<int>("yaw_sign", axes_.yaw_direction, -1);
+  pnh.param<int>("F_sign", axes_.thrust_direction, 1);
+  pnh.param<int>("z_sign", axes_.yaw_direction, -1);
 
   pnh.param<double>("max_roll", max_.roll, 25.0 * M_PI / 180.0);  // [rad]
   pnh.param<double>("max_pitch", max_.pitch, 25.0 * M_PI / 180.0);  // [rad]
@@ -50,6 +50,7 @@ Joy::Joy() {
   pnh.param<double>("max_rudder", max_.rudder, 15.0*M_PI/180.0);
 
   pnh.param<int>("button_takeoff_", buttons_.fly.index, 0);
+  pnh.param<int>("button_mode_", buttons_.mode.index, 1);
 
   command_pub_ = nh_.advertise<fcu_common::Command>(command_topic_,10);
   extended_command_pub_ = nh_.advertise<fcu_common::ExtendedCommand>("extended_"+command_topic_, 10);
@@ -67,6 +68,7 @@ Joy::Joy() {
   autopilot_command_sub_ = nh_.subscribe(autopilot_command_topic_, 10, &Joy::APCommandCallback, this);
   joy_sub_ = nh_.subscribe("joy", 10, &Joy::JoyCallback, this);
   fly_mav_ = false;
+  buttons_.mode.prev_value=1;
 }
 
 void Joy::StopMav() {
@@ -83,15 +85,16 @@ void Joy::APCommandCallback(const fcu_common::CommandConstPtr &msg)
 }
 
 void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
-  if(fly_mav_){
+  static int mode = -1;
+  if(fly_mav_)
+  {
     current_joy_ = *msg;
 
-    command_msg_.normalized_throttle = 0.5*(msg->axes[axes_.thrust] + 1.0);
+    command_msg_.normalized_throttle = 0.5*(msg->axes[axes_.thrust] * axes_.thrust_direction + 1.0);
     command_msg_.normalized_roll = -1.0*msg->axes[axes_.roll] * axes_.roll_direction;
     command_msg_.normalized_pitch = -1.0*msg->axes[axes_.pitch] * axes_.pitch_direction;
     command_msg_.normalized_yaw = msg->axes[axes_.yaw] * axes_.yaw_direction;
 
-    extended_command_msg_.mode = fcu_common::ExtendedCommand::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
     extended_command_msg_.x = command_msg_.normalized_roll;
     extended_command_msg_.y = command_msg_.normalized_pitch;
     extended_command_msg_.z = command_msg_.normalized_yaw;
@@ -106,13 +109,41 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
         //command_msg_.normalized_yaw = msg->axes[axes_.yaw] * max_.rudder * axes_.yaw_direction;
     }
 
-  } else{
+  }
+  else
+  {
     StopMav();
   }
   if(msg->buttons[buttons_.fly.index]==0 && buttons_.fly.prev_value==1){ // button release
     fly_mav_ = !fly_mav_;
   }
   buttons_.fly.prev_value = msg->buttons[buttons_.fly.index];
+
+  if(msg->buttons[buttons_.mode.index]==0 && buttons_.mode.prev_value==1){ // button release
+    mode = (mode+1)%4;
+    if(mode == 0)
+    {
+      ROS_INFO("Rate Mode");
+      extended_command_msg_.mode = fcu_common::ExtendedCommand::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
+    }
+    else if(mode == 1)
+    {
+      ROS_INFO("Angle Mode");
+      extended_command_msg_.mode = fcu_common::ExtendedCommand::MODE_ROLL_PITCH_YAWRATE_THROTTLE;
+    }
+    else if (mode == 2)
+    {
+      ROS_INFO("Altitude Mode");
+      extended_command_msg_.mode = fcu_common::ExtendedCommand::MODE_ROLL_PITCH_YAWRATE_ALTITUDE;
+    }
+    else if (mode == 3)
+    {
+      ROS_INFO("Passthrough");
+      extended_command_msg_.mode = fcu_common::ExtendedCommand::MODE_PASS_THROUGH;
+    }
+  }
+  buttons_.mode.prev_value = msg->buttons[buttons_.mode.index];
+
 
   Publish();
 }

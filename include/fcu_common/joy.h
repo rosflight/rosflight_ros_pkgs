@@ -56,6 +56,7 @@ struct Button{
 
 struct Buttons {
   Button fly;
+  Button mode;
 };
 
 class Joy {
