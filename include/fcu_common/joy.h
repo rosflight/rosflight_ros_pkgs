@@ -39,14 +39,16 @@ struct Axes {
 };
 
 struct Max {
-  double v_xy;
   double roll;
   double pitch;
-  double rate_yaw;
-  double thrust;
+  double roll_rate;
+  double pitch_rate;
+  double yaw_rate;
   double aileron;
   double elevator;
   double rudder;
+  double thrust;
+  double altitude;
 };
 
 struct Button{
