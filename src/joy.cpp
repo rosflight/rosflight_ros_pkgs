@@ -35,7 +35,7 @@ Joy::Joy() {
   pnh.param<int>("F_axis", axes_.thrust, 0);
   pnh.param<int>("z_axis", axes_.yaw, 4);
 
-  pnh.param<int>("x_sign", axes_.roll_direction, -1);
+  pnh.param<int>("x_sign", axes_.roll_direction, 1);
   pnh.param<int>("y_sign", axes_.pitch_direction, 1);
   pnh.param<int>("F_sign", axes_.thrust_direction, -1);
   pnh.param<int>("z_sign", axes_.yaw_direction, 1);
