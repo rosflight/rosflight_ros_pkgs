@@ -25,6 +25,7 @@ fcuIO::fcuIO()
   param_write_srv_ = nh_.advertiseService("param_write", &fcuIO::paramWriteSrvCallback, this);
   imu_calibrate_bias_srv_ = nh_.advertiseService("calibrate_imu_bias", &fcuIO::calibrateImuBiasSrvCallback, this);
   imu_calibrate_temp_srv_ = nh_.advertiseService("calibrate_imu_temp", &fcuIO::calibrateImuTempSrvCallback, this);
+  calibrate_rc_srv_ = nh_.advertiseService("calibrate_rc_trim", &fcuIO::calibrateRCTrimSrvCallback, this);
 
   ros::NodeHandle nh_private("~");
   std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
@@ -492,6 +493,16 @@ bool fcuIO::calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srv
                                0, MAV_CMD_PREFLIGHT_CALIBRATION, 0, 0, 1, 0, 0, 0, 1, 0, 0);
   mavrosflight_->serial.send_message(msg);
 
+  res.success = true;
+  return true;
+}
+
+bool fcuIO::calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+{
+  mavlink_message_t msg;
+  mavlink_msg_command_int_pack(1, 50, &msg, 1, MAV_COMP_ID_ALL,
+                               0, MAV_CMD_DO_RC_CALIBRATION, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  mavrosflight_->serial.send_message(msg);
   res.success = true;
   return true;
 }

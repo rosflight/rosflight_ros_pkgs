@@ -73,6 +73,7 @@ private:
   bool paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+  bool calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
 
   // helpers
   template<class T> inline T saturate(T value, T min, T max)
@@ -103,6 +104,7 @@ private:
   ros::ServiceServer param_write_srv_;
   ros::ServiceServer imu_calibrate_bias_srv_;
   ros::ServiceServer imu_calibrate_temp_srv_;
+  ros::ServiceServer calibrate_rc_srv_;
 
   mavrosflight::MavROSflight *mavrosflight_;
   mavrosflight::sensors::DifferentialPressure diff_pressure_;
