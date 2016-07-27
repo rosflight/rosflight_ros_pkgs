@@ -89,6 +89,9 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
   case MAVLINK_MSG_ID_NAMED_VALUE_FLOAT:
     handle_named_value_float_msg(msg);
     break;
+  case MAVLINK_MSG_ID_NAMED_COMMAND_STRUCT:
+    handle_named_command_struct_msg(msg);
+    break;
   case MAVLINK_MSG_ID_SMALL_BARO:
     handle_small_baro_msg(msg);
     break;
@@ -384,6 +387,42 @@ void fcuIO::handle_named_value_float_msg(const mavlink_message_t &msg)
   out_msg.data = val.value;
 
   named_value_float_pubs_[name].publish(out_msg);
+}
+
+void fcuIO::handle_named_command_struct_msg(const mavlink_message_t &msg)
+{
+  mavlink_named_command_struct_t command;
+  mavlink_msg_named_command_struct_decode(&msg, &command);
+
+  // ensure null termination of name
+  char c_name[MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN + 1];
+  memcpy(c_name, command.name, MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN);
+  c_name[MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN] = '\0';
+  std::string name(c_name);
+
+  if (named_command_struct_pubs_.find(name) == named_command_struct_pubs_.end())
+  {
+    ros::NodeHandle nh;
+    named_command_struct_pubs_[name] = nh.advertise<fcu_common::ExtendedCommand>("named_value/command_struct/" + name, 1);
+  }
+
+  fcu_common::ExtendedCommand command_msg;
+  uint8_t mode;
+  if(command.type = MODE_PASS_THROUGH)
+    command_msg.mode = fcu_common::ExtendedCommand::MODE_PASS_THROUGH;
+  else if(command.type = MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE)
+    command_msg.mode = fcu_common::ExtendedCommand::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
+  else if(command.type = MODE_ROLL_PITCH_YAWRATE_THROTTLE)
+    command_msg.mode = fcu_common::ExtendedCommand::MODE_ROLL_PITCH_YAWRATE_THROTTLE;
+  else if(command.type = MODE_ROLL_PITCH_YAWRATE_ALTITUDE)
+    command_msg.mode = fcu_common::ExtendedCommand::MODE_ROLL_PITCH_YAWRATE_ALTITUDE;
+
+  command_msg.ignore = command.ignore;
+  command_msg.x = command.x;
+  command_msg.y = command.y;
+  command_msg.z = command.z;
+  command_msg.F = command.F;
+  named_command_struct_pubs_[name].publish(command_msg);
 }
 
 void fcuIO::handle_small_baro_msg(const mavlink_message_t &msg)

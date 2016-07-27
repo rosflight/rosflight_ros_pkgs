@@ -62,6 +62,7 @@ private:
   void handle_small_baro_msg(const mavlink_message_t &msg);
   void handle_named_value_int_msg(const mavlink_message_t &msg);
   void handle_named_value_float_msg(const mavlink_message_t &msg);
+  void handle_named_command_struct_msg(const mavlink_message_t &msg);
   void handle_distance_sensor(const mavlink_message_t &msg);
 
   // ROS message callbacks
@@ -98,6 +99,7 @@ private:
   ros::Publisher attitude_pub_;
   std::map<std::string, ros::Publisher> named_value_int_pubs_;
   std::map<std::string, ros::Publisher> named_value_float_pubs_;
+  std::map<std::string, ros::Publisher> named_command_struct_pubs_;
 
   ros::ServiceServer param_get_srv_;
   ros::ServiceServer param_set_srv_;
