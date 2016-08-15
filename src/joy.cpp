@@ -20,6 +20,11 @@
 
 
 #include "fcu_common/joy.h"
+#include "geometry_msgs/Pose.h"
+#include "geometry_msgs/Twist.h"
+#include "gazebo_msgs/ModelState.h"
+#include "gazebo_msgs/SetModelState.h"
+#include "std_srvs/Empty.h"
 
 
 Joy::Joy() {
@@ -28,6 +33,10 @@ Joy::Joy() {
 
   pnh.param<std::string>("command_topic", command_topic_, "command");
   pnh.param<std::string>("autopilot_command_topic", autopilot_command_topic_, "autopilot_command");
+
+  // Defaults -- should be set/overriden by calling launch file
+  pnh.param<std::string>("mav_name", mav_name_, "shredder");
+  pnh.param<std::string>("world_name", world_name_, "empty_world");
 
   // Default to Spektrum Transmitter on Interlink
   pnh.param<int>("x_axis", axes_.roll, 1);
@@ -55,8 +64,11 @@ Joy::Joy() {
   pnh.param<double>("max_roll_angle", max_.roll, 45.0*M_PI/180.0);
   pnh.param<double>("max_pitch_angle", max_.pitch, 45.0*M_PI/180.0);
 
+  // Sets which buttons are tied to which commands
   pnh.param<int>("button_takeoff_", buttons_.fly.index, 0);
   pnh.param<int>("button_mode_", buttons_.mode.index, 1);
+  pnh.param<int>("button_reset_", buttons_.reset.index, 9);
+  pnh.param<int>("button_pause_", buttons_.pause.index, 8);
 
   command_pub_ = nh_.advertise<fcu_common::Command>(command_topic_,10);
   extended_command_pub_ = nh_.advertise<fcu_common::ExtendedCommand>("extended_"+command_topic_, 10);
@@ -75,6 +87,7 @@ Joy::Joy() {
   joy_sub_ = nh_.subscribe("joy", 10, &Joy::JoyCallback, this);
   fly_mav_ = true;
   buttons_.mode.prev_value=1;
+  buttons_.reset.prev_value=1;
 }
 
 void Joy::StopMav() {
@@ -85,6 +98,59 @@ void Joy::StopMav() {
   command_msg_.normalized_throttle = 0;
 }
 
+/* Resets the mav back to origin */
+void Joy::ResetMav() 
+{
+	ros::NodeHandle n;
+    geometry_msgs::Pose start_pose;
+	start_pose.position.x = 0.0;
+	start_pose.position.y = 0.0;
+	start_pose.position.z = 0.1;
+	start_pose.orientation.x = 0.0;
+	start_pose.orientation.y = 0.0;
+	start_pose.orientation.z = 0.0;
+	start_pose.orientation.w = 0.0;
+
+	geometry_msgs::Twist start_twist;
+	start_twist.linear.x = 0.0;
+	start_twist.linear.y = 0.0;
+	start_twist.linear.z = 0.0;
+	start_twist.angular.x = 0.0;
+	start_twist.angular.y = 0.0;
+	start_twist.angular.z = 0.0;
+
+    gazebo_msgs::ModelState modelstate;
+	modelstate.model_name = (std::string) mav_name_;
+	modelstate.reference_frame = (std::string) world_name_;
+	modelstate.pose = start_pose;
+	modelstate.twist = start_twist;
+
+    ros::ServiceClient client = n.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
+    gazebo_msgs::SetModelState setmodelstate;
+	setmodelstate.request.model_state = modelstate;
+	client.call(setmodelstate);
+}
+
+// Pauses the gazebo physics and time
+void Joy::PauseSimulation()
+{
+	ros::NodeHandle n;
+
+	ros::ServiceClient client = n.serviceClient<std_srvs::Empty>("/gazebo/pause_physics");
+	std_srvs::Empty pauseSim;
+	client.call(pauseSim);
+}
+
+// Resumes the gazebo physics and time
+void Joy::ResumeSimulation()
+{
+	ros::NodeHandle n;
+
+	ros::ServiceClient client = n.serviceClient<std_srvs::Empty>("/gazebo/unpause_physics");
+	std_srvs::Empty resumeSim;
+	client.call(resumeSim);
+}
+
 void Joy::APCommandCallback(const fcu_common::CommandConstPtr &msg)
 {
     autopilot_command_ = *msg;
@@ -92,6 +158,7 @@ void Joy::APCommandCallback(const fcu_common::CommandConstPtr &msg)
 
 void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
   static int mode = -1;
+  static bool paused = true;
 //  if(fly_mav_)
 //  {
     current_joy_ = *msg;
@@ -135,6 +202,31 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
         //command_msg_.normalized_yaw = msg->axes[axes_.yaw] * max_.rudder * axes_.yaw_direction;
     }
 
+    // Resets the mav to the origin when start button (button 9) is pressed (if using xbox controller)
+    if(msg->buttons[buttons_.reset.index]==0 && buttons_.reset.prev_value==1) // button release    
+    {
+    	ResetMav();
+    }
+    buttons_.reset.prev_value = msg->buttons[buttons_.reset.index];
+
+    // Pauses/Unpauses the simulation
+    if(msg->buttons[buttons_.pause.index]==0 && buttons_.pause.prev_value==1) // button release    
+    {
+    	if(!paused)
+    	{
+    		PauseSimulation();
+    		paused = true;
+    	}
+    	else
+    	{
+    		ResumeSimulation();
+    		paused = false;
+    	}
+    	
+    }
+    buttons_.pause.prev_value = msg->buttons[buttons_.pause.index];
+
+
 //  }
 //  else
 //  {
@@ -149,7 +241,7 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
     mode = (mode+1)%4;
     if(mode == 0)
     {
-      ROS_INFO("Rate Mode");
+      ROS_INFO("Rate Mode - change test!");
       extended_command_msg_.mode = fcu_common::ExtendedCommand::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
     }
     else if(mode == 1)
