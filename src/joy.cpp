@@ -36,7 +36,6 @@ Joy::Joy() {
 
   // Defaults -- should be set/overriden by calling launch file
   pnh.param<std::string>("mav_name", mav_name_, "shredder");
-  pnh.param<std::string>("world_name", world_name_, "empty_world");
 
   // Default to Spektrum Transmitter on Interlink
   pnh.param<int>("x_axis", axes_.roll, 1);
@@ -101,6 +100,7 @@ void Joy::StopMav() {
 /* Resets the mav back to origin */
 void Joy::ResetMav() 
 {
+	ROS_INFO("Mav position reset.");
 	ros::NodeHandle n;
     geometry_msgs::Pose start_pose;
 	start_pose.position.x = 0.0;
@@ -121,7 +121,7 @@ void Joy::ResetMav()
 
     gazebo_msgs::ModelState modelstate;
 	modelstate.model_name = (std::string) mav_name_;
-	modelstate.reference_frame = (std::string) world_name_;
+	modelstate.reference_frame = (std::string) "world";
 	modelstate.pose = start_pose;
 	modelstate.twist = start_twist;
 
@@ -134,6 +134,7 @@ void Joy::ResetMav()
 // Pauses the gazebo physics and time
 void Joy::PauseSimulation()
 {
+	ROS_INFO("Simulation paused.");
 	ros::NodeHandle n;
 
 	ros::ServiceClient client = n.serviceClient<std_srvs::Empty>("/gazebo/pause_physics");
@@ -144,6 +145,7 @@ void Joy::PauseSimulation()
 // Resumes the gazebo physics and time
 void Joy::ResumeSimulation()
 {
+	ROS_INFO("Simulation resumed.");
 	ros::NodeHandle n;
 
 	ros::ServiceClient client = n.serviceClient<std_srvs::Empty>("/gazebo/unpause_physics");
