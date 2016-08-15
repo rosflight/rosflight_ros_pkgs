@@ -243,7 +243,7 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
     mode = (mode+1)%4;
     if(mode == 0)
     {
-      ROS_INFO("Rate Mode - change test!");
+      ROS_INFO("Rate Mode");
       extended_command_msg_.mode = fcu_common::ExtendedCommand::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
     }
     else if(mode == 1)
