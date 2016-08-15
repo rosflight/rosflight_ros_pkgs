@@ -78,7 +78,6 @@ class Joy {
   std::string autopilot_command_topic_;
 
   std::string mav_name_;
-  std::string world_name_;
 
   Axes axes_;
 
