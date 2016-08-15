@@ -59,6 +59,8 @@ struct Button{
 struct Buttons {
   Button fly;
   Button mode;
+  Button reset;
+  Button pause;
 };
 
 class Joy {
@@ -74,6 +76,9 @@ class Joy {
   std::string namespace_;
   std::string command_topic_;
   std::string autopilot_command_topic_;
+
+  std::string mav_name_;
+  std::string world_name_;
 
   Axes axes_;
 
@@ -92,6 +97,9 @@ class Joy {
   double mass_;
 
   void StopMav();
+  void ResetMav();
+  void PauseSimulation();
+  void ResumeSimulation();
 
   void JoyCallback(const sensor_msgs::JoyConstPtr& msg);
   void APCommandCallback(const fcu_common::CommandConstPtr& msg);
