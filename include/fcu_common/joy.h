@@ -26,6 +26,7 @@
 #include <sensor_msgs/Joy.h>
 #include <fcu_common/Command.h>
 #include <fcu_common/ExtendedCommand.h>
+#include "gazebo_msgs/ModelState.h"
 
 struct Axes {
   int roll;
@@ -90,6 +91,8 @@ class Joy {
 
   Max max_;
   Buttons buttons_;
+  geometry_msgs::Pose reset_pose_;
+  geometry_msgs::Twist reset_twist_;
 
   double current_yaw_vel_;
   double v_yaw_step_;
