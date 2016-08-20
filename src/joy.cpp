@@ -20,9 +20,6 @@
 
 
 #include "fcu_common/joy.h"
-#include "geometry_msgs/Pose.h"
-#include "geometry_msgs/Twist.h"
-#include "gazebo_msgs/ModelState.h"
 #include "gazebo_msgs/SetModelState.h"
 #include "std_srvs/Empty.h"
 
@@ -63,6 +60,20 @@ Joy::Joy() {
   pnh.param<double>("max_roll_angle", max_.roll, 45.0*M_PI/180.0);
   pnh.param<double>("max_pitch_angle", max_.pitch, 45.0*M_PI/180.0);
 
+  pnh.param<double>("reset_pos_x", reset_pose_.position.x, 0.0); 
+  pnh.param<double>("reset_pos_y", reset_pose_.position.y, 0.0); 
+  pnh.param<double>("reset_pos_z", reset_pose_.position.z, 0.0); 
+  pnh.param<double>("reset_orient_x", reset_pose_.orientation.x, 0.0); 
+  pnh.param<double>("reset_orient_x", reset_pose_.orientation.y, 0.0); 
+  pnh.param<double>("reset_orient_x", reset_pose_.orientation.z, 0.0); 
+  pnh.param<double>("reset_orient_x", reset_pose_.orientation.w, 0.0); 
+  pnh.param<double>("reset_linear_twist_x", reset_twist_.linear.x, 0.0); 
+  pnh.param<double>("reset_linear_twist_y", reset_twist_.linear.y, 0.0); 
+  pnh.param<double>("reset_linear_twist_z", reset_twist_.linear.z, 0.0); 
+  pnh.param<double>("reset_angular_twist_x", reset_twist_.angular.x, 0.0); 
+  pnh.param<double>("reset_angular_twist_x", reset_twist_.angular.y, 0.0); 
+  pnh.param<double>("reset_angular_twist_x", reset_twist_.angular.z, 0.0); 
+
   // Sets which buttons are tied to which commands
   pnh.param<int>("button_takeoff_", buttons_.fly.index, 0);
   pnh.param<int>("button_mode_", buttons_.mode.index, 1);
@@ -102,31 +113,15 @@ void Joy::ResetMav()
 {
 	ROS_INFO("Mav position reset.");
 	ros::NodeHandle n;
-    geometry_msgs::Pose start_pose;
-	start_pose.position.x = 0.0;
-	start_pose.position.y = 0.0;
-	start_pose.position.z = 0.1;
-	start_pose.orientation.x = 0.0;
-	start_pose.orientation.y = 0.0;
-	start_pose.orientation.z = 0.0;
-	start_pose.orientation.w = 0.0;
 
-	geometry_msgs::Twist start_twist;
-	start_twist.linear.x = 0.0;
-	start_twist.linear.y = 0.0;
-	start_twist.linear.z = 0.0;
-	start_twist.angular.x = 0.0;
-	start_twist.angular.y = 0.0;
-	start_twist.angular.z = 0.0;
-
-    gazebo_msgs::ModelState modelstate;
+	gazebo_msgs::ModelState modelstate;
 	modelstate.model_name = (std::string) mav_name_;
 	modelstate.reference_frame = (std::string) "world";
-	modelstate.pose = start_pose;
-	modelstate.twist = start_twist;
+	modelstate.pose = reset_pose_;
+	modelstate.twist = reset_twist_;
 
-    ros::ServiceClient client = n.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
-    gazebo_msgs::SetModelState setmodelstate;
+	ros::ServiceClient client = n.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
+	gazebo_msgs::SetModelState setmodelstate;
 	setmodelstate.request.model_state = modelstate;
 	client.call(setmodelstate);
 }
@@ -155,7 +150,7 @@ void Joy::ResumeSimulation()
 
 void Joy::APCommandCallback(const fcu_common::CommandConstPtr &msg)
 {
-    autopilot_command_ = *msg;
+	autopilot_command_ = *msg;
 }
 
 void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
