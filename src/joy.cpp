@@ -20,6 +20,8 @@
 
 
 #include "fcu_common/joy.h"
+#include "gazebo_msgs/SetModelState.h"
+#include "std_srvs/Empty.h"
 
 
 Joy::Joy() {
@@ -28,6 +30,9 @@ Joy::Joy() {
 
   pnh.param<std::string>("command_topic", command_topic_, "command");
   pnh.param<std::string>("autopilot_command_topic", autopilot_command_topic_, "autopilot_command");
+
+  // Defaults -- should be set/overriden by calling launch file
+  pnh.param<std::string>("mav_name", mav_name_, "shredder");
 
   // Default to Spektrum Transmitter on Interlink
   pnh.param<int>("x_axis", axes_.roll, 1);
@@ -55,8 +60,25 @@ Joy::Joy() {
   pnh.param<double>("max_roll_angle", max_.roll, 45.0*M_PI/180.0);
   pnh.param<double>("max_pitch_angle", max_.pitch, 45.0*M_PI/180.0);
 
+  pnh.param<double>("reset_pos_x", reset_pose_.position.x, 0.0); 
+  pnh.param<double>("reset_pos_y", reset_pose_.position.y, 0.0); 
+  pnh.param<double>("reset_pos_z", reset_pose_.position.z, 0.0); 
+  pnh.param<double>("reset_orient_x", reset_pose_.orientation.x, 0.0); 
+  pnh.param<double>("reset_orient_x", reset_pose_.orientation.y, 0.0); 
+  pnh.param<double>("reset_orient_x", reset_pose_.orientation.z, 0.0); 
+  pnh.param<double>("reset_orient_x", reset_pose_.orientation.w, 0.0); 
+  pnh.param<double>("reset_linear_twist_x", reset_twist_.linear.x, 0.0); 
+  pnh.param<double>("reset_linear_twist_y", reset_twist_.linear.y, 0.0); 
+  pnh.param<double>("reset_linear_twist_z", reset_twist_.linear.z, 0.0); 
+  pnh.param<double>("reset_angular_twist_x", reset_twist_.angular.x, 0.0); 
+  pnh.param<double>("reset_angular_twist_x", reset_twist_.angular.y, 0.0); 
+  pnh.param<double>("reset_angular_twist_x", reset_twist_.angular.z, 0.0); 
+
+  // Sets which buttons are tied to which commands
   pnh.param<int>("button_takeoff_", buttons_.fly.index, 0);
   pnh.param<int>("button_mode_", buttons_.mode.index, 1);
+  pnh.param<int>("button_reset_", buttons_.reset.index, 9);
+  pnh.param<int>("button_pause_", buttons_.pause.index, 8);
 
   command_pub_ = nh_.advertise<fcu_common::Command>(command_topic_,10);
   extended_command_pub_ = nh_.advertise<fcu_common::ExtendedCommand>("extended_"+command_topic_, 10);
@@ -75,6 +97,7 @@ Joy::Joy() {
   joy_sub_ = nh_.subscribe("joy", 10, &Joy::JoyCallback, this);
   fly_mav_ = true;
   buttons_.mode.prev_value=1;
+  buttons_.reset.prev_value=1;
 }
 
 void Joy::StopMav() {
@@ -85,13 +108,54 @@ void Joy::StopMav() {
   command_msg_.normalized_throttle = 0;
 }
 
+/* Resets the mav back to origin */
+void Joy::ResetMav() 
+{
+	ROS_INFO("Mav position reset.");
+	ros::NodeHandle n;
+
+	gazebo_msgs::ModelState modelstate;
+	modelstate.model_name = (std::string) mav_name_;
+	modelstate.reference_frame = (std::string) "world";
+	modelstate.pose = reset_pose_;
+	modelstate.twist = reset_twist_;
+
+	ros::ServiceClient client = n.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
+	gazebo_msgs::SetModelState setmodelstate;
+	setmodelstate.request.model_state = modelstate;
+	client.call(setmodelstate);
+}
+
+// Pauses the gazebo physics and time
+void Joy::PauseSimulation()
+{
+	ROS_INFO("Simulation paused.");
+	ros::NodeHandle n;
+
+	ros::ServiceClient client = n.serviceClient<std_srvs::Empty>("/gazebo/pause_physics");
+	std_srvs::Empty pauseSim;
+	client.call(pauseSim);
+}
+
+// Resumes the gazebo physics and time
+void Joy::ResumeSimulation()
+{
+	ROS_INFO("Simulation resumed.");
+	ros::NodeHandle n;
+
+	ros::ServiceClient client = n.serviceClient<std_srvs::Empty>("/gazebo/unpause_physics");
+	std_srvs::Empty resumeSim;
+	client.call(resumeSim);
+}
+
 void Joy::APCommandCallback(const fcu_common::CommandConstPtr &msg)
 {
-    autopilot_command_ = *msg;
+	autopilot_command_ = *msg;
 }
 
 void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
   static int mode = -1;
+  static bool paused = true;
 //  if(fly_mav_)
 //  {
     current_joy_ = *msg;
@@ -134,6 +198,31 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
         //command_msg_.normalized_pitch = -1.0*msg->axes[axes_.pitch] * max_.elevator * axes_.pitch_direction;
         //command_msg_.normalized_yaw = msg->axes[axes_.yaw] * max_.rudder * axes_.yaw_direction;
     }
+
+    // Resets the mav to the origin when start button (button 9) is pressed (if using xbox controller)
+    if(msg->buttons[buttons_.reset.index]==0 && buttons_.reset.prev_value==1) // button release    
+    {
+    	ResetMav();
+    }
+    buttons_.reset.prev_value = msg->buttons[buttons_.reset.index];
+
+    // Pauses/Unpauses the simulation
+    if(msg->buttons[buttons_.pause.index]==0 && buttons_.pause.prev_value==1) // button release    
+    {
+    	if(!paused)
+    	{
+    		PauseSimulation();
+    		paused = true;
+    	}
+    	else
+    	{
+    		ResumeSimulation();
+    		paused = false;
+    	}
+    	
+    }
+    buttons_.pause.prev_value = msg->buttons[buttons_.pause.index];
+
 
 //  }
 //  else

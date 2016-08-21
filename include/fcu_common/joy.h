@@ -26,6 +26,7 @@
 #include <sensor_msgs/Joy.h>
 #include <fcu_common/Command.h>
 #include <fcu_common/ExtendedCommand.h>
+#include "gazebo_msgs/ModelState.h"
 
 struct Axes {
   int roll;
@@ -59,6 +60,8 @@ struct Button{
 struct Buttons {
   Button fly;
   Button mode;
+  Button reset;
+  Button pause;
 };
 
 class Joy {
@@ -75,6 +78,8 @@ class Joy {
   std::string command_topic_;
   std::string autopilot_command_topic_;
 
+  std::string mav_name_;
+
   Axes axes_;
 
   bool fly_mav_;
@@ -86,12 +91,17 @@ class Joy {
 
   Max max_;
   Buttons buttons_;
+  geometry_msgs::Pose reset_pose_;
+  geometry_msgs::Twist reset_twist_;
 
   double current_yaw_vel_;
   double v_yaw_step_;
   double mass_;
 
   void StopMav();
+  void ResetMav();
+  void PauseSimulation();
+  void ResumeSimulation();
 
   void JoyCallback(const sensor_msgs::JoyConstPtr& msg);
   void APCommandCallback(const fcu_common::CommandConstPtr& msg);
