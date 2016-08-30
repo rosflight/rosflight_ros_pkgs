@@ -36,6 +36,9 @@ public:
   void register_param_listener(ParamListenerInterface *listener);
   void unregister_param_listener(ParamListenerInterface *listener);
 
+  bool save_to_file(std::string filename);
+  bool load_from_file(std::string filename);
+
 private:
   void request_param_list();
 

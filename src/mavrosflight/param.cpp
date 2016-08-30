@@ -15,7 +15,11 @@ Param::Param()
 
 Param::Param(mavlink_param_value_t msg)
 {
-  init(std::string(msg.param_id, MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN),
+  char name[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN + 1];
+  memcpy(name, msg.param_id, MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN);
+  name[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN] = '\0';
+
+  init(std::string(name),
        msg.param_index,
        (MAV_PARAM_TYPE) msg.param_type,
        msg.param_value);
@@ -26,24 +30,44 @@ Param::Param(std::string name, int index, MAV_PARAM_TYPE type, float raw_value)
   init(name, index, type, raw_value);
 }
 
-std::string Param::getName()
+std::string Param::getName() const
 {
   return name_;
 }
 
-int Param::getIndex()
+int Param::getIndex() const
 {
   return index_;
 }
 
-MAV_PARAM_TYPE Param::getType()
+MAV_PARAM_TYPE Param::getType() const
 {
   return type_;
 }
 
-double Param::getValue()
+double Param::getValue() const
 {
   return value_;
+}
+
+void Param::setName(std::string name)
+{
+  name_ = name;
+}
+
+void Param::setIndex(int index)
+{
+  index_ = index;
+}
+
+void Param::setType(MAV_PARAM_TYPE type)
+{
+  type_ = type;
+}
+
+void Param::setValue(double value)
+{
+  value_ = value;
 }
 
 void Param::requestSet(double value, mavlink_message_t *msg)
@@ -78,6 +102,17 @@ bool Param::handleUpdate(const mavlink_param_value_t &msg)
   }
 
   return false;
+}
+
+YAML::Node Param::toYaml()
+{
+  YAML::Node node;
+  node["name"] = name_;
+  node["index"] = index_;
+  node["type"] = (int) type_;
+  node["value"] = value_;
+
+  return node;
 }
 
 void Param::init(std::string name, int index, MAV_PARAM_TYPE type, float raw_value)
@@ -184,6 +219,18 @@ double Param::getCastValue(double value)
   }
 
   return cast_value;
+}
+
+YAML::Emitter& operator << (YAML::Emitter& out, const Param& param)
+{
+  out << YAML::Flow;
+  out << YAML::BeginMap;
+  out << YAML::Key << "name" << YAML::Value << param.getName();
+  out << YAML::Key << "value" << YAML::Value << param.getValue();
+  out << YAML::Key << "type"  << YAML::Value << (int) param.getType();
+  out << YAML::Key << "index" << YAML::Value << param.getIndex();
+  out << YAML::EndMap;
+  return out;
 }
 
 } // namespace mavrosflight

@@ -5,6 +5,10 @@
 
 #include <mavrosflight/param_manager.h>
 
+#include <yaml-cpp/yaml.h>
+
+#include <fstream>
+
 namespace mavrosflight
 {
 
@@ -128,6 +132,47 @@ void ParamManager::unregister_param_listener(ParamListenerInterface *listener)
       i--;
     }
   }
+}
+
+bool ParamManager::save_to_file(std::string filename)
+{
+//  YAML::Node root;
+  YAML::Emitter yaml;
+  yaml << YAML::BeginSeq;
+
+  std::map<std::string, Param>::iterator it;
+  for (it = params_.begin(); it != params_.end(); it++)
+  {
+//    root.push_back(it->second.toYaml());
+
+//    yaml << YAML::Flow;
+//    yaml << YAML::BeginMap;
+//    yaml << YAML::Key << "name" << YAML::Value << it->first;
+//    yaml << YAML::Key << "value" << YAML::Value << it->second.getValue();
+//    yaml << YAML::EndMap;
+    yaml << it->second;
+  }
+
+  yaml << YAML::EndSeq;
+
+  try
+  {
+    std::ofstream fout;
+    fout.open(filename.c_str());
+//    fout << root;
+    fout << yaml.c_str();
+    fout.close();
+  }
+  catch (...)
+  {
+    return false;
+  }
+
+  return true;
+}
+
+bool ParamManager::load_from_file(std::string filename)
+{
 }
 
 void ParamManager::request_param_list()
