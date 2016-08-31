@@ -60,7 +60,7 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
   switch (msg.msgid)
   {
   case MAVLINK_MSG_ID_HEARTBEAT:
-    handle_heartbeat_msg();
+    handle_heartbeat_msg(msg);
     break;
   case MAVLINK_MSG_ID_COMMAND_ACK:
     handle_command_ack_msg(msg);
@@ -130,9 +130,54 @@ void fcuIO::on_params_saved_change(bool unsaved_changes)
   }
 }
 
-void fcuIO::handle_heartbeat_msg()
+void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
 {
   ROS_INFO_ONCE("Got HEARTBEAT, connected.");
+
+  static int prev_armed_state = 0;
+  static int prev_control_mode = 0;
+  mavlink_heartbeat_t heartbeat;
+  mavlink_msg_heartbeat_decode(&msg, &heartbeat);
+
+  // Print if change in armed_state
+  if(heartbeat.base_mode != prev_armed_state)
+  {
+    if(heartbeat.base_mode == MAV_MODE_MANUAL_ARMED)
+      ROS_WARN("FCU ARMED");
+    else if(heartbeat.base_mode == MAV_MODE_MANUAL_DISARMED)
+      ROS_WARN("FCU DISARMED");
+    prev_armed_state = heartbeat.base_mode;
+  }
+  else if(heartbeat.base_mode == MAV_MODE_ENUM_END)
+    ROS_ERROR_THROTTLE(1,"FCU FAILSAFE");
+
+
+  // Print if change in control mode
+  if(heartbeat.custom_mode != prev_control_mode)
+  {
+    std::string mode_string;
+    switch(heartbeat.custom_mode)
+    {
+      case MODE_PASS_THROUGH:
+        mode_string = "PASS_THROUGH";
+        break;
+      case MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
+        mode_string = "RATE";
+        break;
+      case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
+        mode_string = "ANGLE";
+        break;
+      case MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
+        mode_string = "ALTITUDE";
+        break;
+      default:
+        mode_string = "UNKNOWN";
+    }
+    ROS_WARN_STREAM("FCU now in " << mode_string << " mode");
+    prev_control_mode = heartbeat.custom_mode;
+  }
+
+
 }
 
 void fcuIO::handle_command_ack_msg(const mavlink_message_t &msg)
@@ -407,14 +452,13 @@ void fcuIO::handle_named_command_struct_msg(const mavlink_message_t &msg)
   }
 
   fcu_common::ExtendedCommand command_msg;
-  uint8_t mode;
-  if(command.type = MODE_PASS_THROUGH)
+  if(command.type == MODE_PASS_THROUGH)
     command_msg.mode = fcu_common::ExtendedCommand::MODE_PASS_THROUGH;
-  else if(command.type = MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE)
+  else if(command.type == MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE)
     command_msg.mode = fcu_common::ExtendedCommand::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
-  else if(command.type = MODE_ROLL_PITCH_YAWRATE_THROTTLE)
+  else if(command.type == MODE_ROLL_PITCH_YAWRATE_THROTTLE)
     command_msg.mode = fcu_common::ExtendedCommand::MODE_ROLL_PITCH_YAWRATE_THROTTLE;
-  else if(command.type = MODE_ROLL_PITCH_YAWRATE_ALTITUDE)
+  else if(command.type == MODE_ROLL_PITCH_YAWRATE_ALTITUDE)
     command_msg.mode = fcu_common::ExtendedCommand::MODE_ROLL_PITCH_YAWRATE_ALTITUDE;
 
   command_msg.ignore = command.ignore;
