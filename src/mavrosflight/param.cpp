@@ -50,26 +50,6 @@ double Param::getValue() const
   return value_;
 }
 
-void Param::setName(std::string name)
-{
-  name_ = name;
-}
-
-void Param::setIndex(int index)
-{
-  index_ = index;
-}
-
-void Param::setType(MAV_PARAM_TYPE type)
-{
-  type_ = type;
-}
-
-void Param::setValue(double value)
-{
-  value_ = value;
-}
-
 void Param::requestSet(double value, mavlink_message_t *msg)
 {
   if (value != value_)
@@ -102,17 +82,6 @@ bool Param::handleUpdate(const mavlink_param_value_t &msg)
   }
 
   return false;
-}
-
-YAML::Node Param::toYaml()
-{
-  YAML::Node node;
-  node["name"] = name_;
-  node["index"] = index_;
-  node["type"] = (int) type_;
-  node["value"] = value_;
-
-  return node;
 }
 
 void Param::init(std::string name, int index, MAV_PARAM_TYPE type, float raw_value)

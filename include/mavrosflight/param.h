@@ -29,15 +29,8 @@ public:
   MAV_PARAM_TYPE getType() const;
   double getValue() const;
 
-  void setName(std::string name);
-  void setIndex(int index);
-  void setType(MAV_PARAM_TYPE type);
-  void setValue(double value);
-
   void requestSet(double value, mavlink_message_t *msg);
   bool handleUpdate(const mavlink_param_value_t &msg);
-
-  YAML::Node toYaml();
 
 private:
   void init(std::string name, int index, MAV_PARAM_TYPE type, float raw_value);
@@ -78,8 +71,6 @@ private:
   double new_value_;
   float expected_raw_value_;
 };
-
-YAML::Emitter& operator << (YAML::Emitter& out, const Param& param);
 
 } // namespace mavrosflight
 
