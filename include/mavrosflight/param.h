@@ -83,33 +83,4 @@ YAML::Emitter& operator << (YAML::Emitter& out, const Param& param);
 
 } // namespace mavrosflight
 
-//namespace YAML {
-//template<>
-//struct convert<mavrosflight::Param>
-//{
-//  static Node encode(const mavrosflight::Param& rhs)
-//  {
-//    Node node;
-//    node["index"] = rhs.getIndex();
-//    node["type"] = (int) rhs.getType();
-//    node["value"] = rhs.getValue();
-//    return node;
-//  }
-
-//  static bool decode(const Node& node, mavrosflight::Param& rhs)
-//  {
-//    if(!node.IsMap() || !node["index"] || !node["type"] || !node["value"])
-//    {
-//      return false;
-//    }
-
-//    rhs.setIndex(node["index"].as<int>());
-//    rhs.setType((MAV_PARAM_TYPE) node["type"].as<int>());
-//    rhs.setValue(node["value"].as<double>());
-
-//    return true;
-//  }
-//};
-//}
-
 #endif // MAVROSFLIGHT_PARAM_H

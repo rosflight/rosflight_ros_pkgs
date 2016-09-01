@@ -136,30 +136,26 @@ void ParamManager::unregister_param_listener(ParamListenerInterface *listener)
 
 bool ParamManager::save_to_file(std::string filename)
 {
-//  YAML::Node root;
+  // build YAML document
   YAML::Emitter yaml;
   yaml << YAML::BeginSeq;
-
   std::map<std::string, Param>::iterator it;
   for (it = params_.begin(); it != params_.end(); it++)
   {
-//    root.push_back(it->second.toYaml());
-
-//    yaml << YAML::Flow;
-//    yaml << YAML::BeginMap;
-//    yaml << YAML::Key << "name" << YAML::Value << it->first;
-//    yaml << YAML::Key << "value" << YAML::Value << it->second.getValue();
-//    yaml << YAML::EndMap;
-    yaml << it->second;
+    yaml << YAML::Flow;
+    yaml << YAML::BeginMap;
+    yaml << YAML::Key << "name" << YAML::Value << it->second.getName();
+    yaml << YAML::Key << "type" << YAML::Value << (int) it->second.getType();
+    yaml << YAML::Key << "value" << YAML::Value << it->second.getValue();
+    yaml << YAML::EndMap;
   }
-
   yaml << YAML::EndSeq;
 
+  // write to file
   try
   {
     std::ofstream fout;
     fout.open(filename.c_str());
-//    fout << root;
     fout << yaml.c_str();
     fout.close();
   }

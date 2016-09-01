@@ -221,16 +221,4 @@ double Param::getCastValue(double value)
   return cast_value;
 }
 
-YAML::Emitter& operator << (YAML::Emitter& out, const Param& param)
-{
-  out << YAML::Flow;
-  out << YAML::BeginMap;
-  out << YAML::Key << "name" << YAML::Value << param.getName();
-  out << YAML::Key << "value" << YAML::Value << param.getValue();
-  out << YAML::Key << "type"  << YAML::Value << (int) param.getType();
-  out << YAML::Key << "index" << YAML::Value << param.getIndex();
-  out << YAML::EndMap;
-  return out;
-}
-
 } // namespace mavrosflight
