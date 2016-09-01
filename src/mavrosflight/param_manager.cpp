@@ -169,6 +169,32 @@ bool ParamManager::save_to_file(std::string filename)
 
 bool ParamManager::load_from_file(std::string filename)
 {
+  try
+  {
+    YAML::Node root = YAML::LoadFile(filename);
+    assert(root.IsSequence());
+
+    for (int i = 0; i < root.size(); i++)
+    {
+      if (root[i].IsMap() && root[i]["name"] && root[i]["type"] && root[i]["value"])
+      {
+        if (is_param_id(root[i]["name"].as<std::string>()))
+        {
+          Param param = params_.find(root[i]["name"].as<std::string>())->second;
+          if ((MAV_PARAM_TYPE) root[i]["type"].as<int>() == param.getType())
+          {
+            set_param_value(root[i]["name"].as<std::string>(), root[i]["value"].as<double>());
+          }
+        }
+      }
+    }
+
+    return true;
+  }
+  catch (...)
+  {
+    return false;
+  }
 }
 
 void ParamManager::request_param_list()

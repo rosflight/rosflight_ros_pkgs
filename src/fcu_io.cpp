@@ -24,6 +24,7 @@ fcuIO::fcuIO()
   param_set_srv_ = nh_.advertiseService("param_set", &fcuIO::paramSetSrvCallback, this);
   param_write_srv_ = nh_.advertiseService("param_write", &fcuIO::paramWriteSrvCallback, this);
   param_save_to_file_srv_ = nh_.advertiseService("param_save_to_file", &fcuIO::paramSaveToFileCallback, this);
+  param_load_from_file_srv_ = nh_.advertiseService("param_load_from_file", &fcuIO::paramLoadFromFileCallback, this);
   imu_calibrate_bias_srv_ = nh_.advertiseService("calibrate_imu_bias", &fcuIO::calibrateImuBiasSrvCallback, this);
   imu_calibrate_temp_srv_ = nh_.advertiseService("calibrate_imu_temp", &fcuIO::calibrateImuTempSrvCallback, this);
   calibrate_rc_srv_ = nh_.advertiseService("calibrate_rc_trim", &fcuIO::calibrateRCTrimSrvCallback, this);
@@ -573,6 +574,12 @@ bool fcuIO::paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Tri
 bool fcuIO::paramSaveToFileCallback(ParamFile::Request &req, ParamFile::Response &res)
 {
   res.success = mavrosflight_->param.save_to_file(req.filename);
+  return true;
+}
+
+bool fcuIO::paramLoadFromFileCallback(ParamFile::Request &req, ParamFile::Response &res)
+{
+  res.success = mavrosflight_->param.load_from_file(req.filename);
   return true;
 }
 

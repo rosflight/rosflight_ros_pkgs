@@ -108,6 +108,7 @@ private:
   ros::ServiceServer param_set_srv_;
   ros::ServiceServer param_write_srv_;
   ros::ServiceServer param_save_to_file_srv_;
+  ros::ServiceServer param_load_from_file_srv_;
   ros::ServiceServer imu_calibrate_bias_srv_;
   ros::ServiceServer imu_calibrate_temp_srv_;
   ros::ServiceServer calibrate_rc_srv_;
