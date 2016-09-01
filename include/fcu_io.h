@@ -51,7 +51,7 @@ public:
 private:
 
   // handle mavlink messages
-  void handle_heartbeat_msg();
+  void handle_heartbeat_msg(const mavlink_message_t &msg);
   void handle_command_ack_msg(const mavlink_message_t &msg);
   void handle_statustext_msg(const mavlink_message_t &msg);
   void handle_attitude_msg(const mavlink_message_t &msg);
@@ -62,6 +62,7 @@ private:
   void handle_small_baro_msg(const mavlink_message_t &msg);
   void handle_named_value_int_msg(const mavlink_message_t &msg);
   void handle_named_value_float_msg(const mavlink_message_t &msg);
+  void handle_named_command_struct_msg(const mavlink_message_t &msg);
   void handle_distance_sensor(const mavlink_message_t &msg);
 
   // ROS message callbacks
@@ -73,6 +74,7 @@ private:
   bool paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+  bool calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
 
   // helpers
   template<class T> inline T saturate(T value, T min, T max)
@@ -97,12 +99,14 @@ private:
   ros::Publisher attitude_pub_;
   std::map<std::string, ros::Publisher> named_value_int_pubs_;
   std::map<std::string, ros::Publisher> named_value_float_pubs_;
+  std::map<std::string, ros::Publisher> named_command_struct_pubs_;
 
   ros::ServiceServer param_get_srv_;
   ros::ServiceServer param_set_srv_;
   ros::ServiceServer param_write_srv_;
   ros::ServiceServer imu_calibrate_bias_srv_;
   ros::ServiceServer imu_calibrate_temp_srv_;
+  ros::ServiceServer calibrate_rc_srv_;
 
   mavrosflight::MavROSflight *mavrosflight_;
   mavrosflight::sensors::DifferentialPressure diff_pressure_;
