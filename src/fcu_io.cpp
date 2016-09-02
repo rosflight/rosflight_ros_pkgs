@@ -74,6 +74,9 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
   case MAVLINK_MSG_ID_SMALL_IMU:
     handle_small_imu_msg(msg);
     break;
+  case MAVLINK_MSG_ID_SMALL_MAG:
+    handle_small_mag_msg(msg);
+    break;
   case MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:
     handle_servo_output_raw_msg(msg);
     break;
@@ -486,6 +489,25 @@ void fcuIO::handle_small_baro_msg(const mavlink_message_t &msg)
     }
     baro_pub_.publish(alt_msg);
   }
+}
+
+void fcuIO::handle_small_mag_msg(const mavlink_message_t &msg)
+{
+  mavlink_small_mag_t mag;
+  mavlink_msg_small_mag_decode(&msg, &mag);
+
+  //! \todo calibration, correct units, floating point message type
+  sensor_msgs::MagneticField mag_msg;
+  mag_msg.header.stamp = ros::Time::now();
+  mag_msg.magnetic_field.x = (double) mag.xmag;
+  mag_msg.magnetic_field.y = (double) mag.ymag;
+  mag_msg.magnetic_field.z = (double) mag.zmag;
+
+  if (mag_pub_.getTopic().empty())
+  {
+    mag_pub_ = nh_.advertise<sensor_msgs::MagneticField>("magnetometer", 1);
+  }
+  mag_pub_.publish(mag_msg);
 }
 
 void fcuIO::handle_distance_sensor(const mavlink_message_t &msg)
