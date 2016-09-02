@@ -16,6 +16,7 @@
 #include <std_msgs/Int32.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/FluidPressure.h>
+#include <sensor_msgs/MagneticField.h>
 #include <sensor_msgs/Temperature.h>
 #include <sensor_msgs/Range.h>
 #include <std_srvs/Trigger.h>
@@ -60,6 +61,7 @@ private:
   void handle_rc_channels_raw_msg(const mavlink_message_t &msg);
   void handle_diff_pressure_msg(const mavlink_message_t &msg);
   void handle_small_baro_msg(const mavlink_message_t &msg);
+  void handle_small_mag_msg(const mavlink_message_t &msg);
   void handle_named_value_int_msg(const mavlink_message_t &msg);
   void handle_named_value_float_msg(const mavlink_message_t &msg);
   void handle_named_command_struct_msg(const mavlink_message_t &msg);
@@ -96,6 +98,7 @@ private:
   ros::Publisher temperature_pub_;
   ros::Publisher baro_pub_;
   ros::Publisher sonar_pub_;
+  ros::Publisher mag_pub_;
   ros::Publisher attitude_pub_;
   std::map<std::string, ros::Publisher> named_value_int_pubs_;
   std::map<std::string, ros::Publisher> named_value_float_pubs_;
