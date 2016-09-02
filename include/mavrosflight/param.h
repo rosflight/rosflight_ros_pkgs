@@ -9,6 +9,8 @@
 #include <mavrosflight/mavlink_bridge.h>
 #include <mavrosflight/mavlink_serial.h>
 
+#include <yaml-cpp/yaml.h>
+
 namespace mavrosflight
 {
 
@@ -22,11 +24,10 @@ public:
   uint16_t pack_param_set_msg(uint8_t system, uint8_t component, mavlink_message_t *msg,
                               uint8_t target_system, uint8_t target_component);
 
-  std::string getName();
-  int getIndex();
-  MAV_PARAM_TYPE getType();
-  double getValue();
-  bool getSetInProgress();
+  std::string getName() const;
+  int getIndex() const;
+  MAV_PARAM_TYPE getType() const;
+  double getValue() const;
 
   void requestSet(double value, mavlink_message_t *msg);
   bool handleUpdate(const mavlink_param_value_t &msg);

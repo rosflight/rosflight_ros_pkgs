@@ -15,7 +15,11 @@ Param::Param()
 
 Param::Param(mavlink_param_value_t msg)
 {
-  init(std::string(msg.param_id, MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN),
+  char name[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN + 1];
+  memcpy(name, msg.param_id, MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN);
+  name[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN] = '\0';
+
+  init(std::string(name),
        msg.param_index,
        (MAV_PARAM_TYPE) msg.param_type,
        msg.param_value);
@@ -26,22 +30,22 @@ Param::Param(std::string name, int index, MAV_PARAM_TYPE type, float raw_value)
   init(name, index, type, raw_value);
 }
 
-std::string Param::getName()
+std::string Param::getName() const
 {
   return name_;
 }
 
-int Param::getIndex()
+int Param::getIndex() const
 {
   return index_;
 }
 
-MAV_PARAM_TYPE Param::getType()
+MAV_PARAM_TYPE Param::getType() const
 {
   return type_;
 }
 
-double Param::getValue()
+double Param::getValue() const
 {
   return value_;
 }

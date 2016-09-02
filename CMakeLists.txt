@@ -2,15 +2,16 @@ cmake_minimum_required(VERSION 2.8.3)
 project(fcu_io)
 
 find_package(catkin REQUIRED COMPONENTS
+  cmake_modules
   fcu_common
   message_generation
   roscpp
   sensor_msgs
   std_msgs
-  cmake_modules
 )
-find_package(Eigen REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(Eigen REQUIRED)
+pkg_check_modules(YAML yaml-cpp)
 
 ###################################
 ## catkin specific configuration ##
@@ -24,6 +25,7 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 
 add_service_files(
   FILES
+  ParamFile.srv
   ParamGet.srv
   ParamSet.srv
 )
@@ -37,7 +39,7 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES mavrosflight
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs
-  DEPENDS Boost
+  DEPENDS Boost Eigen yaml-cpp
 )
 
 ###########
@@ -48,6 +50,8 @@ include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
+  ${Eigen_INCLUDE_DIRS}
+  ${YAML_INCLUDEDIR}
 )
 
 # mavrosflight library
@@ -65,6 +69,7 @@ add_dependencies(mavrosflight ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPOR
 target_link_libraries(mavrosflight
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
+  ${YAML_LIBRARIES}
 )
 
 # fcu_io_node
