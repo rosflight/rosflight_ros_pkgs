@@ -33,8 +33,8 @@ Baro::Baro()
 
 bool Baro::correct(mavlink_small_baro_t baro, double *alt)
 {
-  double pressure = baro.pressure;
-  double temperature = baro.temperature;
+  double pressure = (double)baro.pressure;
+  double temperature = (double)baro.temperature;
 
   if( calibration_counter_ > calibration_count_ + settling_count_)
   {
