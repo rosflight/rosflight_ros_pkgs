@@ -82,12 +82,12 @@ def to_meters(originLat, originLong, originAlt, newLat, newLong, newAlt, flag):
 	newValues = []
 
 	for value in values:
-	#	if value.isdigit() == False:
-	#		print "Degrees Minutes Seconds Format"
-	#		newValues.append(decimal_degrees(value))
-	#	else:
-		print "Long Decimal Format"
-		newValues.append(float(value))
+		if value.isdigit() == 1:
+			print "Long Decimal Format"
+			newValues.append(float(value))
+		else:
+			print "Degrees Minutes Seconds Format"
+			newValues.append(decimal_degrees(value))
 
 	destination = meter_convert(newValues[0], newValues[1], originAlt, newValues[2], newValues[3], newAlt)
 		
