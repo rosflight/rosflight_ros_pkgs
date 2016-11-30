@@ -78,16 +78,18 @@ def to_meters(originLat, originLong, originAlt, newLat, newLong, newAlt, flag):
 	GPSorigin = [originLat, originLong, originAlt]	
 	GPSdestination = [newLat, newLong, newAlt]
 	
-	values = [str(originLat), str(originLong), str(newLat), str(newLong)]
+	values = [originLat, str(originLong), str(newLat), str(newLong)]
 	newValues = []
 
 	for value in values:
-		if value.isdigit():
-			newValues.append(float(value))
-		else:
-			newValues.append(decimal_degrees(value))
+	#	if value.isdigit() == False:
+	#		print "Degrees Minutes Seconds Format"
+	#		newValues.append(decimal_degrees(value))
+	#	else:
+		print "Long Decimal Format"
+		newValues.append(float(value))
 
-	destination = meterConvert(newValues[0], newValues[1], originAlt, newValues[2], newValues[3], newAlt)
+	destination = meter_convert(newValues[0], newValues[1], originAlt, newValues[2], newValues[3], newAlt)
 		
 	#Test Output
 	print("Origin in GPS Coordinates: " + str(GPSorigin))
@@ -100,17 +102,11 @@ def to_meters(originLat, originLong, originAlt, newLat, newLong, newAlt, flag):
 		
 
 
-
-
-
-
-
-
 #######################################################################################################
 
 
 #Test
-test = to_meters(40.25787274333326, 111.65480308234692, 20.0, 40.257049176511316, 111.65421836078167, 20.0, 0)
+test = to_meters(-40.25787274333326, 111.65480308234692, 20.0, -40.257049176511316, 111.65421836078167, 20.0, 0)
 
 #if __name__ == __main__:
 #	toMeters(40.25787274333326, -111.65480308234692, -20.0, 40.257049176511316, -111.65421836078167, -20.0, 0)
