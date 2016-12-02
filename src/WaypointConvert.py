@@ -1,8 +1,17 @@
-#!/usr/bin/python
 # Taylor Pool
-# November 9, 2016
+# December 1, 2016
+#AUVSI Project
 
 # This script contains a function that converts given GPS coordinates into waypoints for ROS.
+#The input supports two types of GPS coordinates
+#1) Long Degree Decimal Format
+#	ex: -34.6830975
+#2) Degrees-Minutes-Seconds Format
+#	ex: N78-45-76.23
+#The function to be called for conversion is to_meters(originLat, originLong, originAlt, newLat, newLong, newAlt, flag)
+#The two formats listed above can be used simultaeously in the same function call.
+#NOTE: Degrees-Minutes-Seconds Format is the only format that uses NSEW directions in front.
+#NOTE: Degrees-Minutes-Seconds Format needs to be surrounded with quotations when passed as an argument.
 
 from math import pi
 from math import cos
@@ -83,22 +92,22 @@ def to_meters(originLat, originLong, originAlt, newLat, newLong, newAlt, flag):
 
 	for value in values:
 		if ("N" in value) or ("S" in value) or ("E" in value) or ("W" in value) == 1:
-			print "Degrees Minutes Seconds Format"
-			print value
+			#print "Degrees Minutes Seconds Format"
+			#print value
 			newValues.append(decimal_degrees(value))
-			print decimal_degrees(value)
+			#print decimal_degrees(value)
 		else:
-			print "Long Decimal Format"
+			#print "Long Decimal Format"
 			newValues.append(float(value))
 
 	destination = meter_convert(newValues[0], newValues[1], originAlt, newValues[2], newValues[3], newAlt)
 
 	#Test Output
-	print("Origin in GPS Coordinates: " + str(GPSorigin))
-	print("\n")
-	print("Destination in GPS Coordinates: " + str(GPSdestination))
-	print("\n")
-	print("Destination Coordinates (Meters) with Distance: " + str(destination))
+	#print("Origin in GPS Coordinates: " + str(GPSorigin))
+	#print("\n")
+	#print("Destination in GPS Coordinates: " + str(GPSdestination))
+	#print("\n")
+	#print("Destination Coordinates (Meters) with Distance: " + str(destination))
 
 	return destination
 
@@ -108,7 +117,28 @@ def to_meters(originLat, originLong, originAlt, newLat, newLong, newAlt, flag):
 
 
 #Test
-test = to_meters("N90-90-76.45", "W45-67-23.54", 20.0, -40.257049176511316, 111.65421836078167, 20.0, 0)
+#test = to_meters("N90-90-76.45", "W45-67-23.54", 20.0, -40.257049176511316, 111.65421836078167, 20.0, 0)
 
 #if __name__ == __main__:
 #	toMeters(40.25787274333326, -111.65480308234692, -20.0, 40.257049176511316, -111.65421836078167, -20.0, 0)
+
+
+#######################################################################################################################
+
+#Sample Output:
+#tpool2@FB280-09:/media/tpool2/TAYLORPOOL/AUVSI/fcu_common/src$ python WaypointConvert.py 
+#Degrees Minutes Seconds Format
+#N90-90-76.45
+#91.5212361111
+#Degrees Minutes Seconds Format
+#W45-67-23.54
+#-46.1232055556
+#Long Decimal Format
+#Long Decimal Format
+#Origin in GPS Coordinates: ['N90-90-76.45', 'W45-67-23.54', 20.0]
+
+
+#Destination in GPS Coordinates: [-40.257049176511316, 111.65421836078167, 20.0]
+
+
+#Destination Coordinates (Meters) with Distance: [-14653095.165621338, -465750.5181201244, 20.0, 14660495.267141715]
