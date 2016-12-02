@@ -22,9 +22,9 @@ def decimal_degrees (string):
 		a = 1
 	elif firstLetter == 'S' or firstLetter == 'W':
 		a = -1
-	
+
 	lessString = string.strip("NSEW ")
-	
+
 	values = lessString.split('-', 2)
 
 	d = float(values[0])
@@ -41,10 +41,10 @@ def decimal_degrees (string):
 #Pre: Lat and Long are given in decimal degrees, and altitude is in meters
 #Post: Returns destination in tuple format [latChange, longChange, newAlt, distance]
 def meter_convert(originLat, originLong, originAlt, newLat, newLong, newAlt):
-		
+
 	#Find CrossSectional Radius of Earth for Given Latitude Degree
 	crossRadius = cos(originLat*pi/180.0)*EARTH_RADIUS
-		
+
 	GPSdestination = [newLat, newLong, -newAlt]	#Given in terms of N, E, D
 
 	#Convert Change in GPS Coordinates to Change in Meters
@@ -69,28 +69,30 @@ def meter_convert(originLat, originLong, originAlt, newLat, newLong, newAlt):
 #		0: meters		else: feet
 #Post: outputs destination given in meters that ROS can understand.
 def to_meters(originLat, originLong, originAlt, newLat, newLong, newAlt, flag):
-	
+
 	#Altitude in Feet needs to be converted to Meters
 	if (flag != 0):
 		originAlt = .305*originAlt
 		newAlt = .305*newAlt
 
-	GPSorigin = [originLat, originLong, originAlt]	
+	GPSorigin = [originLat, originLong, originAlt]
 	GPSdestination = [newLat, newLong, newAlt]
-	
-	values = [originLat, str(originLong), str(newLat), str(newLong)]
+
+	values = [str(originLat), str(originLong), str(newLat), str(newLong)]
 	newValues = []
 
 	for value in values:
-		if value.isdigit() == 1:
+		if ("N" in value) or ("S" in value) or ("E" in value) or ("W" in value) == 1:
+			print "Degrees Minutes Seconds Format"
+			print value
+			newValues.append(decimal_degrees(value))
+			print decimal_degrees(value)
+		else:
 			print "Long Decimal Format"
 			newValues.append(float(value))
-		else:
-			print "Degrees Minutes Seconds Format"
-			newValues.append(decimal_degrees(value))
 
 	destination = meter_convert(newValues[0], newValues[1], originAlt, newValues[2], newValues[3], newAlt)
-		
+
 	#Test Output
 	print("Origin in GPS Coordinates: " + str(GPSorigin))
 	print("\n")
@@ -99,21 +101,14 @@ def to_meters(originLat, originLong, originAlt, newLat, newLong, newAlt, flag):
 	print("Destination Coordinates (Meters) with Distance: " + str(destination))
 
 	return destination
-		
+
 
 
 #######################################################################################################
 
 
 #Test
-test = to_meters(-40.25787274333326, 111.65480308234692, 20.0, -40.257049176511316, 111.65421836078167, 20.0, 0)
+test = to_meters("N90-90-76.45", "W45-67-23.54", 20.0, -40.257049176511316, 111.65421836078167, 20.0, 0)
 
 #if __name__ == __main__:
 #	toMeters(40.25787274333326, -111.65480308234692, -20.0, 40.257049176511316, -111.65421836078167, -20.0, 0)
-
-
-
-
-		
-
-
