@@ -42,10 +42,14 @@ fcuIO::fcuIO()
   {
     ROS_FATAL("%s", e.what());
     ros::shutdown();
-  }
+  }  
 
   mavrosflight_->serial.register_mavlink_listener(this);
   mavrosflight_->param.register_param_listener(this);
+
+  // Request the param list
+  mavrosflight_->param.request_param_list();
+  last_param_request_time_ = ros::Time::now();
 
   std_msgs::Bool unsaved_msg;
   unsaved_msg.data = false;
@@ -154,7 +158,7 @@ void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
     prev_armed_state = heartbeat.base_mode;
   }
   else if(heartbeat.base_mode == MAV_MODE_ENUM_END)
-    ROS_ERROR_THROTTLE(1,"FCU FAILSAFE");
+    ROS_ERROR_THROTTLE(5,"FCU FAILSAFE");
 
 
   // Print if change in control mode
@@ -181,6 +185,16 @@ void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
     ROS_WARN_STREAM("FCU now in " << mode_string << " mode");
     prev_control_mode = heartbeat.custom_mode;
   }
+
+  // Check if we need to ask for parameters again
+  // If it has been more than 5 seconds and we are still missing some parameters,
+  // just ask for the list again
+  if( (last_param_request_time_ - ros::Time::now()) > ros::Duration(5)
+      && !mavrosflight_->param.got_all_params())
+  {
+    mavrosflight_->param.request_param_list();
+  }
+
 
 
 }

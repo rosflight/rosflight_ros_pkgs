@@ -42,8 +42,9 @@ public:
   int get_param_count();
   bool got_all_params();
 
-private:
   void request_param_list();
+
+private:
 
   void handle_param_value_msg(const mavlink_message_t &msg);
   void handle_command_ack_msg(const mavlink_message_t &msg);

@@ -87,6 +87,7 @@ private:
     return value < min ? min : (value > max ? max : value);
   }
 
+  ros::Time last_param_request_time_;
 
   ros::NodeHandle nh_;
 

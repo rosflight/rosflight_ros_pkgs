@@ -21,8 +21,7 @@ ParamManager::ParamManager(MavlinkSerial * const serial) :
   initialized_(false),
   got_all_params_(false)
 {
-  serial_->register_mavlink_listener(this);
-  request_param_list();
+  serial_->register_mavlink_listener(this);  
 }
 
 ParamManager::~ParamManager()
@@ -237,7 +236,7 @@ void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
     }
     else
     {
-        ROS_INFO_STREAM("Got param " << param_count_ << " of " << param.param_count);
+//        ROS_INFO_STREAM("Got param " << param_count_ << " of " << param.param_count);
     }
 
     for (int i = 0; i < listeners_.size(); i++)
