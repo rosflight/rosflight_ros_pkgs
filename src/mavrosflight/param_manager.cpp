@@ -4,7 +4,7 @@
  */
 
 #include <mavrosflight/param_manager.h>
-
+#include <ros/ros.h>
 #include <yaml-cpp/yaml.h>
 
 #include <fstream>
@@ -18,7 +18,8 @@ ParamManager::ParamManager(MavlinkSerial * const serial) :
   write_request_in_progress_(false),
   first_param_received_(false),
   param_count_(0),
-  initialized_(false)
+  initialized_(false),
+  got_all_params_(false)
 {
   serial_->register_mavlink_listener(this);
   request_param_list();
@@ -225,7 +226,19 @@ void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
   if (!is_param_id(name)) // if we haven't received this param before, add it
   {
     params_[name] = Param(param);
-    received_[param.param_index] = true; //! \todo Implement check that all parameters have been received
+    received_[param.param_index] = true;
+
+    // increase the param count
+    param_count_++;
+    if(param_count_ == param.param_count)
+    {
+        ROS_INFO("GOT ALL PARAMS");
+        got_all_params_ = true;
+    }
+    else
+    {
+        ROS_INFO_STREAM("Got param " << param_count_ << " of " << param.param_count);
+    }
 
     for (int i = 0; i < listeners_.size(); i++)
       listeners_[i]->on_new_param_received(name, params_[name].getValue());
@@ -265,6 +278,16 @@ void ParamManager::handle_command_ack_msg(const mavlink_message_t &msg)
 bool ParamManager::is_param_id(std::string name)
 {
   return (params_.find(name) != params_.end());
+}
+
+int ParamManager::get_param_count()
+{
+    return param_count_;
+}
+
+bool ParamManager::got_all_params()
+{
+    return got_all_params_;
 }
 
 } // namespace mavrosflight

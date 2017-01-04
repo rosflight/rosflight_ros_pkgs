@@ -39,6 +39,9 @@ public:
   bool save_to_file(std::string filename);
   bool load_from_file(std::string filename);
 
+  int get_param_count();
+  bool got_all_params();
+
 private:
   void request_param_list();
 
@@ -59,6 +62,7 @@ private:
   size_t param_count_;
   bool *received_;
   bool initialized_;
+  bool got_all_params_;
 };
 
 } // namespace mavrosflight
