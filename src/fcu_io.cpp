@@ -33,6 +33,8 @@ fcuIO::fcuIO()
   std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
   int baud_rate = nh_private.param<int>("baud_rate", 921600);
 
+  ROS_INFO("FCU_IO");
+  ROS_INFO("Connecting to %s, at %d baud", port.c_str(), baud_rate);
 
   try
   {
@@ -623,7 +625,8 @@ bool fcuIO::calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srv
 {
   mavlink_message_t msg;
   mavlink_msg_command_int_pack(1, 50, &msg, 1, MAV_COMP_ID_ALL,
-                               0, MAV_CMD_PREFLIGHT_CALIBRATION, 0, 0, 1, 0, 0, 0, 1, 0, 0);
+                               0, MAV_CMD_PREFLIGHT_CALIBRATION, 0, 0,
+                               1.0, 0.0, 0.0, 0.0, 1, 0, 0.0);
   mavrosflight_->serial.send_message(msg);
 
   res.success = true;

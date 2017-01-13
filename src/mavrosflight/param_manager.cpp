@@ -21,7 +21,7 @@ ParamManager::ParamManager(MavlinkSerial * const serial) :
   initialized_(false),
   got_all_params_(false)
 {
-  serial_->register_mavlink_listener(this);  
+  serial_->register_mavlink_listener(this);
 }
 
 ParamManager::~ParamManager()
@@ -36,12 +36,12 @@ void ParamManager::handle_mavlink_message(const mavlink_message_t &msg)
 {
   switch (msg.msgid)
   {
-  case MAVLINK_MSG_ID_PARAM_VALUE:
-    handle_param_value_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_COMMAND_ACK:
-    handle_command_ack_msg(msg);
-    break;
+    case MAVLINK_MSG_ID_PARAM_VALUE:
+      handle_param_value_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_COMMAND_ACK:
+      handle_command_ack_msg(msg);
+      break;
   }
 }
 
@@ -231,12 +231,12 @@ void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
     param_count_++;
     if(param_count_ == param.param_count)
     {
-        ROS_INFO("GOT ALL PARAMS");
-        got_all_params_ = true;
+      ROS_INFO("GOT ALL PARAMS");
+      got_all_params_ = true;
     }
     else
     {
-//        ROS_INFO_STREAM("Got param " << param_count_ << " of " << param.param_count);
+      //        ROS_INFO_STREAM("Got param " << param_count_ << " of " << param.param_count);
     }
 
     for (int i = 0; i < listeners_.size(); i++)
@@ -263,13 +263,23 @@ void ParamManager::handle_command_ack_msg(const mavlink_message_t &msg)
     mavlink_command_ack_t ack;
     mavlink_msg_command_ack_decode(&msg, &ack);
 
-    if (ack.command == MAV_CMD_PREFLIGHT_STORAGE && ack.result == MAV_RESULT_ACCEPTED)
+    if (ack.command == MAV_CMD_PREFLIGHT_STORAGE)
     {
       write_request_in_progress_ = false;
-      unsaved_changes_ = false;
+      if(ack.result == MAV_RESULT_ACCEPTED)
+      {
+        ROS_INFO("Param write succeeded");
+        unsaved_changes_ = false;
 
-      for (int i = 0; i < listeners_.size(); i++)
-        listeners_[i]->on_params_saved_change(unsaved_changes_);
+        for (int i = 0; i < listeners_.size(); i++)
+          listeners_[i]->on_params_saved_change(unsaved_changes_);
+      }
+      else
+      {
+        ROS_INFO("Param write failed - maybe disarm the aricraft and try again?");
+        write_request_in_progress_ = false;
+        unsaved_changes_ = true;
+      }
     }
   }
 }
@@ -281,12 +291,12 @@ bool ParamManager::is_param_id(std::string name)
 
 int ParamManager::get_param_count()
 {
-    return param_count_;
+  return param_count_;
 }
 
 bool ParamManager::got_all_params()
 {
-    return got_all_params_;
+  return got_all_params_;
 }
 
 } // namespace mavrosflight
