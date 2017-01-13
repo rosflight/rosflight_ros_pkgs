@@ -191,7 +191,7 @@ void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
   // Check if we need to ask for parameters again
   // If it has been more than 5 seconds and we are still missing some parameters,
   // just ask for the list again
-  if( (last_param_request_time_ - ros::Time::now()) > ros::Duration(5)
+  if( (last_param_request_time_ - ros::Time::now()) > ros::Duration(3)
       && !mavrosflight_->param.got_all_params())
   {
     mavrosflight_->param.request_param_list();
