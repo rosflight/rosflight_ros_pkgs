@@ -36,6 +36,11 @@ bool Baro::correct(mavlink_small_baro_t baro, double *alt)
   double pressure = (double)baro.pressure;
   double temperature = (double)baro.temperature;
 
+  if(pressure < 0)
+  {
+    return false;
+  }
+
   if( calibration_counter_ > calibration_count_ + settling_count_)
   {
     double alt_tmp = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 4430.0f; // in meters

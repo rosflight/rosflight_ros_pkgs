@@ -4,7 +4,7 @@
  */
 
 #include <mavrosflight/param_manager.h>
-
+#include <ros/ros.h>
 #include <yaml-cpp/yaml.h>
 
 #include <fstream>
@@ -17,16 +17,15 @@ ParamManager::ParamManager(MavlinkSerial * const serial) :
   unsaved_changes_(false),
   write_request_in_progress_(false),
   first_param_received_(false),
-  param_count_(0),
-  initialized_(false)
+  received_count_(0),
+  got_all_params_(false)
 {
   serial_->register_mavlink_listener(this);
-  request_param_list();
 }
 
 ParamManager::~ParamManager()
 {
-  if (param_count_ > 0)
+  if (first_param_received_)
   {
     delete[] received_;
   }
@@ -197,11 +196,37 @@ bool ParamManager::load_from_file(std::string filename)
   }
 }
 
+void ParamManager::request_params()
+{
+  if (!first_param_received_)
+  {
+    request_param_list();
+  }
+  else
+  {
+    for (size_t i = 0; i < num_params_; i++)
+    {
+      if (!received_[i])
+      {
+        request_param(i);
+      }
+    }
+  }
+}
+
 void ParamManager::request_param_list()
 {
   mavlink_message_t param_list_msg;
   mavlink_msg_param_request_list_pack(1, 50, &param_list_msg, 1, MAV_COMP_ID_ALL);
   serial_->send_message(param_list_msg);
+}
+
+void ParamManager::request_param(int index)
+{
+  mavlink_message_t param_request_msg;
+  char empty[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
+  mavlink_msg_param_request_read_pack(1, 50, &param_request_msg, 1, MAV_COMP_ID_ALL, empty, (int16_t) index);
+  serial_->send_message(param_request_msg);
 }
 
 void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
@@ -212,7 +237,8 @@ void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
   if (!first_param_received_)
   {
     first_param_received_ = true;
-    received_ = new bool[param.param_count];
+    num_params_ = param.param_count;
+    received_ = new bool[num_params_];
   }
 
   // ensure null termination of name
@@ -225,7 +251,14 @@ void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
   if (!is_param_id(name)) // if we haven't received this param before, add it
   {
     params_[name] = Param(param);
-    received_[param.param_index] = true; //! \todo Implement check that all parameters have been received
+    received_[param.param_index] = true;
+
+    // increase the param count
+    received_count_++;
+    if(received_count_ == num_params_)
+    {
+      got_all_params_ = true;
+    }
 
     for (int i = 0; i < listeners_.size(); i++)
       listeners_[i]->on_new_param_received(name, params_[name].getValue());
@@ -251,13 +284,23 @@ void ParamManager::handle_command_ack_msg(const mavlink_message_t &msg)
     mavlink_command_ack_t ack;
     mavlink_msg_command_ack_decode(&msg, &ack);
 
-    if (ack.command == MAV_CMD_PREFLIGHT_STORAGE && ack.result == MAV_RESULT_ACCEPTED)
+    if (ack.command == MAV_CMD_PREFLIGHT_STORAGE)
     {
       write_request_in_progress_ = false;
-      unsaved_changes_ = false;
+      if(ack.result == MAV_RESULT_ACCEPTED)
+      {
+        ROS_INFO("Param write succeeded");
+        unsaved_changes_ = false;
 
-      for (int i = 0; i < listeners_.size(); i++)
-        listeners_[i]->on_params_saved_change(unsaved_changes_);
+        for (int i = 0; i < listeners_.size(); i++)
+          listeners_[i]->on_params_saved_change(unsaved_changes_);
+      }
+      else
+      {
+        ROS_INFO("Param write failed - maybe disarm the aricraft and try again?");
+        write_request_in_progress_ = false;
+        unsaved_changes_ = true;
+      }
     }
   }
 }
@@ -265,6 +308,28 @@ void ParamManager::handle_command_ack_msg(const mavlink_message_t &msg)
 bool ParamManager::is_param_id(std::string name)
 {
   return (params_.find(name) != params_.end());
+}
+
+int ParamManager::get_num_params()
+{
+  if (first_param_received_)
+  {
+    return num_params_;
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+int ParamManager::get_params_received()
+{
+  return received_count_;
+}
+
+bool ParamManager::got_all_params()
+{
+  return got_all_params_;
 }
 
 } // namespace mavrosflight

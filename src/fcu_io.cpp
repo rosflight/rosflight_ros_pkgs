@@ -33,6 +33,8 @@ fcuIO::fcuIO()
   std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
   int baud_rate = nh_private.param<int>("baud_rate", 921600);
 
+  ROS_INFO("FCU_IO");
+  ROS_INFO("Connecting to %s, at %d baud", port.c_str(), baud_rate);
 
   try
   {
@@ -42,11 +44,16 @@ fcuIO::fcuIO()
   {
     ROS_FATAL("%s", e.what());
     ros::shutdown();
-  }
+  }  
 
   mavrosflight_->serial.register_mavlink_listener(this);
   mavrosflight_->param.register_param_listener(this);
 
+  // request the param list
+  mavrosflight_->param.request_params();
+  param_timer_ = nh_.createTimer(ros::Duration(1.0), &fcuIO::paramTimerCallback, this);
+
+  // initialize latched "unsaved parameters" message value
   std_msgs::Bool unsaved_msg;
   unsaved_msg.data = false;
   unsaved_params_pub_.publish(unsaved_msg);
@@ -154,7 +161,7 @@ void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
     prev_armed_state = heartbeat.base_mode;
   }
   else if(heartbeat.base_mode == MAV_MODE_ENUM_END)
-    ROS_ERROR_THROTTLE(1,"FCU FAILSAFE");
+    ROS_ERROR_THROTTLE(5,"FCU FAILSAFE");
 
 
   // Print if change in control mode
@@ -181,8 +188,6 @@ void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
     ROS_WARN_STREAM("FCU now in " << mode_string << " mode");
     prev_control_mode = heartbeat.custom_mode;
   }
-
-
 }
 
 void fcuIO::handle_command_ack_msg(const mavlink_message_t &msg)
@@ -609,7 +614,8 @@ bool fcuIO::calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srv
 {
   mavlink_message_t msg;
   mavlink_msg_command_int_pack(1, 50, &msg, 1, MAV_COMP_ID_ALL,
-                               0, MAV_CMD_PREFLIGHT_CALIBRATION, 0, 0, 1, 0, 0, 0, 1, 0, 0);
+                               0, MAV_CMD_PREFLIGHT_CALIBRATION, 0, 0,
+                               1.0, 0.0, 0.0, 0.0, 1, 0, 0.0);
   mavrosflight_->serial.send_message(msg);
 
   res.success = true;
@@ -624,6 +630,22 @@ bool fcuIO::calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs
   mavrosflight_->serial.send_message(msg);
   res.success = true;
   return true;
+}
+
+void fcuIO::paramTimerCallback(const ros::TimerEvent &e)
+{
+  if (mavrosflight_->param.got_all_params())
+  {
+    param_timer_.stop();
+    ROS_INFO("Received all parameters");
+  }
+  else
+  {
+    mavrosflight_->param.request_params();
+    ROS_INFO("Received %d of %d parameters. Requesting missing parameters...",
+             mavrosflight_->param.get_params_received(),
+             mavrosflight_->param.get_num_params());
+  }
 }
 
 bool fcuIO::calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
