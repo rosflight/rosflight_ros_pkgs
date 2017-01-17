@@ -39,12 +39,16 @@ public:
   bool save_to_file(std::string filename);
   bool load_from_file(std::string filename);
 
-  int get_param_count();
+  int get_num_params();
+  int get_params_received();
   bool got_all_params();
 
-  void request_param_list();
+  void request_params();
 
 private:
+
+  void request_param_list();
+  void request_param(int index);
 
   void handle_param_value_msg(const mavlink_message_t &msg);
   void handle_command_ack_msg(const mavlink_message_t &msg);
@@ -60,9 +64,9 @@ private:
   bool write_request_in_progress_;
 
   bool first_param_received_;
-  size_t param_count_;
+  size_t num_params_;
+  size_t received_count_;
   bool *received_;
-  bool initialized_;
   bool got_all_params_;
 };
 

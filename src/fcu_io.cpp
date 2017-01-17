@@ -49,10 +49,11 @@ fcuIO::fcuIO()
   mavrosflight_->serial.register_mavlink_listener(this);
   mavrosflight_->param.register_param_listener(this);
 
-  // Request the param list
-  mavrosflight_->param.request_param_list();
-  last_param_request_time_ = ros::Time::now();
+  // request the param list
+  mavrosflight_->param.request_params();
+  param_timer_ = nh_.createTimer(ros::Duration(1.0), &fcuIO::paramTimerCallback, this);
 
+  // initialize latched "unsaved parameters" message value
   std_msgs::Bool unsaved_msg;
   unsaved_msg.data = false;
   unsaved_params_pub_.publish(unsaved_msg);
@@ -187,18 +188,6 @@ void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
     ROS_WARN_STREAM("FCU now in " << mode_string << " mode");
     prev_control_mode = heartbeat.custom_mode;
   }
-
-  // Check if we need to ask for parameters again
-  // If it has been more than 5 seconds and we are still missing some parameters,
-  // just ask for the list again
-  if( (last_param_request_time_ - ros::Time::now()) > ros::Duration(3)
-      && !mavrosflight_->param.got_all_params())
-  {
-    mavrosflight_->param.request_param_list();
-  }
-
-
-
 }
 
 void fcuIO::handle_command_ack_msg(const mavlink_message_t &msg)
@@ -641,6 +630,22 @@ bool fcuIO::calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs
   mavrosflight_->serial.send_message(msg);
   res.success = true;
   return true;
+}
+
+void fcuIO::paramTimerCallback(const ros::TimerEvent &e)
+{
+  if (mavrosflight_->param.got_all_params())
+  {
+    param_timer_.stop();
+    ROS_INFO("Received all parameters");
+  }
+  else
+  {
+    mavrosflight_->param.request_params();
+    ROS_INFO("Received %d of %d parameters. Requesting missing parameters...",
+             mavrosflight_->param.get_params_received(),
+             mavrosflight_->param.get_num_params());
+  }
 }
 
 bool fcuIO::calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)

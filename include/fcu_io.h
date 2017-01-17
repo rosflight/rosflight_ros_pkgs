@@ -81,13 +81,14 @@ private:
   bool calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
 
+  // timer callbacks
+  void paramTimerCallback(const ros::TimerEvent &e);
+
   // helpers
   template<class T> inline T saturate(T value, T min, T max)
   {
     return value < min ? min : (value > max ? max : value);
   }
-
-  ros::Time last_param_request_time_;
 
   ros::NodeHandle nh_;
 
@@ -116,6 +117,8 @@ private:
   ros::ServiceServer imu_calibrate_bias_srv_;
   ros::ServiceServer imu_calibrate_temp_srv_;
   ros::ServiceServer calibrate_rc_srv_;
+
+  ros::Timer param_timer_;
 
   mavrosflight::MavROSflight *mavrosflight_;
   mavrosflight::sensors::DifferentialPressure diff_pressure_;
