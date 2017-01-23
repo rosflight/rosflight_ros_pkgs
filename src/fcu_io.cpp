@@ -8,8 +8,11 @@
 #include <stdint.h>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
+#include <tf/tf.h>
+
 
 #include "fcu_io.h"
+
 
 namespace fcu_io
 {
@@ -255,6 +258,10 @@ void fcuIO::handle_attitude_msg(const mavlink_message_t &msg)
   attitude_msg.q = attitude.pitchspeed;
   attitude_msg.r = attitude.yawspeed;
 
+  tf::Quaternion quat;
+  quat.setRPY(attitude_msg.roll, attitude_msg.pitch, attitude_msg.yaw);
+  tf::quaternionTFToMsg(quat, attitude_quat_);
+
   if(attitude_pub_.getTopic().empty())
   {
     attitude_pub_ = nh_.advertise<fcu_common::Attitude>("attitude", 1);
@@ -301,6 +308,8 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
                             &imu_msg.angular_velocity.y,
                             &imu_msg.angular_velocity.z,
                             &temp_msg.temperature);
+
+  imu_msg.orientation = attitude_quat_;
 
   if (valid)
   {

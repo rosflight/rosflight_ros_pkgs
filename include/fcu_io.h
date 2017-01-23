@@ -32,6 +32,7 @@
 #include <mavrosflight/mavrosflight.h>
 #include <mavrosflight/mavlink_listener_interface.h>
 #include <mavrosflight/param_listener_interface.h>
+#include <geometry_msgs/Quaternion.h>
 
 namespace fcu_io
 {
@@ -117,6 +118,8 @@ private:
   ros::ServiceServer imu_calibrate_bias_srv_;
   ros::ServiceServer imu_calibrate_temp_srv_;
   ros::ServiceServer calibrate_rc_srv_;
+
+  geometry_msgs::Quaternion attitude_quat_;
 
   ros::Timer param_timer_;
 
