@@ -164,7 +164,7 @@ void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
     prev_armed_state = heartbeat.base_mode;
   }
   else if(heartbeat.base_mode == MAV_MODE_ENUM_END)
-    ROS_ERROR_THROTTLE(5,"FCU FAILSAFE");
+    ROS_ERROR_THROTTLE(600,"FCU FAILSAFE");
 
 
   // Print if change in control mode
