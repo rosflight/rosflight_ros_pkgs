@@ -47,7 +47,7 @@ fcuIO::fcuIO()
   {
     ROS_FATAL("%s", e.what());
     ros::shutdown();
-  }  
+  }
 
   mavrosflight_->serial.register_mavlink_listener(this);
   mavrosflight_->param.register_param_listener(this);
@@ -71,51 +71,51 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
 {
   switch (msg.msgid)
   {
-  case MAVLINK_MSG_ID_HEARTBEAT:
-    handle_heartbeat_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_COMMAND_ACK:
-    handle_command_ack_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_STATUSTEXT:
-    handle_statustext_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_ATTITUDE:
-    handle_attitude_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_SMALL_IMU:
-    handle_small_imu_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_SMALL_MAG:
-    handle_small_mag_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:
-    handle_servo_output_raw_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_RC_CHANNELS:
-    handle_rc_channels_raw_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_DIFF_PRESSURE:
-    handle_diff_pressure_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_NAMED_VALUE_INT:
-    handle_named_value_int_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_NAMED_VALUE_FLOAT:
-    handle_named_value_float_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_NAMED_COMMAND_STRUCT:
-    handle_named_command_struct_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_SMALL_BARO:
-    handle_small_baro_msg(msg);
-    break;
-  case MAVLINK_MSG_ID_DISTANCE_SENSOR:
-    handle_distance_sensor(msg);
-    break;
-  default:
-    ROS_DEBUG("fcu_io: Got unhandled mavlink message ID %d", msg.msgid);
-    break;
+    case MAVLINK_MSG_ID_HEARTBEAT:
+      handle_heartbeat_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_COMMAND_ACK:
+      handle_command_ack_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_STATUSTEXT:
+      handle_statustext_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_ATTITUDE_QUATERNION:
+      handle_attitude_quaternion_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_SMALL_IMU:
+      handle_small_imu_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_SMALL_MAG:
+      handle_small_mag_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:
+      handle_servo_output_raw_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_RC_CHANNELS:
+      handle_rc_channels_raw_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_DIFF_PRESSURE:
+      handle_diff_pressure_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_NAMED_VALUE_INT:
+      handle_named_value_int_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_NAMED_VALUE_FLOAT:
+      handle_named_value_float_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_NAMED_COMMAND_STRUCT:
+      handle_named_command_struct_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_SMALL_BARO:
+      handle_small_baro_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_SMALL_SONAR:
+      handle_small_sonar(msg);
+      break;
+    default:
+      ROS_DEBUG("fcu_io: Got unhandled mavlink message ID %d", msg.msgid);
+      break;
   }
 }
 
@@ -200,16 +200,16 @@ void fcuIO::handle_command_ack_msg(const mavlink_message_t &msg)
 
   switch (ack.command)
   {
-  case MAV_CMD_PREFLIGHT_CALIBRATION:
-    if (ack.result == MAV_RESULT_ACCEPTED)
-    {
-      ROS_INFO("IMU bias calibration complete!");
-    }
-    else
-    {
-      ROS_ERROR("IMU bias calibration failed");
-    }
-    break;
+    case MAV_CMD_PREFLIGHT_CALIBRATION:
+      if (ack.result == MAV_RESULT_ACCEPTED)
+      {
+        ROS_INFO("IMU bias calibration complete!");
+      }
+      else
+      {
+        ROS_ERROR("IMU bias calibration failed");
+      }
+      break;
   }
 }
 
@@ -225,48 +225,59 @@ void fcuIO::handle_statustext_msg(const mavlink_message_t &msg)
 
   switch (status.severity)
   {
-  case MAV_SEVERITY_EMERGENCY:
-  case MAV_SEVERITY_ALERT:
-  case MAV_SEVERITY_CRITICAL:
-  case MAV_SEVERITY_ERROR:
-    ROS_ERROR("[FCU]: %s", c_str);
-    break;
-  case MAV_SEVERITY_WARNING:
-    ROS_WARN("[FCU]: %s", c_str);
-    break;
-  case MAV_SEVERITY_NOTICE:
-  case MAV_SEVERITY_INFO:
-    ROS_INFO("[FCU]: %s", c_str);
-    break;
-  case MAV_SEVERITY_DEBUG:
-    ROS_DEBUG("[FCU]: %s", c_str);
-    break;
+    case MAV_SEVERITY_EMERGENCY:
+    case MAV_SEVERITY_ALERT:
+    case MAV_SEVERITY_CRITICAL:
+    case MAV_SEVERITY_ERROR:
+      ROS_ERROR("[FCU]: %s", c_str);
+      break;
+    case MAV_SEVERITY_WARNING:
+      ROS_WARN("[FCU]: %s", c_str);
+      break;
+    case MAV_SEVERITY_NOTICE:
+    case MAV_SEVERITY_INFO:
+      ROS_INFO("[FCU]: %s", c_str);
+      break;
+    case MAV_SEVERITY_DEBUG:
+      ROS_DEBUG("[FCU]: %s", c_str);
+      break;
   }
 }
 
-void fcuIO::handle_attitude_msg(const mavlink_message_t &msg)
+void fcuIO::handle_attitude_quaternion_msg(const mavlink_message_t &msg)
 {
-  mavlink_attitude_t attitude;
-  mavlink_msg_attitude_decode(&msg, &attitude);
+  mavlink_attitude_quaternion_t attitude;
+  mavlink_msg_attitude_quaternion_decode(&msg, &attitude);
 
   fcu_common::Attitude attitude_msg;
   attitude_msg.header.stamp = mavrosflight_->time.get_ros_time_ms(attitude.time_boot_ms);
-  attitude_msg.roll = attitude.roll;
-  attitude_msg.pitch = attitude.pitch;
-  attitude_msg.yaw = attitude.yaw;
-  attitude_msg.p = attitude.rollspeed;
-  attitude_msg.q = attitude.pitchspeed;
-  attitude_msg.r = attitude.yawspeed;
+  attitude_msg.attitude.w = attitude.q1;
+  attitude_msg.attitude.x = attitude.q2;
+  attitude_msg.attitude.y = attitude.q3;
+  attitude_msg.attitude.z = attitude.q4;
+  attitude_msg.angular_velocity.x = attitude.rollspeed;
+  attitude_msg.angular_velocity.y = attitude.pitchspeed;
+  attitude_msg.angular_velocity.z = attitude.yawspeed;
 
-  tf::Quaternion quat;
-  quat.setRPY(attitude_msg.roll, attitude_msg.pitch, attitude_msg.yaw);
+
+  geometry_msgs::Vector3Stamped euler_msg;
+
+  tf::Quaternion quat(attitude.q2, attitude.q3, attitude.q4,attitude.q1);
+  tf::Matrix3x3(quat).getEulerYPR(euler_msg.vector.z, euler_msg.vector.y, euler_msg.vector.x);
+
+  // save off the quaternion for use with the IMU callback
   tf::quaternionTFToMsg(quat, attitude_quat_);
 
   if(attitude_pub_.getTopic().empty())
   {
     attitude_pub_ = nh_.advertise<fcu_common::Attitude>("attitude", 1);
   }
+  if(euler_pub_.getTopic().empty())
+  {
+    euler_pub_ = nh_.advertise<geometry_msgs::Vector3Stamped>("attitude/euler",1);
+  }
   attitude_pub_.publish(attitude_msg);
+  euler_pub_.publish(euler_msg);
 }
 
 void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
@@ -332,9 +343,8 @@ void fcuIO::handle_servo_output_raw_msg(const mavlink_message_t &msg)
   mavlink_servo_output_raw_t servo;
   mavlink_msg_servo_output_raw_decode(&msg, &servo);
 
-  fcu_common::ServoOutputRaw out_msg;
+  fcu_common::OutputRaw out_msg;
   out_msg.header.stamp = mavrosflight_->time.get_ros_time_us(servo.time_usec);
-  out_msg.port = servo.port;
 
   out_msg.values[0] = servo.servo1_raw;
   out_msg.values[1] = servo.servo2_raw;
@@ -347,7 +357,7 @@ void fcuIO::handle_servo_output_raw_msg(const mavlink_message_t &msg)
 
   if(servo_output_raw_pub_.getTopic().empty())
   {
-    servo_output_raw_pub_ = nh_.advertise<fcu_common::ServoOutputRaw>("servo_output_raw", 1);
+    servo_output_raw_pub_ = nh_.advertise<fcu_common::OutputRaw>("servo_output_raw", 1);
   }
   servo_output_raw_pub_.publish(out_msg);
 }
@@ -357,9 +367,8 @@ void fcuIO::handle_rc_channels_raw_msg(const mavlink_message_t &msg)
   mavlink_rc_channels_raw_t rc;
   mavlink_msg_rc_channels_raw_decode(&msg, &rc);
 
-  fcu_common::ServoOutputRaw out_msg;
+  fcu_common::RCRaw out_msg;
   out_msg.header.stamp = mavrosflight_->time.get_ros_time_ms(rc.time_boot_ms);
-  out_msg.port = rc.port;
 
   out_msg.values[0] = rc.chan1_raw;
   out_msg.values[1] = rc.chan2_raw;
@@ -372,7 +381,7 @@ void fcuIO::handle_rc_channels_raw_msg(const mavlink_message_t &msg)
 
   if(rc_raw_pub_.getTopic().empty())
   {
-    rc_raw_pub_ = nh_.advertise<fcu_common::ServoOutputRaw>("rc_raw", 1);
+    rc_raw_pub_ = nh_.advertise<fcu_common::RCRaw>("rc_raw", 1);
   }
   rc_raw_pub_.publish(out_msg);
 }
@@ -467,18 +476,18 @@ void fcuIO::handle_named_command_struct_msg(const mavlink_message_t &msg)
   if (named_command_struct_pubs_.find(name) == named_command_struct_pubs_.end())
   {
     ros::NodeHandle nh;
-    named_command_struct_pubs_[name] = nh.advertise<fcu_common::ExtendedCommand>("named_value/command_struct/" + name, 1);
+    named_command_struct_pubs_[name] = nh.advertise<fcu_common::Command>("named_value/command_struct/" + name, 1);
   }
 
-  fcu_common::ExtendedCommand command_msg;
+  fcu_common::Command command_msg;
   if(command.type == MODE_PASS_THROUGH)
-    command_msg.mode = fcu_common::ExtendedCommand::MODE_PASS_THROUGH;
+    command_msg.mode = fcu_common::Command::MODE_PASS_THROUGH;
   else if(command.type == MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE)
-    command_msg.mode = fcu_common::ExtendedCommand::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
+    command_msg.mode = fcu_common::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
   else if(command.type == MODE_ROLL_PITCH_YAWRATE_THROTTLE)
-    command_msg.mode = fcu_common::ExtendedCommand::MODE_ROLL_PITCH_YAWRATE_THROTTLE;
+    command_msg.mode = fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE;
   else if(command.type == MODE_ROLL_PITCH_YAWRATE_ALTITUDE)
-    command_msg.mode = fcu_common::ExtendedCommand::MODE_ROLL_PITCH_YAWRATE_ALTITUDE;
+    command_msg.mode = fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE;
 
   command_msg.ignore = command.ignore;
   command_msg.x = command.x;
@@ -493,18 +502,17 @@ void fcuIO::handle_small_baro_msg(const mavlink_message_t &msg)
   mavlink_small_baro_t baro;
   mavlink_msg_small_baro_decode(&msg, &baro);
 
-  double alt = 0;
+  fcu_common::Barometer baro_msg;
+  baro_msg.header.stamp = ros::Time::now();
+  baro_msg.altitude = baro.altitude;
+  baro_msg.pressure = baro.pressure;
+  baro_msg.temperature = baro.temperature;
 
-  if (baro_.correct(baro, &alt))
+  if(baro_pub_.getTopic().empty())
   {
-    std_msgs::Float32 alt_msg;
-    alt_msg.data = alt;
-    if(baro_pub_.getTopic().empty())
-    {
-      baro_pub_ = nh_.advertise<std_msgs::Float32>("baro/alt", 1);
-    }
-    baro_pub_.publish(alt_msg);
+    baro_pub_ = nh_.advertise<fcu_common::Barometer>("baro", 1);
   }
+  baro_pub_.publish(baro_msg);
 }
 
 void fcuIO::handle_small_mag_msg(const mavlink_message_t &msg)
@@ -526,18 +534,18 @@ void fcuIO::handle_small_mag_msg(const mavlink_message_t &msg)
   mag_pub_.publish(mag_msg);
 }
 
-void fcuIO::handle_distance_sensor(const mavlink_message_t &msg)
+void fcuIO::handle_small_sonar(const mavlink_message_t &msg)
 {
-  mavlink_distance_sensor_t distance;
-  mavlink_msg_distance_sensor_decode(&msg, &distance);
+  mavlink_small_sonar_t sonar;
+  mavlink_msg_small_sonar_decode(&msg, &sonar);
 
   sensor_msgs::Range alt_msg;
-  alt_msg.header.stamp = mavrosflight_->time.get_ros_time_us(distance.time_boot_ms);
+  alt_msg.header.stamp = ros::Time::now();
 
   // MB1242 returns in cm
-  alt_msg.max_range = distance.max_distance/100.0;
-  alt_msg.min_range = distance.min_distance/100.0;
-  alt_msg.range = distance.current_distance/100.0;
+  alt_msg.max_range = sonar.max_range;
+  alt_msg.min_range = sonar.min_range;
+  alt_msg.range = sonar.range;
 
   alt_msg.radiation_type = sensor_msgs::Range::ULTRASOUND;
   alt_msg.field_of_view = 1.0472; // approx 60 deg
@@ -551,7 +559,7 @@ void fcuIO::handle_distance_sensor(const mavlink_message_t &msg)
 }
 
 
-void fcuIO::commandCallback(fcu_common::ExtendedCommand::ConstPtr msg)
+void fcuIO::commandCallback(fcu_common::Command::ConstPtr msg)
 {
   //! \todo these are hard-coded to match right now; may want to replace with something more robust
   OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE) msg->mode;
@@ -564,18 +572,18 @@ void fcuIO::commandCallback(fcu_common::ExtendedCommand::ConstPtr msg)
 
   switch (mode)
   {
-  case MODE_PASS_THROUGH:
-    x = saturate(x, -1.0f, 1.0f);
-    y = saturate(y, -1.0f, 1.0f);
-    z = saturate(z, -1.0f, 1.0f);
-    F = saturate(F, 0.0f, 1.0f);
-    break;
-  case MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
-  case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
-    F = saturate(F, 0.0f, 1.0f);
-    break;
-  case MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
-    break;
+    case MODE_PASS_THROUGH:
+      x = saturate(x, -1.0f, 1.0f);
+      y = saturate(y, -1.0f, 1.0f);
+      z = saturate(z, -1.0f, 1.0f);
+      F = saturate(F, 0.0f, 1.0f);
+      break;
+    case MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
+    case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
+      F = saturate(F, 0.0f, 1.0f);
+      break;
+    case MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
+      break;
   }
 
   mavlink_message_t mavlink_msg;
