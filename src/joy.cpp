@@ -83,8 +83,6 @@ Joy::Joy() {
   command_pub_ = nh_.advertise<fcu_common::Command>(command_topic_,10);
   extended_command_pub_ = nh_.advertise<fcu_common::Command>("extended_"+command_topic_, 10);
 
-  //  ROS_ERROR_STREAM("mass = " << mass_ <<" max_thrust = " << max_.thrust);
-
   command_msg_.x = 0;
   command_msg_.y = 0;
   command_msg_.z = 0;
