@@ -25,7 +25,6 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
 #include <fcu_common/Command.h>
-//#include <fcu_common/ExtendedCommand.h>
 #include "gazebo_msgs/ModelState.h"
 
 struct Axes {
