@@ -25,7 +25,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
 #include <fcu_common/Command.h>
-#include <fcu_common/ExtendedCommand.h>
+//#include <fcu_common/ExtendedCommand.h>
 #include "gazebo_msgs/ModelState.h"
 
 struct Axes {
@@ -86,7 +86,7 @@ class Joy {
 
   fcu_common::Command command_msg_;
   fcu_common::Command autopilot_command_;
-  fcu_common::ExtendedCommand extended_command_msg_;
+//  fcu_common::ExtendedCommand extended_command_msg_;
   sensor_msgs::Joy current_joy_;
 
   Max max_;
