@@ -21,12 +21,6 @@ add_message_files(
   Command.msg
   Barometer.msg
   Airspeed.msg
-  FW_State.msg
-  FW_Controller_Commands.msg
-  FW_Current_Path.msg
-  FW_Waypoint.msg
-  FW_Attitude_Commands.msg
-  MR_Controller_Commands.msg
   Attitude.msg
 )
 
