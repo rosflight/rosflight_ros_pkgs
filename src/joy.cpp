@@ -80,7 +80,6 @@ Joy::Joy()
   pnh.param<int>("button_pause_", buttons_.pause.index, 8);
 
   command_pub_ = nh_.advertise<fcu_common::Command>(command_topic_, 10);
-  extended_command_pub_ = nh_.advertise<fcu_common::Command>("extended_" + command_topic_, 10);
 
   command_msg_.x = 0;
   command_msg_.y = 0;

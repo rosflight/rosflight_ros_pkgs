@@ -73,7 +73,6 @@ class Joy
 private:
   ros::NodeHandle nh_;
   ros::Publisher command_pub_;
-  ros::Publisher extended_command_pub_;
   ros::Subscriber autopilot_command_sub_;
   ros::Subscriber joy_sub_;
 

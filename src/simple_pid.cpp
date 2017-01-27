@@ -61,6 +61,7 @@ double SimplePID::computePID(double desired, double current, double dt)
   return kp_ * error + ki_ * integrator_ - kd_ * differentiator_;
 }
 
+
 double SimplePID::computePIDDirect(double x_c, double x, double x_dot, double dt)
 {
   double error = x_c - x;
