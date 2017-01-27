@@ -39,10 +39,7 @@
 
 namespace fcu_io
 {
-
-class fcuIO :
-  public mavrosflight::MavlinkListenerInterface,
-  public mavrosflight::ParamListenerInterface
+class fcuIO : public mavrosflight::MavlinkListenerInterface, public mavrosflight::ParamListenerInterface
 {
 public:
   fcuIO();
@@ -55,7 +52,6 @@ public:
   virtual void on_params_saved_change(bool unsaved_changes);
 
 private:
-
   // handle mavlink messages
   void handle_heartbeat_msg(const mavlink_message_t &msg);
   void handle_command_ack_msg(const mavlink_message_t &msg);
@@ -89,7 +85,8 @@ private:
   void paramTimerCallback(const ros::TimerEvent &e);
 
   // helpers
-  template<class T> inline T saturate(T value, T min, T max)
+  template <class T>
+  inline T saturate(T value, T min, T max)
   {
     return value < min ? min : (value > max ? max : value);
   }
@@ -131,6 +128,6 @@ private:
   mavrosflight::sensors::Imu imu_;
 };
 
-} // namespace fcu_io
+}  // namespace fcu_io
 
-#endif // FCU_IO_MAVROSFLIGHT_ROS_H
+#endif  // FCU_IO_MAVROSFLIGHT_ROS_H

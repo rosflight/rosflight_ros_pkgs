@@ -17,7 +17,6 @@
 
 namespace mavrosflight
 {
-
 class TimeManager : MavlinkListenerInterface
 {
 public:
@@ -41,6 +40,6 @@ private:
   bool initialized_;
 };
 
-} // namespace mavrosflight
+}  // namespace mavrosflight
 
-#endif // MAVROSFLIGHT_TIME_MANAGER_H
+#endif  // MAVROSFLIGHT_TIME_MANAGER_H

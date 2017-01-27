@@ -10,14 +10,12 @@
 
 namespace mavrosflight
 {
-
 /**
  * \brief Describes an interface classes can implement to receive and handle mavlink messages
  */
 class MavlinkListenerInterface
 {
 public:
-
   /**
    * \brief The handler function for mavlink messages to be implemented by derived classes
    * \param msg The mavlink message to handle
@@ -25,6 +23,6 @@ public:
   virtual void handle_mavlink_message(const mavlink_message_t &msg) = 0;
 };
 
-} // namespace mavrosflight
+}  // namespace mavrosflight
 
-#endif // MAVROSFLIGHT_MAVLINK_LISTENER_INTERFACE_H
+#endif  // MAVROSFLIGHT_MAVLINK_LISTENER_INTERFACE_H

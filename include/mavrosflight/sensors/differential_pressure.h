@@ -12,7 +12,6 @@ namespace mavrosflight
 {
 namespace sensors
 {
-
 class DifferentialPressure
 {
 public:
@@ -37,7 +36,7 @@ private:
   double diff_press_offset_;
 };
 
-} // namespace sensors
-} // namespace mavrosflight
+}  // namespace sensors
+}  // namespace mavrosflight
 
-#endif // MAVROSFLIGHT_SENSORS_DIFF_PRESSURE_H
+#endif  // MAVROSFLIGHT_SENSORS_DIFF_PRESSURE_H

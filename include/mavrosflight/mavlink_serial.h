@@ -24,11 +24,9 @@
 
 namespace mavrosflight
 {
-
 class MavlinkSerial
 {
 public:
-
   /**
    * \brief Instantiates the class and begins communication on the specified serial port
    * \param port Name of the serial port (e.g. "/dev/ttyUSB0")
@@ -45,22 +43,21 @@ public:
    * \brief Register a listener for mavlink messages
    * \param listener Pointer to an object that implements the MavlinkListenerInterface interface
    */
-  void register_mavlink_listener(MavlinkListenerInterface * const listener);
+  void register_mavlink_listener(MavlinkListenerInterface* const listener);
 
   /**
    * \brief Unregister a listener for mavlink messages
    * \param listener Pointer to an object that implements the MavlinkListenerInterface interface
    */
-  void unregister_mavlink_listener(MavlinkListenerInterface * const listener);
+  void unregister_mavlink_listener(MavlinkListenerInterface* const listener);
 
   /**
    * \brief Send a mavlink message
    * \param msg The message to send
    */
-  void send_message(const mavlink_message_t &msg);
+  void send_message(const mavlink_message_t& msg);
 
 private:
-
   //===========================================================================
   // definitions
   //===========================================================================
@@ -74,17 +71,25 @@ private:
     size_t len;
     size_t pos;
 
-    WriteBuffer() : len(0), pos(0) {}
-
-    WriteBuffer(const uint8_t * buf, uint16_t len) : len(len), pos(0)
+    WriteBuffer() : len(0), pos(0)
     {
-      assert(len <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
+    }
+
+    WriteBuffer(const uint8_t* buf, uint16_t len) : len(len), pos(0)
+    {
+      assert(len <= MAVLINK_MAX_PACKET_LEN);  //! \todo Do something less catastrophic here
       memcpy(data, buf, len);
     }
 
-    uint8_t * dpos() { return data + pos; }
+    uint8_t* dpos()
+    {
+      return data + pos;
+    }
 
-    size_t nbytes() { return len - pos; }
+    size_t nbytes()
+    {
+      return len - pos;
+    }
   };
 
   /**
@@ -130,12 +135,12 @@ private:
   // member variables
   //===========================================================================
 
-  std::vector<MavlinkListenerInterface*> listeners_; //!< listeners for mavlink messages
+  std::vector<MavlinkListenerInterface*> listeners_;  //!< listeners for mavlink messages
 
-  boost::asio::io_service io_service_; //!< boost io service provider
-  boost::asio::serial_port serial_port_; //!< boost serial port object
-  boost::thread io_thread_; //!< thread on which the io service runs
-  boost::recursive_mutex mutex_; //!< mutex for threadsafe operation
+  boost::asio::io_service io_service_;    //!< boost io service provider
+  boost::asio::serial_port serial_port_;  //!< boost serial port object
+  boost::thread io_thread_;               //!< thread on which the io service runs
+  boost::recursive_mutex mutex_;          //!< mutex for threadsafe operation
 
   uint8_t sysid_;
   uint8_t compid_;
@@ -145,10 +150,10 @@ private:
   mavlink_message_t msg_in_;
   mavlink_status_t status_in_;
 
-  std::list<WriteBuffer*> write_queue_; //!< queue of buffers to be written to the serial port
-  bool write_in_progress_; //!< flag for whether async_write is already running
+  std::list<WriteBuffer*> write_queue_;  //!< queue of buffers to be written to the serial port
+  bool write_in_progress_;               //!< flag for whether async_write is already running
 };
 
-} // namespace mavrosflight
+}  // namespace mavrosflight
 
-#endif // MAVROSFLIGHT_MAVLINK_SERIAL_H
+#endif  // MAVROSFLIGHT_MAVLINK_SERIAL_H
