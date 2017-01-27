@@ -128,9 +128,7 @@ private:
   geometry_msgs::Quaternion attitude_quat_;
 
   mavrosflight::MavROSflight *mavrosflight_;
-  mavrosflight::sensors::DifferentialPressure diff_pressure_;
   mavrosflight::sensors::Imu imu_;
-  mavrosflight::sensors::Baro baro_;
 };
 
 } // namespace fcu_io

@@ -61,9 +61,7 @@ add_library(mavrosflight
   src/mavrosflight/param_manager.cpp
   src/mavrosflight/param.cpp
   src/mavrosflight/time_manager.cpp
-  src/mavrosflight/sensors/differential_pressure.cpp
   src/mavrosflight/sensors/imu.cpp
-  src/mavrosflight/sensors/baro.cpp
 )
 add_dependencies(mavrosflight ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(mavrosflight

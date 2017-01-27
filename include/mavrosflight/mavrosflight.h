@@ -14,9 +14,7 @@
 #include <mavrosflight/mavlink_listener_interface.h>
 #include <mavrosflight/param_listener_interface.h>
 
-#include <mavrosflight/sensors/differential_pressure.h>
 #include <mavrosflight/sensors/imu.h>
-#include <mavrosflight/sensors/baro.h>
 
 #include <boost/function.hpp>
 

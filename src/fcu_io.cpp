@@ -10,13 +10,10 @@
 #include <eigen3/Eigen/Dense>
 #include <tf/tf.h>
 
-
 #include "fcu_io.h"
-
 
 namespace fcu_io
 {
-
 fcuIO::fcuIO()
 {
   command_sub_ = nh_.subscribe("extended_command", 1, &fcuIO::commandCallback, this);
@@ -155,23 +152,22 @@ void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
   mavlink_msg_heartbeat_decode(&msg, &heartbeat);
 
   // Print if change in armed_state
-  if(heartbeat.base_mode != prev_armed_state)
+  if (heartbeat.base_mode != prev_armed_state)
   {
-    if(heartbeat.base_mode == MAV_MODE_MANUAL_ARMED)
+    if (heartbeat.base_mode == MAV_MODE_MANUAL_ARMED)
       ROS_WARN("FCU ARMED");
-    else if(heartbeat.base_mode == MAV_MODE_MANUAL_DISARMED)
+    else if (heartbeat.base_mode == MAV_MODE_MANUAL_DISARMED)
       ROS_WARN("FCU DISARMED");
     prev_armed_state = heartbeat.base_mode;
   }
-  else if(heartbeat.base_mode == MAV_MODE_ENUM_END)
-    ROS_ERROR_THROTTLE(600,"FCU FAILSAFE");
-
+  else if (heartbeat.base_mode == MAV_MODE_ENUM_END)
+    ROS_ERROR_THROTTLE(600, "FCU FAILSAFE");
 
   // Print if change in control mode
-  if(heartbeat.custom_mode != prev_control_mode)
+  if (heartbeat.custom_mode != prev_control_mode)
   {
     std::string mode_string;
-    switch(heartbeat.custom_mode)
+    switch (heartbeat.custom_mode)
     {
       case MODE_PASS_THROUGH:
         mode_string = "PASS_THROUGH";
@@ -259,22 +255,21 @@ void fcuIO::handle_attitude_quaternion_msg(const mavlink_message_t &msg)
   attitude_msg.angular_velocity.y = attitude.pitchspeed;
   attitude_msg.angular_velocity.z = attitude.yawspeed;
 
-
   geometry_msgs::Vector3Stamped euler_msg;
 
-  tf::Quaternion quat(attitude.q2, attitude.q3, attitude.q4,attitude.q1);
+  tf::Quaternion quat(attitude.q2, attitude.q3, attitude.q4, attitude.q1);
   tf::Matrix3x3(quat).getEulerYPR(euler_msg.vector.z, euler_msg.vector.y, euler_msg.vector.x);
 
   // save off the quaternion for use with the IMU callback
   tf::quaternionTFToMsg(quat, attitude_quat_);
 
-  if(attitude_pub_.getTopic().empty())
+  if (attitude_pub_.getTopic().empty())
   {
     attitude_pub_ = nh_.advertise<fcu_common::Attitude>("attitude", 1);
   }
-  if(euler_pub_.getTopic().empty())
+  if (euler_pub_.getTopic().empty())
   {
-    euler_pub_ = nh_.advertise<geometry_msgs::Vector3Stamped>("attitude/euler",1);
+    euler_pub_ = nh_.advertise<geometry_msgs::Vector3Stamped>("attitude/euler", 1);
   }
   attitude_pub_.publish(attitude_msg);
   euler_pub_.publish(euler_msg);
@@ -294,10 +289,10 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
   // This is so we can eventually make calibrating the IMU an external service
   if (imu_.is_calibrating())
   {
-    if(imu_.calibrate_temp(imu))
+    if (imu_.calibrate_temp(imu))
     {
-      ROS_INFO("IMU temperature calibration complete:\n xm = %f, ym = %f, zm = %f xb = %f yb = %f, zb = %f",
-               imu_.xm(),imu_.ym(),imu_.zm(),imu_.xb(),imu_.yb(),imu_.zb());
+      ROS_INFO("IMU temperature calibration complete:\n xm = %f, ym = %f, zm = %f xb = %f yb = %f, zb = %f", imu_.xm(),
+               imu_.ym(), imu_.zm(), imu_.xb(), imu_.yb(), imu_.zb());
 
       // calibration is done, send params to the param server
       mavrosflight_->param.set_param_value("ACC_X_TEMP_COMP", imu_.xm());
@@ -311,26 +306,21 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
     }
   }
 
-  bool valid = imu_.correct(imu,
-                            &imu_msg.linear_acceleration.x,
-                            &imu_msg.linear_acceleration.y,
-                            &imu_msg.linear_acceleration.z,
-                            &imu_msg.angular_velocity.x,
-                            &imu_msg.angular_velocity.y,
-                            &imu_msg.angular_velocity.z,
-                            &temp_msg.temperature);
+  bool valid = imu_.correct(imu, &imu_msg.linear_acceleration.x, &imu_msg.linear_acceleration.y,
+                            &imu_msg.linear_acceleration.z, &imu_msg.angular_velocity.x, &imu_msg.angular_velocity.y,
+                            &imu_msg.angular_velocity.z, &temp_msg.temperature);
 
   imu_msg.orientation = attitude_quat_;
 
   if (valid)
   {
-    if(imu_pub_.getTopic().empty())
+    if (imu_pub_.getTopic().empty())
     {
       imu_pub_ = nh_.advertise<sensor_msgs::Imu>("imu/data", 1);
     }
     imu_pub_.publish(imu_msg);
 
-    if(imu_temp_pub_.getTopic().empty())
+    if (imu_temp_pub_.getTopic().empty())
     {
       imu_temp_pub_ = nh_.advertise<sensor_msgs::Temperature>("imu/temperature", 1);
     }
@@ -355,7 +345,7 @@ void fcuIO::handle_servo_output_raw_msg(const mavlink_message_t &msg)
   out_msg.values[6] = servo.servo7_raw;
   out_msg.values[7] = servo.servo8_raw;
 
-  if(servo_output_raw_pub_.getTopic().empty())
+  if (servo_output_raw_pub_.getTopic().empty())
   {
     servo_output_raw_pub_ = nh_.advertise<fcu_common::OutputRaw>("servo_output_raw", 1);
   }
@@ -379,7 +369,7 @@ void fcuIO::handle_rc_channels_raw_msg(const mavlink_message_t &msg)
   out_msg.values[6] = rc.chan7_raw;
   out_msg.values[7] = rc.chan8_raw;
 
-  if(rc_raw_pub_.getTopic().empty())
+  if (rc_raw_pub_.getTopic().empty())
   {
     rc_raw_pub_ = nh_.advertise<fcu_common::RCRaw>("rc_raw", 1);
   }
@@ -391,29 +381,17 @@ void fcuIO::handle_diff_pressure_msg(const mavlink_message_t &msg)
   mavlink_diff_pressure_t diff;
   mavlink_msg_diff_pressure_decode(&msg, &diff);
 
-  sensor_msgs::Temperature temp_msg;
-  temp_msg.header.stamp = ros::Time::now(); //! \todo time synchronization
+  fcu_common::Airspeed airspeed_msg;
+  airspeed_msg.header.stamp = ros::Time::now();
+  airspeed_msg.velocity = diff.velocity;
+  airspeed_msg.differential_pressure = diff.diff_pressure;
+  airspeed_msg.temperature = diff.temperature;
 
-  sensor_msgs::FluidPressure pressure_msg;
-  pressure_msg.header.stamp = ros::Time::now(); //! \todo time synchronization
-
-  bool valid = diff_pressure_.correct(diff,
-                                      &pressure_msg.fluid_pressure,
-                                      &temp_msg.temperature);
-
-  if (valid)
+  if (diff_pressure_pub_.getTopic().empty())
   {
-    if(diff_pressure_pub_.getTopic().empty())
-    {
-      diff_pressure_pub_ = nh_.advertise<sensor_msgs::FluidPressure>("diff_pressure", 1);
-    }
-    if(temperature_pub_.getTopic().empty())
-    {
-      temperature_pub_ = nh_.advertise<sensor_msgs::Temperature>("temperature", 1);
-    }
-    temperature_pub_.publish(temp_msg);
-    diff_pressure_pub_.publish(pressure_msg);
+    diff_pressure_pub_ = nh_.advertise<fcu_common::Airspeed>("airspeed", 1);
   }
+  diff_pressure_pub_.publish(airspeed_msg);
 }
 
 void fcuIO::handle_named_value_int_msg(const mavlink_message_t &msg)
@@ -480,13 +458,13 @@ void fcuIO::handle_named_command_struct_msg(const mavlink_message_t &msg)
   }
 
   fcu_common::Command command_msg;
-  if(command.type == MODE_PASS_THROUGH)
+  if (command.type == MODE_PASS_THROUGH)
     command_msg.mode = fcu_common::Command::MODE_PASS_THROUGH;
-  else if(command.type == MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE)
+  else if (command.type == MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE)
     command_msg.mode = fcu_common::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
-  else if(command.type == MODE_ROLL_PITCH_YAWRATE_THROTTLE)
+  else if (command.type == MODE_ROLL_PITCH_YAWRATE_THROTTLE)
     command_msg.mode = fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE;
-  else if(command.type == MODE_ROLL_PITCH_YAWRATE_ALTITUDE)
+  else if (command.type == MODE_ROLL_PITCH_YAWRATE_ALTITUDE)
     command_msg.mode = fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE;
 
   command_msg.ignore = command.ignore;
@@ -508,7 +486,7 @@ void fcuIO::handle_small_baro_msg(const mavlink_message_t &msg)
   baro_msg.pressure = baro.pressure;
   baro_msg.temperature = baro.temperature;
 
-  if(baro_pub_.getTopic().empty())
+  if (baro_pub_.getTopic().empty())
   {
     baro_pub_ = nh_.advertise<fcu_common::Barometer>("baro", 1);
   }
@@ -523,9 +501,9 @@ void fcuIO::handle_small_mag_msg(const mavlink_message_t &msg)
   //! \todo calibration, correct units, floating point message type
   sensor_msgs::MagneticField mag_msg;
   mag_msg.header.stamp = ros::Time::now();
-  mag_msg.magnetic_field.x = (double) mag.xmag;
-  mag_msg.magnetic_field.y = (double) mag.ymag;
-  mag_msg.magnetic_field.z = (double) mag.zmag;
+  mag_msg.magnetic_field.x = (double)mag.xmag;
+  mag_msg.magnetic_field.y = (double)mag.ymag;
+  mag_msg.magnetic_field.z = (double)mag.zmag;
 
   if (mag_pub_.getTopic().empty())
   {
@@ -548,22 +526,20 @@ void fcuIO::handle_small_sonar(const mavlink_message_t &msg)
   alt_msg.range = sonar.range;
 
   alt_msg.radiation_type = sensor_msgs::Range::ULTRASOUND;
-  alt_msg.field_of_view = 1.0472; // approx 60 deg
+  alt_msg.field_of_view = 1.0472;  // approx 60 deg
 
-  if(sonar_pub_.getTopic().empty())
+  if (sonar_pub_.getTopic().empty())
   {
     sonar_pub_ = nh_.advertise<sensor_msgs::Range>("sonar/data", 1);
   }
   sonar_pub_.publish(alt_msg);
-
 }
-
 
 void fcuIO::commandCallback(fcu_common::Command::ConstPtr msg)
 {
   //! \todo these are hard-coded to match right now; may want to replace with something more robust
-  OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE) msg->mode;
-  OFFBOARD_CONTROL_IGNORE ignore = (OFFBOARD_CONTROL_IGNORE) msg->ignore;
+  OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE)msg->mode;
+  OFFBOARD_CONTROL_IGNORE ignore = (OFFBOARD_CONTROL_IGNORE)msg->ignore;
 
   float x = msg->x;
   float y = msg->y;
@@ -587,8 +563,7 @@ void fcuIO::commandCallback(fcu_common::Command::ConstPtr msg)
   }
 
   mavlink_message_t mavlink_msg;
-  mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg,
-                                    mode, ignore, x, y, z, F);
+  mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg, mode, ignore, x, y, z, F);
   mavrosflight_->serial.send_message(mavlink_msg);
 }
 
@@ -630,9 +605,8 @@ bool fcuIO::paramLoadFromFileCallback(ParamFile::Request &req, ParamFile::Respon
 bool fcuIO::calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
   mavlink_message_t msg;
-  mavlink_msg_command_int_pack(1, 50, &msg, 1, MAV_COMP_ID_ALL,
-                               0, MAV_CMD_PREFLIGHT_CALIBRATION, 0, 0,
-                               1.0, 0.0, 0.0, 0.0, 1, 0, 0.0);
+  mavlink_msg_command_int_pack(1, 50, &msg, 1, MAV_COMP_ID_ALL, 0, MAV_CMD_PREFLIGHT_CALIBRATION, 0, 0, 1.0, 0.0, 0.0,
+                               0.0, 1, 0, 0.0);
   mavrosflight_->serial.send_message(msg);
 
   res.success = true;
@@ -642,8 +616,8 @@ bool fcuIO::calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srv
 bool fcuIO::calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
   mavlink_message_t msg;
-  mavlink_msg_command_int_pack(1, 50, &msg, 1, MAV_COMP_ID_ALL,
-                               0, MAV_CMD_DO_RC_CALIBRATION, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  mavlink_msg_command_int_pack(1, 50, &msg, 1, MAV_COMP_ID_ALL, 0, MAV_CMD_DO_RC_CALIBRATION, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0);
   mavrosflight_->serial.send_message(msg);
   res.success = true;
   return true;
@@ -660,8 +634,7 @@ void fcuIO::paramTimerCallback(const ros::TimerEvent &e)
   {
     mavrosflight_->param.request_params();
     ROS_INFO("Received %d of %d parameters. Requesting missing parameters...",
-             mavrosflight_->param.get_params_received(),
-             mavrosflight_->param.get_num_params());
+             mavrosflight_->param.get_params_received(), mavrosflight_->param.get_num_params());
   }
 }
 
@@ -683,4 +656,4 @@ bool fcuIO::calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srv
   return true;
 }
 
-} // namespace fcu_io
+}  // namespace fcu_io
