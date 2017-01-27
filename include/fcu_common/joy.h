@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-
 #ifndef fcu_common_joy_JOY_H_
 #define fcu_common_joy_JOY_H_
 
@@ -27,7 +26,8 @@
 #include <fcu_common/Command.h>
 #include "gazebo_msgs/ModelState.h"
 
-struct Axes {
+struct Axes
+{
   int roll;
   int pitch;
   int thrust;
@@ -38,7 +38,8 @@ struct Axes {
   int yaw_direction;
 };
 
-struct Max {
+struct Max
+{
   double roll;
   double pitch;
   double roll_rate;
@@ -51,22 +52,25 @@ struct Max {
   double altitude;
 };
 
-struct Button{
+struct Button
+{
   int index;
   bool prev_value;
 };
 
-struct Buttons {
+struct Buttons
+{
   Button fly;
   Button mode;
   Button reset;
   Button pause;
 };
 
-class Joy {
+class Joy
+{
   typedef sensor_msgs::Joy::_buttons_type ButtonType;
 
- private:
+private:
   ros::NodeHandle nh_;
   ros::Publisher command_pub_;
   ros::Publisher extended_command_pub_;
@@ -85,7 +89,7 @@ class Joy {
 
   fcu_common::Command command_msg_;
   fcu_common::Command autopilot_command_;
-//  fcu_common::ExtendedCommand extended_command_msg_;
+  //  fcu_common::ExtendedCommand extended_command_msg_;
   sensor_msgs::Joy current_joy_;
 
   Max max_;
@@ -102,12 +106,12 @@ class Joy {
   void PauseSimulation();
   void ResumeSimulation();
 
-  void JoyCallback(const sensor_msgs::JoyConstPtr& msg);
-  void APCommandCallback(const fcu_common::CommandConstPtr& msg);
+  void JoyCallback(const sensor_msgs::JoyConstPtr &msg);
+  void APCommandCallback(const fcu_common::CommandConstPtr &msg);
   void Publish();
 
- public:
+public:
   Joy();
 };
 
-#endif // fcu_common_joy_JOY_H_
+#endif  // fcu_common_joy_JOY_H_

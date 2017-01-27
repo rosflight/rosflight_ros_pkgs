@@ -18,13 +18,12 @@
  * limitations under the License.
  */
 
-
 #include "fcu_common/joy.h"
 #include "gazebo_msgs/SetModelState.h"
 #include "std_srvs/Empty.h"
 
-
-Joy::Joy() {
+Joy::Joy()
+{
   ros::NodeHandle nh;
   ros::NodeHandle pnh("~");
 
@@ -45,20 +44,20 @@ Joy::Joy() {
   pnh.param<int>("F_sign", axes_.thrust_direction, -1);
   pnh.param<int>("z_sign", axes_.yaw_direction, 1);
 
-  pnh.param<double>("max_thrust", max_.thrust, 74.676);  // [N]
-  pnh.param<double>("max_altitude", max_.altitude, 10.0); // [m]
-  pnh.param<double>("mass", mass_, 3.81);  // [N]
+  pnh.param<double>("max_thrust", max_.thrust, 74.676);    // [N]
+  pnh.param<double>("max_altitude", max_.altitude, 10.0);  // [m]
+  pnh.param<double>("mass", mass_, 3.81);                  // [N]
 
-  pnh.param<double>("max_aileron", max_.aileron, 15.0*M_PI/180.0);
-  pnh.param<double>("max_elevator", max_.elevator, 25.0*M_PI/180.0);
-  pnh.param<double>("max_rudder", max_.rudder, 15.0*M_PI/180.0);
+  pnh.param<double>("max_aileron", max_.aileron, 15.0 * M_PI / 180.0);
+  pnh.param<double>("max_elevator", max_.elevator, 25.0 * M_PI / 180.0);
+  pnh.param<double>("max_rudder", max_.rudder, 15.0 * M_PI / 180.0);
 
-  pnh.param<double>("max_roll_rate", max_.roll_rate, 360.0*M_PI/180.0);
-  pnh.param<double>("max_pitch_rate", max_.pitch_rate, 360.0*M_PI/180.0);
-  pnh.param<double>("max_yaw_rate", max_.yaw_rate, 360.0*M_PI/180.0);
+  pnh.param<double>("max_roll_rate", max_.roll_rate, 360.0 * M_PI / 180.0);
+  pnh.param<double>("max_pitch_rate", max_.pitch_rate, 360.0 * M_PI / 180.0);
+  pnh.param<double>("max_yaw_rate", max_.yaw_rate, 360.0 * M_PI / 180.0);
 
-  pnh.param<double>("max_roll_angle", max_.roll, 45.0*M_PI/180.0);
-  pnh.param<double>("max_pitch_angle", max_.pitch, 45.0*M_PI/180.0);
+  pnh.param<double>("max_roll_angle", max_.roll, 45.0 * M_PI / 180.0);
+  pnh.param<double>("max_pitch_angle", max_.pitch, 45.0 * M_PI / 180.0);
 
   pnh.param<double>("reset_pos_x", reset_pose_.position.x, 0.0);
   pnh.param<double>("reset_pos_y", reset_pose_.position.y, 0.0);
@@ -80,8 +79,8 @@ Joy::Joy() {
   pnh.param<int>("button_reset_", buttons_.reset.index, 9);
   pnh.param<int>("button_pause_", buttons_.pause.index, 8);
 
-  command_pub_ = nh_.advertise<fcu_common::Command>(command_topic_,10);
-  extended_command_pub_ = nh_.advertise<fcu_common::Command>("extended_"+command_topic_, 10);
+  command_pub_ = nh_.advertise<fcu_common::Command>(command_topic_, 10);
+  extended_command_pub_ = nh_.advertise<fcu_common::Command>("extended_" + command_topic_, 10);
 
   command_msg_.x = 0;
   command_msg_.y = 0;
@@ -95,12 +94,12 @@ Joy::Joy() {
   autopilot_command_sub_ = nh_.subscribe(autopilot_command_topic_, 10, &Joy::APCommandCallback, this);
   joy_sub_ = nh_.subscribe("joy", 10, &Joy::JoyCallback, this);
   fly_mav_ = true;
-  buttons_.mode.prev_value=1;
-  buttons_.reset.prev_value=1;
+  buttons_.mode.prev_value = 1;
+  buttons_.reset.prev_value = 1;
 }
 
-void Joy::StopMav() {
-
+void Joy::StopMav()
+{
   command_msg_.x = 0;
   command_msg_.y = 0;
   command_msg_.z = 0;
@@ -108,13 +107,13 @@ void Joy::StopMav() {
 }
 
 /* Resets the mav back to origin */
-void Joy::ResetMav() 
+void Joy::ResetMav()
 {
   ROS_INFO("Mav position reset.");
   ros::NodeHandle n;
 
   gazebo_msgs::ModelState modelstate;
-  modelstate.model_name = (std::string) mav_name_;
+  modelstate.model_name = (std::string)mav_name_;
   modelstate.reference_frame = (std::string) "world";
   modelstate.pose = reset_pose_;
   modelstate.twist = reset_twist_;
@@ -152,18 +151,19 @@ void Joy::APCommandCallback(const fcu_common::CommandConstPtr &msg)
   autopilot_command_ = *msg;
 }
 
-void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
+void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
+{
   static int mode = -1;
   static bool paused = true;
 
   current_joy_ = *msg;
 
-  command_msg_.F = 0.5*(msg->axes[axes_.thrust] * axes_.thrust_direction + 1.0);
-  command_msg_.x = -1.0*msg->axes[axes_.roll] * axes_.roll_direction;
-  command_msg_.y = -1.0*msg->axes[axes_.pitch] * axes_.pitch_direction;
+  command_msg_.F = 0.5 * (msg->axes[axes_.thrust] * axes_.thrust_direction + 1.0);
+  command_msg_.x = -1.0 * msg->axes[axes_.roll] * axes_.roll_direction;
+  command_msg_.y = -1.0 * msg->axes[axes_.pitch] * axes_.pitch_direction;
   command_msg_.z = msg->axes[axes_.yaw] * axes_.yaw_direction;
 
-  switch(command_msg_.mode)
+  switch (command_msg_.mode)
   {
     case fcu_common::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
       command_msg_.x *= max_.roll_rate;
@@ -183,22 +183,23 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
       break;
   }
 
-  if(msg->buttons[1] == 1)
+  if (msg->buttons[1] == 1)
   {
     command_msg_ = autopilot_command_;
   }
 
-  // Resets the mav to the origin when start button (button 9) is pressed (if using xbox controller)
-  if(msg->buttons[buttons_.reset.index]==0 && buttons_.reset.prev_value==1) // button release
+  // Resets the mav to the origin when start button (button 9) is pressed (if
+  // using xbox controller)
+  if (msg->buttons[buttons_.reset.index] == 0 && buttons_.reset.prev_value == 1)  // button release
   {
     ResetMav();
   }
   buttons_.reset.prev_value = msg->buttons[buttons_.reset.index];
 
   // Pauses/Unpauses the simulation
-  if(msg->buttons[buttons_.pause.index]==0 && buttons_.pause.prev_value==1) // button release
+  if (msg->buttons[buttons_.pause.index] == 0 && buttons_.pause.prev_value == 1)  // button release
   {
-    if(!paused)
+    if (!paused)
     {
       PauseSimulation();
       paused = true;
@@ -208,18 +209,18 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
       ResumeSimulation();
       paused = false;
     }
-
   }
   buttons_.pause.prev_value = msg->buttons[buttons_.pause.index];
 
-  if(msg->buttons[buttons_.mode.index]==0 && buttons_.mode.prev_value==1){ // button release
-    mode = (mode+1)%4;
-    if(mode == 0)
+  if (msg->buttons[buttons_.mode.index] == 0 && buttons_.mode.prev_value == 1)
+  {  // button release
+    mode = (mode + 1) % 4;
+    if (mode == 0)
     {
       ROS_INFO("Rate Mode");
       command_msg_.mode = fcu_common::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
     }
-    else if(mode == 1)
+    else if (mode == 1)
     {
       ROS_INFO("Angle Mode");
       command_msg_.mode = fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE;
@@ -237,15 +238,16 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
   }
   buttons_.mode.prev_value = msg->buttons[buttons_.mode.index];
 
-
   Publish();
 }
 
-void Joy::Publish() {
+void Joy::Publish()
+{
   command_pub_.publish(command_msg_);
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv)
+{
   ros::init(argc, argv, "fcu_common_joy");
   Joy joy;
 

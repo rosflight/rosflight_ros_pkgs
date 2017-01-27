@@ -8,11 +8,10 @@
 #define ROTOR_CONTROLLER_SIMPLE_PID_H
 
 #include <cmath>
-#include <ros/ros.h> // included temporarily for debug statements
+#include <ros/ros.h>  // included temporarily for debug statements
 
 namespace fcu_common
 {
-
 /*!
  * \brief The simplePID class is a basic, tried and true PID controller.  Only P (proportional) gains are
  *  necessary, the I (integral) and D (derivative) default to zero. The I control is computed using a
@@ -28,7 +27,6 @@ public:
    */
   SimplePID();
 
-
   /*!
    * \brief SimplePID initializes the class.
    * \param p the proportional controller gain (required)
@@ -39,7 +37,6 @@ public:
    * \param tau band limited differentiator to reduce noise
    */
   SimplePID(double p, double i = 0.0, double d = 0.0, double tau = 0.15);
-
 
   /*!
    * \brief computePID computes the PID control for the given error and timestep (since the last control was computed!)
@@ -59,7 +56,6 @@ public:
    */
   double computePIDDirect(double x_c, double x, double x_dot, double dt);
 
-
   /*!
    * \brief setgains is used to set the gains for a controller after it's been initialized.  It will rewrite
    *  whatever is already there!
@@ -72,25 +68,23 @@ public:
    */
   void setGains(double p, double i = 0.0, double d = 0.0, double tau = 0.15);
 
-
-
   /*!
    * \brief clearIntegrator allows you to clear the integrator, in case of integrator windup.
    */
   void clearIntegrator()
   {
-      integrator_ = 0.0;
+    integrator_ = 0.0;
   }
 
 protected:
-  double kp_;  //!< the proportional gain
-  double ki_;  //!< the integral gain (zero if you don't want integral control)
-  double kd_;  //!< the derivative gain (zero if you don't want derivative control)
-  double integrator_; //!< the integral of p_error
-  double differentiator_; //!< used for noise reduced differentiation
-  double last_error_;  //!< the last p_error, for computing the derivative;
-  double last_state_;  //!< the last state, for computing the derivative;
-  double tau_;  //!< the noise reduction term for the derivative
+  double kp_;              //!< the proportional gain
+  double ki_;              //!< the integral gain (zero if you don't want integral control)
+  double kd_;              //!< the derivative gain (zero if you don't want derivative control)
+  double integrator_;      //!< the integral of p_error
+  double differentiator_;  //!< used for noise reduced differentiation
+  double last_error_;      //!< the last p_error, for computing the derivative;
+  double last_state_;      //!< the last state, for computing the derivative;
+  double tau_;             //!< the noise reduction term for the derivative
 
   /*!
    * \brief saturate saturates the variable val
@@ -101,14 +95,13 @@ protected:
    */
   inline double saturate(double val, double &min, double &max)
   {
-    if(val > max)
+    if (val > max)
       val = max;
-    else if(val < min)
+    else if (val < min)
       val = min;
     return val;
   }
 };
-
 }
 
-#endif // ROTOR_CONTROLLER_SIMPLE_PID_H
+#endif  // ROTOR_CONTROLLER_SIMPLE_PID_H
