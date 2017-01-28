@@ -14,13 +14,14 @@
 
 namespace mavrosflight
 {
+
 /**
  * \brief Describes an exception encountered while using the boost serial libraries
  */
 class SerialException : public std::exception
 {
 public:
-  explicit SerialException(const char *const description)
+  explicit SerialException(const char * const description)
   {
     init(description);
   }
@@ -35,15 +36,11 @@ public:
     init(err.what());
   }
 
-  SerialException(const SerialException &other) : what_(other.what_)
-  {
-  }
+  SerialException(const SerialException &other) : what_(other.what_) {}
 
-  ~SerialException() throw()
-  {
-  }
+  ~SerialException() throw() {}
 
-  virtual const char *what() const throw()
+  virtual const char* what() const throw()
   {
     return what_.c_str();
   }
@@ -51,7 +48,7 @@ public:
 private:
   std::string what_;
 
-  void init(const char *const description)
+  void init(const char * const description)
   {
     std::ostringstream ss;
     ss << "Serial Error: " << description;
@@ -59,6 +56,7 @@ private:
   }
 };
 
-}  // namespace mavrosflight
+} // namespace mavrosflight
 
-#endif  // MAVROSFLIGHT_SERIAL_EXCEPTION_H
+#endif // MAVROSFLIGHT_SERIAL_EXCEPTION_H
+

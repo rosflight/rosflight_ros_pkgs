@@ -10,4 +10,4 @@
 
 #include <mavlink/v1.0/rosflight/mavlink.h>
 
-#endif  // MAVROSFLIGHT_MAVLINK_BRIDGE_H
+#endif // MAVROSFLIGHT_MAVLINK_BRIDGE_H

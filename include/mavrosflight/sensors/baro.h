@@ -12,12 +12,14 @@ namespace mavrosflight
 {
 namespace sensors
 {
+
 /**
  * \brief Barometer sensor class
  */
 class Baro
 {
 public:
+
   Baro(double alpha, double ground, int settling_count, int calibration_count);
   Baro();
 
@@ -39,14 +41,15 @@ private:
   // calibration variables
   int calibration_counter_;
   double calibration_sum_;
-  int settling_count_;  // settle for a second or so
+  int settling_count_; // settle for a second or so
   int calibration_count_;
 
   // offsets and filters
   double prev_alt_;
+
 };
 
-}  // namespace sensors
-}  // namespace mavrosflight
+} // namespace sensors
+} // namespace mavrosflight
 
-#endif  // MAVROSFLIGHT_SENSORS_IMU_H
+#endif // MAVROSFLIGHT_SENSORS_IMU_H
