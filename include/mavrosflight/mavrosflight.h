@@ -23,9 +23,11 @@
 
 namespace mavrosflight
 {
+
 class MavROSflight
 {
 public:
+
   /**
    * \brief Instantiates the class and begins communication on the specified serial port
    * \param port Name of the serial port (e.g. "/dev/ttyUSB0")
@@ -44,11 +46,12 @@ public:
   TimeManager time;
 
 private:
+
   // member variables
   uint8_t sysid_;
   uint8_t compid_;
 };
 
-}  // namespace mavrosflight
+} // namespace mavrosflight
 
-#endif  // MAVROSFLIGHT_MAVROSFLIGHT_H
+#endif // MAVROSFLIGHT_MAVROSFLIGHT_H

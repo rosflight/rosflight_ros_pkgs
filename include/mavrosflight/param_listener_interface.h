@@ -10,12 +10,14 @@
 
 namespace mavrosflight
 {
+
 /**
  * \brief Describes an interface classes can implement to receive and handle mavlink messages
  */
 class ParamListenerInterface
 {
 public:
+
   /**
    * \brief Called when a parameter is received from the fcu for the first time
    * \param name The name of the parameter
@@ -37,6 +39,6 @@ public:
   virtual void on_params_saved_change(bool unsaved_changes) = 0;
 };
 
-}  // namespace mavrosflight
+} // namespace mavrosflight
 
-#endif  // MAVROSFLIGHT_PARAM_LISTENER_INTERFACE_H
+#endif // MAVROSFLIGHT_PARAM_LISTENER_INTERFACE_H

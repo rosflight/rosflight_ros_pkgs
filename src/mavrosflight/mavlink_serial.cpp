@@ -13,10 +13,13 @@
 
 namespace mavrosflight
 {
+
 using boost::asio::serial_port_base;
 
-MavlinkSerial::MavlinkSerial(std::string port, int baud_rate)
-  : io_service_(), serial_port_(io_service_), write_in_progress_(false)
+MavlinkSerial::MavlinkSerial(std::string port, int baud_rate) :
+  io_service_(),
+  serial_port_(io_service_),
+  write_in_progress_(false)
 {
   // setup serial port
   try
@@ -43,7 +46,7 @@ MavlinkSerial::~MavlinkSerial()
   close();
 }
 
-void MavlinkSerial::register_mavlink_listener(MavlinkListenerInterface *const listener)
+void MavlinkSerial::register_mavlink_listener(MavlinkListenerInterface * const listener)
 {
   if (listener == NULL)
     return;
@@ -62,7 +65,7 @@ void MavlinkSerial::register_mavlink_listener(MavlinkListenerInterface *const li
     listeners_.push_back(listener);
 }
 
-void MavlinkSerial::unregister_mavlink_listener(MavlinkListenerInterface *const listener)
+void MavlinkSerial::unregister_mavlink_listener(MavlinkListenerInterface * const listener)
 {
   if (listener == NULL)
     return;
@@ -92,18 +95,20 @@ void MavlinkSerial::close()
 
 void MavlinkSerial::do_async_read()
 {
-  if (!serial_port_.is_open())
-    return;
+  if (!serial_port_.is_open()) return;
 
-  serial_port_.async_read_some(boost::asio::buffer(read_buf_raw_, MAVLINK_SERIAL_READ_BUF_SIZE),
-                               boost::bind(&MavlinkSerial::async_read_end, this, boost::asio::placeholders::error,
-                                           boost::asio::placeholders::bytes_transferred));
+  serial_port_.async_read_some(
+        boost::asio::buffer(read_buf_raw_, MAVLINK_SERIAL_READ_BUF_SIZE),
+        boost::bind(
+          &MavlinkSerial::async_read_end,
+          this,
+          boost::asio::placeholders::error,
+          boost::asio::placeholders::bytes_transferred));
 }
 
 void MavlinkSerial::async_read_end(const boost::system::error_code &error, size_t bytes_transferred)
 {
-  if (!serial_port_.is_open())
-    return;
+  if (!serial_port_.is_open()) return;
 
   if (error)
   {
@@ -129,7 +134,7 @@ void MavlinkSerial::send_message(const mavlink_message_t &msg)
 {
   WriteBuffer *buffer = new WriteBuffer();
   buffer->len = mavlink_msg_to_send_buffer(buffer->data, &msg);
-  assert(buffer->len <= MAVLINK_MAX_PACKET_LEN);  //! \todo Do something less catastrophic here
+  assert(buffer->len <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
 
   {
     mutex_lock lock(mutex_);
@@ -150,9 +155,14 @@ void MavlinkSerial::do_async_write(bool check_write_state)
 
   write_in_progress_ = true;
   WriteBuffer *buffer = write_queue_.front();
-  serial_port_.async_write_some(boost::asio::buffer(buffer->dpos(), buffer->nbytes()),
-                                boost::bind(&MavlinkSerial::async_write_end, this, boost::asio::placeholders::error,
-                                            boost::asio::placeholders::bytes_transferred));
+  serial_port_.async_write_some(
+        boost::asio::buffer(buffer->dpos(), buffer->nbytes()),
+        boost::bind(
+          &MavlinkSerial::async_write_end,
+          this,
+          boost::asio::placeholders::error,
+          boost::asio::placeholders::bytes_transferred));
+
 }
 
 void MavlinkSerial::async_write_end(const boost::system::error_code &error, std::size_t bytes_transferred)
@@ -184,4 +194,4 @@ void MavlinkSerial::async_write_end(const boost::system::error_code &error, std:
     do_async_write(false);
 }
 
-}  // namespace mavrosflight
+} // namespace mavrosflight

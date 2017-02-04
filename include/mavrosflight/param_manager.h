@@ -18,10 +18,11 @@
 
 namespace mavrosflight
 {
+
 class ParamManager : public MavlinkListenerInterface
 {
 public:
-  ParamManager(MavlinkSerial *const serial);
+  ParamManager(MavlinkSerial * const serial);
   ~ParamManager();
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
@@ -45,6 +46,7 @@ public:
   void request_params();
 
 private:
+
   void request_param_list();
   void request_param(int index);
 
@@ -53,7 +55,7 @@ private:
 
   bool is_param_id(std::string name);
 
-  std::vector<ParamListenerInterface *> listeners_;
+  std::vector<ParamListenerInterface*> listeners_;
 
   MavlinkSerial *serial_;
   std::map<std::string, Param> params_;
@@ -68,6 +70,6 @@ private:
   bool got_all_params_;
 };
 
-}  // namespace mavrosflight
+} // namespace mavrosflight
 
-#endif  // MAVROSFLIGHT_PARAM_MANAGER_H
+#endif // MAVROSFLIGHT_PARAM_MANAGER_H
