@@ -16,7 +16,7 @@ namespace fcu_io
 {
 fcuIO::fcuIO()
 {
-  command_sub_ = nh_.subscribe("extended_command", 1, &fcuIO::commandCallback, this);
+  command_sub_ = nh_.subscribe("command", 1, &fcuIO::commandCallback, this);
 
   unsaved_params_pub_ = nh_.advertise<std_msgs::Bool>("unsaved_params", 1, true);
 
