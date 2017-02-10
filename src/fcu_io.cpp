@@ -16,7 +16,7 @@ namespace fcu_io
 {
 fcuIO::fcuIO()
 {
-  command_sub_ = nh_.subscribe("extended_command", 1, &fcuIO::commandCallback, this);
+  command_sub_ = nh_.subscribe("command", 1, &fcuIO::commandCallback, this);
 
   unsaved_params_pub_ = nh_.advertise<std_msgs::Bool>("unsaved_params", 1, true);
 
@@ -347,7 +347,7 @@ void fcuIO::handle_servo_output_raw_msg(const mavlink_message_t &msg)
 
   if (servo_output_raw_pub_.getTopic().empty())
   {
-    servo_output_raw_pub_ = nh_.advertise<fcu_common::OutputRaw>("servo_output_raw", 1);
+    servo_output_raw_pub_ = nh_.advertise<fcu_common::OutputRaw>("output_raw", 1);
   }
   servo_output_raw_pub_.publish(out_msg);
 }
