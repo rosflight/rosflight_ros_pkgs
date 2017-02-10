@@ -11,13 +11,14 @@
 
 namespace mavrosflight
 {
-ParamManager::ParamManager(MavlinkSerial *const serial)
-  : serial_(serial)
-  , unsaved_changes_(false)
-  , write_request_in_progress_(false)
-  , first_param_received_(false)
-  , received_count_(0)
-  , got_all_params_(false)
+
+ParamManager::ParamManager(MavlinkSerial * const serial) :
+  serial_(serial),
+  unsaved_changes_(false),
+  write_request_in_progress_(false),
+  first_param_received_(false),
+  received_count_(0),
+  got_all_params_(false)
 {
   serial_->register_mavlink_listener(this);
 }
@@ -34,12 +35,12 @@ void ParamManager::handle_mavlink_message(const mavlink_message_t &msg)
 {
   switch (msg.msgid)
   {
-    case MAVLINK_MSG_ID_PARAM_VALUE:
-      handle_param_value_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_COMMAND_ACK:
-      handle_command_ack_msg(msg);
-      break;
+  case MAVLINK_MSG_ID_PARAM_VALUE:
+    handle_param_value_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_COMMAND_ACK:
+    handle_command_ack_msg(msg);
+    break;
   }
 }
 
@@ -85,8 +86,8 @@ bool ParamManager::write_params()
     mavlink_message_t msg;
     uint8_t sysid = 1;
     uint8_t compid = 1;
-    mavlink_msg_command_int_pack(sysid, compid, &msg, 1, MAV_COMP_ID_ALL, 0, MAV_CMD_PREFLIGHT_STORAGE, 0, 0, 1, 0, 0,
-                                 0, 0, 0, 0);
+    mavlink_msg_command_int_pack(sysid, compid, &msg,
+                                 1, MAV_COMP_ID_ALL, 0, MAV_CMD_PREFLIGHT_STORAGE, 0, 0, 1, 0, 0, 0, 0, 0, 0);
     serial_->send_message(msg);
 
     write_request_in_progress_ = true;
@@ -143,7 +144,7 @@ bool ParamManager::save_to_file(std::string filename)
     yaml << YAML::Flow;
     yaml << YAML::BeginMap;
     yaml << YAML::Key << "name" << YAML::Value << it->second.getName();
-    yaml << YAML::Key << "type" << YAML::Value << (int)it->second.getType();
+    yaml << YAML::Key << "type" << YAML::Value << (int) it->second.getType();
     yaml << YAML::Key << "value" << YAML::Value << it->second.getValue();
     yaml << YAML::EndMap;
   }
@@ -179,7 +180,7 @@ bool ParamManager::load_from_file(std::string filename)
         if (is_param_id(root[i]["name"].as<std::string>()))
         {
           Param param = params_.find(root[i]["name"].as<std::string>())->second;
-          if ((MAV_PARAM_TYPE)root[i]["type"].as<int>() == param.getType())
+          if ((MAV_PARAM_TYPE) root[i]["type"].as<int>() == param.getType())
           {
             set_param_value(root[i]["name"].as<std::string>(), root[i]["value"].as<double>());
           }
@@ -224,7 +225,7 @@ void ParamManager::request_param(int index)
 {
   mavlink_message_t param_request_msg;
   char empty[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
-  mavlink_msg_param_request_read_pack(1, 50, &param_request_msg, 1, MAV_COMP_ID_ALL, empty, (int16_t)index);
+  mavlink_msg_param_request_read_pack(1, 50, &param_request_msg, 1, MAV_COMP_ID_ALL, empty, (int16_t) index);
   serial_->send_message(param_request_msg);
 }
 
@@ -247,14 +248,14 @@ void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
 
   std::string name(c_name);
 
-  if (!is_param_id(name))  // if we haven't received this param before, add it
+  if (!is_param_id(name)) // if we haven't received this param before, add it
   {
     params_[name] = Param(param);
     received_[param.param_index] = true;
 
     // increase the param count
     received_count_++;
-    if (received_count_ == num_params_)
+    if(received_count_ == num_params_)
     {
       got_all_params_ = true;
     }
@@ -262,7 +263,7 @@ void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
     for (int i = 0; i < listeners_.size(); i++)
       listeners_[i]->on_new_param_received(name, params_[name].getValue());
   }
-  else  // otherwise check if we have new unsaved changes as a result of a param set request
+  else // otherwise check if we have new unsaved changes as a result of a param set request
   {
     if (params_[name].handleUpdate(param))
     {
@@ -286,7 +287,7 @@ void ParamManager::handle_command_ack_msg(const mavlink_message_t &msg)
     if (ack.command == MAV_CMD_PREFLIGHT_STORAGE)
     {
       write_request_in_progress_ = false;
-      if (ack.result == MAV_RESULT_ACCEPTED)
+      if(ack.result == MAV_RESULT_ACCEPTED)
       {
         ROS_INFO("Param write succeeded");
         unsaved_changes_ = false;
@@ -331,4 +332,4 @@ bool ParamManager::got_all_params()
   return got_all_params_;
 }
 
-}  // namespace mavrosflight
+} // namespace mavrosflight

@@ -13,7 +13,11 @@ namespace mavrosflight
 {
 namespace sensors
 {
-Imu::Imu() : calibrating_(false), calibration_time_(60.0), deltaT_(1.0)
+
+Imu::Imu() :
+  calibrating_(false),
+  calibration_time_(60.0),
+  deltaT_(1.0)
 {
   x_[0] << 0, 0;
   x_[1] << 0, 0;
@@ -80,7 +84,7 @@ bool Imu::calibrate_temp(mavlink_small_imu_t msg)
     {
       Eigen::MatrixX2d Amat;
       Eigen::VectorXd Bmat;
-      Amat.resize(A_.size(), 2);
+      Amat.resize(A_.size(),2);
       Bmat.resize(B_.size());
 
       // put the data into and Eigen Matrix for linear algebra
@@ -88,8 +92,8 @@ bool Imu::calibrate_temp(mavlink_small_imu_t msg)
       std::deque<Eigen::Vector3d>::iterator B_it = B_.begin();
       for (int j = 0; j < A_.size(); j++)
       {
-        Amat(j, 0) = *A_it;
-        Amat(j, 1) = 1.0;
+        Amat(j,0) = *A_it;
+        Amat(j,1) = 1.0;
         Bmat(j) = (*B_it)(i);
         B_it++;
         A_it++;
@@ -104,8 +108,8 @@ bool Imu::calibrate_temp(mavlink_small_imu_t msg)
   return !calibrating_;
 }
 
-bool Imu::correct(mavlink_small_imu_t msg, double *xacc, double *yacc, double *zacc, double *xgyro, double *ygyro,
-                  double *zgyro, double *temp)
+bool Imu::correct(mavlink_small_imu_t msg,
+                  double *xacc, double *yacc, double *zacc, double *xgyro, double *ygyro, double *zgyro, double *temp)
 {
   *xacc = msg.xacc;
   *yacc = msg.yacc;
@@ -119,5 +123,5 @@ bool Imu::correct(mavlink_small_imu_t msg, double *xacc, double *yacc, double *z
   return true;
 }
 
-}  // namespace sensors
-}  // namespace mavrosflight
+} // namespace sensors
+} // namespace mavrosflight
