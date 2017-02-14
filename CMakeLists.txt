@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+ cmake_minimum_required(VERSION 2.8.3)
 project(fcu_common)
 
 ## Find catkin macros and libraries
@@ -43,6 +43,8 @@ add_definitions(-std=c++11)
 add_library(fcu_common
   src/simple_pid.cpp
   include/fcu_common/simple_pid.h
+  src/turbomath.cpp
+  include/fcu_common/turbomath.h
 )
 target_link_libraries(fcu_common ${catkin_LIBRARIES})
 
