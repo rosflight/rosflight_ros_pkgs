@@ -71,10 +71,10 @@ float asin_lookup(float x)
   static const float max = 1.0;
   static const float min = 0.0;
   static const int16_t num_entries = 250;
-  static const float dx = 0.0;
+  static float dx = 0.0;
   static const float scale = 10000.0;
 
-  float t = (x - sin_min) / (max - min) * num_entries;
+  float t = (x - min) / (max - min) * num_entries;
   uint8_t index = (uint8_t)t;
   dx = t - (float)index;
 
@@ -116,10 +116,10 @@ float sin_lookup(float x)
   static const float max = 1.0;
   static const float min = 0.0;
   static const int16_t num_entries = 250;
-  static const float dx = 0.0;
+  static float dx = 0.0;
   static const float scale = 10000.0;
 
-  float t = (x - sin_min) / (max - min) * num_entries;
+  float t = (x - min) / (max - min) * num_entries;
   uint8_t index = (uint8_t)t;
   dx = t - (float)index;
 
@@ -166,10 +166,10 @@ float atan_lookup(float x)
   static const float max = 1.0;
   static const float min = 0.0;
   static const int16_t num_entries = 250;
-  static const float dx = 0.0;
+  static float dx = 0.0;
   static const float scale = 10000.0;
 
-  float t = (x - sin_min) / (max - min) * num_entries;
+  float t = (x - min) / (max - min) * num_entries;
   uint8_t index = (uint8_t)t;
   dx = t - (float)index;
 
@@ -231,8 +231,8 @@ float turboInvSqrt(float x)
   float x2, y;
   const float threehalfs = 1.5F;
 
-  x2 = number * 0.5F;
-  y  = number;
+  x2 = x * 0.5F;
+  y  = x;
   i  = * ( long * ) &y;                       // evil floating point bit level hacking
   i  = 0x5f3759df - ( i >> 1 );
   y  = * ( float * ) &i;
