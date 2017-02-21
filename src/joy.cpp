@@ -245,6 +245,7 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
         command_msg_.F = equilibrium_thrust_ + (equilibrium_thrust_) * command_msg_.F;
       }
       break;
+
     case fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE:
       command_msg_.x *= max_.roll;
       command_msg_.y *= max_.pitch;
@@ -258,6 +259,7 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
         command_msg_.F = equilibrium_thrust_ + (equilibrium_thrust_) * command_msg_.F;
       }
       break;
+
     case fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
       command_msg_.x *= max_.roll;
       command_msg_.y *= max_.pitch;
@@ -266,15 +268,20 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
       current_altitude_setpoint_ += dt * max_.zvel * command_msg_.F;
       command_msg_.F = current_altitude_setpoint_;
       break;
+
     case fcu_common::Command::MODE_XVEL_YVEL_YAWRATE_ALTITUDE:
+    {
       // Remember that roll affects y velocity and pitch affects -x velocity
+      double original_x = command_msg_.x;
       command_msg_.x = max_.xvel * -1.0 * command_msg_.y;
-      command_msg_.y = max_.yvel * command_msg_.x;
+      command_msg_.y = max_.yvel * original_x;
       command_msg_.z *= max_.yaw_rate;
       // Integrate altitude
       current_altitude_setpoint_ += dt * max_.zvel * command_msg_.F;
       command_msg_.F = current_altitude_setpoint_;
       break;
+    }
+
     case fcu_common::Command::MODE_XPOS_YPOS_YAW_ALTITUDE:
       // Integrate all axes
       // (Remember that roll affects y velocity and pitch affects -x velocity)
