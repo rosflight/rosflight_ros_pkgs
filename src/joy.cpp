@@ -260,7 +260,6 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
       }
       break;
 
-
     case fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
       command_msg_.x *= max_.roll;
       command_msg_.y *= max_.pitch;
