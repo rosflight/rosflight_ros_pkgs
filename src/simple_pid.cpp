@@ -20,7 +20,8 @@ SimplePID::SimplePID()
 //
 // Initialize the controller
 //
-SimplePID::SimplePID(double p, double i, double d, double tau) : kp_(p), ki_(i), kd_(d), tau_(tau)
+SimplePID::SimplePID(double p, double i, double d, double max, double min, double tau) :
+  kp_(p), ki_(i), kd_(d), max_(max), min_(min), tau_(tau)
 {
   integrator_ = 0.0;
   differentiator_ = 0.0;
@@ -31,54 +32,80 @@ SimplePID::SimplePID(double p, double i, double d, double tau) : kp_(p), ki_(i),
 //
 // Compute the control;
 //
-double SimplePID::computePID(double desired, double current, double dt)
+double SimplePID::computePID(double desired, double current, double dt, double x_dot)
 {
   double error = desired - current;
-  if (dt == 0.0 || std::abs(error) > 9999999)
+
+  // Don't do stupid things (like divide by nearly zero, gigantic control jumps)
+  if (dt < 0.00001 || std::abs(error) > 9999999)
   {
     last_error_ = error;
     last_state_ = current;
     return 0.0;
   }
 
-  integrator_ += dt / 2 * (error + last_error_);
-
-  // derivative
-  if (dt > 0.0)
+  if (dt > 1.0)
   {
-    // Noise reduction (See "Small Unmanned Aircraft". Chapter 6. Slide 31/33)
-    // d/dx w.r.t. error:: differentiator_ = (2*tau_ - dt)/(2*tau_ + dt)*differentiator_ + 2/(2*tau_ + dt)*(error -
-    // last_error_);
-    differentiator_ =
-        (2 * tau_ - dt) / (2 * tau_ + dt) * differentiator_ + 2 / (2 * tau_ + dt) * (current - last_state_);
+    // This means that this is a ''stale'' controller and needs to be reset.
+    // This would happen if we have been operating in a different mode for a while
+    // and will result in some enormous integrator.
+    // Or, it means we are disarmed and shouldn't integrate
+    // Setting dt for this loop will mean that the integrator and dirty derivative
+    // doesn't do anything this time but will keep it from exploding.
+    dt = 0.0;
+    pid->differentiator = 0.0;
   }
 
+  double p_term = error*kp_;
+  double i_term = 0.0;
+  double d_term = 0.0;
+
+
+  // Calculate Derivative Term
+  if (kd_ > 0.0)
+  {
+    if (std::isfinite(x_dot))
+    {
+      d_term = kd_ * x_dot;
+    }
+    else if (dt > 0.0)
+    {
+      // Noise reduction (See "Small Unmanned Aircraft". Chapter 6. Slide 31/33)
+      // d/dx w.r.t. error:: differentiator_ = (2*tau_ - dt)/(2*tau_ + dt)*differentiator_ + 2/(2*tau_ + dt)*(error -
+      // last_error_);
+      differentiator_ =
+          (2 * tau_ - dt) / (2 * tau_ + dt) * differentiator_ + 2 / (2 * tau_ + dt) * (current - last_state_);
+      d_term = kd_* differentiator_;
+    }
+  }
+
+  // Calculate Integrator Term
+  if (ki_ > 0.0)
+  {
+      integrator_ += dt / 2 * (error + last_error_); // (trapezoidal rule)
+      i_term = ki_ * integrator_;
+  }
+
+  // Save off this state for next loop
   last_error_ = error;
   last_state_ = current;
 
-  // Note the negative der. term.  This is because now the differentiator is in the feedback loop rather than the
-  // forward loop
-  return kp_ * error + ki_ * integrator_ - kd_ * differentiator_;
-}
+  // Sum three terms
+  double u = kp_ * error + ki_ * integrator_ - kd_ * differentiator_;
 
-
-double SimplePID::computePIDDirect(double x_c, double x, double x_dot, double dt)
-{
-  double error = x_c - x;
-  if (dt == 0.0 || std::abs(error) > 9999999)
+  // Integrator anti-windup
+  double u_sat = saturate(u, min_, max_);
+  if (u != u_sat && std::fabs(i_term) > fabs(u - p_term + d_term))
   {
-    last_error_ = error;
-    last_state_ = x;
-    return 0.0;
+    // If we are at the saturation limits, then make sure the integrator doesn't get
+    // bigger if it won't do anything (except take longer to unwind).  Just set it to the
+    // largest value it could be to max out the control
+    integrator_ = (u_sat - p_term + d_term) / ki_;
   }
 
-  integrator_ += dt / 2 * (error + last_error_);
-
-  last_error_ = error;
-  last_state_ = x;
-
-  return kp_ * error + ki_ * integrator_ - kd_ * x_dot;
+  return u_sat;
 }
+
 
 //
 // Late initialization or redo
