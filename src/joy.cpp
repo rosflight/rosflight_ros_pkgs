@@ -31,7 +31,7 @@ Joy::Joy()
   namespace_nh.param<double>("mass", mass_, 3.61);
   namespace_nh.param<double>("max_F", max_thrust, 64.50);
   namespace_nh.param<std::string>("mav_name", mav_name_,"shredder");
-  equilibrium_thrust_ = max_thrust / mass_;
+  equilibrium_thrust_ = (mass_*9.80665) / max_thrust;
 
   // Get Parameters from joystick configuration yaml
   pnh.param<std::string>("gazebo_namespace", gazebo_ns_, "");
@@ -236,11 +236,27 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
       command_msg_.x *= max_.roll_rate;
       command_msg_.y *= max_.pitch_rate;
       command_msg_.z *= max_.yaw_rate;
+      if (command_msg_.F > 0.0)
+      {
+        command_msg_.F = equilibrium_thrust_ + (1.0 - equilibrium_thrust_) * command_msg_.F;
+      }
+      else
+      {
+        command_msg_.F = equilibrium_thrust_ + (equilibrium_thrust_) * command_msg_.F;
+      }
       break;
     case fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE:
       command_msg_.x *= max_.roll;
       command_msg_.y *= max_.pitch;
       command_msg_.z *= max_.yaw_rate;
+      if (command_msg_.F > 0.0)
+      {
+        command_msg_.F = equilibrium_thrust_ + (1.0 - equilibrium_thrust_) * command_msg_.F;
+      }
+      else
+      {
+        command_msg_.F = equilibrium_thrust_ + (equilibrium_thrust_) * command_msg_.F;
+      }
       break;
     case fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
       command_msg_.x *= max_.roll;
