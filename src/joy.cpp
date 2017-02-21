@@ -1,9 +1,5 @@
 /*
- * Copyright 2015 Fadri Furrer, ASL, ETH Zurich, Switzerland
- * Copyright 2015 Michael Burri, ASL, ETH Zurich, Switzerland
- * Copyright 2015 Mina Kamel, ASL, ETH Zurich, Switzerland
- * Copyright 2015 Janosch Nikolic, ASL, ETH Zurich, Switzerland
- * Copyright 2015 Markus Achtelik, ASL, ETH Zurich, Switzerland
+ * Copyright 2017 James Jackson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,29 +20,30 @@
 
 Joy::Joy()
 {
-  ros::NodeHandle nh;
   ros::NodeHandle pnh("~");
+  ros::NodeHandle namespace_nh(ros::this_node::getNamespace());
 
   pnh.param<std::string>("command_topic", command_topic_, "command");
   pnh.param<std::string>("autopilot_command_topic", autopilot_command_topic_, "autopilot_command");
 
-  // Defaults -- should be set/overriden by calling launch file
-  pnh.param<std::string>("mav_name", mav_name_, "shredder");
+  // Get global parameters
+  double max_thrust;
+  namespace_nh.param<double>("mass", mass_, 3.61);
+  namespace_nh.param<double>("max_F", max_thrust, 64.50);
+  namespace_nh.param<std::string>("mav_name", mav_name_,"shredder");
+  equilibrium_thrust_ = max_thrust / mass_;
 
-  // Default to Spektrum Transmitter on Interlink
-  pnh.param<int>("x_axis", axes_.roll, 1);
-  pnh.param<int>("y_axis", axes_.pitch, 2);
-  pnh.param<int>("F_axis", axes_.thrust, 0);
-  pnh.param<int>("z_axis", axes_.yaw, 4);
+  // Get Parameters from joystick configuration yaml
+  pnh.param<std::string>("gazebo_namespace", gazebo_ns_, "");
+  pnh.param<int>("x_axis", axes_.x, 1);
+  pnh.param<int>("y_axis", axes_.y, 2);
+  pnh.param<int>("F_axis", axes_.F, 0);
+  pnh.param<int>("z_axis", axes_.z, 4);
 
-  pnh.param<int>("x_sign", axes_.roll_direction, 1);
-  pnh.param<int>("y_sign", axes_.pitch_direction, 1);
-  pnh.param<int>("F_sign", axes_.thrust_direction, -1);
-  pnh.param<int>("z_sign", axes_.yaw_direction, 1);
-
-  pnh.param<double>("max_thrust", max_.thrust, 74.676);    // [N]
-  pnh.param<double>("max_altitude", max_.altitude, 10.0);  // [m]
-  pnh.param<double>("mass", mass_, 3.81);                  // [N]
+  pnh.param<int>("x_sign", axes_.x_direction, 1);
+  pnh.param<int>("y_sign", axes_.y_direction, 1);
+  pnh.param<int>("F_sign", axes_.F_direction, -1);
+  pnh.param<int>("z_sign", axes_.z_direction, 1);
 
   pnh.param<double>("max_aileron", max_.aileron, 15.0 * M_PI / 180.0);
   pnh.param<double>("max_elevator", max_.elevator, 25.0 * M_PI / 180.0);
@@ -58,6 +55,11 @@ Joy::Joy()
 
   pnh.param<double>("max_roll_angle", max_.roll, 45.0 * M_PI / 180.0);
   pnh.param<double>("max_pitch_angle", max_.pitch, 45.0 * M_PI / 180.0);
+
+  pnh.param<double>("max_xvel", max_.xvel, 1.5);
+  pnh.param<double>("max_yvel", max_.yvel, 1.5);
+  pnh.param<double>("max_zvel", max_.zvel, 1.5);
+  command_msg_.mode = pnh.param<int>("control_mode", (int)fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE);
 
   pnh.param<double>("reset_pos_x", reset_pose_.position.x, 0.0);
   pnh.param<double>("reset_pos_y", reset_pose_.position.y, 0.0);
@@ -74,10 +76,11 @@ Joy::Joy()
   pnh.param<double>("reset_angular_twist_x", reset_twist_.angular.z, 0.0);
 
   // Sets which buttons are tied to which commands
-  pnh.param<int>("button_takeoff_", buttons_.fly.index, 0);
-  pnh.param<int>("button_mode_", buttons_.mode.index, 1);
-  pnh.param<int>("button_reset_", buttons_.reset.index, 9);
-  pnh.param<int>("button_pause_", buttons_.pause.index, 8);
+  pnh.param<int>("button_takeoff", buttons_.fly.index, 0);
+  pnh.param<int>("button_mode", buttons_.mode.index, 1);
+  pnh.param<int>("button_reset", buttons_.reset.index, 9);
+  pnh.param<int>("button_pause", buttons_.pause.index, 8);
+  pnh.param<int>("button_override", buttons_.override.index, 8);
 
   command_pub_ = nh_.advertise<fcu_common::Command>(command_topic_, 10);
 
@@ -92,9 +95,10 @@ Joy::Joy()
   namespace_ = nh_.getNamespace();
   autopilot_command_sub_ = nh_.subscribe(autopilot_command_topic_, 10, &Joy::APCommandCallback, this);
   joy_sub_ = nh_.subscribe("joy", 10, &Joy::JoyCallback, this);
-  fly_mav_ = true;
-  buttons_.mode.prev_value = 1;
-  buttons_.reset.prev_value = 1;
+  buttons_.mode.prev_value = 0;
+  buttons_.reset.prev_value = 0;
+
+  current_altitude_setpoint_ = current_x_setpoint_ = current_y_setpoint_ = 0.0;
 }
 
 void Joy::StopMav()
@@ -143,6 +147,7 @@ void Joy::ResumeSimulation()
   ros::ServiceClient client = n.serviceClient<std_srvs::Empty>("/gazebo/unpause_physics");
   std_srvs::Empty resumeSim;
   client.call(resumeSim);
+  last_time_ = ros::Time::now().toSec();
 }
 
 void Joy::APCommandCallback(const fcu_common::CommandConstPtr &msg)
@@ -152,43 +157,19 @@ void Joy::APCommandCallback(const fcu_common::CommandConstPtr &msg)
 
 void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
 {
-  static int mode = -1;
-  static bool paused = true;
+  double dt = ros::Time::now().toSec() - last_time_;
+  last_time_ = ros::Time::now().toSec();
 
   current_joy_ = *msg;
 
-  command_msg_.F = 0.5 * (msg->axes[axes_.thrust] * axes_.thrust_direction + 1.0);
-  command_msg_.x = -1.0 * msg->axes[axes_.roll] * axes_.roll_direction;
-  command_msg_.y = -1.0 * msg->axes[axes_.pitch] * axes_.pitch_direction;
-  command_msg_.z = msg->axes[axes_.yaw] * axes_.yaw_direction;
-
-  switch (command_msg_.mode)
+  // Perform button actions
+  if (msg->buttons[buttons_.override.index] == 0 && buttons_.override.prev_value == 1)
   {
-    case fcu_common::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
-      command_msg_.x *= max_.roll_rate;
-      command_msg_.y *= max_.pitch_rate;
-      command_msg_.z *= max_.yaw_rate;
-      break;
-    case fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE:
-      command_msg_.x *= max_.roll;
-      command_msg_.y *= max_.pitch;
-      command_msg_.z *= max_.yaw_rate;
-      break;
-    case fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
-      command_msg_.x *= max_.roll;
-      command_msg_.y *= max_.pitch;
-      command_msg_.z *= max_.yaw_rate;
-      command_msg_.F *= max_.altitude;
-      break;
+    override_autopilot_ = true;
   }
+  buttons_.override.prev_value = msg->buttons[buttons_.override.index];
 
-  if (msg->buttons[1] == 1)
-  {
-    command_msg_ = autopilot_command_;
-  }
-
-  // Resets the mav to the origin when start button (button 9) is pressed (if
-  // using xbox controller)
+  // Resets the mav to the origin
   if (msg->buttons[buttons_.reset.index] == 0 && buttons_.reset.prev_value == 1)  // button release
   {
     ResetMav();
@@ -212,30 +193,93 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
   buttons_.pause.prev_value = msg->buttons[buttons_.pause.index];
 
   if (msg->buttons[buttons_.mode.index] == 0 && buttons_.mode.prev_value == 1)
-  {  // button release
-    mode = (mode + 1) % 4;
-    if (mode == 0)
-    {
-      ROS_INFO("Rate Mode");
-      command_msg_.mode = fcu_common::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
-    }
-    else if (mode == 1)
-    {
-      ROS_INFO("Angle Mode");
-      command_msg_.mode = fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE;
-    }
-    else if (mode == 2)
-    {
-      ROS_INFO("Altitude Mode");
-      command_msg_.mode = fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE;
-    }
-    else if (mode == 3)
+  {
+    command_msg_.mode = (command_msg_.mode + 1) % 6;
+    if (command_msg_.mode == fcu_common::Command::MODE_PASS_THROUGH)
     {
       ROS_INFO("Passthrough");
-      command_msg_.mode = fcu_common::Command::MODE_PASS_THROUGH;
+    }
+    else if (command_msg_.mode == fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE)
+    {
+      ROS_INFO("Angle Mode");
+    }
+    else if (command_msg_.mode == fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE)
+    {
+      ROS_INFO("Altitude Mode");
+    }
+    else if (command_msg_.mode == fcu_common::Command::MODE_XVEL_YVEL_YAWRATE_ALTITUDE)
+    {
+      ROS_INFO("Velocity Mode");
+    }
+    else if (command_msg_.mode == fcu_common::Command::MODE_XPOS_YPOS_YAW_ALTITUDE)
+    {
+      ROS_INFO("Position Mode");
+    }
+    else
+    {
+      ROS_INFO("Passthrough");
     }
   }
   buttons_.mode.prev_value = msg->buttons[buttons_.mode.index];
+
+  // calculate the output command from the joysticks
+  if(override_autopilot_)
+  {
+    command_msg_.F = msg->axes[axes_.F] * axes_.F_direction;
+    command_msg_.x = msg->axes[axes_.x] * axes_.x_direction;
+    command_msg_.y = msg->axes[axes_.y] * axes_.y_direction;
+    command_msg_.z = msg->axes[axes_.z] * axes_.z_direction;
+
+    switch (command_msg_.mode)
+    {
+    case fcu_common::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
+      command_msg_.x *= max_.roll_rate;
+      command_msg_.y *= max_.pitch_rate;
+      command_msg_.z *= max_.yaw_rate;
+      break;
+    case fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE:
+      command_msg_.x *= max_.roll;
+      command_msg_.y *= max_.pitch;
+      command_msg_.z *= max_.yaw_rate;
+      break;
+    case fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
+      command_msg_.x *= max_.roll;
+      command_msg_.y *= max_.pitch;
+      command_msg_.z *= max_.yaw_rate;
+      // Integrate altitude
+      current_altitude_setpoint_ += dt * max_.zvel * command_msg_.F;
+      command_msg_.F = current_altitude_setpoint_;
+      break;
+    case fcu_common::Command::MODE_XVEL_YVEL_YAWRATE_ALTITUDE:
+      // Remember that roll affects y velocity and pitch affects -x velocity
+      command_msg_.x = max_.xvel * -1.0 * command_msg_.y;
+      command_msg_.y = max_.yvel * command_msg_.x;
+      command_msg_.z *= max_.yaw_rate;
+      // Integrate altitude
+      current_altitude_setpoint_ += dt * max_.zvel * command_msg_.F;
+      command_msg_.F = current_altitude_setpoint_;
+      break;
+    case fcu_common::Command::MODE_XPOS_YPOS_YAW_ALTITUDE:
+      // Integrate all axes
+      // (Remember that roll affects y velocity and pitch affects -x velocity)
+      current_x_setpoint_ -= dt * max_.xvel * command_msg_.y;
+      command_msg_.x = current_x_setpoint_;
+
+      current_y_setpoint_ += dt * max_.yvel * command_msg_.x;
+      command_msg_.y = current_y_setpoint_;
+
+      current_yaw_setpoint_ += dt * max_.yaw_rate * command_msg_.z;
+      current_yaw_setpoint_ = fmod(current_yaw_setpoint_, (2.0 * M_PI));
+
+      current_altitude_setpoint_ += dt * max_.zvel * command_msg_.z;
+      command_msg_.z = current_altitude_setpoint_;
+      break;
+    }
+  }
+  else
+  {
+    command_msg_ = autopilot_command_;
+  }
 
   Publish();
 }

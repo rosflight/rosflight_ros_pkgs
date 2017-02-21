@@ -1,9 +1,5 @@
 /*
- * Copyright 2015 Fadri Furrer, ASL, ETH Zurich, Switzerland
- * Copyright 2015 Michael Burri, ASL, ETH Zurich, Switzerland
- * Copyright 2015 Mina Kamel, ASL, ETH Zurich, Switzerland
- * Copyright 2015 Janosch Nikolic, ASL, ETH Zurich, Switzerland
- * Copyright 2015 Markus Achtelik, ASL, ETH Zurich, Switzerland
+ * Copyright 2017 James Jackson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,28 +24,32 @@
 
 struct Axes
 {
-  int roll;
-  int pitch;
-  int thrust;
-  int yaw;
-  int roll_direction;
-  int pitch_direction;
-  int thrust_direction;
-  int yaw_direction;
+  int x;
+  int y;
+  int F;
+  int z;
+  int x_direction;
+  int y_direction;
+  int F_direction;
+  int z_direction;
 };
 
 struct Max
 {
   double roll;
   double pitch;
+
   double roll_rate;
   double pitch_rate;
   double yaw_rate;
+
   double aileron;
   double elevator;
   double rudder;
-  double thrust;
-  double altitude;
+
+  double xvel;
+  double yvel;
+  double zvel;
 };
 
 struct Button
@@ -64,6 +64,7 @@ struct Buttons
   Button mode;
   Button reset;
   Button pause;
+  Button override;
 };
 
 class Joy
@@ -81,10 +82,13 @@ private:
   std::string autopilot_command_topic_;
 
   std::string mav_name_;
+  std::string gazebo_ns_;
 
   Axes axes_;
 
-  bool fly_mav_;
+  bool override_autopilot_ = true;
+  bool paused = true;
+  double equilibrium_thrust_;
 
   fcu_common::Command command_msg_;
   fcu_common::Command autopilot_command_;
@@ -95,6 +99,13 @@ private:
   Buttons buttons_;
   geometry_msgs::Pose reset_pose_;
   geometry_msgs::Twist reset_twist_;
+
+  double current_altitude_setpoint_;
+  double current_x_setpoint_;
+  double current_y_setpoint_;
+  double current_yaw_setpoint_;
+  double last_time_;
+
 
   double current_yaw_vel_;
   double v_yaw_step_;
