@@ -17,3 +17,5 @@ float32 wn		# Windspeed north component (m/s)
 float32 we		# Windspeed east component (m/s)
 float32[4] quat		# Quaternion (wxyz, NED)
 bool quat_valid		# Quaternion valid
+float32 chi_deg		# Wrapped course angle (deg)
+float32 psi_deg		# Wrapped yaw angle (deg)
