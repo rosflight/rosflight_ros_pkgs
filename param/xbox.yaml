@@ -22,9 +22,9 @@ max_roll_rate: 3.14159
 max_pitch_rate: 3.14159
 max_yaw_rate: 6.283
 
-max_roll_angle: 0.785
-max_pitch_angle: 0.785
+max_roll_angle: 1.4
+max_pitch_angle: 1.4
 
-max_xvel: 4.0
-max_yvel: 4.0
+max_xvel: 25.0
+max_yvel: 25.0
 max_zvel: 4.0

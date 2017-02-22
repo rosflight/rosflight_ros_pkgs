@@ -265,7 +265,7 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
       command_msg_.y *= max_.pitch;
       command_msg_.z *= max_.yaw_rate;
       // Integrate altitude
-      current_altitude_setpoint_ += dt * max_.zvel * command_msg_.F;
+      current_altitude_setpoint_ -= dt * max_.zvel * command_msg_.F;
       command_msg_.F = current_altitude_setpoint_;
       break;
 
@@ -277,7 +277,7 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
       command_msg_.y = max_.yvel * original_x;
       command_msg_.z *= max_.yaw_rate;
       // Integrate altitude
-      current_altitude_setpoint_ += dt * max_.zvel * command_msg_.F;
+      current_altitude_setpoint_ -= dt * max_.zvel * command_msg_.F;
       command_msg_.F = current_altitude_setpoint_;
       break;
     }
@@ -294,7 +294,7 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
       current_yaw_setpoint_ += dt * max_.yaw_rate * command_msg_.z;
       current_yaw_setpoint_ = fmod(current_yaw_setpoint_, (2.0 * M_PI));
 
-      current_altitude_setpoint_ += dt * max_.zvel * command_msg_.z;
+      current_altitude_setpoint_ -= dt * max_.zvel * command_msg_.z;
       command_msg_.z = current_altitude_setpoint_;
       break;
     }
