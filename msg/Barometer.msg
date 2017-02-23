@@ -1,4 +1,4 @@
 Header header
-float32 altitude # m
-float32 pressure # Pa
-float32 temperature # K
+float32 altitude
+float32 pressure
+float32 temperature
