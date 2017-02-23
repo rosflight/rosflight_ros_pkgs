@@ -39,8 +39,6 @@ double SimplePID::computePID(double desired, double current, double dt, double x
   // Don't do stupid things (like divide by nearly zero, gigantic control jumps)
   if (dt < 0.00001 || std::abs(error) > 9999999)
   {
-    last_error_ = error;
-    last_state_ = current;
     return 0.0;
   }
 
@@ -91,19 +89,21 @@ double SimplePID::computePID(double desired, double current, double dt, double x
   last_state_ = current;
 
   // Sum three terms
-  double u = kp_ * error + ki_ * integrator_ - kd_ * differentiator_;
+  double u = p_term + i_term - d_term;
+
+  return u;
 
   // Integrator anti-windup
-  double u_sat = saturate(u, min_, max_);
-  if (u != u_sat && std::fabs(i_term) > fabs(u - p_term + d_term))
-  {
-    // If we are at the saturation limits, then make sure the integrator doesn't get
-    // bigger if it won't do anything (except take longer to unwind).  Just set it to the
-    // largest value it could be to max out the control
-    integrator_ = (u_sat - p_term + d_term) / ki_;
-  }
+//  double u_sat = saturate(u, min_, max_);
+//  if (u != u_sat && std::fabs(i_term) > fabs(u - p_term + d_term))
+//  {
+//    // If we are at the saturation limits, then make sure the integrator doesn't get
+//    // bigger if it won't do anything (except take longer to unwind).  Just set it to the
+//    // largest value it could be to max out the control
+//    integrator_ = (u_sat - p_term + d_term) / ki_;
+//  }
 
-  return u_sat;
+//  return u_sat;
 }
 
 
