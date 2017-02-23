@@ -53,7 +53,7 @@ double SimplePID::computePID(double desired, double current, double dt, double x
     // Setting dt for this loop will mean that the integrator and dirty derivative
     // doesn't do anything this time but will keep it from exploding.
     dt = 0.0;
-    pid->differentiator = 0.0;
+    differentiator_ = 0.0;
   }
 
   double p_term = error*kp_;
@@ -116,10 +116,6 @@ void SimplePID::setGains(double p, double i, double d, double tau)
   kp_ = p;
   ki_ = i;
   kd_ = d;
-  // integrator_ = 0.0;
-  // differentiator_ = 0.0;
-  // last_error_ = 0.0;
-  // last_state_ = 0.0;
   tau_ = tau;
 }
 
