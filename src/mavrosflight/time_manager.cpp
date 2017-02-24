@@ -18,7 +18,9 @@ TimeManager::TimeManager(MavlinkSerial *serial) :
   serial_->register_mavlink_listener(this);
 
   ros::NodeHandle nh;
-  time_sync_timer_ = nh.createTimer(ros::Duration(ros::Rate(1)), &TimeManager::timer_callback, this);
+  ros::TimerEvent event;
+  timer_callback(event);
+  // time_sync_timer_ = nh.createTimer(ros::Duration(ros::Rate(1)), &TimeManager::timer_callback, this);
 }
 
 void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
