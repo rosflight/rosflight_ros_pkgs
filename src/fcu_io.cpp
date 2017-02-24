@@ -33,6 +33,7 @@ fcuIO::fcuIO()
   ros::NodeHandle nh_private("~");
   std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
   int baud_rate = nh_private.param<int>("baud_rate", 921600);
+  frame_id_ = nh_private.param<std::string>("frame_id", "world");
 
   ROS_INFO("FCU_IO");
   ROS_INFO("Connecting to %s, at %d baud", port.c_str(), baud_rate);
@@ -283,9 +284,11 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
 
   sensor_msgs::Imu imu_msg;
   imu_msg.header.stamp = mavrosflight_->time.get_ros_time_us(imu.time_boot_us);
+  imu_msg.header.frame_id = frame_id_;
 
   sensor_msgs::Temperature temp_msg;
   temp_msg.header.stamp = imu_msg.header.stamp;
+  temp_msg.header.frame_id = frame_id_;
 
   // This is so we can eventually make calibrating the IMU an external service
   if (imu_.is_calibrating())
@@ -668,3 +671,4 @@ bool fcuIO::rebootSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger
 }
 
 } // namespace fcu_io
+

@@ -129,6 +129,8 @@ private:
 
   geometry_msgs::Quaternion attitude_quat_;
 
+  std::string frame_id_;
+
   mavrosflight::MavROSflight *mavrosflight_;
   mavrosflight::sensors::Imu imu_;
 };
