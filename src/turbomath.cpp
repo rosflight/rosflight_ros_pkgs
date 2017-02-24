@@ -137,7 +137,7 @@ float turbosin(float x)
 {
   while (x > M_PI)
     x -= 2.0*M_PI;
-  while (x < M_PI)
+  while (x <= -M_PI)
     x += 2.0*M_PI;
 
   if (0 <= x && x<=M_PI / 2.0)
