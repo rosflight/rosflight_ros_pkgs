@@ -36,7 +36,7 @@ public:
    * \param imax the max value accepted in the output of the integral control (saturation for integrator windup)
    * \param tau band limited differentiator to reduce noise
    */
-  SimplePID(double p, double i = 0.0, double d = 0.0, double max = INFINITY, double min = -INFINITY, double tau = 0.15);
+  SimplePID(double p, double i = 0.0, double d = 0.0, double max = DBL_MAX, double min = -DBL_MAX, double tau = 0.15);
 
   /*!
    * \brief computePID computes the PID control for the given error and timestep (since the last control was computed!)

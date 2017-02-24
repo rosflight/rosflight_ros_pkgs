@@ -1,0 +1,30 @@
+x_axis: 3
+y_axis: 4
+F_axis: 1
+z_axis: 0
+
+x_sign: -1
+y_sign: -1
+F_sign: 1
+z_sign: -1
+
+button_takeoff: 0
+button_mode: 1
+button_reset: 6
+button_pause: 7
+button_override: 4
+
+max_aileron: 1.0
+max_elevator: 1.0
+max_rudder: 1.0
+
+max_roll_rate: 3.14159
+max_pitch_rate: 3.14159
+max_yaw_rate: 6.283
+
+max_roll_angle: 1.4
+max_pitch_angle: 1.4
+
+max_xvel: 25.0
+max_yvel: 25.0
+max_zvel: 4.0
