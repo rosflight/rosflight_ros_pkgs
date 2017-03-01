@@ -27,6 +27,7 @@ fcuIO::fcuIO()
   param_load_from_file_srv_ = nh_.advertiseService("param_load_from_file", &fcuIO::paramLoadFromFileCallback, this);
   imu_calibrate_bias_srv_ = nh_.advertiseService("calibrate_imu_bias", &fcuIO::calibrateImuBiasSrvCallback, this);
   imu_calibrate_temp_srv_ = nh_.advertiseService("calibrate_imu_temp", &fcuIO::calibrateImuTempSrvCallback, this);
+  mag_calibrate_srv_ = nh_.advertiseService("calibrate_mag", &fcuIO::calibrateMagSrvCallback, this);
   calibrate_rc_srv_ = nh_.advertiseService("calibrate_rc_trim", &fcuIO::calibrateRCTrimSrvCallback, this);
   reboot_srv_ = nh_.advertiseService("reboot", &fcuIO::rebootSrvCallback, this);
 
@@ -504,16 +505,44 @@ void fcuIO::handle_small_mag_msg(const mavlink_message_t &msg)
 
   //! \todo calibration, correct units, floating point message type
   sensor_msgs::MagneticField mag_msg;
-  mag_msg.header.stamp = ros::Time::now();
-  mag_msg.magnetic_field.x = (double)mag.xmag;
-  mag_msg.magnetic_field.y = (double)mag.ymag;
-  mag_msg.magnetic_field.z = (double)mag.zmag;
+  mag_msg.header.stamp = ros::Time::now();//mavrosflight_->time.get_ros_time_us(mag.time_boot_us);
+  mag_msg.header.frame_id = frame_id_;
 
-  if (mag_pub_.getTopic().empty())
+  if (mag_.is_calibrating())
   {
-    mag_pub_ = nh_.advertise<sensor_msgs::MagneticField>("magnetometer", 1);
+    if (mag_.calibrate(mag))
+    {
+      ROS_INFO("Magnetometer calibration complete:\n A = \n%f, %f, %f,\n%f, %f, %f,\n%f, %f, %f\nbx = %f, by = %f, bz = %f",
+               mag_.a11(), mag_.a12(), mag_.a13(), mag_.a21(), mag_.a22(), mag_.a23(), mag_.a31(), mag_.a32(), mag_.a33(), mag_.bx(), mag_.by(), mag_.bz());
+
+      // calibration is done, send params to the param server
+      mavrosflight_->param.set_param_value("MAG_A11_COMP", mag_.a11());
+      mavrosflight_->param.set_param_value("MAG_A12_COMP", mag_.a12());
+      mavrosflight_->param.set_param_value("MAG_A13_COMP", mag_.a13());
+      mavrosflight_->param.set_param_value("MAG_A21_COMP", mag_.a21());
+      mavrosflight_->param.set_param_value("MAG_A22_COMP", mag_.a22());
+      mavrosflight_->param.set_param_value("MAG_A23_COMP", mag_.a23());
+      mavrosflight_->param.set_param_value("MAG_A31_COMP", mag_.a31());
+      mavrosflight_->param.set_param_value("MAG_A32_COMP", mag_.a32());
+      mavrosflight_->param.set_param_value("MAG_A33_COMP", mag_.a33());
+      mavrosflight_->param.set_param_value("MAG_X_BIAS", mag_.bx());
+      mavrosflight_->param.set_param_value("MAG_Y_BIAS", mag_.by());
+      mavrosflight_->param.set_param_value("MAG_Z_BIAS", mag_.bz());
+
+      ROS_WARN("Write params to save new magnetometer calibration!");
+    }
   }
-  mag_pub_.publish(mag_msg);
+
+  bool valid = mag_.correct(mag, &mag_msg.magnetic_field.x, &mag_msg.magnetic_field.y, &mag_msg.magnetic_field.z);
+
+  if (valid)
+  {
+    if (mag_pub_.getTopic().empty())
+    {
+      mag_pub_ = nh_.advertise<sensor_msgs::MagneticField>("magnetometer", 1);
+    }
+    mag_pub_.publish(mag_msg);
+  }
 }
 
 void fcuIO::handle_small_sonar(const mavlink_message_t &msg)
@@ -655,6 +684,29 @@ bool fcuIO::calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srv
   // tell the IMU to start a temperature calibration
   imu_.start_temp_calibration();
   ROS_WARN("IMU temperature calibration started");
+
+  res.success = true;
+  return true;
+}
+
+bool fcuIO::calibrateMagSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+{
+  // reset the previous calibration
+  mavrosflight_->param.set_param_value("MAG_A11_COMP", 1);
+  mavrosflight_->param.set_param_value("MAG_A12_COMP", 0);
+  mavrosflight_->param.set_param_value("MAG_A13_COMP", 0);
+  mavrosflight_->param.set_param_value("MAG_A21_COMP", 0);
+  mavrosflight_->param.set_param_value("MAG_A22_COMP", 1);
+  mavrosflight_->param.set_param_value("MAG_A23_COMP", 0);
+  mavrosflight_->param.set_param_value("MAG_A31_COMP", 0);
+  mavrosflight_->param.set_param_value("MAG_A32_COMP", 0);
+  mavrosflight_->param.set_param_value("MAG_A33_COMP", 1);
+  mavrosflight_->param.set_param_value("MAG_X_BIAS", 0);
+  mavrosflight_->param.set_param_value("MAG_Y_BIAS", 0);
+  mavrosflight_->param.set_param_value("MAG_Z_BIAS", 0);
+
+  // tell the magnetometer to start a temperature calibration
+  mag_.start_calibration();
 
   res.success = true;
   return true;
