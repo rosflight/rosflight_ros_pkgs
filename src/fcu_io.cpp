@@ -512,10 +512,11 @@ void fcuIO::handle_small_mag_msg(const mavlink_message_t &msg)
   {
     if (mag_.calibrate(mag))
     {
-      ROS_INFO("Magnetometer calibration complete:\n A = \n%f, %f, %f,\n%f, %f, %f,\n%f, %f, %f\nbx = %f, by = %f, bz = %f",
+      ROS_INFO("Magnetometer calibration complete:\nA = \n%9.5f, %9.5f, %9.5f,\n%9.5f, %9.5f, %9.5f,\n%9.5f, %9.5f, %9.5f\nbx = %9.5f, by = %9.5f, bz = %9.5f",
                mag_.a11(), mag_.a12(), mag_.a13(), mag_.a21(), mag_.a22(), mag_.a23(), mag_.a31(), mag_.a32(), mag_.a33(), mag_.bx(), mag_.by(), mag_.bz());
 
       // calibration is done, send params to the param server
+      sleep(0.1); // delay (seconds)
       mavrosflight_->param.set_param_value("MAG_A11_COMP", mag_.a11());
       mavrosflight_->param.set_param_value("MAG_A12_COMP", mag_.a12());
       mavrosflight_->param.set_param_value("MAG_A13_COMP", mag_.a13());
@@ -692,6 +693,7 @@ bool fcuIO::calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srv
 bool fcuIO::calibrateMagSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
   // reset the previous calibration
+  sleep(0.1); // delay (seconds)
   mavrosflight_->param.set_param_value("MAG_A11_COMP", 1);
   mavrosflight_->param.set_param_value("MAG_A12_COMP", 0);
   mavrosflight_->param.set_param_value("MAG_A13_COMP", 0);

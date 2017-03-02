@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(fcu_io)
 
+# Use C++11 Standard
+add_definitions(-std=c++11)
+
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   fcu_common

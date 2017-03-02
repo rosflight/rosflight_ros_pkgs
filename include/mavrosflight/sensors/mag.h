@@ -9,6 +9,7 @@
 #include <mavrosflight/mavlink_bridge.h>
 #include <math.h>
 #include <eigen3/Eigen/Eigen>
+#include <random>
 #include <deque>
 
 namespace mavrosflight
@@ -53,23 +54,6 @@ public:
    */
   bool correct(mavlink_small_mag_t msg, double *xmag, double *ymag, double *zmag);
 
-  /*
-      sort eigenvalues and eigenvectors output from Eigen library
-  */
-  void eigSort(Eigen::MatrixXd &w, Eigen::MatrixXd &v);
-
-  /*
-      This function gets ellipsoid parameters via least squares on ellipsoidal data
-      according to the paper, "Least squares ellipsoid specific fitting" by Li.
-  */
-  Eigen::MatrixXd ellipsoidLS(std::deque<Eigen::Vector3d> meas);
-
-  /*
-      This function computes magnetometer calibration parameters according to Section 5.3 of the
-      paper, "Complete Triaxis Magnetometer Calibration in the Magnetic Domain" by Renaudin et al.
-  */
-  void magCal(Eigen::MatrixXd u, Eigen::MatrixXd &A, Eigen::MatrixXd &bb);
-
   /// These are the publicly available versions of the mag calibration
   /// The const stuff is to make it read-only
   const double a11() const { return A_(0, 0); }
@@ -93,8 +77,34 @@ private:
   bool first_time_; //!< waiting for first measurement for calibration
   double start_time_; //!< timestamp of first calibration measurement
   double displayed_time_; //!< calibration time left already displayed
+  int ransac_iters_; //!< number of ransac iterations to fit ellipsoid to mag measurements
+  double inlier_thresh_; //!< threshold to consider measurement an inlier in ellipsoidRANSAC
   int measurement_throttle_;
+  Eigen::Vector3d measurement_prev_;
   std::deque<Eigen::Vector3d> measurements_;
+
+  // function to perform RANSAC on ellipsoid data
+  Eigen::MatrixXd ellipsoidRANSAC(std::deque<Eigen::Vector3d> meas, int iters, double inlier_thresh);
+
+  // function to vector from ellipsoid center to surface along input vector
+  Eigen::Vector3d intersect(Eigen::Vector3d r_m, Eigen::Vector3d r_e, Eigen::MatrixXd Q, Eigen::MatrixXd ub, double k);
+
+  /*
+      sort eigenvalues and eigenvectors output from Eigen library
+  */
+  void eigSort(Eigen::MatrixXd &w, Eigen::MatrixXd &v);
+
+  /*
+      This function gets ellipsoid parameters via least squares on ellipsoidal data
+      according to the paper, "Least squares ellipsoid specific fitting" by Li.
+  */
+  Eigen::MatrixXd ellipsoidLS(std::deque<Eigen::Vector3d> meas);
+
+  /*
+      This function compute magnetometer calibration parameters according to Section 5.3 of the
+      paper, "Complete Triaxis Magnetometer Calibration in the Magnetic Domain" by Renaudin et al.
+  */
+  void magCal(Eigen::MatrixXd u, Eigen::MatrixXd &A, Eigen::MatrixXd &bb);
 };
 
 } // namespace sensors
