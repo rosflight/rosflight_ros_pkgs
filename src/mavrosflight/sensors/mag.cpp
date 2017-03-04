@@ -282,6 +282,11 @@ void Mag::eigSort(Eigen::MatrixXd &w, Eigen::MatrixXd &v)
     v = v1;
 }
 
+/*
+    This function gets ellipsoid parameters via least squares on ellipsoidal data
+    according to the paper: Li, Qingde, and John G. Griffiths. "Least squares ellipsoid 
+    specific fitting." Geometric modeling and processing, 2004. proceedings. IEEE, 2004.
+*/
 Eigen::MatrixXd Mag::ellipsoidLS(std::deque<Eigen::Vector3d> meas)
 {
     // form D matrix from eq. 6
@@ -351,6 +356,11 @@ Eigen::MatrixXd Mag::ellipsoidLS(std::deque<Eigen::Vector3d> meas)
     return u;
 }
 
+/*
+    This function compute magnetometer calibration parameters according to Section 5.3 of the
+    paper: Renaudin, Valérie, Muhammad Haris Afzal, and Gérard Lachapelle. "Complete triaxis 
+    magnetometer calibration in the magnetic domain." Journal of sensors 2010 (2010).
+*/
 void Mag::magCal(Eigen::MatrixXd u, Eigen::MatrixXd &A, Eigen::MatrixXd &bb)
 {
     // unpack coefficients

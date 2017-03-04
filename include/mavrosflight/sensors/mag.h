@@ -96,13 +96,15 @@ private:
 
   /*
       This function gets ellipsoid parameters via least squares on ellipsoidal data
-      according to the paper, "Least squares ellipsoid specific fitting" by Li.
+      according to the paper: Li, Qingde, and John G. Griffiths. "Least squares ellipsoid 
+      specific fitting." Geometric modeling and processing, 2004. proceedings. IEEE, 2004.
   */
   Eigen::MatrixXd ellipsoidLS(std::deque<Eigen::Vector3d> meas);
 
   /*
       This function compute magnetometer calibration parameters according to Section 5.3 of the
-      paper, "Complete Triaxis Magnetometer Calibration in the Magnetic Domain" by Renaudin et al.
+      paper: Renaudin, Valérie, Muhammad Haris Afzal, and Gérard Lachapelle. "Complete triaxis 
+      magnetometer calibration in the magnetic domain." Journal of sensors 2010 (2010).
   */
   void magCal(Eigen::MatrixXd u, Eigen::MatrixXd &A, Eigen::MatrixXd &bb);
 };
