@@ -84,6 +84,8 @@ private:
   bool calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+  bool calibrateBaroSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+  bool calibrateAirspeedSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool rebootSrvCallback(std_srvs::Trigger::Request & req, std_srvs::Trigger::Response &res);
 
   // timer callbacks
@@ -123,6 +125,8 @@ private:
   ros::ServiceServer imu_calibrate_bias_srv_;
   ros::ServiceServer imu_calibrate_temp_srv_;
   ros::ServiceServer calibrate_rc_srv_;
+  ros::ServiceServer calibrate_baro_srv_;
+  ros::ServiceServer calibrate_airspeed_srv_;
   ros::ServiceServer reboot_srv_;
 
   ros::Timer param_timer_;

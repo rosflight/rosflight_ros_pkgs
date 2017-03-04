@@ -201,11 +201,11 @@ void fcuIO::handle_command_ack_msg(const mavlink_message_t &msg)
     case MAV_CMD_PREFLIGHT_CALIBRATION:
       if (ack.result == MAV_RESULT_ACCEPTED)
       {
-        ROS_INFO("IMU bias calibration complete!");
+        ROS_INFO("Sensor calibration Acknowledged!");
       }
       else
       {
-        ROS_ERROR("IMU bias calibration failed");
+        ROS_ERROR("Sensor calibration failed");
       }
       break;
   }
@@ -391,6 +391,11 @@ void fcuIO::handle_diff_pressure_msg(const mavlink_message_t &msg)
   airspeed_msg.differential_pressure = diff.diff_pressure;
   airspeed_msg.temperature = diff.temperature;
 
+  if(calibrate_airspeed_srv_.getService().empty())
+  {
+    calibrate_airspeed_srv_ = nh_.advertiseService("calibrate_airspeed", &fcuIO::calibrateAirspeedSrvCallback, this);
+  }
+
   if (diff_pressure_pub_.getTopic().empty())
   {
     diff_pressure_pub_ = nh_.advertise<fcu_common::Airspeed>("airspeed", 1);
@@ -489,6 +494,12 @@ void fcuIO::handle_small_baro_msg(const mavlink_message_t &msg)
   baro_msg.altitude = baro.altitude;
   baro_msg.pressure = baro.pressure;
   baro_msg.temperature = baro.temperature;
+
+  // If we are getting barometer messages, then we should publish the barometer calibration service
+  if(calibrate_baro_srv_.getService().empty())
+  {
+    calibrate_baro_srv_ = nh_.advertiseService("calibrate_baro", &fcuIO::calibrateBaroSrvCallback, this);
+  }
 
   if (baro_pub_.getTopic().empty())
   {
@@ -656,6 +667,26 @@ bool fcuIO::calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srv
   imu_.start_temp_calibration();
   ROS_WARN("IMU temperature calibration started");
 
+  res.success = true;
+  return true;
+}
+
+bool fcuIO::calibrateAirspeedSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+{
+  mavlink_message_t msg;
+  mavlink_msg_command_int_pack(1, 50, &msg, 1, MAV_COMP_ID_ALL,
+                               0, MAV_CMD_PREFLIGHT_CALIBRATION, 0, 0, 0, 0, 1, 0, 0, 0, 0);
+  mavrosflight_->serial.send_message(msg);
+  res.success = true;
+  return true;
+}
+
+bool fcuIO::calibrateBaroSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+{
+  mavlink_message_t msg;
+  mavlink_msg_command_int_pack(1, 50, &msg, 1, MAV_COMP_ID_ALL,
+                               0, MAV_CMD_PREFLIGHT_CALIBRATION, 0, 0, 0, 1, 0, 0, 0, 0, 0);
+  mavrosflight_->serial.send_message(msg);
   res.success = true;
   return true;
 }
