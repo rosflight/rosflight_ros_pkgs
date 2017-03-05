@@ -15,6 +15,7 @@
 #include <mavrosflight/param_listener_interface.h>
 
 #include <mavrosflight/sensors/imu.h>
+#include <mavrosflight/sensors/mag.h>
 
 #include <boost/function.hpp>
 

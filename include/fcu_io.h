@@ -84,6 +84,7 @@ private:
   bool calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+  bool calibrateMagSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool rebootSrvCallback(std_srvs::Trigger::Request & req, std_srvs::Trigger::Response &res);
 
   // timer callbacks
@@ -122,6 +123,7 @@ private:
   ros::ServiceServer param_load_from_file_srv_;
   ros::ServiceServer imu_calibrate_bias_srv_;
   ros::ServiceServer imu_calibrate_temp_srv_;
+  ros::ServiceServer mag_calibrate_srv_;
   ros::ServiceServer calibrate_rc_srv_;
   ros::ServiceServer reboot_srv_;
 
@@ -133,6 +135,7 @@ private:
 
   mavrosflight::MavROSflight *mavrosflight_;
   mavrosflight::sensors::Imu imu_;
+  mavrosflight::sensors::Mag mag_;
 };
 
 } // namespace fcu_io
