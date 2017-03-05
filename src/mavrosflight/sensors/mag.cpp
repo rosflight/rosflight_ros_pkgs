@@ -31,7 +31,6 @@ void Mag::start_calibration()
   first_time_ = true;
   start_time_ = 0;
 
-  measurement_throttle_ = 0;
   measurement_prev_ = Eigen::Vector3d::Zero();
 }
 
@@ -56,8 +55,6 @@ bool Mag::calibrate(mavlink_small_mag_t msg)
   // if still in calibration mode
   if (elapsed < calibration_time_)
   {
-    if (measurement_throttle_ > 3)
-    {
       Eigen::Vector3d measurement;
       measurement << msg.xmag, msg.ymag, msg.zmag;
 
@@ -66,11 +63,7 @@ bool Mag::calibrate(mavlink_small_mag_t msg)
       {
         measurements_.push_back(measurement);
       }
-
-      measurement_throttle_ = 0;
       measurement_prev_ = measurement;
-    }
-    measurement_throttle_++;
   }
   else if (calibrating_)
   {

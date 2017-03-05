@@ -27,7 +27,6 @@ fcuIO::fcuIO()
   param_load_from_file_srv_ = nh_.advertiseService("param_load_from_file", &fcuIO::paramLoadFromFileCallback, this);
   imu_calibrate_bias_srv_ = nh_.advertiseService("calibrate_imu_bias", &fcuIO::calibrateImuBiasSrvCallback, this);
   imu_calibrate_temp_srv_ = nh_.advertiseService("calibrate_imu_temp", &fcuIO::calibrateImuTempSrvCallback, this);
-  mag_calibrate_srv_ = nh_.advertiseService("calibrate_mag", &fcuIO::calibrateMagSrvCallback, this);
   calibrate_rc_srv_ = nh_.advertiseService("calibrate_rc_trim", &fcuIO::calibrateRCTrimSrvCallback, this);
   reboot_srv_ = nh_.advertiseService("reboot", &fcuIO::rebootSrvCallback, this);
 
@@ -535,6 +534,11 @@ void fcuIO::handle_small_mag_msg(const mavlink_message_t &msg)
   }
 
   bool valid = mag_.correct(mag, &mag_msg.magnetic_field.x, &mag_msg.magnetic_field.y, &mag_msg.magnetic_field.z);
+
+  if(mag_calibrate_srv_.getService().empty())
+  {
+    mag_calibrate_srv_ = nh_.advertiseService("calibrate_mag", &fcuIO::calibrateMagSrvCallback, this);
+  }
 
   if (valid)
   {

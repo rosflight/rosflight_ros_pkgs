@@ -79,7 +79,6 @@ private:
   double displayed_time_; //!< calibration time left already displayed
   int ransac_iters_; //!< number of ransac iterations to fit ellipsoid to mag measurements
   double inlier_thresh_; //!< threshold to consider measurement an inlier in ellipsoidRANSAC
-  int measurement_throttle_;
   Eigen::Vector3d measurement_prev_;
   std::deque<Eigen::Vector3d> measurements_;
 
