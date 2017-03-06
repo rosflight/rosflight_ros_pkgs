@@ -705,6 +705,7 @@ bool fcuIO::calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srv
   return true;
 }
 
+
 bool fcuIO::calibrateMagSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
   // reset the previous calibration
@@ -728,6 +729,27 @@ bool fcuIO::calibrateMagSrvCallback(std_srvs::Trigger::Request &req, std_srvs::T
   res.success = true;
   return true;
 }
+
+bool fcuIO::calibrateAirspeedSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+{
+  mavlink_message_t msg;
+  mavlink_msg_command_int_pack(1, 50, &msg, 1, MAV_COMP_ID_ALL,
+                               0, MAV_CMD_PREFLIGHT_CALIBRATION, 0, 0, 0, 0, 1, 0, 0, 0, 0);
+  mavrosflight_->serial.send_message(msg);
+  res.success = true;
+  return true;
+}
+
+bool fcuIO::calibrateBaroSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+{
+  mavlink_message_t msg;
+  mavlink_msg_command_int_pack(1, 50, &msg, 1, MAV_COMP_ID_ALL,
+                               0, MAV_CMD_PREFLIGHT_CALIBRATION, 0, 0, 0, 1, 0, 0, 0, 0, 0);
+  mavrosflight_->serial.send_message(msg);
+  res.success = true;
+  return true;
+}
+
 
 bool fcuIO::calibrateAirspeedSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
