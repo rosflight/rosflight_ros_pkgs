@@ -33,7 +33,6 @@ fcuIO::fcuIO()
   ros::NodeHandle nh_private("~");
   std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
   int baud_rate = nh_private.param<int>("baud_rate", 921600);
-  frame_id_ = nh_private.param<std::string>("frame_id", "world");
 
   ROS_INFO("FCU_IO");
   ROS_INFO("Connecting to %s, at %d baud", port.c_str(), baud_rate);
@@ -59,6 +58,11 @@ fcuIO::fcuIO()
   std_msgs::Bool unsaved_msg;
   unsaved_msg.data = false;
   unsaved_params_pub_.publish(unsaved_msg);
+
+  // Set up a few other random things
+  frame_id_ = nh_private.param<std::string>("frame_id", "world");
+  double magnetic_field_strength = nh_private.param<double>("magnetic_field_reference", 1.0);
+  mag_.set_refence_magnetic_field_strength(magnetic_field_strength);
 }
 
 fcuIO::~fcuIO()
@@ -73,7 +77,7 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_HEARTBEAT:
       handle_heartbeat_msg(msg);
       break;
-    case MAVLINK_MSG_ID_COMMAND_ACK:
+    case MAVLINK_MSG_ID_ROSFLIGHT_CMD_ACK:
       handle_command_ack_msg(msg);
       break;
     case MAVLINK_MSG_ID_STATUSTEXT:
@@ -136,7 +140,7 @@ void fcuIO::on_params_saved_change(bool unsaved_changes)
 
   if (unsaved_changes)
   {
-    ROS_WARN("There are unsaved changes to onboard parameters");
+    ROS_WARN_THROTTLE(1,"There are unsaved changes to onboard parameters");
   }
   else
   {
@@ -193,21 +197,16 @@ void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
 
 void fcuIO::handle_command_ack_msg(const mavlink_message_t &msg)
 {
-  mavlink_command_ack_t ack;
-  mavlink_msg_command_ack_decode(&msg, &ack);
+  mavlink_rosflight_cmd_ack_t ack;
+  mavlink_msg_rosflight_cmd_ack_decode(&msg, &ack);
 
-  switch (ack.command)
+  if (ack.success == ROSFLIGHT_CMD_SUCCESS)
   {
-    case MAV_CMD_PREFLIGHT_CALIBRATION:
-      if (ack.result == MAV_RESULT_ACCEPTED)
-      {
-        ROS_INFO("Sensor calibration Acknowledged!");
-      }
-      else
-      {
-        ROS_ERROR("Sensor calibration failed");
-      }
-      break;
+    ROS_DEBUG("MAVLink command %d Acknowledged", ack.command);
+  }
+  else
+  {
+    ROS_ERROR("MAVLink command %d Failed", ack.command);
   }
 }
 
@@ -568,8 +567,6 @@ void fcuIO::handle_small_sonar(const mavlink_message_t &msg)
 
   sensor_msgs::Range alt_msg;
   alt_msg.header.stamp = ros::Time::now();
-
-  // MB1242 returns in cm
   alt_msg.max_range = sonar.max_range;
   alt_msg.min_range = sonar.min_range;
   alt_msg.range = sonar.range;
@@ -654,8 +651,7 @@ bool fcuIO::paramLoadFromFileCallback(ParamFile::Request &req, ParamFile::Respon
 bool fcuIO::calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
   mavlink_message_t msg;
-  mavlink_msg_command_int_pack(1, 50, &msg, 1, MAV_COMP_ID_ALL, 0, MAV_CMD_PREFLIGHT_CALIBRATION, 0, 0, 1.0, 0.0, 0.0,
-                               0.0, 1, 0, 0.0);
+  mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_ACCEL_CALIBRATION);
   mavrosflight_->serial.send_message(msg);
 
   res.success = true;
@@ -665,8 +661,7 @@ bool fcuIO::calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srv
 bool fcuIO::calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
   mavlink_message_t msg;
-  mavlink_msg_command_int_pack(1, 50, &msg, 1, MAV_COMP_ID_ALL, 0, MAV_CMD_DO_RC_CALIBRATION, 0, 0, 0, 0, 0, 0, 0, 0,
-                               0);
+  mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_RC_CALIBRATION);
   mavrosflight_->serial.send_message(msg);
   res.success = true;
   return true;
@@ -733,8 +728,7 @@ bool fcuIO::calibrateMagSrvCallback(std_srvs::Trigger::Request &req, std_srvs::T
 bool fcuIO::calibrateAirspeedSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
   mavlink_message_t msg;
-  mavlink_msg_command_int_pack(1, 50, &msg, 1, MAV_COMP_ID_ALL,
-                               0, MAV_CMD_PREFLIGHT_CALIBRATION, 0, 0, 0, 0, 1, 0, 0, 0, 0);
+  mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_AIRSPEED_CALIBRATION);
   mavrosflight_->serial.send_message(msg);
   res.success = true;
   return true;
@@ -743,8 +737,7 @@ bool fcuIO::calibrateAirspeedSrvCallback(std_srvs::Trigger::Request &req, std_sr
 bool fcuIO::calibrateBaroSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
   mavlink_message_t msg;
-  mavlink_msg_command_int_pack(1, 50, &msg, 1, MAV_COMP_ID_ALL,
-                               0, MAV_CMD_PREFLIGHT_CALIBRATION, 0, 0, 0, 1, 0, 0, 0, 0, 0);
+  mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_BARO_CALIBRATION);
   mavrosflight_->serial.send_message(msg);
   res.success = true;
   return true;
@@ -753,8 +746,7 @@ bool fcuIO::calibrateBaroSrvCallback(std_srvs::Trigger::Request &req, std_srvs::
 bool fcuIO::rebootSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
   mavlink_message_t msg;
-  mavlink_msg_command_int_pack(1, 50, &msg, 1, MAV_COMP_ID_ALL,
-                               0, MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_REBOOT);
   mavrosflight_->serial.send_message(msg);
   res.success = true;
   return true;

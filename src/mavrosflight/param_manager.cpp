@@ -38,7 +38,7 @@ void ParamManager::handle_mavlink_message(const mavlink_message_t &msg)
   case MAVLINK_MSG_ID_PARAM_VALUE:
     handle_param_value_msg(msg);
     break;
-  case MAVLINK_MSG_ID_COMMAND_ACK:
+  case MAVLINK_MSG_ID_ROSFLIGHT_CMD_ACK:
     handle_command_ack_msg(msg);
     break;
   }
@@ -86,8 +86,7 @@ bool ParamManager::write_params()
     mavlink_message_t msg;
     uint8_t sysid = 1;
     uint8_t compid = 1;
-    mavlink_msg_command_int_pack(sysid, compid, &msg,
-                                 1, MAV_COMP_ID_ALL, 0, MAV_CMD_PREFLIGHT_STORAGE, 0, 0, 1, 0, 0, 0, 0, 0, 0);
+    mavlink_msg_rosflight_cmd_pack(sysid, compid, &msg, ROSFLIGHT_CMD_WRITE_PARAMS);
     serial_->send_message(msg);
 
     write_request_in_progress_ = true;
@@ -281,13 +280,13 @@ void ParamManager::handle_command_ack_msg(const mavlink_message_t &msg)
 {
   if (write_request_in_progress_)
   {
-    mavlink_command_ack_t ack;
-    mavlink_msg_command_ack_decode(&msg, &ack);
+    mavlink_rosflight_cmd_ack_t ack;
+    mavlink_msg_rosflight_cmd_ack_decode(&msg, &ack);
 
-    if (ack.command == MAV_CMD_PREFLIGHT_STORAGE)
+    if (ack.command == ROSFLIGHT_CMD_WRITE_PARAMS)
     {
       write_request_in_progress_ = false;
-      if(ack.result == MAV_RESULT_ACCEPTED)
+      if(ack.success == ROSFLIGHT_CMD_SUCCESS)
       {
         ROS_INFO("Param write succeeded");
         unsaved_changes_ = false;

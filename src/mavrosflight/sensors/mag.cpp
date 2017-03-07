@@ -13,12 +13,18 @@ namespace sensors
 
 Mag::Mag() :
   calibrating_(false),
-  calibration_time_(30.0)
+  calibration_time_(30.0),
+  reference_field_strength_(1.0)
 {
   A_ = Eigen::MatrixXd::Zero(3, 3);
   b_ = Eigen::MatrixXd::Zero(3, 1);
   ransac_iters_ = 100;
   inlier_thresh_ = 200;
+}
+
+void Mag::set_refence_magnetic_field_strength(double reference_magnetic_field)
+{
+  reference_field_strength_ = reference_magnetic_field;
 }
 
 void Mag::start_calibration()
@@ -393,7 +399,7 @@ void Mag::magCal(Eigen::MatrixXd u, Eigen::MatrixXd &A, Eigen::MatrixXd &bb)
     Eigen::MatrixXd V = eigensolver.eigenvectors().real();
 
     // compute alpha according to eq. 27 of Renaudin (the denominator needs to be multiplied by -1)
-    double Hm = 51503.9; // (nT) Provo, UT magnetic field magnitude
+    double Hm = reference_field_strength_; // (uT) Provo, UT magnetic field magnitude
     Eigen::MatrixXd utVDiVtu = ub.transpose() * V * D.inverse() * V.transpose() * ub;
     double alpha = (4. * Hm * Hm) / (utVDiVtu(0) - 4 * k);
 

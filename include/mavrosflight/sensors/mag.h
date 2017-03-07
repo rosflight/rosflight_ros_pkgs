@@ -32,6 +32,12 @@ public:
   void start_calibration();
 
   /**
+   * @brief set_refence_magnetic_field_strength
+   * @param reference_magnetic_field
+   */
+  void set_refence_magnetic_field_strength(double reference_magnetic_field);
+
+  /**
    * \brief Check if a calibration is in progress
    * \return True if a calibration is currently in progress
    */
@@ -71,6 +77,8 @@ public:
 
 private:
   Eigen::MatrixXd A_, b_;
+
+  double reference_field_strength_; //!< the strength of earth's magnetic field at your location
 
   bool calibrating_; //!< whether a temperature calibration is in progress
   double calibration_time_; //!< seconds to record data for temperature compensation
