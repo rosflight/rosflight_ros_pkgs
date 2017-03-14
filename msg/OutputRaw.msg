@@ -1,4 +1,4 @@
 # raw servo outputs
 
 Header header
-uint16[16] values
+float32[16] values

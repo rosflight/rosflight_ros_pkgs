@@ -42,7 +42,7 @@ if __name__ == '__main__':
     rospy.init_node('gps')
 
     serial_port = rospy.get_param('~port','/dev/ttyUSB0')
-    serial_baud = rospy.get_param('~baud',9600)
+    serial_baud = rospy.get_param('~baud',115200)
     frame_id = libnmea_navsat_driver.driver.RosNMEADriver.get_frame_id()
 
     try:
