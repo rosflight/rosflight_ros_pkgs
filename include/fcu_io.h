@@ -62,7 +62,7 @@ private:
   void handle_statustext_msg(const mavlink_message_t &msg);
   void handle_attitude_quaternion_msg(const mavlink_message_t &msg);
   void handle_small_imu_msg(const mavlink_message_t &msg);
-  void handle_servo_output_raw_msg(const mavlink_message_t &msg);
+  void handle_rosflight_output_raw_msg(const mavlink_message_t &msg);
   void handle_rc_channels_raw_msg(const mavlink_message_t &msg);
   void handle_diff_pressure_msg(const mavlink_message_t &msg);
   void handle_small_baro_msg(const mavlink_message_t &msg);

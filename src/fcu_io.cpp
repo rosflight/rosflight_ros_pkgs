@@ -92,8 +92,8 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_SMALL_MAG:
       handle_small_mag_msg(msg);
       break;
-    case MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:
-      handle_servo_output_raw_msg(msg);
+    case MAVLINK_MSG_ID_ROSFLIGHT_OUTPUT_RAW:
+      handle_rosflight_output_raw_msg(msg);
       break;
     case MAVLINK_MSG_ID_RC_CHANNELS:
       handle_rc_channels_raw_msg(msg);
@@ -331,22 +331,24 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
   }
 }
 
-void fcuIO::handle_servo_output_raw_msg(const mavlink_message_t &msg)
+void fcuIO::handle_rosflight_output_raw_msg(const mavlink_message_t &msg)
 {
-  mavlink_servo_output_raw_t servo;
-  mavlink_msg_servo_output_raw_decode(&msg, &servo);
+  mavlink_rosflight_output_raw_t servo;
+  mavlink_msg_rosflight_output_raw_decode(&msg, &servo);
 
   fcu_common::OutputRaw out_msg;
-  out_msg.header.stamp = mavrosflight_->time.get_ros_time_us(servo.time_usec);
+  out_msg.header.stamp = mavrosflight_->time.get_ros_time_us(servo.stamp);
 
-  out_msg.values[0] = servo.servo1_raw;
-  out_msg.values[1] = servo.servo2_raw;
-  out_msg.values[2] = servo.servo3_raw;
-  out_msg.values[3] = servo.servo4_raw;
-  out_msg.values[4] = servo.servo5_raw;
-  out_msg.values[5] = servo.servo6_raw;
-  out_msg.values[6] = servo.servo7_raw;
-  out_msg.values[7] = servo.servo8_raw;
+  out_msg.values[0] = servo.channels[0];
+  out_msg.values[1] = servo.channels[1];
+  out_msg.values[2] = servo.channels[2];
+  out_msg.values[3] = servo.channels[3];
+  out_msg.values[4] = servo.channels[4];
+  out_msg.values[5] = servo.channels[5];
+  out_msg.values[6] = servo.channels[6];
+  out_msg.values[7] = servo.channels[7];
+  out_msg.values[8] = servo.channels[8];
+  out_msg.values[9] = servo.channels[9];
 
   if (servo_output_raw_pub_.getTopic().empty())
   {
