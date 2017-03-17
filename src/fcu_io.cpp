@@ -92,8 +92,8 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_SMALL_MAG:
       handle_small_mag_msg(msg);
       break;
-    case MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:
-      handle_servo_output_raw_msg(msg);
+    case MAVLINK_MSG_ID_ROSFLIGHT_OUTPUT_RAW:
+      handle_rosflight_output_raw_msg(msg);
       break;
     case MAVLINK_MSG_ID_RC_CHANNELS:
       handle_rc_channels_raw_msg(msg);
@@ -183,9 +183,6 @@ void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
         break;
       case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
         mode_string = "ANGLE";
-        break;
-      case MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
-        mode_string = "ALTITUDE";
         break;
       default:
         mode_string = "UNKNOWN";
@@ -331,28 +328,23 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
   }
 }
 
-void fcuIO::handle_servo_output_raw_msg(const mavlink_message_t &msg)
+void fcuIO::handle_rosflight_output_raw_msg(const mavlink_message_t &msg)
 {
-  mavlink_servo_output_raw_t servo;
-  mavlink_msg_servo_output_raw_decode(&msg, &servo);
+  mavlink_rosflight_output_raw_t servo;
+  mavlink_msg_rosflight_output_raw_decode(&msg, &servo);
 
   fcu_common::OutputRaw out_msg;
-  out_msg.header.stamp = mavrosflight_->time.get_ros_time_us(servo.time_usec);
-
-  out_msg.values[0] = servo.servo1_raw;
-  out_msg.values[1] = servo.servo2_raw;
-  out_msg.values[2] = servo.servo3_raw;
-  out_msg.values[3] = servo.servo4_raw;
-  out_msg.values[4] = servo.servo5_raw;
-  out_msg.values[5] = servo.servo6_raw;
-  out_msg.values[6] = servo.servo7_raw;
-  out_msg.values[7] = servo.servo8_raw;
-
-  if (servo_output_raw_pub_.getTopic().empty())
+  out_msg.header.stamp = mavrosflight_->time.get_ros_time_us(servo.stamp);
+  for (int i = 0; i < 8; i++)
   {
-    servo_output_raw_pub_ = nh_.advertise<fcu_common::OutputRaw>("output_raw", 1);
+    out_msg.values[i] = servo.values[i];
   }
-  servo_output_raw_pub_.publish(out_msg);
+
+  if (output_raw_pub_.getTopic().empty())
+  {
+    output_raw_pub_ = nh_.advertise<fcu_common::OutputRaw>("output_raw", 1);
+  }
+  output_raw_pub_.publish(out_msg);
 }
 
 void fcuIO::handle_rc_channels_raw_msg(const mavlink_message_t &msg)
