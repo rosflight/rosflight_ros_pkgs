@@ -105,7 +105,7 @@ private:
   ros::Publisher unsaved_params_pub_;
   ros::Publisher imu_pub_;
   ros::Publisher imu_temp_pub_;
-  ros::Publisher servo_output_raw_pub_;
+  ros::Publisher output_raw_pub_;
   ros::Publisher rc_raw_pub_;
   ros::Publisher diff_pressure_pub_;
   ros::Publisher temperature_pub_;

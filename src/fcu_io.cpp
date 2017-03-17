@@ -338,23 +338,16 @@ void fcuIO::handle_rosflight_output_raw_msg(const mavlink_message_t &msg)
 
   fcu_common::OutputRaw out_msg;
   out_msg.header.stamp = mavrosflight_->time.get_ros_time_us(servo.stamp);
-
-  out_msg.values[0] = servo.channels[0];
-  out_msg.values[1] = servo.channels[1];
-  out_msg.values[2] = servo.channels[2];
-  out_msg.values[3] = servo.channels[3];
-  out_msg.values[4] = servo.channels[4];
-  out_msg.values[5] = servo.channels[5];
-  out_msg.values[6] = servo.channels[6];
-  out_msg.values[7] = servo.channels[7];
-  out_msg.values[8] = servo.channels[8];
-  out_msg.values[9] = servo.channels[9];
-
-  if (servo_output_raw_pub_.getTopic().empty())
+  for (int i = 0; i < 8; i++)
   {
-    servo_output_raw_pub_ = nh_.advertise<fcu_common::OutputRaw>("output_raw", 1);
+    out_msg.values[i] = servo.values[i];
   }
-  servo_output_raw_pub_.publish(out_msg);
+
+  if (output_raw_pub_.getTopic().empty())
+  {
+    output_raw_pub_ = nh_.advertise<fcu_common::OutputRaw>("output_raw", 1);
+  }
+  output_raw_pub_.publish(out_msg);
 }
 
 void fcuIO::handle_rc_channels_raw_msg(const mavlink_message_t &msg)
