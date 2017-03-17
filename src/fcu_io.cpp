@@ -184,9 +184,6 @@ void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
       case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
         mode_string = "ANGLE";
         break;
-      case MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
-        mode_string = "ALTITUDE";
-        break;
       default:
         mode_string = "UNKNOWN";
     }
