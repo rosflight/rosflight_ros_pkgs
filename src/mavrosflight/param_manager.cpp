@@ -238,6 +238,10 @@ void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
     first_param_received_ = true;
     num_params_ = param.param_count;
     received_ = new bool[num_params_];
+    for (int i = 0; i < num_params_; i++)
+    {
+      received_[i] = false;
+    }
   }
 
   // ensure null termination of name
