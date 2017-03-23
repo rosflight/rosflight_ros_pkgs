@@ -25,8 +25,8 @@ fcuIO::fcuIO()
   param_write_srv_ = nh_.advertiseService("param_write", &fcuIO::paramWriteSrvCallback, this);
   param_save_to_file_srv_ = nh_.advertiseService("param_save_to_file", &fcuIO::paramSaveToFileCallback, this);
   param_load_from_file_srv_ = nh_.advertiseService("param_load_from_file", &fcuIO::paramLoadFromFileCallback, this);
-  imu_calibrate_bias_srv_ = nh_.advertiseService("calibrate_imu_bias", &fcuIO::calibrateImuBiasSrvCallback, this);
-  imu_calibrate_temp_srv_ = nh_.advertiseService("calibrate_imu_temp", &fcuIO::calibrateImuTempSrvCallback, this);
+  imu_calibrate_bias_srv_ = nh_.advertiseService("calibrate_imu", &fcuIO::calibrateImuBiasSrvCallback, this);
+//  imu_calibrate_temp_srv_ = nh_.advertiseService("calibrate_imu_temp", &fcuIO::calibrateImuTempSrvCallback, this);
   calibrate_rc_srv_ = nh_.advertiseService("calibrate_rc_trim", &fcuIO::calibrateRCTrimSrvCallback, this);
   reboot_srv_ = nh_.advertiseService("reboot", &fcuIO::rebootSrvCallback, this);
 
