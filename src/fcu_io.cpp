@@ -27,7 +27,7 @@ fcuIO::fcuIO()
   param_load_from_file_srv_ = nh_.advertiseService("param_load_from_file", &fcuIO::paramLoadFromFileCallback, this);
   imu_calibrate_bias_srv_ = nh_.advertiseService("calibrate_imu", &fcuIO::calibrateImuBiasSrvCallback, this);
 //  imu_calibrate_temp_srv_ = nh_.advertiseService("calibrate_imu_temp", &fcuIO::calibrateImuTempSrvCallback, this);
-  calibrate_rc_srv_ = nh_.advertiseService("calibrate_rc_trim", &fcuIO::calibrateRCTrimSrvCallback, this);
+//  calibrate_rc_srv_ = nh_.advertiseService("calibrate_rc_trim", &fcuIO::calibrateRCTrimSrvCallback, this);
   reboot_srv_ = nh_.advertiseService("reboot", &fcuIO::rebootSrvCallback, this);
 
   ros::NodeHandle nh_private("~");
