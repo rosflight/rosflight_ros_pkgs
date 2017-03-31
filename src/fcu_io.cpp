@@ -154,6 +154,7 @@ void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
 
   static int prev_armed_state = 0;
   static int prev_control_mode = 0;
+  static int prev_failsafe_status = MAV_STATE_STANDBY;
   mavlink_heartbeat_t heartbeat;
   mavlink_msg_heartbeat_decode(&msg, &heartbeat);
 
@@ -166,8 +167,16 @@ void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
       ROS_WARN("FCU DISARMED");
     prev_armed_state = heartbeat.base_mode;
   }
-  else if (heartbeat.base_mode == MAV_MODE_ENUM_END)
-    ROS_ERROR_THROTTLE(600, "FCU FAILSAFE");
+
+  // Print if change in failsafe status
+  if (heartbeat.system_status != prev_failsafe_status)
+  {
+    if (heartbeat.system_status == MAV_STATE_CRITICAL)
+      ROS_ERROR("FCU FAILSAFE");
+    else
+      ROS_INFO("FAILSAFE RECOVERED");
+    prev_failsafe_status = heartbeat.system_status;
+  }
 
   // Print if change in control mode
   if (heartbeat.custom_mode != prev_control_mode)
