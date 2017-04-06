@@ -155,6 +155,7 @@ void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
   static int prev_armed_state = 0;
   static int prev_control_mode = 0;
   static int prev_failsafe_status = MAV_STATE_STANDBY;
+  static int prev_autopilot = 0;
   mavlink_heartbeat_t heartbeat;
   mavlink_msg_heartbeat_decode(&msg, &heartbeat);
 
@@ -199,6 +200,28 @@ void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
     ROS_WARN_STREAM("FCU now in " << mode_string << " mode");
     prev_control_mode = heartbeat.custom_mode;
   }
+  if (heartbeat.autopilot != prev_autopilot)
+  {
+    if ( heartbeat.autopilot)
+      ROS_WARN("RC override active");
+    else
+      ROS_WARN("Returned to computer control");
+    prev_autopilot = heartbeat.autopilot;
+  }
+
+  // Build the status message and send it
+  fcu_common::Status status_msg;
+  status_msg.header.stamp = ros::Time::now();
+  status_msg.armed = (heartbeat.base_mode == MAV_MODE_MANUAL_ARMED);
+  status_msg.failsafe = (heartbeat.system_status == MAV_STATE_CRITICAL);
+  status_msg.rc_override = heartbeat.autopilot;
+  if (status_pub_.getTopic().empty())
+  {
+    status_pub_ = nh_.advertise<fcu_common::Status>("status", 1);
+  }
+  status_pub_.publish(status_msg);
+
+  
 }
 
 void fcuIO::handle_command_ack_msg(const mavlink_message_t &msg)

@@ -27,6 +27,7 @@
 #include <fcu_common/Command.h>
 #include <fcu_common/OutputRaw.h>
 #include <fcu_common/RCRaw.h>
+#include <fcu_common/Status.h>
 
 #include <fcu_io/ParamFile.h>
 #include <fcu_io/ParamGet.h>
@@ -114,6 +115,7 @@ private:
   ros::Publisher mag_pub_;
   ros::Publisher attitude_pub_;
   ros::Publisher euler_pub_;
+  ros::Publisher status_pub_;
   std::map<std::string, ros::Publisher> named_value_int_pubs_;
   std::map<std::string, ros::Publisher> named_value_float_pubs_;
   std::map<std::string, ros::Publisher> named_command_struct_pubs_;
