@@ -59,6 +59,7 @@ private:
 
   // handle mavlink messages
   void handle_heartbeat_msg(const mavlink_message_t &msg);
+  void handle_status_msg(const mavlink_message_t &msg);
   void handle_command_ack_msg(const mavlink_message_t &msg);
   void handle_statustext_msg(const mavlink_message_t &msg);
   void handle_attitude_quaternion_msg(const mavlink_message_t &msg);
