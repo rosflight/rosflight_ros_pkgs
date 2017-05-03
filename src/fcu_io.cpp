@@ -237,7 +237,7 @@ void fcuIO::handle_status_msg(const mavlink_message_t &msg)
   out_status.armed = status_msg.status & ROSFLIGHT_STATUS_ARMED;
   out_status.failsafe = status_msg.status & ROSFLIGHT_STATUS_IN_FAILSAFE;
   out_status.rc_override = status_msg.status & ROSFLIGHT_STATUS_RC_OVERRIDE;
-  out_status.I2C_errors = status_msg.i2c_errors;
+  out_status.num_errors = status_msg.num_errors;
   out_status.loop_time_us = status_msg.loop_time_us;
   if (status_pub_.getTopic().empty())
   {
