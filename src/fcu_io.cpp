@@ -77,6 +77,9 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_HEARTBEAT:
       handle_heartbeat_msg(msg);
       break;
+    case MAVLINK_MSG_ID_ROSFLIGHT_STATUS:
+      handle_status_msg(msg);
+      break;
     case MAVLINK_MSG_ID_ROSFLIGHT_CMD_ACK:
       handle_command_ack_msg(msg);
       break;
@@ -150,39 +153,67 @@ void fcuIO::on_params_saved_change(bool unsaved_changes)
 
 void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
 {
-  ROS_INFO_ONCE("Got HEARTBEAT, connected.");
+  ROS_INFO_ONCE("Got HEARTBEAT, connected.");  
+}
 
-  static int prev_armed_state = 0;
-  static int prev_control_mode = 0;
-  static int prev_failsafe_status = MAV_STATE_STANDBY;
-  mavlink_heartbeat_t heartbeat;
-  mavlink_msg_heartbeat_decode(&msg, &heartbeat);
+void fcuIO::handle_status_msg(const mavlink_message_t &msg)
+{
+  static uint8_t prev_status = 0;
+  static uint8_t prev_error_code = 0;
+  static uint8_t prev_control_mode = 0;
+  mavlink_rosflight_status_t status_msg;
+  mavlink_msg_rosflight_status_decode(&msg, &status_msg);
 
-  // Print if change in armed_state
-  if (heartbeat.base_mode != prev_armed_state)
+  // Print if change to status
+  if (prev_status != status_msg.status)
   {
-    if (heartbeat.base_mode == MAV_MODE_MANUAL_ARMED)
-      ROS_WARN("FCU ARMED");
-    else if (heartbeat.base_mode == MAV_MODE_MANUAL_DISARMED)
-      ROS_WARN("FCU DISARMED");
-    prev_armed_state = heartbeat.base_mode;
+    // armed state check
+    if (prev_status & ROSFLIGHT_STATUS_ARMED != status_msg.status & ROSFLIGHT_STATUS_ARMED)
+    {
+      if (status_msg.status & ROSFLIGHT_STATUS_ARMED)
+        ROS_WARN("FCU ARMED");
+      else
+        ROS_WARN("FCU_DISARMED");
+    }
+
+    // failsafe check
+    if (prev_status & ROSFLIGHT_STATUS_IN_FAILSAFE != status_msg.status & ROSFLIGHT_STATUS_IN_FAILSAFE)
+    {
+      if (status_msg.status & ROSFLIGHT_STATUS_IN_FAILSAFE)
+        ROS_ERROR("FCU FAILSAFE");
+      else
+        ROS_INFO("FAILSAFE RECOVERED");
+    }
+
+    if (prev_status & ROSFLIGHT_STATUS_RC_OVERRIDE != status_msg.status & ROSFLIGHT_STATUS_RC_OVERRIDE)
+    {
+      if (status_msg.status & ROSFLIGHT_STATUS_RC_OVERRIDE)
+        ROS_WARN("RC override active");
+      else
+        ROS_WARN("Returned to computer control");
+    }
+    if (prev_status & ROSFLIGHT_STATUS_OFFBOARD_CONTROL_ACTIVE != status_msg.status & ROSFLIGHT_STATUS_OFFBOARD_CONTROL_ACTIVE)
+    {
+      if (status_msg.status & ROSFLIGHT_STATUS_OFFBOARD_CONTROL_ACTIVE)
+        ROS_WARN("Computer Control active");
+      else
+        ROS_WARN("Computer Control Lost");
+    }
+    prev_status = status_msg.status;
   }
 
-  // Print if change in failsafe status
-  if (heartbeat.system_status != prev_failsafe_status)
+  // Print if got error code
+  if (prev_error_code != status_msg.error_code)
   {
-    if (heartbeat.system_status == MAV_STATE_CRITICAL)
-      ROS_ERROR("FCU FAILSAFE");
-    else
-      ROS_INFO("FAILSAFE RECOVERED");
-    prev_failsafe_status = heartbeat.system_status;
+    ROS_ERROR("FC ERROR %d", status_msg.error_code);
+    prev_error_code = status_msg.error_code;
   }
 
   // Print if change in control mode
-  if (heartbeat.custom_mode != prev_control_mode)
+  if (prev_control_mode != status_msg.control_mode)
   {
     std::string mode_string;
-    switch (heartbeat.custom_mode)
+    switch (status_msg.control_mode)
     {
       case MODE_PASS_THROUGH:
         mode_string = "PASS_THROUGH";
@@ -197,8 +228,22 @@ void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
         mode_string = "UNKNOWN";
     }
     ROS_WARN_STREAM("FCU now in " << mode_string << " mode");
-    prev_control_mode = heartbeat.custom_mode;
+    prev_control_mode = status_msg.control_mode;
   }
+
+  // Build the status message and send it
+  fcu_common::Status out_status;
+  out_status.header.stamp = ros::Time::now();
+  out_status.armed = status_msg.status & ROSFLIGHT_STATUS_ARMED;
+  out_status.failsafe = status_msg.status & ROSFLIGHT_STATUS_IN_FAILSAFE;
+  out_status.rc_override = status_msg.status & ROSFLIGHT_STATUS_RC_OVERRIDE;
+  out_status.num_errors = status_msg.num_errors;
+  out_status.loop_time_us = status_msg.loop_time_us;
+  if (status_pub_.getTopic().empty())
+  {
+    status_pub_ = nh_.advertise<fcu_common::Status>("status", 1);
+  }
+  status_pub_.publish(out_status);
 }
 
 void fcuIO::handle_command_ack_msg(const mavlink_message_t &msg)
