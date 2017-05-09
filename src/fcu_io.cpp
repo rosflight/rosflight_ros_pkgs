@@ -54,6 +54,10 @@ fcuIO::fcuIO()
   mavrosflight_->param.request_params();
   param_timer_ = nh_.createTimer(ros::Duration(1.0), &fcuIO::paramTimerCallback, this);
 
+  // request version information
+  request_version();
+  version_timer_ = nh_.createTimer(ros::Duration(1.0), &fcuIO::versionTimerCallback, this);
+
   // initialize latched "unsaved parameters" message value
   std_msgs::Bool unsaved_msg;
   unsaved_msg.data = false;
@@ -118,6 +122,9 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
       break;
     case MAVLINK_MSG_ID_SMALL_SONAR:
       handle_small_sonar(msg);
+      break;
+    case MAVLINK_MSG_ID_ROSFLIGHT_VERSION:
+      handle_version_msg(msg);
       break;
     default:
       ROS_DEBUG("fcu_io: Got unhandled mavlink message ID %d", msg.msgid);
@@ -627,6 +634,25 @@ void fcuIO::handle_small_sonar(const mavlink_message_t &msg)
   sonar_pub_.publish(alt_msg);
 }
 
+void fcuIO::handle_version_msg(const mavlink_message_t &msg)
+{
+  version_timer_.stop();
+
+  mavlink_rosflight_version_t version;
+  mavlink_msg_rosflight_version_decode(&msg, &version);
+
+  std_msgs::String version_msg;
+  version_msg.data = version.version;
+
+  if (version_pub_.getTopic().empty())
+  {
+    version_pub_ = nh_.advertise<std_msgs::String>("version", 1, true);
+  }
+  version_pub_.publish(version_msg);
+
+  ROS_INFO("Firmware version: %s", version.version);
+}
+
 void fcuIO::commandCallback(fcu_common::Command::ConstPtr msg)
 {
   //! \todo these are hard-coded to match right now; may want to replace with something more robust
@@ -726,6 +752,18 @@ void fcuIO::paramTimerCallback(const ros::TimerEvent &e)
     ROS_INFO("Received %d of %d parameters. Requesting missing parameters...",
              mavrosflight_->param.get_params_received(), mavrosflight_->param.get_num_params());
   }
+}
+
+void fcuIO::versionTimerCallback(const ros::TimerEvent &e)
+{
+  request_version();
+}
+
+void fcuIO::request_version()
+{
+  mavlink_message_t msg;
+  mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_SEND_VERSION);
+  mavrosflight_->serial.send_message(msg);
 }
 
 bool fcuIO::calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)

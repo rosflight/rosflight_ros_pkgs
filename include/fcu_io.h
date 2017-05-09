@@ -14,11 +14,14 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float32.h>
 #include <std_msgs/Int32.h>
+#include <std_msgs/String.h>
+
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/FluidPressure.h>
 #include <sensor_msgs/MagneticField.h>
 #include <sensor_msgs/Temperature.h>
 #include <sensor_msgs/Range.h>
+
 #include <std_srvs/Trigger.h>
 
 #include <fcu_common/Attitude.h>
@@ -36,6 +39,7 @@
 #include <mavrosflight/mavrosflight.h>
 #include <mavrosflight/mavlink_listener_interface.h>
 #include <mavrosflight/param_listener_interface.h>
+
 #include <geometry_msgs/Quaternion.h>
 
 namespace fcu_io
@@ -73,6 +77,7 @@ private:
   void handle_named_value_float_msg(const mavlink_message_t &msg);
   void handle_named_command_struct_msg(const mavlink_message_t &msg);
   void handle_small_sonar(const mavlink_message_t &msg);
+  void handle_version_msg(const mavlink_message_t &msg);
 
   // ROS message callbacks
   void commandCallback(fcu_common::Command::ConstPtr msg);
@@ -93,8 +98,11 @@ private:
 
   // timer callbacks
   void paramTimerCallback(const ros::TimerEvent &e);
+  void versionTimerCallback(const ros::TimerEvent &e);
 
   // helpers
+  void request_version();
+
   template<class T> inline T saturate(T value, T min, T max)
   {
     return value < min ? min : (value > max ? max : value);
@@ -117,6 +125,7 @@ private:
   ros::Publisher attitude_pub_;
   ros::Publisher euler_pub_;
   ros::Publisher status_pub_;
+  ros::Publisher version_pub_;
   std::map<std::string, ros::Publisher> named_value_int_pubs_;
   std::map<std::string, ros::Publisher> named_value_float_pubs_;
   std::map<std::string, ros::Publisher> named_command_struct_pubs_;
@@ -135,6 +144,7 @@ private:
   ros::ServiceServer reboot_srv_;
 
   ros::Timer param_timer_;
+  ros::Timer version_timer_;
 
   geometry_msgs::Quaternion attitude_quat_;
 
