@@ -1,4 +1,4 @@
- cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 2.8.3)
 project(fcu_common)
 
 ## Find catkin macros and libraries
@@ -23,6 +23,7 @@ add_message_files(
   Airspeed.msg
   Attitude.msg
   State.msg
+  Status.msg
 )
 
 generate_messages(
