@@ -14,7 +14,10 @@
 
 namespace fcu_io
 {
-fcuIO::fcuIO()
+fcuIO::fcuIO() :
+  prev_status_(0),
+  prev_error_code_(0),
+  prev_control_mode_(0)
 {
   command_sub_ = nh_.subscribe("command", 1, &fcuIO::commandCallback, this);
 
@@ -165,17 +168,14 @@ void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
 
 void fcuIO::handle_status_msg(const mavlink_message_t &msg)
 {
-  static uint8_t prev_status = 0;
-  static uint8_t prev_error_code = 0;
-  static uint8_t prev_control_mode = 0;
   mavlink_rosflight_status_t status_msg;
   mavlink_msg_rosflight_status_decode(&msg, &status_msg);
 
   // Print if change to status
-  if (prev_status != status_msg.status)
+  if (prev_status_ != status_msg.status)
   {
     // armed state check
-    if (prev_status & ROSFLIGHT_STATUS_ARMED != status_msg.status & ROSFLIGHT_STATUS_ARMED)
+    if ((prev_status_ & ROSFLIGHT_STATUS_ARMED) != (status_msg.status & ROSFLIGHT_STATUS_ARMED))
     {
       if (status_msg.status & ROSFLIGHT_STATUS_ARMED)
         ROS_WARN("FCU ARMED");
@@ -184,40 +184,43 @@ void fcuIO::handle_status_msg(const mavlink_message_t &msg)
     }
 
     // failsafe check
-    if (prev_status & ROSFLIGHT_STATUS_IN_FAILSAFE != status_msg.status & ROSFLIGHT_STATUS_IN_FAILSAFE)
+    if ((prev_status_ & ROSFLIGHT_STATUS_IN_FAILSAFE) != (status_msg.status & ROSFLIGHT_STATUS_IN_FAILSAFE))
     {
       if (status_msg.status & ROSFLIGHT_STATUS_IN_FAILSAFE)
         ROS_ERROR("FCU FAILSAFE");
       else
-        ROS_INFO("FAILSAFE RECOVERED");
+        ROS_INFO("FCU FAILSAFE RECOVERED");
     }
 
-    if (prev_status & ROSFLIGHT_STATUS_RC_OVERRIDE != status_msg.status & ROSFLIGHT_STATUS_RC_OVERRIDE)
+    // rc override check
+    if ((prev_status_ & ROSFLIGHT_STATUS_RC_OVERRIDE) != (status_msg.status & ROSFLIGHT_STATUS_RC_OVERRIDE))
     {
       if (status_msg.status & ROSFLIGHT_STATUS_RC_OVERRIDE)
         ROS_WARN("RC override active");
       else
         ROS_WARN("Returned to computer control");
     }
-    if (prev_status & ROSFLIGHT_STATUS_OFFBOARD_CONTROL_ACTIVE != status_msg.status & ROSFLIGHT_STATUS_OFFBOARD_CONTROL_ACTIVE)
+
+    // offboard control check
+    if ((prev_status_ & ROSFLIGHT_STATUS_OFFBOARD_CONTROL_ACTIVE) != (status_msg.status & ROSFLIGHT_STATUS_OFFBOARD_CONTROL_ACTIVE))
     {
       if (status_msg.status & ROSFLIGHT_STATUS_OFFBOARD_CONTROL_ACTIVE)
-        ROS_WARN("Computer Control active");
+        ROS_WARN("Computer control active");
       else
-        ROS_WARN("Computer Control Lost");
+        ROS_WARN("Computer control lost");
     }
-    prev_status = status_msg.status;
+    prev_status_ = status_msg.status;
   }
 
   // Print if got error code
-  if (prev_error_code != status_msg.error_code)
+  if (prev_error_code_ != status_msg.error_code)
   {
-    ROS_ERROR("FC ERROR %d", status_msg.error_code);
-    prev_error_code = status_msg.error_code;
+    ROS_ERROR("FCU ERROR 0x%02x", status_msg.error_code);
+    prev_error_code_ = status_msg.error_code;
   }
 
   // Print if change in control mode
-  if (prev_control_mode != status_msg.control_mode)
+  if (prev_control_mode_ != status_msg.control_mode)
   {
     std::string mode_string;
     switch (status_msg.control_mode)
@@ -235,7 +238,7 @@ void fcuIO::handle_status_msg(const mavlink_message_t &msg)
         mode_string = "UNKNOWN";
     }
     ROS_WARN_STREAM("FCU now in " << mode_string << " mode");
-    prev_control_mode = status_msg.control_mode;
+    prev_control_mode_ = status_msg.control_mode;
   }
 
   // Build the status message and send it
