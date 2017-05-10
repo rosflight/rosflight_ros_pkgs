@@ -147,9 +147,9 @@ private:
   ros::Timer version_timer_;
 
   geometry_msgs::Quaternion attitude_quat_;
-  uint8_t prev_status_ = 0;
-  uint8_t prev_error_code_ = 0;
-  uint8_t prev_control_mode_ = 0;
+  uint8_t prev_status_;
+  uint8_t prev_error_code_;
+  uint8_t prev_control_mode_;
 
   std::string frame_id_;
 

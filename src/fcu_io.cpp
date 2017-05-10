@@ -14,7 +14,10 @@
 
 namespace fcu_io
 {
-fcuIO::fcuIO()
+fcuIO::fcuIO() :
+  prev_status_(0),
+  prev_error_code_(0),
+  prev_control_mode_(0)
 {
   command_sub_ = nh_.subscribe("command", 1, &fcuIO::commandCallback, this);
 
@@ -186,7 +189,7 @@ void fcuIO::handle_status_msg(const mavlink_message_t &msg)
       if (status_msg.status & ROSFLIGHT_STATUS_IN_FAILSAFE)
         ROS_ERROR("FCU FAILSAFE");
       else
-        ROS_INFO("FAILSAFE RECOVERED");
+        ROS_INFO("FCU FAILSAFE RECOVERED");
     }
 
     // rc override check
@@ -202,9 +205,9 @@ void fcuIO::handle_status_msg(const mavlink_message_t &msg)
     if ((prev_status_ & ROSFLIGHT_STATUS_OFFBOARD_CONTROL_ACTIVE) != (status_msg.status & ROSFLIGHT_STATUS_OFFBOARD_CONTROL_ACTIVE))
     {
       if (status_msg.status & ROSFLIGHT_STATUS_OFFBOARD_CONTROL_ACTIVE)
-        ROS_WARN("Computer Control active");
+        ROS_WARN("Computer control active");
       else
-        ROS_WARN("Computer Control Lost");
+        ROS_WARN("Computer control lost");
     }
     prev_status_ = status_msg.status;
   }
@@ -212,7 +215,7 @@ void fcuIO::handle_status_msg(const mavlink_message_t &msg)
   // Print if got error code
   if (prev_error_code_ != status_msg.error_code)
   {
-    ROS_ERROR("FC ERROR %d", status_msg.error_code);
+    ROS_ERROR("FCU ERROR 0x%02x", status_msg.error_code);
     prev_error_code_ = status_msg.error_code;
   }
 
