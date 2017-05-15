@@ -2,3 +2,9 @@
 *.swp
 *.bak
 *.user
+.DS_Store
+.cproject
+.project
+.settings
+*.pyc
+*.gch

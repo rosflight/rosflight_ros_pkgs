@@ -1,0 +1,24 @@
+<!-- This is a launch file that runs the bare minimum requirements to get -->
+<!-- gazebo running.  It requires a relative_nav::Command on /command -->
+<!-- to move the hex, and outputs imu, altimeter, laserscan and RGBD images -->
+<!-- as well as a relative_nav::FilterState message on /global_state  -->
+<!-- a geometry_msgs::StampedTransform on /mocap to imitate motion capture -->
+
+
+<launch>
+  <!-- Joy -->
+  <node name="rc" pkg="fcu_common" type="joy" output="screen">
+    <param name="F_axis" value="0"/>
+    <param name="x_axis" value="1"/>
+    <param name="y_axis" value="2"/>
+    <param name="z_axis" value="4"/>
+
+    <param name="x_sign" value="-1"/>
+    <param name="y_sign" value="-1"/>
+    <param name="z_sign" value="-1"/>
+    <param name="F_sign" value="-1"/>
+  </node>
+  <node name="joy" pkg="joy" type="joy_node">
+    <param name="autorepeat_rate" value="100"/>
+  </node>
+</launch>
