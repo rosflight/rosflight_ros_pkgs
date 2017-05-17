@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "fcu_common/joy.h"
+#include "rosflight_common/joy.h"
 #include "gazebo_msgs/SetModelState.h"
 #include "std_srvs/Empty.h"
 
@@ -59,7 +59,7 @@ Joy::Joy()
   pnh.param<double>("max_xvel", max_.xvel, 1.5);
   pnh.param<double>("max_yvel", max_.yvel, 1.5);
   pnh.param<double>("max_zvel", max_.zvel, 1.5);
-  command_msg_.mode = pnh.param<int>("control_mode", (int)fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE);
+  command_msg_.mode = pnh.param<int>("control_mode", (int)rosflight_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE);
 
   pnh.param<double>("reset_pos_x", reset_pose_.position.x, 0.0);
   pnh.param<double>("reset_pos_y", reset_pose_.position.y, 0.0);
@@ -82,7 +82,7 @@ Joy::Joy()
   pnh.param<int>("button_pause", buttons_.pause.index, 8);
   pnh.param<int>("button_override", buttons_.override.index, 8);
 
-  command_pub_ = nh_.advertise<fcu_common::Command>(command_topic_, 10);
+  command_pub_ = nh_.advertise<rosflight_common::Command>(command_topic_, 10);
 
   command_msg_.x = 0;
   command_msg_.y = 0;
@@ -150,7 +150,7 @@ void Joy::ResumeSimulation()
   last_time_ = ros::Time::now().toSec();
 }
 
-void Joy::APCommandCallback(const fcu_common::CommandConstPtr &msg)
+void Joy::APCommandCallback(const rosflight_common::CommandConstPtr &msg)
 {
   autopilot_command_ = *msg;
 }
@@ -195,23 +195,23 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
   if (msg->buttons[buttons_.mode.index] == 0 && buttons_.mode.prev_value == 1)
   {
     command_msg_.mode = (command_msg_.mode + 1) % 6;
-    if (command_msg_.mode == fcu_common::Command::MODE_PASS_THROUGH)
+    if (command_msg_.mode == rosflight_common::Command::MODE_PASS_THROUGH)
     {
       ROS_INFO("Passthrough");
     }
-    else if (command_msg_.mode == fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE)
+    else if (command_msg_.mode == rosflight_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE)
     {
       ROS_INFO("Angle Mode");
     }
-    else if (command_msg_.mode == fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE)
+    else if (command_msg_.mode == rosflight_common::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE)
     {
       ROS_INFO("Altitude Mode");
     }
-    else if (command_msg_.mode == fcu_common::Command::MODE_XVEL_YVEL_YAWRATE_ALTITUDE)
+    else if (command_msg_.mode == rosflight_common::Command::MODE_XVEL_YVEL_YAWRATE_ALTITUDE)
     {
       ROS_INFO("Velocity Mode");
     }
-    else if (command_msg_.mode == fcu_common::Command::MODE_XPOS_YPOS_YAW_ALTITUDE)
+    else if (command_msg_.mode == rosflight_common::Command::MODE_XPOS_YPOS_YAW_ALTITUDE)
     {
       ROS_INFO("Position Mode");
     }
@@ -232,7 +232,7 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
 
     switch (command_msg_.mode)
     {
-    case fcu_common::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
+    case rosflight_common::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
       command_msg_.x *= max_.roll_rate;
       command_msg_.y *= max_.pitch_rate;
       command_msg_.z *= max_.yaw_rate;
@@ -246,7 +246,7 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
       }
       break;
 
-    case fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE:
+    case rosflight_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE:
       command_msg_.x *= max_.roll;
       command_msg_.y *= max_.pitch;
       command_msg_.z *= max_.yaw_rate;
@@ -260,7 +260,7 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
       }
       break;
 
-    case fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
+    case rosflight_common::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
       command_msg_.x *= max_.roll;
       command_msg_.y *= max_.pitch;
       command_msg_.z *= max_.yaw_rate;
@@ -269,7 +269,7 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
       command_msg_.F = current_altitude_setpoint_;
       break;
 
-    case fcu_common::Command::MODE_XVEL_YVEL_YAWRATE_ALTITUDE:
+    case rosflight_common::Command::MODE_XVEL_YVEL_YAWRATE_ALTITUDE:
     {
       // Remember that roll affects y velocity and pitch affects -x velocity
       double original_x = command_msg_.x;
@@ -282,7 +282,7 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
       break;
     }
 
-    case fcu_common::Command::MODE_XPOS_YPOS_YAW_ALTITUDE:
+    case rosflight_common::Command::MODE_XPOS_YPOS_YAW_ALTITUDE:
       // Integrate all axes
       // (Remember that roll affects y velocity and pitch affects -x velocity)
       current_x_setpoint_ -= dt * max_.xvel * command_msg_.y;
@@ -314,7 +314,7 @@ void Joy::Publish()
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "fcu_common_joy");
+  ros::init(argc, argv, "rosflight_common_joy");
   Joy joy;
 
   ros::spin();

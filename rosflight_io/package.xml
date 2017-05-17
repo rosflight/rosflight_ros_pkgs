@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>fcu_io</name>
+  <name>rosflight_io</name>
   <version>0.0.0</version>
   <description>Package for interfacing to the ROSflight autopilot firmware over MAVLink</description>
 
@@ -11,14 +11,13 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <depend>fcu_common</depend>
+  <depend>rosflight_common</depend>
   <depend>roscpp</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>cmake_modules</depend>
 
   <build_depend>message_generation</build_depend>
-
   <exec_depend>message_runtime</exec_depend>
 
   <export>

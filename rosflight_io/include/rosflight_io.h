@@ -1,10 +1,10 @@
 /**
- * \file fcu_io.h
+ * \file rosflight_io.h
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#ifndef FCU_IO_MAVROSFLIGHT_ROS_H
-#define FCU_IO_MAVROSFLIGHT_ROS_H
+#ifndef ROSFLIGHT_IO_MAVROSFLIGHT_ROS_H
+#define ROSFLIGHT_IO_MAVROSFLIGHT_ROS_H
 
 #include <map>
 #include <string>
@@ -24,17 +24,17 @@
 
 #include <std_srvs/Trigger.h>
 
-#include <fcu_common/Attitude.h>
-#include <fcu_common/Barometer.h>
-#include <fcu_common/Airspeed.h>
-#include <fcu_common/Command.h>
-#include <fcu_common/OutputRaw.h>
-#include <fcu_common/RCRaw.h>
-#include <fcu_common/Status.h>
+#include <rosflight_common/Attitude.h>
+#include <rosflight_common/Barometer.h>
+#include <rosflight_common/Airspeed.h>
+#include <rosflight_common/Command.h>
+#include <rosflight_common/OutputRaw.h>
+#include <rosflight_common/RCRaw.h>
+#include <rosflight_common/Status.h>
 
-#include <fcu_io/ParamFile.h>
-#include <fcu_io/ParamGet.h>
-#include <fcu_io/ParamSet.h>
+#include <rosflight_io/ParamFile.h>
+#include <rosflight_io/ParamGet.h>
+#include <rosflight_io/ParamSet.h>
 
 #include <mavrosflight/mavrosflight.h>
 #include <mavrosflight/mavlink_listener_interface.h>
@@ -42,16 +42,16 @@
 
 #include <geometry_msgs/Quaternion.h>
 
-namespace fcu_io
+namespace rosflight_io
 {
 
-class fcuIO :
+class rosflightIO :
   public mavrosflight::MavlinkListenerInterface,
   public mavrosflight::ParamListenerInterface
 {
 public:
-  fcuIO();
-  ~fcuIO();
+  rosflightIO();
+  ~rosflightIO();
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
 
@@ -80,14 +80,14 @@ private:
   void handle_version_msg(const mavlink_message_t &msg);
 
   // ROS message callbacks
-  void commandCallback(fcu_common::Command::ConstPtr msg);
+  void commandCallback(rosflight_common::Command::ConstPtr msg);
 
   // ROS service callbacks
-  bool paramGetSrvCallback(fcu_io::ParamGet::Request &req, fcu_io::ParamGet::Response &res);
-  bool paramSetSrvCallback(fcu_io::ParamSet::Request &req, fcu_io::ParamSet::Response &res);
+  bool paramGetSrvCallback(rosflight_io::ParamGet::Request &req, rosflight_io::ParamGet::Response &res);
+  bool paramSetSrvCallback(rosflight_io::ParamSet::Request &req, rosflight_io::ParamSet::Response &res);
   bool paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool paramSaveToFileCallback(fcu_io::ParamFile::Request &req, fcu_io::ParamFile::Response &res);
-  bool paramLoadFromFileCallback(fcu_io::ParamFile::Request &req, fcu_io::ParamFile::Response &res);
+  bool paramSaveToFileCallback(rosflight_io::ParamFile::Request &req, rosflight_io::ParamFile::Response &res);
+  bool paramLoadFromFileCallback(rosflight_io::ParamFile::Request &req, rosflight_io::ParamFile::Response &res);
   bool calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
@@ -158,6 +158,6 @@ private:
   mavrosflight::sensors::Mag mag_;
 };
 
-} // namespace fcu_io
+} // namespace rosflight_io
 
-#endif // FCU_IO_MAVROSFLIGHT_ROS_H
+#endif // ROSFLIGHT_IO_MAVROSFLIGHT_ROS_H

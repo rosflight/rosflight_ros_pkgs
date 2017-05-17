@@ -1,5 +1,5 @@
 /**
- * \file fcu_io.cpp
+ * \file rosflight_io.cpp
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
@@ -10,34 +10,33 @@
 #include <eigen3/Eigen/Dense>
 #include <tf/tf.h>
 
-#include "fcu_io.h"
+#include "rosflight_io.h"
 
-namespace fcu_io
+namespace rosflight_io
 {
-fcuIO::fcuIO() :
+rosflightIO::rosflightIO() :
   prev_status_(0),
   prev_error_code_(0),
   prev_control_mode_(0)
 {
-  command_sub_ = nh_.subscribe("command", 1, &fcuIO::commandCallback, this);
+  command_sub_ = nh_.subscribe("command", 1, &rosflightIO::commandCallback, this);
 
   unsaved_params_pub_ = nh_.advertise<std_msgs::Bool>("unsaved_params", 1, true);
 
-  param_get_srv_ = nh_.advertiseService("param_get", &fcuIO::paramGetSrvCallback, this);
-  param_set_srv_ = nh_.advertiseService("param_set", &fcuIO::paramSetSrvCallback, this);
-  param_write_srv_ = nh_.advertiseService("param_write", &fcuIO::paramWriteSrvCallback, this);
-  param_save_to_file_srv_ = nh_.advertiseService("param_save_to_file", &fcuIO::paramSaveToFileCallback, this);
-  param_load_from_file_srv_ = nh_.advertiseService("param_load_from_file", &fcuIO::paramLoadFromFileCallback, this);
-  imu_calibrate_bias_srv_ = nh_.advertiseService("calibrate_imu", &fcuIO::calibrateImuBiasSrvCallback, this);
-//  imu_calibrate_temp_srv_ = nh_.advertiseService("calibrate_imu_temp", &fcuIO::calibrateImuTempSrvCallback, this);
-  calibrate_rc_srv_ = nh_.advertiseService("calibrate_rc_trim", &fcuIO::calibrateRCTrimSrvCallback, this);
-  reboot_srv_ = nh_.advertiseService("reboot", &fcuIO::rebootSrvCallback, this);
+  param_get_srv_ = nh_.advertiseService("param_get", &rosflightIO::paramGetSrvCallback, this);
+  param_set_srv_ = nh_.advertiseService("param_set", &rosflightIO::paramSetSrvCallback, this);
+  param_write_srv_ = nh_.advertiseService("param_write", &rosflightIO::paramWriteSrvCallback, this);
+  param_save_to_file_srv_ = nh_.advertiseService("param_save_to_file", &rosflightIO::paramSaveToFileCallback, this);
+  param_load_from_file_srv_ = nh_.advertiseService("param_load_from_file", &rosflightIO::paramLoadFromFileCallback, this);
+  imu_calibrate_bias_srv_ = nh_.advertiseService("calibrate_imu", &rosflightIO::calibrateImuBiasSrvCallback, this);
+//  imu_calibrate_temp_srv_ = nh_.advertiseService("calibrate_imu_temp", &rosflightIO::calibrateImuTempSrvCallback, this);
+  calibrate_rc_srv_ = nh_.advertiseService("calibrate_rc_trim", &rosflightIO::calibrateRCTrimSrvCallback, this);
+  reboot_srv_ = nh_.advertiseService("reboot", &rosflightIO::rebootSrvCallback, this);
 
   ros::NodeHandle nh_private("~");
   std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
   int baud_rate = nh_private.param<int>("baud_rate", 921600);
 
-  ROS_INFO("FCU_IO");
   ROS_INFO("Connecting to %s, at %d baud", port.c_str(), baud_rate);
 
   try
@@ -55,11 +54,11 @@ fcuIO::fcuIO() :
 
   // request the param list
   mavrosflight_->param.request_params();
-  param_timer_ = nh_.createTimer(ros::Duration(1.0), &fcuIO::paramTimerCallback, this);
+  param_timer_ = nh_.createTimer(ros::Duration(1.0), &rosflightIO::paramTimerCallback, this);
 
   // request version information
   request_version();
-  version_timer_ = nh_.createTimer(ros::Duration(1.0), &fcuIO::versionTimerCallback, this);
+  version_timer_ = nh_.createTimer(ros::Duration(1.0), &rosflightIO::versionTimerCallback, this);
 
   // initialize latched "unsaved parameters" message value
   std_msgs::Bool unsaved_msg;
@@ -72,12 +71,12 @@ fcuIO::fcuIO() :
   mag_.set_refence_magnetic_field_strength(magnetic_field_strength);
 }
 
-fcuIO::~fcuIO()
+rosflightIO::~rosflightIO()
 {
   delete mavrosflight_;
 }
 
-void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
+void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
 {
   switch (msg.msgid)
   {
@@ -130,22 +129,22 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
       handle_version_msg(msg);
       break;
     default:
-      ROS_DEBUG("fcu_io: Got unhandled mavlink message ID %d", msg.msgid);
+      ROS_DEBUG("rosflight_io: Got unhandled mavlink message ID %d", msg.msgid);
       break;
   }
 }
 
-void fcuIO::on_new_param_received(std::string name, double value)
+void rosflightIO::on_new_param_received(std::string name, double value)
 {
   ROS_INFO("Got parameter %s with value %g", name.c_str(), value);
 }
 
-void fcuIO::on_param_value_updated(std::string name, double value)
+void rosflightIO::on_param_value_updated(std::string name, double value)
 {
   ROS_INFO("Parameter %s has new value %g", name.c_str(), value);
 }
 
-void fcuIO::on_params_saved_change(bool unsaved_changes)
+void rosflightIO::on_params_saved_change(bool unsaved_changes)
 {
   std_msgs::Bool msg;
   msg.data = unsaved_changes;
@@ -161,12 +160,12 @@ void fcuIO::on_params_saved_change(bool unsaved_changes)
   }
 }
 
-void fcuIO::handle_heartbeat_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_heartbeat_msg(const mavlink_message_t &msg)
 {
-  ROS_INFO_ONCE("Got HEARTBEAT, connected.");  
+  ROS_INFO_ONCE("Got HEARTBEAT, connected.");
 }
 
-void fcuIO::handle_status_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_status_msg(const mavlink_message_t &msg)
 {
   mavlink_rosflight_status_t status_msg;
   mavlink_msg_rosflight_status_decode(&msg, &status_msg);
@@ -178,18 +177,18 @@ void fcuIO::handle_status_msg(const mavlink_message_t &msg)
     if ((prev_status_ & ROSFLIGHT_STATUS_ARMED) != (status_msg.status & ROSFLIGHT_STATUS_ARMED))
     {
       if (status_msg.status & ROSFLIGHT_STATUS_ARMED)
-        ROS_WARN("FCU ARMED");
+        ROS_WARN("Autopilot ARMED");
       else
-        ROS_WARN("FCU_DISARMED");
+        ROS_WARN("Autopilot DISARMED");
     }
 
     // failsafe check
     if ((prev_status_ & ROSFLIGHT_STATUS_IN_FAILSAFE) != (status_msg.status & ROSFLIGHT_STATUS_IN_FAILSAFE))
     {
       if (status_msg.status & ROSFLIGHT_STATUS_IN_FAILSAFE)
-        ROS_ERROR("FCU FAILSAFE");
+        ROS_ERROR("Autopilot FAILSAFE");
       else
-        ROS_INFO("FCU FAILSAFE RECOVERED");
+        ROS_INFO("Autopilot FAILSAFE RECOVERED");
     }
 
     // rc override check
@@ -215,7 +214,7 @@ void fcuIO::handle_status_msg(const mavlink_message_t &msg)
   // Print if got error code
   if (prev_error_code_ != status_msg.error_code)
   {
-    ROS_ERROR("FCU ERROR 0x%02x", status_msg.error_code);
+    ROS_ERROR("Autopilot ERROR 0x%02x", status_msg.error_code);
     prev_error_code_ = status_msg.error_code;
   }
 
@@ -237,12 +236,12 @@ void fcuIO::handle_status_msg(const mavlink_message_t &msg)
       default:
         mode_string = "UNKNOWN";
     }
-    ROS_WARN_STREAM("FCU now in " << mode_string << " mode");
+    ROS_WARN_STREAM("Autopilot now in " << mode_string << " mode");
     prev_control_mode_ = status_msg.control_mode;
   }
 
   // Build the status message and send it
-  fcu_common::Status out_status;
+  rosflight_common::Status out_status;
   out_status.header.stamp = ros::Time::now();
   out_status.armed = status_msg.status & ROSFLIGHT_STATUS_ARMED;
   out_status.failsafe = status_msg.status & ROSFLIGHT_STATUS_IN_FAILSAFE;
@@ -251,12 +250,12 @@ void fcuIO::handle_status_msg(const mavlink_message_t &msg)
   out_status.loop_time_us = status_msg.loop_time_us;
   if (status_pub_.getTopic().empty())
   {
-    status_pub_ = nh_.advertise<fcu_common::Status>("status", 1);
+    status_pub_ = nh_.advertise<rosflight_common::Status>("status", 1);
   }
   status_pub_.publish(out_status);
 }
 
-void fcuIO::handle_command_ack_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_command_ack_msg(const mavlink_message_t &msg)
 {
   mavlink_rosflight_cmd_ack_t ack;
   mavlink_msg_rosflight_cmd_ack_decode(&msg, &ack);
@@ -271,7 +270,7 @@ void fcuIO::handle_command_ack_msg(const mavlink_message_t &msg)
   }
 }
 
-void fcuIO::handle_statustext_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_statustext_msg(const mavlink_message_t &msg)
 {
   mavlink_statustext_t status;
   mavlink_msg_statustext_decode(&msg, &status);
@@ -287,27 +286,27 @@ void fcuIO::handle_statustext_msg(const mavlink_message_t &msg)
     case MAV_SEVERITY_ALERT:
     case MAV_SEVERITY_CRITICAL:
     case MAV_SEVERITY_ERROR:
-      ROS_ERROR("[FCU]: %s", c_str);
+      ROS_ERROR("[Autopilot]: %s", c_str);
       break;
     case MAV_SEVERITY_WARNING:
-      ROS_WARN("[FCU]: %s", c_str);
+      ROS_WARN("[Autopilot]: %s", c_str);
       break;
     case MAV_SEVERITY_NOTICE:
     case MAV_SEVERITY_INFO:
-      ROS_INFO("[FCU]: %s", c_str);
+      ROS_INFO("[Autopilot]: %s", c_str);
       break;
     case MAV_SEVERITY_DEBUG:
-      ROS_DEBUG("[FCU]: %s", c_str);
+      ROS_DEBUG("[Autopilot]: %s", c_str);
       break;
   }
 }
 
-void fcuIO::handle_attitude_quaternion_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_attitude_quaternion_msg(const mavlink_message_t &msg)
 {
   mavlink_attitude_quaternion_t attitude;
   mavlink_msg_attitude_quaternion_decode(&msg, &attitude);
 
-  fcu_common::Attitude attitude_msg;
+  rosflight_common::Attitude attitude_msg;
   attitude_msg.header.stamp = mavrosflight_->time.get_ros_time_ms(attitude.time_boot_ms);
   attitude_msg.attitude.w = attitude.q1;
   attitude_msg.attitude.x = attitude.q2;
@@ -327,7 +326,7 @@ void fcuIO::handle_attitude_quaternion_msg(const mavlink_message_t &msg)
 
   if (attitude_pub_.getTopic().empty())
   {
-    attitude_pub_ = nh_.advertise<fcu_common::Attitude>("attitude", 1);
+    attitude_pub_ = nh_.advertise<rosflight_common::Attitude>("attitude", 1);
   }
   if (euler_pub_.getTopic().empty())
   {
@@ -337,7 +336,7 @@ void fcuIO::handle_attitude_quaternion_msg(const mavlink_message_t &msg)
   euler_pub_.publish(euler_msg);
 }
 
-void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_small_imu_msg(const mavlink_message_t &msg)
 {
   mavlink_small_imu_t imu;
   mavlink_msg_small_imu_decode(&msg, &imu);
@@ -392,12 +391,12 @@ void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
   }
 }
 
-void fcuIO::handle_rosflight_output_raw_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_rosflight_output_raw_msg(const mavlink_message_t &msg)
 {
   mavlink_rosflight_output_raw_t servo;
   mavlink_msg_rosflight_output_raw_decode(&msg, &servo);
 
-  fcu_common::OutputRaw out_msg;
+  rosflight_common::OutputRaw out_msg;
   out_msg.header.stamp = mavrosflight_->time.get_ros_time_us(servo.stamp);
   for (int i = 0; i < 8; i++)
   {
@@ -406,17 +405,17 @@ void fcuIO::handle_rosflight_output_raw_msg(const mavlink_message_t &msg)
 
   if (output_raw_pub_.getTopic().empty())
   {
-    output_raw_pub_ = nh_.advertise<fcu_common::OutputRaw>("output_raw", 1);
+    output_raw_pub_ = nh_.advertise<rosflight_common::OutputRaw>("output_raw", 1);
   }
   output_raw_pub_.publish(out_msg);
 }
 
-void fcuIO::handle_rc_channels_raw_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_rc_channels_raw_msg(const mavlink_message_t &msg)
 {
   mavlink_rc_channels_raw_t rc;
   mavlink_msg_rc_channels_raw_decode(&msg, &rc);
 
-  fcu_common::RCRaw out_msg;
+  rosflight_common::RCRaw out_msg;
   out_msg.header.stamp = mavrosflight_->time.get_ros_time_ms(rc.time_boot_ms);
 
   out_msg.values[0] = rc.chan1_raw;
@@ -430,17 +429,17 @@ void fcuIO::handle_rc_channels_raw_msg(const mavlink_message_t &msg)
 
   if (rc_raw_pub_.getTopic().empty())
   {
-    rc_raw_pub_ = nh_.advertise<fcu_common::RCRaw>("rc_raw", 1);
+    rc_raw_pub_ = nh_.advertise<rosflight_common::RCRaw>("rc_raw", 1);
   }
   rc_raw_pub_.publish(out_msg);
 }
 
-void fcuIO::handle_diff_pressure_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_diff_pressure_msg(const mavlink_message_t &msg)
 {
   mavlink_diff_pressure_t diff;
   mavlink_msg_diff_pressure_decode(&msg, &diff);
 
-  fcu_common::Airspeed airspeed_msg;
+  rosflight_common::Airspeed airspeed_msg;
   airspeed_msg.header.stamp = ros::Time::now();
   airspeed_msg.velocity = diff.velocity;
   airspeed_msg.differential_pressure = diff.diff_pressure;
@@ -448,17 +447,17 @@ void fcuIO::handle_diff_pressure_msg(const mavlink_message_t &msg)
 
   if(calibrate_airspeed_srv_.getService().empty())
   {
-    calibrate_airspeed_srv_ = nh_.advertiseService("calibrate_airspeed", &fcuIO::calibrateAirspeedSrvCallback, this);
+    calibrate_airspeed_srv_ = nh_.advertiseService("calibrate_airspeed", &rosflightIO::calibrateAirspeedSrvCallback, this);
   }
 
   if (diff_pressure_pub_.getTopic().empty())
   {
-    diff_pressure_pub_ = nh_.advertise<fcu_common::Airspeed>("airspeed", 1);
+    diff_pressure_pub_ = nh_.advertise<rosflight_common::Airspeed>("airspeed", 1);
   }
   diff_pressure_pub_.publish(airspeed_msg);
 }
 
-void fcuIO::handle_named_value_int_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_named_value_int_msg(const mavlink_message_t &msg)
 {
   mavlink_named_value_int_t val;
   mavlink_msg_named_value_int_decode(&msg, &val);
@@ -481,7 +480,7 @@ void fcuIO::handle_named_value_int_msg(const mavlink_message_t &msg)
   named_value_int_pubs_[name].publish(out_msg);
 }
 
-void fcuIO::handle_named_value_float_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_named_value_float_msg(const mavlink_message_t &msg)
 {
   mavlink_named_value_float_t val;
   mavlink_msg_named_value_float_decode(&msg, &val);
@@ -504,7 +503,7 @@ void fcuIO::handle_named_value_float_msg(const mavlink_message_t &msg)
   named_value_float_pubs_[name].publish(out_msg);
 }
 
-void fcuIO::handle_named_command_struct_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_named_command_struct_msg(const mavlink_message_t &msg)
 {
   mavlink_named_command_struct_t command;
   mavlink_msg_named_command_struct_decode(&msg, &command);
@@ -518,18 +517,18 @@ void fcuIO::handle_named_command_struct_msg(const mavlink_message_t &msg)
   if (named_command_struct_pubs_.find(name) == named_command_struct_pubs_.end())
   {
     ros::NodeHandle nh;
-    named_command_struct_pubs_[name] = nh.advertise<fcu_common::Command>("named_value/command_struct/" + name, 1);
+    named_command_struct_pubs_[name] = nh.advertise<rosflight_common::Command>("named_value/command_struct/" + name, 1);
   }
 
-  fcu_common::Command command_msg;
+  rosflight_common::Command command_msg;
   if (command.type == MODE_PASS_THROUGH)
-    command_msg.mode = fcu_common::Command::MODE_PASS_THROUGH;
+    command_msg.mode = rosflight_common::Command::MODE_PASS_THROUGH;
   else if (command.type == MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE)
-    command_msg.mode = fcu_common::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
+    command_msg.mode = rosflight_common::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
   else if (command.type == MODE_ROLL_PITCH_YAWRATE_THROTTLE)
-    command_msg.mode = fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE;
+    command_msg.mode = rosflight_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE;
   else if (command.type == MODE_ROLL_PITCH_YAWRATE_ALTITUDE)
-    command_msg.mode = fcu_common::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE;
+    command_msg.mode = rosflight_common::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE;
 
   command_msg.ignore = command.ignore;
   command_msg.x = command.x;
@@ -539,12 +538,12 @@ void fcuIO::handle_named_command_struct_msg(const mavlink_message_t &msg)
   named_command_struct_pubs_[name].publish(command_msg);
 }
 
-void fcuIO::handle_small_baro_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_small_baro_msg(const mavlink_message_t &msg)
 {
   mavlink_small_baro_t baro;
   mavlink_msg_small_baro_decode(&msg, &baro);
 
-  fcu_common::Barometer baro_msg;
+  rosflight_common::Barometer baro_msg;
   baro_msg.header.stamp = ros::Time::now();
   baro_msg.altitude = baro.altitude;
   baro_msg.pressure = baro.pressure;
@@ -553,17 +552,17 @@ void fcuIO::handle_small_baro_msg(const mavlink_message_t &msg)
   // If we are getting barometer messages, then we should publish the barometer calibration service
   if(calibrate_baro_srv_.getService().empty())
   {
-    calibrate_baro_srv_ = nh_.advertiseService("calibrate_baro", &fcuIO::calibrateBaroSrvCallback, this);
+    calibrate_baro_srv_ = nh_.advertiseService("calibrate_baro", &rosflightIO::calibrateBaroSrvCallback, this);
   }
 
   if (baro_pub_.getTopic().empty())
   {
-    baro_pub_ = nh_.advertise<fcu_common::Barometer>("baro", 1);
+    baro_pub_ = nh_.advertise<rosflight_common::Barometer>("baro", 1);
   }
   baro_pub_.publish(baro_msg);
 }
 
-void fcuIO::handle_small_mag_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_small_mag_msg(const mavlink_message_t &msg)
 {
   mavlink_small_mag_t mag;
   mavlink_msg_small_mag_decode(&msg, &mag);
@@ -603,7 +602,7 @@ void fcuIO::handle_small_mag_msg(const mavlink_message_t &msg)
 
   if(mag_calibrate_srv_.getService().empty())
   {
-    mag_calibrate_srv_ = nh_.advertiseService("calibrate_mag", &fcuIO::calibrateMagSrvCallback, this);
+    mag_calibrate_srv_ = nh_.advertiseService("calibrate_mag", &rosflightIO::calibrateMagSrvCallback, this);
   }
 
   if (valid)
@@ -616,7 +615,7 @@ void fcuIO::handle_small_mag_msg(const mavlink_message_t &msg)
   }
 }
 
-void fcuIO::handle_small_sonar(const mavlink_message_t &msg)
+void rosflightIO::handle_small_sonar(const mavlink_message_t &msg)
 {
   mavlink_small_sonar_t sonar;
   mavlink_msg_small_sonar_decode(&msg, &sonar);
@@ -637,7 +636,7 @@ void fcuIO::handle_small_sonar(const mavlink_message_t &msg)
   sonar_pub_.publish(alt_msg);
 }
 
-void fcuIO::handle_version_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_version_msg(const mavlink_message_t &msg)
 {
   version_timer_.stop();
 
@@ -656,7 +655,7 @@ void fcuIO::handle_version_msg(const mavlink_message_t &msg)
   ROS_INFO("Firmware version: %s", version.version);
 }
 
-void fcuIO::commandCallback(fcu_common::Command::ConstPtr msg)
+void rosflightIO::commandCallback(rosflight_common::Command::ConstPtr msg)
 {
   //! \todo these are hard-coded to match right now; may want to replace with something more robust
   OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE)msg->mode;
@@ -688,19 +687,19 @@ void fcuIO::commandCallback(fcu_common::Command::ConstPtr msg)
   mavrosflight_->serial.send_message(mavlink_msg);
 }
 
-bool fcuIO::paramGetSrvCallback(fcu_io::ParamGet::Request &req, fcu_io::ParamGet::Response &res)
+bool rosflightIO::paramGetSrvCallback(rosflight_io::ParamGet::Request &req, rosflight_io::ParamGet::Response &res)
 {
   res.exists = mavrosflight_->param.get_param_value(req.name, &res.value);
   return true;
 }
 
-bool fcuIO::paramSetSrvCallback(fcu_io::ParamSet::Request &req, fcu_io::ParamSet::Response &res)
+bool rosflightIO::paramSetSrvCallback(rosflight_io::ParamSet::Request &req, rosflight_io::ParamSet::Response &res)
 {
   res.exists = mavrosflight_->param.set_param_value(req.name, req.value);
   return true;
 }
 
-bool fcuIO::paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+bool rosflightIO::paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
   res.success = mavrosflight_->param.write_params();
   if (!res.success)
@@ -711,19 +710,19 @@ bool fcuIO::paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Tri
   return true;
 }
 
-bool fcuIO::paramSaveToFileCallback(ParamFile::Request &req, ParamFile::Response &res)
+bool rosflightIO::paramSaveToFileCallback(ParamFile::Request &req, ParamFile::Response &res)
 {
   res.success = mavrosflight_->param.save_to_file(req.filename);
   return true;
 }
 
-bool fcuIO::paramLoadFromFileCallback(ParamFile::Request &req, ParamFile::Response &res)
+bool rosflightIO::paramLoadFromFileCallback(ParamFile::Request &req, ParamFile::Response &res)
 {
   res.success = mavrosflight_->param.load_from_file(req.filename);
   return true;
 }
 
-bool fcuIO::calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+bool rosflightIO::calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_ACCEL_CALIBRATION);
@@ -733,7 +732,7 @@ bool fcuIO::calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srv
   return true;
 }
 
-bool fcuIO::calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+bool rosflightIO::calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_RC_CALIBRATION);
@@ -742,7 +741,7 @@ bool fcuIO::calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs
   return true;
 }
 
-void fcuIO::paramTimerCallback(const ros::TimerEvent &e)
+void rosflightIO::paramTimerCallback(const ros::TimerEvent &e)
 {
   if (mavrosflight_->param.got_all_params())
   {
@@ -757,19 +756,19 @@ void fcuIO::paramTimerCallback(const ros::TimerEvent &e)
   }
 }
 
-void fcuIO::versionTimerCallback(const ros::TimerEvent &e)
+void rosflightIO::versionTimerCallback(const ros::TimerEvent &e)
 {
   request_version();
 }
 
-void fcuIO::request_version()
+void rosflightIO::request_version()
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_SEND_VERSION);
   mavrosflight_->serial.send_message(msg);
 }
 
-bool fcuIO::calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+bool rosflightIO::calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
   // First, reset the previous calibration
   mavrosflight_->param.set_param_value("ACC_X_TEMP_COMP", 0);
@@ -788,7 +787,7 @@ bool fcuIO::calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srv
 }
 
 
-bool fcuIO::calibrateMagSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+bool rosflightIO::calibrateMagSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
   // reset the previous calibration
   sleep(0.1); // delay (seconds)
@@ -812,7 +811,7 @@ bool fcuIO::calibrateMagSrvCallback(std_srvs::Trigger::Request &req, std_srvs::T
   return true;
 }
 
-bool fcuIO::calibrateAirspeedSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+bool rosflightIO::calibrateAirspeedSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_AIRSPEED_CALIBRATION);
@@ -821,7 +820,7 @@ bool fcuIO::calibrateAirspeedSrvCallback(std_srvs::Trigger::Request &req, std_sr
   return true;
 }
 
-bool fcuIO::calibrateBaroSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+bool rosflightIO::calibrateBaroSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_BARO_CALIBRATION);
@@ -830,7 +829,7 @@ bool fcuIO::calibrateBaroSrvCallback(std_srvs::Trigger::Request &req, std_srvs::
   return true;
 }
 
-bool fcuIO::rebootSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+bool rosflightIO::rebootSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_REBOOT);
@@ -839,5 +838,4 @@ bool fcuIO::rebootSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger
   return true;
 }
 
-} // namespace fcu_io
-
+} // namespace rosflight_io

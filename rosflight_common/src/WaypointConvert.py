@@ -126,7 +126,7 @@ def to_meters(originLat, originLong, originAlt, newLat, newLong, newAlt, flag):
 #######################################################################################################################
 
 #Sample Output:
-#tpool2@FB280-09:/media/tpool2/TAYLORPOOL/AUVSI/fcu_common/src$ python WaypointConvert.py 
+#tpool2@FB280-09:/media/tpool2/TAYLORPOOL/AUVSI/rosflight_common/src$ python WaypointConvert.py 
 #Degrees Minutes Seconds Format
 #N90-90-76.45
 #91.5212361111

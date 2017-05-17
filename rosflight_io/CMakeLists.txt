@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(fcu_io)
+project(rosflight_io)
 
 # Use this to make Eigen run REALLY fast
 set(CMAKE_CXX_FLAGS "-std=c++0x -fopenmp -O3")
 
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
-  fcu_common
+  rosflight_common
   message_generation
   roscpp
   sensor_msgs
@@ -74,14 +74,13 @@ target_link_libraries(mavrosflight
   ${YAML_LIBRARIES}
 )
 
-# fcu_io_node
-add_executable(fcu_io_node
-  src/fcu_io_node.cpp
-  src/fcu_io.cpp
+# rosflight_io_node
+add_executable(rosflight_io_node
+  src/rosflight_io_node.cpp
+  src/rosflight_io.cpp
 )
-add_dependencies(fcu_io_node fcu_common_generate_messages_cpp)
-add_dependencies(fcu_io_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(fcu_io_node
+add_dependencies(rosflight_io_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(rosflight_io_node
   mavrosflight
   ${catkin_LIBRARIES}
   ${Boost_LIBRARES}
@@ -92,7 +91,7 @@ target_link_libraries(fcu_io_node
 #############
 
 # Mark executables and libraries for installation
-install(TARGETS mavrosflight fcu_io_node
+install(TARGETS mavrosflight rosflight_io_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

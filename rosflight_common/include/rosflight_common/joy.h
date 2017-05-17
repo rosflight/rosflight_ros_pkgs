@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef fcu_common_joy_JOY_H_
-#define fcu_common_joy_JOY_H_
+#ifndef rosflight_common_joy_JOY_H_
+#define rosflight_common_joy_JOY_H_
 
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
-#include <fcu_common/Command.h>
+#include <rosflight_common/Command.h>
 #include "gazebo_msgs/ModelState.h"
 
 struct Axes
@@ -90,9 +90,9 @@ private:
   bool paused = true;
   double equilibrium_thrust_;
 
-  fcu_common::Command command_msg_;
-  fcu_common::Command autopilot_command_;
-  //  fcu_common::ExtendedCommand extended_command_msg_;
+  rosflight_common::Command command_msg_;
+  rosflight_common::Command autopilot_command_;
+  //  rosflight_common::ExtendedCommand extended_command_msg_;
   sensor_msgs::Joy current_joy_;
 
   Max max_;
@@ -117,11 +117,11 @@ private:
   void ResumeSimulation();
 
   void JoyCallback(const sensor_msgs::JoyConstPtr &msg);
-  void APCommandCallback(const fcu_common::CommandConstPtr &msg);
+  void APCommandCallback(const rosflight_common::CommandConstPtr &msg);
   void Publish();
 
 public:
   Joy();
 };
 
-#endif  // fcu_common_joy_JOY_H_
+#endif  // rosflight_common_joy_JOY_H_
