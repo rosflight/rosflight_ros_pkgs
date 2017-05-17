@@ -10,7 +10,7 @@
 #include <eigen3/Eigen/Dense>
 #include <tf/tf.h>
 
-#include "rosflight_io.h"
+#include <rosflight_io/rosflight_io.h>
 
 namespace rosflight_io
 {
@@ -127,6 +127,10 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
       break;
     case MAVLINK_MSG_ID_ROSFLIGHT_VERSION:
       handle_version_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_PARAM_VALUE:
+    case MAVLINK_MSG_ID_TIMESYNC:
+      // silently ignore (handled elsewhere)
       break;
     default:
       ROS_DEBUG("rosflight_io: Got unhandled mavlink message ID %d", msg.msgid);
