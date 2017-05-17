@@ -6,7 +6,7 @@
  * https://gist.github.com/yoggy/3323808
  */
 
-#include <mavrosflight/mavlink_serial.h>
+#include <rosflight/mavrosflight/mavlink_serial.h>
 
 #include <boost/thread.hpp>
 #include <ros/ros.h>

@@ -3,7 +3,7 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#include <mavrosflight/sensors/differential_pressure.h>
+#include <rosflight/mavrosflight/sensors/differential_pressure.h>
 
 namespace mavrosflight
 {

@@ -3,7 +3,7 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#include <mavrosflight/param.h>
+#include <rosflight/mavrosflight/param.h>
 
 namespace mavrosflight
 {

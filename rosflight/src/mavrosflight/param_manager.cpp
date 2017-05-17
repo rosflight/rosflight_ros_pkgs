@@ -3,7 +3,7 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#include <mavrosflight/param_manager.h>
+#include <rosflight/mavrosflight/param_manager.h>
 #include <ros/ros.h>
 #include <yaml-cpp/yaml.h>
 

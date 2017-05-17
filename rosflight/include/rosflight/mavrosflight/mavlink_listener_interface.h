@@ -6,7 +6,7 @@
 #ifndef MAVROSFLIGHT_MAVLINK_LISTENER_INTERFACE_H
 #define MAVROSFLIGHT_MAVLINK_LISTENER_INTERFACE_H
 
-#include <mavrosflight/mavlink_bridge.h>
+#include <rosflight/mavrosflight/mavlink_bridge.h>
 
 namespace mavrosflight
 {

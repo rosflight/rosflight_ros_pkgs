@@ -6,7 +6,7 @@
 #ifndef MAVROSFLIGHT_SENSORS_DIFF_PRESSURE_H
 #define MAVROSFLIGHT_SENSORS_DIFF_PRESSURE_H
 
-#include <mavrosflight/mavlink_bridge.h>
+#include <rosflight/mavrosflight/mavlink_bridge.h>
 
 namespace mavrosflight
 {

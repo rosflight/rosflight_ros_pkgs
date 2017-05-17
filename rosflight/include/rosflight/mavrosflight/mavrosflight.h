@@ -6,16 +6,16 @@
 #ifndef MAVROSFLIGHT_MAVROSFLIGHT_H
 #define MAVROSFLIGHT_MAVROSFLIGHT_H
 
-#include <mavrosflight/mavlink_bridge.h>
-#include <mavrosflight/mavlink_serial.h>
-#include <mavrosflight/param_manager.h>
-#include <mavrosflight/time_manager.h>
+#include <rosflight/mavrosflight/mavlink_bridge.h>
+#include <rosflight/mavrosflight/mavlink_serial.h>
+#include <rosflight/mavrosflight/param_manager.h>
+#include <rosflight/mavrosflight/time_manager.h>
 
-#include <mavrosflight/mavlink_listener_interface.h>
-#include <mavrosflight/param_listener_interface.h>
+#include <rosflight/mavrosflight/mavlink_listener_interface.h>
+#include <rosflight/mavrosflight/param_listener_interface.h>
 
-#include <mavrosflight/sensors/imu.h>
-#include <mavrosflight/sensors/mag.h>
+#include <rosflight/mavrosflight/sensors/imu.h>
+#include <rosflight/mavrosflight/sensors/mag.h>
 
 #include <boost/function.hpp>
 

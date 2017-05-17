@@ -6,7 +6,7 @@
  * https://gist.github.com/yoggy/3323808
  */
 
-#include "mavrosflight/mavrosflight.h"
+#include <rosflight/mavrosflight/mavrosflight.h>
 
 #include <ros/ros.h>
 

@@ -6,8 +6,8 @@
 #ifndef MAVROSFLIGHT_PARAM_H
 #define MAVROSFLIGHT_PARAM_H
 
-#include <mavrosflight/mavlink_bridge.h>
-#include <mavrosflight/mavlink_serial.h>
+#include <rosflight/mavrosflight/mavlink_bridge.h>
+#include <rosflight/mavrosflight/mavlink_serial.h>
 
 #include <yaml-cpp/yaml.h>
 

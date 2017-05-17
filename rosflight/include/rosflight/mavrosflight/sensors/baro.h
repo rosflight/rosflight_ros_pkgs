@@ -6,7 +6,7 @@
 #ifndef MAVROSFLIGHT_SENSORS_BARO_H
 #define MAVROSFLIGHT_SENSORS_BARO_H
 
-#include <mavrosflight/mavlink_bridge.h>
+#include <rosflight/mavrosflight/mavlink_bridge.h>
 
 namespace mavrosflight
 {

@@ -6,9 +6,9 @@
 #ifndef MAVROSFLIGHT_TIME_MANAGER_H
 #define MAVROSFLIGHT_TIME_MANAGER_H
 
-#include <mavrosflight/mavlink_bridge.h>
-#include <mavrosflight/mavlink_listener_interface.h>
-#include <mavrosflight/mavlink_serial.h>
+#include <rosflight/mavrosflight/mavlink_bridge.h>
+#include <rosflight/mavrosflight/mavlink_listener_interface.h>
+#include <rosflight/mavrosflight/mavlink_serial.h>
 
 #include <ros/ros.h>
 
