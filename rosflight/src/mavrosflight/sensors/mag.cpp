@@ -3,7 +3,7 @@
  * \author Jerel Nielsen <jerel.nielsen@gmail.com>
  */
 
-#include <mavrosflight/sensors/mag.h>
+#include <rosflight/mavrosflight/sensors/mag.h>
 #include <ros/ros.h>
 
 namespace mavrosflight
@@ -101,7 +101,7 @@ Eigen::MatrixXd Mag::ellipsoidRANSAC(std::deque<Eigen::Vector3d> meas, int iters
     // initialize random number generator
     std::random_device random_dev;
     std::mt19937 generator(random_dev());
-    
+
     // RANSAC to find a good ellipsoid fit
     int inlier_count_best = 0; // number of inliers for best fit
     std::deque<Eigen::Vector3d> inliers_best; // container for inliers to best fit
@@ -136,7 +136,7 @@ Eigen::MatrixXd Mag::ellipsoidRANSAC(std::deque<Eigen::Vector3d> meas, int iters
 
         double I = a + b + c;
         double J = a * b + b * c + a *c - f * f - g * g - h * h;
-        
+
         if (4 * J - I * I <= 0)
         {
             continue;
@@ -164,7 +164,7 @@ Eigen::MatrixXd Mag::ellipsoidRANSAC(std::deque<Eigen::Vector3d> meas, int iters
         std::deque<Eigen::Vector3d> inliers;
         for (unsigned j = 0; j < meas.size(); j++)
         {
-            // compute the vector from ellipsoid center to surface along 
+            // compute the vector from ellipsoid center to surface along
             // measurement vector and a one from the perturbed measurement
             Eigen::Vector3d perturb = Eigen::Vector3d::Ones() * 0.1;
             Eigen::Vector3d r_int = intersect(meas[j], r_e, Q, ub, k);
@@ -283,7 +283,7 @@ void Mag::eigSort(Eigen::MatrixXd &w, Eigen::MatrixXd &v)
 
 /*
     This function gets ellipsoid parameters via least squares on ellipsoidal data
-    according to the paper: Li, Qingde, and John G. Griffiths. "Least squares ellipsoid 
+    according to the paper: Li, Qingde, and John G. Griffiths. "Least squares ellipsoid
     specific fitting." Geometric modeling and processing, 2004. proceedings. IEEE, 2004.
 */
 Eigen::MatrixXd Mag::ellipsoidLS(std::deque<Eigen::Vector3d> meas)
@@ -357,7 +357,7 @@ Eigen::MatrixXd Mag::ellipsoidLS(std::deque<Eigen::Vector3d> meas)
 
 /*
     This function compute magnetometer calibration parameters according to Section 5.3 of the
-    paper: Renaudin, Valérie, Muhammad Haris Afzal, and Gérard Lachapelle. "Complete triaxis 
+    paper: Renaudin, Valérie, Muhammad Haris Afzal, and Gérard Lachapelle. "Complete triaxis
     magnetometer calibration in the magnetic domain." Journal of sensors 2010 (2010).
 */
 void Mag::magCal(Eigen::MatrixXd u, Eigen::MatrixXd &A, Eigen::MatrixXd &bb)

@@ -7,7 +7,7 @@
 #ifndef MAVROSFLIGHT_SENSORS_IMU_H
 #define MAVROSFLIGHT_SENSORS_IMU_H
 
-#include <mavrosflight/mavlink_bridge.h>
+#include <rosflight/mavrosflight/mavlink_bridge.h>
 #include <eigen3/Eigen/Core>
 #include <deque>
 

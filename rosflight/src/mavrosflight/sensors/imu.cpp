@@ -4,7 +4,7 @@
  * \author James Jackson <me@jamessjackson.com>
  */
 
-#include <mavrosflight/sensors/imu.h>
+#include <rosflight/mavrosflight/sensors/imu.h>
 #include <ros/ros.h>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>

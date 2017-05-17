@@ -36,9 +36,9 @@
 #include <rosflight_io/ParamGet.h>
 #include <rosflight_io/ParamSet.h>
 
-#include <mavrosflight/mavrosflight.h>
-#include <mavrosflight/mavlink_listener_interface.h>
-#include <mavrosflight/param_listener_interface.h>
+#include <rosflight/mavrosflight/mavrosflight.h>
+#include <rosflight/mavrosflight/mavlink_listener_interface.h>
+#include <rosflight/mavrosflight/param_listener_interface.h>
 
 #include <geometry_msgs/Quaternion.h>
 

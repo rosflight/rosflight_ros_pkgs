@@ -3,14 +3,14 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#include <mavrosflight/serial_exception.h>
+#include <rosflight/mavrosflight/serial_exception.h>
 #include <string>
 #include <stdint.h>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
 #include <tf/tf.h>
 
-#include <rosflight_io/rosflight_io.h>
+#include <rosflight/rosflight_io.h>
 
 namespace rosflight_io
 {

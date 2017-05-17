@@ -6,7 +6,7 @@
  */
 
 #include <ros/ros.h>
-#include <rosflight_io/rosflight_io.h>
+#include <rosflight/rosflight_io.h>
 
 int main(int argc, char **argv)
 {

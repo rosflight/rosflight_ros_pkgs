@@ -6,9 +6,9 @@
 #ifndef MAVROSFLIGHT_MAVLINK_SERIAL_H
 #define MAVROSFLIGHT_MAVLINK_SERIAL_H
 
-#include <mavrosflight/mavlink_bridge.h>
-#include <mavrosflight/mavlink_listener_interface.h>
-#include <mavrosflight/serial_exception.h>
+#include <rosflight/mavrosflight/mavlink_bridge.h>
+#include <rosflight/mavrosflight/mavlink_listener_interface.h>
+#include <rosflight/mavrosflight/serial_exception.h>
 
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
