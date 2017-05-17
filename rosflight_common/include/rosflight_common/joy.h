@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef rosflight_common_joy_JOY_H_
-#define rosflight_common_joy_JOY_H_
+#ifndef ROSFLIGHT_COMMON_JOY_JOY_H
+#define ROSFLIGHT_COMMON_JOY_JOY_H
 
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
@@ -92,7 +92,6 @@ private:
 
   rosflight_common::Command command_msg_;
   rosflight_common::Command autopilot_command_;
-  //  rosflight_common::ExtendedCommand extended_command_msg_;
   sensor_msgs::Joy current_joy_;
 
   Max max_;
@@ -124,4 +123,4 @@ public:
   Joy();
 };
 
-#endif  // rosflight_common_joy_JOY_H_
+#endif  // ROSFLIGHT_COMMON_JOY_JOY_H
