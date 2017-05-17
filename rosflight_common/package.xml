@@ -8,6 +8,10 @@
 
   <license>TODO</license>
 
+  <url type="website">http://rosflight.org</url>
+  <url type="repository">https://github.com/rosflight/rosflight</url>
+  <url type="bugtracker">https://github.com/rosflight/rosflight/issues</url>
+
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>geometry_msgs</depend>
