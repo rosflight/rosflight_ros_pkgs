@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(rosflight_io)
+project(rosflight)
 
 # Use this to make Eigen run REALLY fast
 set(CMAKE_CXX_FLAGS "-std=c++0x -fopenmp -O3")
@@ -19,7 +19,7 @@ pkg_check_modules(YAML yaml-cpp)
 ###################################
 ## catkin specific configuration ##
 ###################################
-# 
+#
 # add_message_files(
 #   FILES
 #   Command.msg
@@ -75,12 +75,12 @@ target_link_libraries(mavrosflight
 )
 
 # rosflight_io_node
-add_executable(rosflight_io_node
+add_executable(rosflight_io
   src/rosflight_io_node.cpp
   src/rosflight_io.cpp
 )
-add_dependencies(rosflight_io_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(rosflight_io_node
+add_dependencies(rosflight_io ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(rosflight_io
   mavrosflight
   ${catkin_LIBRARIES}
   ${Boost_LIBRARES}
@@ -91,7 +91,7 @@ target_link_libraries(rosflight_io_node
 #############
 
 # Mark executables and libraries for installation
-install(TARGETS mavrosflight rosflight_io_node
+install(TARGETS mavrosflight rosflight_io
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

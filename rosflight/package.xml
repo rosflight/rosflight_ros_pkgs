@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>rosflight_io</name>
+  <name>rosflight</name>
   <version>0.0.0</version>
   <description>Package for interfacing to the ROSflight autopilot firmware over MAVLink</description>
 
