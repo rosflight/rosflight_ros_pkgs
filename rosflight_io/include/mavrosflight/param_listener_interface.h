@@ -19,7 +19,7 @@ class ParamListenerInterface
 public:
 
   /**
-   * \brief Called when a parameter is received from the fcu for the first time
+   * \brief Called when a parameter is received from the autopilot for the first time
    * \param name The name of the parameter
    * \param value The value of the parameter
    */
@@ -34,7 +34,7 @@ public:
 
   /**
    * \brief Called when the status of whether there are unsaved parameters changes
-   * \param unsaved_changes True if there are parameters that have been set but not saved on the fcu
+   * \param unsaved_changes True if there are parameters that have been set but not saved on the autopilot
    */
   virtual void on_params_saved_change(bool unsaved_changes) = 0;
 };

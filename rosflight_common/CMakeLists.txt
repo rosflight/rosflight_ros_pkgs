@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(fcu_common)
+project(rosflight_common)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -35,23 +35,22 @@ generate_messages(
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES fcu_common
+  LIBRARIES rosflight_common
   CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs geometry_msgs
 )
 
 add_definitions(-std=c++11)
 
-add_library(fcu_common
-  src/simple_pid.cpp
-  include/fcu_common/simple_pid.h
-  src/turbomath.cpp
-  include/fcu_common/turbomath.h
-)
-target_link_libraries(fcu_common ${catkin_LIBRARIES})
-
 include_directories(include)
 include_directories(${catkin_INCLUDE_DIRS})
 
+add_library(rosflight_common
+  src/simple_pid.cpp
+  src/turbomath.cpp
+)
+add_dependencies(${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(rosflight_common ${catkin_LIBRARIES})
+
 add_executable(joy src/joy.cpp)
-add_dependencies(joy fcu_common_generate_messages_cpp)
+add_dependencies(joy ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(joy ${catkin_LIBRARIES})
