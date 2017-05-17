@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rosflight_pkgs</name>
+  <version>0.0.0</version>
+  <description>ROS interface for the ROSflight autpilot stack</description>
+
+  <maintainer email="daniel.koch@byu.edu">Daniel Koch</maintainer>
+
+  <license>TODO</license>
+
+  <url type="website">http://rosflight.org</url>
+  <url type="repository">https://github.com/rosflight/rosflight</url>
+  <url type="bugtracker">https://github.com/rosflight/rosflight/issues</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rosflight</exec_depend>
+  <exec_depend>rosflight_msgs</exec_depend>
+  <exec_depend>rosflight_utils</exec_depend>
+
+  <export>
+    <metapackage/>
+  </export>
+</package>
