@@ -6,15 +6,25 @@ set(CMAKE_CXX_FLAGS "-std=c++0x -fopenmp -O3")
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  cmake_modules
   geometry_msgs
   rosflight_msgs
   sensor_msgs
   std_msgs
 )
 find_package(Boost REQUIRED COMPONENTS system thread)
-find_package(Eigen REQUIRED)
-pkg_check_modules(YAML yaml-cpp)
+find_package(Eigen3 REQUIRED)
+find_package(yaml-cpp REQUIRED)
+# pkg_check_modules(YAML yaml-cpp)
+
+
+## Look for and clone MAVLINK if it is missing
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/include/rosflight/mavlink/v1.0/rosflight/mavlink.h)
+	message("found mavlink")
+else()
+	message("Unable to find Mavlink at ${CMAKE_CURRENT_SOURCE_DIR}/include/rosflight/mavlink/v1.0/rosflight/mavlink.h")
+	execute_process(COMMAND git submodule update --init --recursive
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endif()
 
 ###################################
 ## catkin specific configuration ##
@@ -24,7 +34,7 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES mavrosflight
   CATKIN_DEPENDS roscpp geometry_msgs rosflight_msgs sensor_msgs std_msgs
-  DEPENDS Boost Eigen yaml-cpp
+  DEPENDS Boost
 )
 
 ###########
@@ -35,8 +45,8 @@ include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
-  ${Eigen_INCLUDE_DIRS}
-  ${YAML_INCLUDEDIR}
+  ${Eigen3_INCLUDE_DIRS}
+  ${YAML_INCLUDE_DIR}
 )
 
 # mavrosflight library
