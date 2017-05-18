@@ -14,7 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(Eigen3 REQUIRED)
 find_package(yaml-cpp REQUIRED)
-# pkg_check_modules(YAML yaml-cpp)
 
 
 ## Look for and clone MAVLINK if it is missing
