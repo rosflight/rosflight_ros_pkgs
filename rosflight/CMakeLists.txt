@@ -18,9 +18,7 @@ find_package(yaml-cpp REQUIRED)
 
 
 ## Look for and clone MAVLINK if it is missing
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/include/rosflight/mavlink/v1.0/rosflight/mavlink.h)
-	message("found mavlink")
-else()
+if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/include/rosflight/mavlink/v1.0/rosflight/mavlink.h)
 	message("Unable to find Mavlink at ${CMAKE_CURRENT_SOURCE_DIR}/include/rosflight/mavlink/v1.0/rosflight/mavlink.h")
 	execute_process(COMMAND git submodule update --init --recursive
                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
