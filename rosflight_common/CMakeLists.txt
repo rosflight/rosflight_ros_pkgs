@@ -6,37 +6,14 @@ project(rosflight_common)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  std_msgs
+  rosflight_msgs
   sensor_msgs
-  geometry_msgs
-  nav_msgs
-  message_generation
-)
-
-add_message_files(
-  FILES
-  GPS.msg
-  OutputRaw.msg
-  RCRaw.msg
-  Command.msg
-  Barometer.msg
-  Airspeed.msg
-  Attitude.msg
-  State.msg
-  Status.msg
-)
-
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-  sensor_msgs
-  geometry_msgs
 )
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES rosflight_common
-  CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs geometry_msgs
+  CATKIN_DEPENDS roscpp rospy rosflight_msgs sensor_msgs
 )
 
 add_definitions(-std=c++11)

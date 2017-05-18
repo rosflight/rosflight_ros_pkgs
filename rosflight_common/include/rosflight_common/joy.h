@@ -19,7 +19,7 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
-#include <rosflight_common/Command.h>
+#include <rosflight_msgs/Command.h>
 #include "gazebo_msgs/ModelState.h"
 
 struct Axes
@@ -90,8 +90,8 @@ private:
   bool paused = true;
   double equilibrium_thrust_;
 
-  rosflight_common::Command command_msg_;
-  rosflight_common::Command autopilot_command_;
+  rosflight_msgs::Command command_msg_;
+  rosflight_msgs::Command autopilot_command_;
   sensor_msgs::Joy current_joy_;
 
   Max max_;
@@ -116,7 +116,7 @@ private:
   void ResumeSimulation();
 
   void JoyCallback(const sensor_msgs::JoyConstPtr &msg);
-  void APCommandCallback(const rosflight_common::CommandConstPtr &msg);
+  void APCommandCallback(const rosflight_msgs::CommandConstPtr &msg);
   void Publish();
 
 public:

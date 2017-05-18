@@ -5,10 +5,10 @@ project(rosflight)
 set(CMAKE_CXX_FLAGS "-std=c++0x -fopenmp -O3")
 
 find_package(catkin REQUIRED COMPONENTS
-  cmake_modules
-  rosflight_common
-  message_generation
   roscpp
+  cmake_modules
+  geometry_msgs
+  rosflight_msgs
   sensor_msgs
   std_msgs
 )
@@ -19,29 +19,11 @@ pkg_check_modules(YAML yaml-cpp)
 ###################################
 ## catkin specific configuration ##
 ###################################
-#
-# add_message_files(
-#   FILES
-#   Command.msg
-#   ServoOutputRaw.msg
-# )
-
-add_service_files(
-  FILES
-  ParamFile.srv
-  ParamGet.srv
-  ParamSet.srv
-)
-
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-)
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES mavrosflight
-  CATKIN_DEPENDS roscpp sensor_msgs std_msgs
+  CATKIN_DEPENDS roscpp geometry_msgs rosflight_msgs sensor_msgs std_msgs
   DEPENDS Boost Eigen yaml-cpp
 )
 
@@ -98,7 +80,7 @@ install(TARGETS mavrosflight rosflight_io
 )
 
 # Mark cpp header files for installation
-install(DIRECTORY include/mavrosflight/
+install(DIRECTORY include/rosflight/mavrosflight/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE

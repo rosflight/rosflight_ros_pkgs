@@ -245,7 +245,7 @@ void rosflightIO::handle_status_msg(const mavlink_message_t &msg)
   }
 
   // Build the status message and send it
-  rosflight_common::Status out_status;
+  rosflight_msgs::Status out_status;
   out_status.header.stamp = ros::Time::now();
   out_status.armed = status_msg.status & ROSFLIGHT_STATUS_ARMED;
   out_status.failsafe = status_msg.status & ROSFLIGHT_STATUS_IN_FAILSAFE;
@@ -254,7 +254,7 @@ void rosflightIO::handle_status_msg(const mavlink_message_t &msg)
   out_status.loop_time_us = status_msg.loop_time_us;
   if (status_pub_.getTopic().empty())
   {
-    status_pub_ = nh_.advertise<rosflight_common::Status>("status", 1);
+    status_pub_ = nh_.advertise<rosflight_msgs::Status>("status", 1);
   }
   status_pub_.publish(out_status);
 }
@@ -310,7 +310,7 @@ void rosflightIO::handle_attitude_quaternion_msg(const mavlink_message_t &msg)
   mavlink_attitude_quaternion_t attitude;
   mavlink_msg_attitude_quaternion_decode(&msg, &attitude);
 
-  rosflight_common::Attitude attitude_msg;
+  rosflight_msgs::Attitude attitude_msg;
   attitude_msg.header.stamp = mavrosflight_->time.get_ros_time_ms(attitude.time_boot_ms);
   attitude_msg.attitude.w = attitude.q1;
   attitude_msg.attitude.x = attitude.q2;
@@ -330,7 +330,7 @@ void rosflightIO::handle_attitude_quaternion_msg(const mavlink_message_t &msg)
 
   if (attitude_pub_.getTopic().empty())
   {
-    attitude_pub_ = nh_.advertise<rosflight_common::Attitude>("attitude", 1);
+    attitude_pub_ = nh_.advertise<rosflight_msgs::Attitude>("attitude", 1);
   }
   if (euler_pub_.getTopic().empty())
   {
@@ -400,7 +400,7 @@ void rosflightIO::handle_rosflight_output_raw_msg(const mavlink_message_t &msg)
   mavlink_rosflight_output_raw_t servo;
   mavlink_msg_rosflight_output_raw_decode(&msg, &servo);
 
-  rosflight_common::OutputRaw out_msg;
+  rosflight_msgs::OutputRaw out_msg;
   out_msg.header.stamp = mavrosflight_->time.get_ros_time_us(servo.stamp);
   for (int i = 0; i < 8; i++)
   {
@@ -409,7 +409,7 @@ void rosflightIO::handle_rosflight_output_raw_msg(const mavlink_message_t &msg)
 
   if (output_raw_pub_.getTopic().empty())
   {
-    output_raw_pub_ = nh_.advertise<rosflight_common::OutputRaw>("output_raw", 1);
+    output_raw_pub_ = nh_.advertise<rosflight_msgs::OutputRaw>("output_raw", 1);
   }
   output_raw_pub_.publish(out_msg);
 }
@@ -419,7 +419,7 @@ void rosflightIO::handle_rc_channels_raw_msg(const mavlink_message_t &msg)
   mavlink_rc_channels_raw_t rc;
   mavlink_msg_rc_channels_raw_decode(&msg, &rc);
 
-  rosflight_common::RCRaw out_msg;
+  rosflight_msgs::RCRaw out_msg;
   out_msg.header.stamp = mavrosflight_->time.get_ros_time_ms(rc.time_boot_ms);
 
   out_msg.values[0] = rc.chan1_raw;
@@ -433,7 +433,7 @@ void rosflightIO::handle_rc_channels_raw_msg(const mavlink_message_t &msg)
 
   if (rc_raw_pub_.getTopic().empty())
   {
-    rc_raw_pub_ = nh_.advertise<rosflight_common::RCRaw>("rc_raw", 1);
+    rc_raw_pub_ = nh_.advertise<rosflight_msgs::RCRaw>("rc_raw", 1);
   }
   rc_raw_pub_.publish(out_msg);
 }
@@ -443,7 +443,7 @@ void rosflightIO::handle_diff_pressure_msg(const mavlink_message_t &msg)
   mavlink_diff_pressure_t diff;
   mavlink_msg_diff_pressure_decode(&msg, &diff);
 
-  rosflight_common::Airspeed airspeed_msg;
+  rosflight_msgs::Airspeed airspeed_msg;
   airspeed_msg.header.stamp = ros::Time::now();
   airspeed_msg.velocity = diff.velocity;
   airspeed_msg.differential_pressure = diff.diff_pressure;
@@ -456,7 +456,7 @@ void rosflightIO::handle_diff_pressure_msg(const mavlink_message_t &msg)
 
   if (diff_pressure_pub_.getTopic().empty())
   {
-    diff_pressure_pub_ = nh_.advertise<rosflight_common::Airspeed>("airspeed", 1);
+    diff_pressure_pub_ = nh_.advertise<rosflight_msgs::Airspeed>("airspeed", 1);
   }
   diff_pressure_pub_.publish(airspeed_msg);
 }
@@ -521,18 +521,18 @@ void rosflightIO::handle_named_command_struct_msg(const mavlink_message_t &msg)
   if (named_command_struct_pubs_.find(name) == named_command_struct_pubs_.end())
   {
     ros::NodeHandle nh;
-    named_command_struct_pubs_[name] = nh.advertise<rosflight_common::Command>("named_value/command_struct/" + name, 1);
+    named_command_struct_pubs_[name] = nh.advertise<rosflight_msgs::Command>("named_value/command_struct/" + name, 1);
   }
 
-  rosflight_common::Command command_msg;
+  rosflight_msgs::Command command_msg;
   if (command.type == MODE_PASS_THROUGH)
-    command_msg.mode = rosflight_common::Command::MODE_PASS_THROUGH;
+    command_msg.mode = rosflight_msgs::Command::MODE_PASS_THROUGH;
   else if (command.type == MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE)
-    command_msg.mode = rosflight_common::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
+    command_msg.mode = rosflight_msgs::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
   else if (command.type == MODE_ROLL_PITCH_YAWRATE_THROTTLE)
-    command_msg.mode = rosflight_common::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE;
+    command_msg.mode = rosflight_msgs::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE;
   else if (command.type == MODE_ROLL_PITCH_YAWRATE_ALTITUDE)
-    command_msg.mode = rosflight_common::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE;
+    command_msg.mode = rosflight_msgs::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE;
 
   command_msg.ignore = command.ignore;
   command_msg.x = command.x;
@@ -547,7 +547,7 @@ void rosflightIO::handle_small_baro_msg(const mavlink_message_t &msg)
   mavlink_small_baro_t baro;
   mavlink_msg_small_baro_decode(&msg, &baro);
 
-  rosflight_common::Barometer baro_msg;
+  rosflight_msgs::Barometer baro_msg;
   baro_msg.header.stamp = ros::Time::now();
   baro_msg.altitude = baro.altitude;
   baro_msg.pressure = baro.pressure;
@@ -561,7 +561,7 @@ void rosflightIO::handle_small_baro_msg(const mavlink_message_t &msg)
 
   if (baro_pub_.getTopic().empty())
   {
-    baro_pub_ = nh_.advertise<rosflight_common::Barometer>("baro", 1);
+    baro_pub_ = nh_.advertise<rosflight_msgs::Barometer>("baro", 1);
   }
   baro_pub_.publish(baro_msg);
 }
@@ -659,7 +659,7 @@ void rosflightIO::handle_version_msg(const mavlink_message_t &msg)
   ROS_INFO("Firmware version: %s", version.version);
 }
 
-void rosflightIO::commandCallback(rosflight_common::Command::ConstPtr msg)
+void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
 {
   //! \todo these are hard-coded to match right now; may want to replace with something more robust
   OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE)msg->mode;
@@ -691,13 +691,13 @@ void rosflightIO::commandCallback(rosflight_common::Command::ConstPtr msg)
   mavrosflight_->serial.send_message(mavlink_msg);
 }
 
-bool rosflightIO::paramGetSrvCallback(rosflight_io::ParamGet::Request &req, rosflight_io::ParamGet::Response &res)
+bool rosflightIO::paramGetSrvCallback(rosflight_msgs::ParamGet::Request &req, rosflight_msgs::ParamGet::Response &res)
 {
   res.exists = mavrosflight_->param.get_param_value(req.name, &res.value);
   return true;
 }
 
-bool rosflightIO::paramSetSrvCallback(rosflight_io::ParamSet::Request &req, rosflight_io::ParamSet::Response &res)
+bool rosflightIO::paramSetSrvCallback(rosflight_msgs::ParamSet::Request &req, rosflight_msgs::ParamSet::Response &res)
 {
   res.exists = mavrosflight_->param.set_param_value(req.name, req.value);
   return true;
@@ -714,13 +714,13 @@ bool rosflightIO::paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srv
   return true;
 }
 
-bool rosflightIO::paramSaveToFileCallback(ParamFile::Request &req, ParamFile::Response &res)
+bool rosflightIO::paramSaveToFileCallback(rosflight_msgs::ParamFile::Request &req, rosflight_msgs::ParamFile::Response &res)
 {
   res.success = mavrosflight_->param.save_to_file(req.filename);
   return true;
 }
 
-bool rosflightIO::paramLoadFromFileCallback(ParamFile::Request &req, ParamFile::Response &res)
+bool rosflightIO::paramLoadFromFileCallback(rosflight_msgs::ParamFile::Request &req, rosflight_msgs::ParamFile::Response &res)
 {
   res.success = mavrosflight_->param.load_from_file(req.filename);
   return true;
