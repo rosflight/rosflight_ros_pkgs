@@ -10,7 +10,7 @@
 #include <cmath>
 #include <ros/ros.h>  // included temporarily for debug statements
 
-namespace rosflight_common
+namespace rosflight_utils
 {
 /*!
  * \brief The simplePID class is a basic, tried and true PID controller.  Only P (proportional) gains are

@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>rosflight_common</name>
+  <name>rosflight_utils</name>
   <version>0.0.0</version>
-  <description>The rosflight_common package</description>
+  <description>Supporting utilities for ROSflight packages</description>
 
   <maintainer email="gary.ellingson@byu.edu">gary</maintainer>
 

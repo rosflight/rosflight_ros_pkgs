@@ -1,4 +1,4 @@
-#include <rosflight_common/turbomath.h>
+#include <rosflight_utils/turbomath.h>
 
 #include <stdint.h>
 
