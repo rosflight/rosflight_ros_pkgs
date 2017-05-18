@@ -24,17 +24,17 @@
 
 #include <std_srvs/Trigger.h>
 
-#include <rosflight_common/Attitude.h>
-#include <rosflight_common/Barometer.h>
-#include <rosflight_common/Airspeed.h>
-#include <rosflight_common/Command.h>
-#include <rosflight_common/OutputRaw.h>
-#include <rosflight_common/RCRaw.h>
-#include <rosflight_common/Status.h>
+#include <rosflight_msgs/Attitude.h>
+#include <rosflight_msgs/Barometer.h>
+#include <rosflight_msgs/Airspeed.h>
+#include <rosflight_msgs/Command.h>
+#include <rosflight_msgs/OutputRaw.h>
+#include <rosflight_msgs/RCRaw.h>
+#include <rosflight_msgs/Status.h>
 
-#include <rosflight_io/ParamFile.h>
-#include <rosflight_io/ParamGet.h>
-#include <rosflight_io/ParamSet.h>
+#include <rosflight_msgs/ParamFile.h>
+#include <rosflight_msgs/ParamGet.h>
+#include <rosflight_msgs/ParamSet.h>
 
 #include <rosflight/mavrosflight/mavrosflight.h>
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
@@ -80,14 +80,14 @@ private:
   void handle_version_msg(const mavlink_message_t &msg);
 
   // ROS message callbacks
-  void commandCallback(rosflight_common::Command::ConstPtr msg);
+  void commandCallback(rosflight_msgs::Command::ConstPtr msg);
 
   // ROS service callbacks
-  bool paramGetSrvCallback(rosflight_io::ParamGet::Request &req, rosflight_io::ParamGet::Response &res);
-  bool paramSetSrvCallback(rosflight_io::ParamSet::Request &req, rosflight_io::ParamSet::Response &res);
+  bool paramGetSrvCallback(rosflight_msgs::ParamGet::Request &req, rosflight_msgs::ParamGet::Response &res);
+  bool paramSetSrvCallback(rosflight_msgs::ParamSet::Request &req, rosflight_msgs::ParamSet::Response &res);
   bool paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool paramSaveToFileCallback(rosflight_io::ParamFile::Request &req, rosflight_io::ParamFile::Response &res);
-  bool paramLoadFromFileCallback(rosflight_io::ParamFile::Request &req, rosflight_io::ParamFile::Response &res);
+  bool paramSaveToFileCallback(rosflight_msgs::ParamFile::Request &req, rosflight_msgs::ParamFile::Response &res);
+  bool paramLoadFromFileCallback(rosflight_msgs::ParamFile::Request &req, rosflight_msgs::ParamFile::Response &res);
   bool calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);

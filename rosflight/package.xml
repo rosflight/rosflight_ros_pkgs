@@ -15,14 +15,13 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <depend>rosflight_common</depend>
   <depend>roscpp</depend>
+  <depend>rosflight_msgs</depend>
+  <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
-  <depend>cmake_modules</depend>
 
-  <build_depend>message_generation</build_depend>
-  <exec_depend>message_runtime</exec_depend>
+  <build_depend>cmake_modules</build_depend>
 
   <export>
   </export>

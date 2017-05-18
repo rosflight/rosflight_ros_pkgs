@@ -2,7 +2,7 @@
 
 import rospy
 #from std_msgs.msg import String
-from rosflight_common.msg import FW_State, FW_Controller_Commands, FW_Attitude_Commands
+from rosflight_msgs.msg import FW_State, FW_Controller_Commands, FW_Attitude_Commands
 from rosgraph_msgs.msg import Clock
 
 #stuff we need for plotting
