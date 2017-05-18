@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(rosflight_common)
+project(rosflight_utils)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES rosflight_common
+  LIBRARIES rosflight_utils
   CATKIN_DEPENDS roscpp rospy rosflight_msgs sensor_msgs
 )
 
@@ -21,12 +21,12 @@ add_definitions(-std=c++11)
 include_directories(include)
 include_directories(${catkin_INCLUDE_DIRS})
 
-add_library(rosflight_common
+add_library(rosflight_utils
   src/simple_pid.cpp
   src/turbomath.cpp
 )
 add_dependencies(${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(rosflight_common ${catkin_LIBRARIES})
+target_link_libraries(rosflight_utils ${catkin_LIBRARIES})
 
 add_executable(joy src/joy.cpp)
 add_dependencies(joy ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

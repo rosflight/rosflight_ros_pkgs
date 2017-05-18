@@ -7,7 +7,7 @@
 
 <launch>
   <!-- Joy -->
-  <node name="rc" pkg="rosflight_common" type="joy" output="screen">
+  <node name="rc" pkg="rosflight_utils" type="joy" output="screen">
     <param name="F_axis" value="0"/>
     <param name="x_axis" value="1"/>
     <param name="y_axis" value="2"/>

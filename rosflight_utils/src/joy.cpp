@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "rosflight_common/joy.h"
-#include "gazebo_msgs/SetModelState.h"
-#include "std_srvs/Empty.h"
+#include <rosflight_utils/joy.h>
+#include <gazebo_msgs/SetModelState.h>
+#include <std_srvs/Empty.h>
 
 Joy::Joy()
 {
@@ -314,7 +314,7 @@ void Joy::Publish()
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "rosflight_common_joy");
+  ros::init(argc, argv, "rosflight_utils_joy");
   Joy joy;
 
   ros::spin();
