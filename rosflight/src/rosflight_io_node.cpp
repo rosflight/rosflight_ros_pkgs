@@ -10,7 +10,7 @@
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "rosflight_io_node");
+  ros::init(argc, argv, "rosflight_io");
   rosflight_io::rosflightIO rosflight_io;
   ros::spin();
 }
