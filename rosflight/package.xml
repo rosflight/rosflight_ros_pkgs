@@ -25,6 +25,8 @@
   <depend>eigen</depend>
   <depend>yaml-cpp</depend>
 
+  <build_depend>git</build_depend>
+
   <export>
   </export>
 </package>
