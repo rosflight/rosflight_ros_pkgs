@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rosflight_utils</name>
-  <version>0.1.1</version>
+  <version>0.1.2</version>
   <description>Supporting utilities for ROSflight packages</description>
 
   <maintainer email="gary.ellingson@byu.edu">gary</maintainer>

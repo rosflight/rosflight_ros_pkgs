@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rosflight</name>
-  <version>0.1.1</version>
+  <version>0.1.2</version>
   <description>Package for interfacing to the ROSflight autopilot firmware over MAVLink</description>
 
   <author email="daniel.koch@byu.edu">Daniel Koch</author>
