@@ -35,7 +35,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
 #include <rosflight_msgs/Command.h>
-#include "gazebo_msgs/ModelState.h"
+#include <gazebo_msgs/ModelState.h>
 
 struct Axes
 {

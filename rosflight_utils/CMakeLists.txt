@@ -6,8 +6,12 @@ project(rosflight_utils)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  gazebo_msgs
+  geometry_msgs
   rosflight_msgs
+  rosgraph_msgs
   sensor_msgs
+  std_srvs
 )
 
 catkin_package(

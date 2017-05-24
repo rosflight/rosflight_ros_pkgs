@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   rosflight_msgs
   sensor_msgs
   std_msgs
+  std_srvs
 )
 find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(Eigen3 REQUIRED)
