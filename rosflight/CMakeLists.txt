@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(rosflight)
 
 # Use this to make Eigen run REALLY fast
-set(CMAKE_CXX_FLAGS "-std=c++0x -fopenmp -O3")
+set(CMAKE_CXX_FLAGS "-std=c++0x -O3")
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
