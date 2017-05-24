@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   std_srvs
+  tf
 )
 find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(Eigen3 REQUIRED)
