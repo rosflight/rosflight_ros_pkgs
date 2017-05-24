@@ -2,6 +2,9 @@
 Changelog for package rosflight_utils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.2 (2017-05-24)
+------------------
+
 0.1.1 (2017-05-24)
 ------------------
 * Added missing dependencies

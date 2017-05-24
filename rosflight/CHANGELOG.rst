@@ -2,6 +2,12 @@
 Changelog for package rosflight
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.2 (2017-05-24)
+------------------
+* Removed OpenMP compile flag for now
+* Added missing tf dependency
+* Contributors: Daniel Koch
+
 0.1.1 (2017-05-24)
 ------------------
 * Added missing dependencies
