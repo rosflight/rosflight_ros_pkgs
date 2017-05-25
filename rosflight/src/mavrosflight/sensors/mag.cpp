@@ -187,8 +187,7 @@ Eigen::MatrixXd Mag::ellipsoidRANSAC(std::deque<Eigen::Vector3d> meas, int iters
 
         // eq. 21 of Renaudin (should be negative according to eq. 16)
         // this is the vector to the ellipsoid center
-        Eigen::Vector3d bb = -0.5 * Q.inverse() * ub;
-        Eigen::Vector3d r_e = bb;
+        Eigen::Vector3d r_e = -0.5 * Q.inverse() * ub;
 
         // count inliers and store inliers
         int inlier_count = 0;
@@ -379,9 +378,9 @@ Eigen::MatrixXd Mag::ellipsoidLS(std::deque<Eigen::Vector3d> meas)
     // compute solution vector defined in paragraph below eq. 15
     Eigen::MatrixXd u1 = V.col(0);
     Eigen::MatrixXd u2 = -S22.inverse() * S12.transpose() * u1;
-    Eigen::MatrixXd u(10, 1);
-    u.block(0, 0, 6, 1) = u1;
-    u.block(6, 0, 4, 1) = u2;
+    Eigen::Matrix<double,10,1> u;
+    u.block<6,1>(0,0) = u1;
+    u.block<4,1>(6,0) = u2;
 
     return u;
 }
