@@ -265,10 +265,10 @@ Eigen::Vector3d Mag::intersect(Eigen::Vector3d r_m, Eigen::Vector3d r_e, Eigen::
     return r_int;
 }
 
-void Mag::eigSort(Eigen::MatrixXd &w, Eigen::MatrixXd &v)
+void Mag::eigSort(Eigen::Matrix<double,6,1> &w, Eigen::Matrix<double,6,6> &v)
 {
     // create index array
-    int idx[w.cols()];
+    int idx[6];
     for (unsigned i = 0; i < w.cols(); i++)
     {
         idx[i] = i;
@@ -342,7 +342,8 @@ Eigen::MatrixXd Mag::ellipsoidLS(std::deque<Eigen::Vector3d> meas)
 
     // form the C1 matrix from eq. 7
     double k = 4;
-    Eigen::MatrixXd C1 = Eigen::MatrixXd::Zero(6, 6);
+    Eigen::Matrix<double,6,6> C1;
+    C1.setZero();
     C1(0, 0) = -1;
     C1(0, 1) = k / 2 - 1;
     C1(0, 2) = k / 2 - 1;
@@ -357,27 +358,27 @@ Eigen::MatrixXd Mag::ellipsoidLS(std::deque<Eigen::Vector3d> meas)
     C1(5, 5) = -k;
 
     // decompose D*D^T according to eq. 11
-    Eigen::MatrixXd DDt = D * D.transpose();
-    Eigen::MatrixXd S11 = DDt.block(0, 0, 6, 6);
-    Eigen::MatrixXd S12 = DDt.block(0, 6, 6, 4);
-    Eigen::MatrixXd S22 = DDt.block(6, 6, 4, 4);
+    Eigen::Matrix<double,10,10> DDt = D * D.transpose();
+    Eigen::Matrix<double,6,6> S11 = DDt.block<6,6>(0, 0);
+    Eigen::Matrix<double,6,4> S12 = DDt.block<6,4>(0, 6);
+    Eigen::Matrix<double,4,4> S22 = DDt.block<4,4>(6, 6);
 
     // solve eigensystem in eq. 15
-    Eigen::MatrixXd ES = C1.inverse() * (S11 - S12 * S22.inverse() * S12.transpose());
-    Eigen::EigenSolver<Eigen::MatrixXd> eigensolver(ES);
+    Eigen::Matrix<double,6,6> ES = C1.inverse() * (S11 - S12 * S22.inverse() * S12.transpose());
+    Eigen::EigenSolver<Eigen::Matrix<double,6,6> > eigensolver(ES);
     if (eigensolver.info() != Eigen::Success)
     {
         abort();
     }
-    Eigen::MatrixXd w = eigensolver.eigenvalues().real().transpose();
-    Eigen::MatrixXd V = eigensolver.eigenvectors().real();
+    Eigen::Matrix<double,6,1> w = eigensolver.eigenvalues().real().transpose();
+    Eigen::Matrix<double,6,6> V = eigensolver.eigenvectors().real();
 
     // sort eigenvalues and eigenvectors from most positive to most negative
     eigSort(w, V);
 
     // compute solution vector defined in paragraph below eq. 15
-    Eigen::MatrixXd u1 = V.col(0);
-    Eigen::MatrixXd u2 = -S22.inverse() * S12.transpose() * u1;
+    Eigen::Matrix<double,6,1> u1 = V.col(0);
+    Eigen::Matrix<double,4,1> u2 = -S22.inverse() * S12.transpose() * u1;
     Eigen::Matrix<double,10,1> u;
     u.block<6,1>(0,0) = u1;
     u.block<4,1>(6,0) = u2;

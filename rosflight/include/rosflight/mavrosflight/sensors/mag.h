@@ -130,7 +130,7 @@ private:
   /*
       sort eigenvalues and eigenvectors output from Eigen library
   */
-  void eigSort(Eigen::MatrixXd &w, Eigen::MatrixXd &v);
+  void eigSort(Eigen::Matrix<double,6,1> &w, Eigen::Matrix<double,6,6> &v);
 
   /*
       This function gets ellipsoid parameters via least squares on ellipsoidal data
