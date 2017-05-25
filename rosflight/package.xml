@@ -28,6 +28,7 @@
   <depend>yaml-cpp</depend>
 
   <build_depend>git</build_depend>
+  <build_depend>pkg-config</build_depend>
 
   <export>
   </export>
