@@ -19,6 +19,7 @@ add_message_files(
   Attitude.msg
   State.msg
   Status.msg
+  AuxCommand.msg
 )
 
 add_service_files(

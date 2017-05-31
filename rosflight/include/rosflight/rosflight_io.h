@@ -59,6 +59,7 @@
 #include <rosflight_msgs/Barometer.h>
 #include <rosflight_msgs/Airspeed.h>
 #include <rosflight_msgs/Command.h>
+#include <rosflight_msgs/AuxCommand.h>
 #include <rosflight_msgs/OutputRaw.h>
 #include <rosflight_msgs/RCRaw.h>
 #include <rosflight_msgs/Status.h>
@@ -112,6 +113,7 @@ private:
 
   // ROS message callbacks
   void commandCallback(rosflight_msgs::Command::ConstPtr msg);
+  void auxCommandCallback(rosflight_msgs::AuxCommand::ConstPtr msg);
 
   // ROS service callbacks
   bool paramGetSrvCallback(rosflight_msgs::ParamGet::Request &req, rosflight_msgs::ParamGet::Response &res);
@@ -142,6 +144,7 @@ private:
   ros::NodeHandle nh_;
 
   ros::Subscriber command_sub_;
+  ros::Subscriber aux_command_sub_;
 
   ros::Publisher unsaved_params_pub_;
   ros::Publisher imu_pub_;
