@@ -666,7 +666,7 @@ void rosflightIO::handle_small_sonar(const mavlink_message_t &msg)
 
   if (sonar_pub_.getTopic().empty())
   {
-    sonar_pub_ = nh_.advertise<sensor_msgs::Range>("sonar/data", 1);
+    sonar_pub_ = nh_.advertise<sensor_msgs::Range>("sonar", 1);
   }
   sonar_pub_.publish(alt_msg);
 }
