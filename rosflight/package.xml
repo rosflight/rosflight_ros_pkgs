@@ -4,10 +4,12 @@
   <version>0.1.2</version>
   <description>Package for interfacing to the ROSflight autopilot firmware over MAVLink</description>
 
-  <author email="daniel.koch@byu.edu">Daniel Koch</author>
-  <maintainer email="daniel.koch@byu.edu">Daniel Koch</maintainer>
+  <maintainer email="daniel.p.koch@gmail.com">Daniel Koch</maintainer>
 
-  <license>TODO</license>
+  <author email="daniel.p.koch@gmail.com">Daniel Koch</author>
+  <author email="superjax08@gmail.com">James Jackson</author>
+
+  <license>BSD</license>
 
   <url type="website">http://rosflight.org</url>
   <url type="repository">https://github.com/rosflight/rosflight</url>
