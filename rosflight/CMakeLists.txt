@@ -15,7 +15,9 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(Eigen3 REQUIRED)
-find_package(yaml-cpp REQUIRED)
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
 
 ## Look for and clone MAVLINK if it is missing
 if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/include/rosflight/mavlink/v1.0/.git")
@@ -46,7 +48,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
-  ${YAML_CPP_INCLUDE_DIR}
+  ${YAML_CPP_INCLUDEDIR}
 )
 
 # mavrosflight library
@@ -57,7 +59,6 @@ add_library(mavrosflight
   src/mavrosflight/param.cpp
   src/mavrosflight/time_manager.cpp
   src/mavrosflight/sensors/imu.cpp
-  src/mavrosflight/sensors/mag.cpp
 )
 add_dependencies(mavrosflight ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(mavrosflight
