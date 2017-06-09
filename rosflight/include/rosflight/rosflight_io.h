@@ -132,11 +132,13 @@ private:
 
   // helpers
   void request_version();
+  void check_error_code(uint8_t current, uint8_t previous, ROSFLIGHT_ERROR_CODE code, std::string name);
 
   template<class T> inline T saturate(T value, T min, T max)
   {
     return value < min ? min : (value > max ? max : value);
   }
+
 
   ros::NodeHandle nh_;
 

@@ -247,7 +247,12 @@ void rosflightIO::handle_status_msg(const mavlink_message_t &msg)
   // Print if got error code
   if (prev_error_code_ != status_msg.error_code)
   {
-    ROS_ERROR("Autopilot ERROR 0x%02x", status_msg.error_code);
+    check_error_code(status_msg.error_code, prev_error_code_, ROSFLIGHT_ERROR_INVALID_MIXER, "Invalid mixer");
+    check_error_code(status_msg.error_code, prev_error_code_, ROSFLIGHT_ERROR_IMU_NOT_RESPONDING, "IMU not responding");
+    check_error_code(status_msg.error_code, prev_error_code_, ROSFLIGHT_ERROR_RC_LOST, "RC lost");
+    check_error_code(status_msg.error_code, prev_error_code_, ROSFLIGHT_ERROR_UNHEALTHY_ESTIMATOR, "Unhealthy estimator");
+
+    ROS_DEBUG("Autopilot ERROR 0x%02x", status_msg.error_code);
     prev_error_code_ = status_msg.error_code;
   }
 
@@ -767,6 +772,17 @@ void rosflightIO::request_version()
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_SEND_VERSION);
   mavrosflight_->serial.send_message(msg);
+}
+
+void rosflightIO::check_error_code(uint8_t current, uint8_t previous, ROSFLIGHT_ERROR_CODE code, std::string name)
+{
+  if ((current & code) != (previous & code))
+  {
+    if (current & code)
+      ROS_ERROR("Autopilot ERROR: %s", name.c_str());
+    else
+      ROS_INFO("Autopilot RECOVERED ERROR: %s", name.c_str());
+  }
 }
 
 bool rosflightIO::calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
