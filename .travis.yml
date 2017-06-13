@@ -4,18 +4,15 @@ sudo: required
 services:
   - docker
 
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq python3-empy
-
 install:
   - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
   - sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
   - sudo apt-get update
   - sudo apt-get install python3-ros-buildfarm
+  - sudo apt-get install python3-empy
 
 before_script:
-  - mkdir prerelease_test && cd prerelease_test
+  - mkdir `mktemp -d -p .`
 
 script:
   - ../prerelease_tests.sh ${TRAVIS_PULL_REQUEST_BRANCH}
