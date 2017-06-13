@@ -11,4 +11,4 @@ install:
 
 script:
   - mkdir prerelease_test && cd prerelease_test
-  - ../prerelease_tests.sh ${TRAVIS_BRANCH}
+  - ../prerelease_tests.sh ${TRAVIS_PULL_REQUEST_BRANCH}

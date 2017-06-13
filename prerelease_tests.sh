@@ -45,6 +45,7 @@ function run_test() {
   if [ ! -f prerelease.sh ]; then
     echo_yellow "Generating prerelease scripts failed!"
     echo_red "[Failed]"
+    cat ../${TEST_NAME}-generate.log
     EXIT_CODE=2
     popd > /dev/null
     return 2
@@ -60,6 +61,7 @@ function run_test() {
     return 0
   else
     echo_red "[Failed]"
+    cat ../${TEST_NAME}-test.log
     EXIT_CODE=1
     popd > /dev/null
     return 1
