@@ -9,10 +9,10 @@ install:
   - sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
   - sudo apt-get update
   - sudo apt-get install python3-ros-buildfarm
-  - sudo apt-get install python3-empy
+  - sudo apt-get install python3-empy python-empy
 
 before_script:
-  - mkdir `mktemp -d -p .`
+  - cd `mktemp -d -p .`
 
 script:
   - ../prerelease_tests.sh ${TRAVIS_PULL_REQUEST_BRANCH}
