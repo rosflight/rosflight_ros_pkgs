@@ -11,4 +11,4 @@ install:
 
 script:
   - mkdir prerelease_test && cd prerelease_test
-  - ../prerelease_tests.sh `git rev-parse --abbrev-ref HEAD`
+  - ../prerelease_tests.sh ${TRAVIS_BRANCH}
