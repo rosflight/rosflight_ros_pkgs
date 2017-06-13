@@ -1,3 +1,4 @@
+language: cpp
 sudo: required
 services:
   - docker
@@ -9,4 +10,4 @@ install:
   - sudo apt-get install python3-ros-buildfarm
 
 script:
-  - prerelease_tests.sh
+  - ./prerelease_tests.sh
