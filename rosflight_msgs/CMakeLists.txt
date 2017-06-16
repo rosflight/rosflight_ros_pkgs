@@ -19,6 +19,7 @@ add_message_files(
   Attitude.msg
   State.msg
   Status.msg
+  Lidar.msg
 )
 
 add_service_files(

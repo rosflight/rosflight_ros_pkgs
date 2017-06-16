@@ -154,6 +154,9 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_SMALL_SONAR:
       handle_small_sonar(msg);
       break;
+    case MAVLINK_MSG_ID_LIDAR:
+      handle_lidar_msg(msg);
+      break;
     case MAVLINK_MSG_ID_ROSFLIGHT_VERSION:
       handle_version_msg(msg);
       break;
@@ -655,6 +658,21 @@ void rosflightIO::handle_version_msg(const mavlink_message_t &msg)
 
   ROS_INFO("Firmware version: %s", version.version);
 }
+
+void rosflightIO::handle_lidar_msg(const mavlink_message_t &msg)
+{
+  mavlink_lidar_t lidar;
+  mavlink_msg_lidar_decode(&msg, &lidar);
+  rosflight_msgs::Lidar lidar_msg;
+  lidar_msg.header.stamp = ros::Time::now();
+  lidar_msg.altitude = lidar.altitude;
+  if (lidar_pub_.getTopic().empty())
+  {
+    lidar_pub_ = nh_.advertise<rosflight_msgs::Lidar>("lidar", 1);
+  }
+  lidar_pub_.publish(lidar_msg);
+}
+
 
 void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
 {
