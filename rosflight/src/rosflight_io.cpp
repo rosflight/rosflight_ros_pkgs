@@ -151,11 +151,8 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_SMALL_BARO:
       handle_small_baro_msg(msg);
       break;
-    case MAVLINK_MSG_ID_SMALL_SONAR:
-      handle_small_sonar(msg);
-      break;
-    case MAVLINK_MSG_ID_LIDAR:
-      handle_lidar_msg(msg);
+    case MAVLINK_MSG_ID_SMALL_RANGE:
+      handle_small_range(msg);
       break;
     case MAVLINK_MSG_ID_ROSFLIGHT_VERSION:
       handle_version_msg(msg);
@@ -619,25 +616,39 @@ void rosflightIO::handle_small_mag_msg(const mavlink_message_t &msg)
   mag_pub_.publish(mag_msg);
 }
 
-void rosflightIO::handle_small_sonar(const mavlink_message_t &msg)
+void rosflightIO::handle_small_range(const mavlink_message_t &msg)
 {
-  mavlink_small_sonar_t sonar;
-  mavlink_msg_small_sonar_decode(&msg, &sonar);
+  mavlink_small_range_t mRange;
+  mavlink_msg_small_range_decode(&msg, &mRange);
 
   sensor_msgs::Range alt_msg;
   alt_msg.header.stamp = ros::Time::now();
-  alt_msg.max_range = sonar.max_range;
-  alt_msg.min_range = sonar.min_range;
-  alt_msg.range = sonar.range;
+  alt_msg.max_range = mRange.max_range;
+  alt_msg.min_range = mRange.min_range;
+  alt_msg.range = mRange.range;
 
-  alt_msg.radiation_type = sensor_msgs::Range::ULTRASOUND;
-  alt_msg.field_of_view = 1.0472;  // approx 60 deg
-
-  if (sonar_pub_.getTopic().empty())
+  if (mRange.type == ROSFLIGHT_RANGE_SONAR)
   {
-    sonar_pub_ = nh_.advertise<sensor_msgs::Range>("sonar", 1);
+    alt_msg.radiation_type  = sensor_msgs::Range::ULTRASOUND;
+    alt_msg.field_of_view   = 1.0472;  // approx 60 deg
+
+    if (sonar_pub_.getTopic().empty())
+    {
+      sonar_pub_ = nh_.advertise<sensor_msgs::Range>("sonar", 1);
+    }
+    sonar_pub_.publish(alt_msg);
   }
-  sonar_pub_.publish(alt_msg);
+  else 
+  {
+    alt_msg.radiation_type  = sensor_msgs::Range::INFRARED;
+    alt_msg.field_of_view   = .0349066; //approx 2 deg
+    if (lidar_pub_.getTopic().empty())
+    {
+      lidar_pub_ = nh_.advertise<sensor_msgs::Range>("lidar", 1);
+    }
+    lidar_pub_.publish(alt_msg);
+  }
+
 }
 
 void rosflightIO::handle_version_msg(const mavlink_message_t &msg)
@@ -658,21 +669,6 @@ void rosflightIO::handle_version_msg(const mavlink_message_t &msg)
 
   ROS_INFO("Firmware version: %s", version.version);
 }
-
-void rosflightIO::handle_lidar_msg(const mavlink_message_t &msg)
-{
-  mavlink_lidar_t lidar;
-  mavlink_msg_lidar_decode(&msg, &lidar);
-  rosflight_msgs::Lidar lidar_msg;
-  lidar_msg.header.stamp = ros::Time::now();
-  lidar_msg.altitude = lidar.altitude;
-  if (lidar_pub_.getTopic().empty())
-  {
-    lidar_pub_ = nh_.advertise<rosflight_msgs::Lidar>("lidar", 1);
-  }
-  lidar_pub_.publish(lidar_msg);
-}
-
 
 void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
 {

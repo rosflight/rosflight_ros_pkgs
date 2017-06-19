@@ -62,7 +62,6 @@
 #include <rosflight_msgs/OutputRaw.h>
 #include <rosflight_msgs/RCRaw.h>
 #include <rosflight_msgs/Status.h>
-#include <rosflight_msgs/Lidar.h>
 
 #include <rosflight_msgs/ParamFile.h>
 #include <rosflight_msgs/ParamGet.h>
@@ -108,9 +107,8 @@ private:
   void handle_named_value_int_msg(const mavlink_message_t &msg);
   void handle_named_value_float_msg(const mavlink_message_t &msg);
   void handle_named_command_struct_msg(const mavlink_message_t &msg);
-  void handle_small_sonar(const mavlink_message_t &msg);
+  void handle_small_range(const mavlink_message_t &msg);
   void handle_version_msg(const mavlink_message_t &msg);
-  void handle_lidar_msg(const mavlink_message_t &msg);
 
   // ROS message callbacks
   void commandCallback(rosflight_msgs::Command::ConstPtr msg);
