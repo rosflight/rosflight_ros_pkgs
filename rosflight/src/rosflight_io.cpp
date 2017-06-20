@@ -152,7 +152,7 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
       handle_small_baro_msg(msg);
       break;
     case MAVLINK_MSG_ID_SMALL_RANGE:
-      handle_small_range(msg);
+      handle_small_range_msg(msg);
       break;
     case MAVLINK_MSG_ID_ROSFLIGHT_VERSION:
       handle_version_msg(msg);
@@ -616,37 +616,40 @@ void rosflightIO::handle_small_mag_msg(const mavlink_message_t &msg)
   mag_pub_.publish(mag_msg);
 }
 
-void rosflightIO::handle_small_range(const mavlink_message_t &msg)
+void rosflightIO::handle_small_range_msg(const mavlink_message_t &msg)
 {
-  mavlink_small_range_t mRange;
-  mavlink_msg_small_range_decode(&msg, &mRange);
+  mavlink_small_range_t range;
+  mavlink_msg_small_range_decode(&msg, &range);
 
   sensor_msgs::Range alt_msg;
   alt_msg.header.stamp = ros::Time::now();
-  alt_msg.max_range = mRange.max_range;
-  alt_msg.min_range = mRange.min_range;
-  alt_msg.range = mRange.range;
+  alt_msg.max_range = range.max_range;
+  alt_msg.min_range = range.min_range;
+  alt_msg.range = range.range;
 
-  if (mRange.type == ROSFLIGHT_RANGE_SONAR)
-  {
-    alt_msg.radiation_type  = sensor_msgs::Range::ULTRASOUND;
-    alt_msg.field_of_view   = 1.0472;  // approx 60 deg
+  switch(range.type) {
+    case ROSFLIGHT_RANGE_SONAR:
+      alt_msg.radiation_type  = sensor_msgs::Range::ULTRASOUND;
+      alt_msg.field_of_view   = 1.0472;  // approx 60 deg
 
-    if (sonar_pub_.getTopic().empty())
-    {
-      sonar_pub_ = nh_.advertise<sensor_msgs::Range>("sonar", 1);
-    }
-    sonar_pub_.publish(alt_msg);
-  }
-  else 
-  {
-    alt_msg.radiation_type  = sensor_msgs::Range::INFRARED;
-    alt_msg.field_of_view   = .0349066; //approx 2 deg
-    if (lidar_pub_.getTopic().empty())
-    {
-      lidar_pub_ = nh_.advertise<sensor_msgs::Range>("lidar", 1);
-    }
-    lidar_pub_.publish(alt_msg);
+      if (sonar_pub_.getTopic().empty())
+      {
+        sonar_pub_ = nh_.advertise<sensor_msgs::Range>("sonar", 1);
+      }
+      sonar_pub_.publish(alt_msg);
+      break;
+    case ROSFLIGHT_RANGE_LIDAR:
+      alt_msg.radiation_type  = sensor_msgs::Range::INFRARED;
+      alt_msg.field_of_view   = .0349066; //approx 2 deg
+      
+      if (lidar_pub_.getTopic().empty())
+      {
+        lidar_pub_ = nh_.advertise<sensor_msgs::Range>("lidar", 1);
+      }
+      lidar_pub_.publish(alt_msg);
+      break;
+    default:
+      break;
   }
 
 }
