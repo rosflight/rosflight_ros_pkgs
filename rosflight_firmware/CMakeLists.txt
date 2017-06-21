@@ -11,7 +11,7 @@ include_directories(firmware/lib/mavlink)
 include_directories(firmware/lib)
 
 catkin_package(
-  INCLUDE_DIRS firmware/include
+  INCLUDE_DIRS firmware/include firmware/lib/turbotrig firmware/lib/mavlink firmware/lib
   LIBRARIES rosflight_firmware
 )
 
