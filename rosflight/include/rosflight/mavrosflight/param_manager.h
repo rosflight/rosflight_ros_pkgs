@@ -38,8 +38,8 @@
 #define MAVROSFLIGHT_PARAM_MANAGER_H
 
 #include <rosflight/mavrosflight/mavlink_bridge.h>
+#include <rosflight/mavrosflight/mavlink_comm.h>
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
-#include <rosflight/mavrosflight/mavlink_serial.h>
 #include <rosflight/mavrosflight/param.h>
 #include <rosflight/mavrosflight/param_listener_interface.h>
 
@@ -53,7 +53,7 @@ namespace mavrosflight
 class ParamManager : public MavlinkListenerInterface
 {
 public:
-  ParamManager(MavlinkSerial * const serial);
+  ParamManager(MavlinkComm * const comm);
   ~ParamManager();
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
@@ -88,7 +88,7 @@ private:
 
   std::vector<ParamListenerInterface*> listeners_;
 
-  MavlinkSerial *serial_;
+  MavlinkComm *comm_;
   std::map<std::string, Param> params_;
 
   bool unsaved_changes_;

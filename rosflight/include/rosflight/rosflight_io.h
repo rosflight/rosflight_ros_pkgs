@@ -68,6 +68,7 @@
 #include <rosflight_msgs/ParamSet.h>
 
 #include <rosflight/mavrosflight/mavrosflight.h>
+#include <rosflight/mavrosflight/mavlink_comm.h>
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
 #include <rosflight/mavrosflight/param_listener_interface.h>
 
@@ -182,6 +183,7 @@ private:
 
   std::string frame_id_;
 
+  mavrosflight::MavlinkComm *mavlink_comm_;
   mavrosflight::MavROSflight *mavrosflight_;
   mavrosflight::sensors::Imu imu_;
 };
