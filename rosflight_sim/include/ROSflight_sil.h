@@ -96,6 +96,9 @@ private:
   uint64_t start_time_us_;
 
   ros::NodeHandle* nh_;
+
+  // For reset handling
+  math::Pose initial_pose_;
 };
 }
 

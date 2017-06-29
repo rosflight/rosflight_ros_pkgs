@@ -108,6 +108,8 @@ void ROSflightSIL::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
   // Connect the update function to the simulation
   updateConnection_ = event::Events::ConnectWorldUpdateBegin(boost::bind(&ROSflightSIL::OnUpdate, this, _1));
+
+  initial_pose_ = link_->GetWorldCoGPose();
 }
 
 
@@ -146,6 +148,8 @@ void ROSflightSIL::OnUpdate(const common::UpdateInfo& _info)
 
 void ROSflightSIL::Reset()
 {
+    link_->SetWorldPose(initial_pose_);
+    link_->ResetPhysicsStates();
 //  start_time_us_ = (uint64_t)(world_->GetSimTime().Double() * 1e3);
 //  rosflight_init();
 }

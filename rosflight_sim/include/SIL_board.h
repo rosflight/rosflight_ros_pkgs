@@ -138,7 +138,19 @@ public:
       model_ = model;
       nh_ = nh;
       mav_type_ = mav_type;
+
+      // Configure Noise
+      random_generator_= std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
+      standard_normal_distribution_ = std::normal_distribution<double>(0.0, 1.0);
+
+      /// TODO read a param to set this
+      noise_on_ = true;
   }
+
+  // Random Engine for noise
+  std::default_random_engine random_generator_;
+  std::normal_distribution<double> standard_normal_distribution_;
+  bool noise_on_;
 
   gazebo::physics::WorldPtr world_;
   gazebo::physics::ModelPtr model_;

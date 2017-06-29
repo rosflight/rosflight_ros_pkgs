@@ -80,7 +80,8 @@ uint8_t SIL_Board::serial_read(void)
 }
 
 // sensors
-/// TODO these are perfect sensors as of right now
+/// TODO these sensors have noise, no bias
+/// noise params are hard coded
 void SIL_Board::sensors_init()
 {
 }
@@ -110,18 +111,26 @@ void SIL_Board::imu_read_accel(float accel[3])
     gazebo::math::Vector3 acceleration_I = link_->GetRelativeLinearAccel() - C_W_I.RotateVectorReverse(gravity_W_);
   #endif
 
-  accel[0] = acceleration_I.x;
-  accel[1] = -acceleration_I.y;
-  accel[2] = -acceleration_I.z;
+  float sigma_a_d = 0;
+  if(noise_on_)
+      sigma_a_d = 1 / 0.002 * 0.008;
+
+  accel[0] = acceleration_I.x + sigma_a_d*standard_normal_distribution_(random_generator_);
+  accel[1] = -acceleration_I.y + sigma_a_d*standard_normal_distribution_(random_generator_);
+  accel[2] = -acceleration_I.z + sigma_a_d*standard_normal_distribution_(random_generator_);
 }
 
 void SIL_Board::imu_read_gyro(float gyro[3])
 {
   gazebo::math::Vector3 angular_vel_I = link_->GetRelativeAngularVel();
 
-  gyro[0] = angular_vel_I.x;
-  gyro[1] = -angular_vel_I.y;
-  gyro[2] = -angular_vel_I.z;
+  float sigma_g_d = 0;
+  if(noise_on_)
+      sigma_g_d = 1 / 0.002 * 0.0008726646;
+
+  gyro[0] = angular_vel_I.x + sigma_g_d*standard_normal_distribution_(random_generator_);
+  gyro[1] = -angular_vel_I.y + sigma_g_d*standard_normal_distribution_(random_generator_);
+  gyro[2] = -angular_vel_I.z + sigma_g_d*standard_normal_distribution_(random_generator_);
 }
 
 bool SIL_Board::imu_read_all(float accel[3], float* temperature, float gyro[3])
@@ -157,8 +166,16 @@ void SIL_Board::mag_read(float mag[3])
   gazebo::math::Pose I_to_B = link_->GetWorldPose();
   double now = world_->GetSimTime().Double();
 
+  gazebo::math::Vector3 noise;
+  noise.x = 0.02*standard_normal_distribution_(random_generator_);
+  noise.y = 0.02*standard_normal_distribution_(random_generator_);
+  noise.z = 0.02*standard_normal_distribution_(random_generator_);
+
   // combine parts to create a measurement
   gazebo::math::Vector3 measurement = I_to_B.rot.RotateVectorReverse(inertial_magnetic_field_);
+
+  if(noise_on_)
+      measurement += noise;
 
   // normalize measurement
   gazebo::math::Vector3 normalized = measurement.Normalize();
@@ -183,8 +200,13 @@ void SIL_Board::baro_read(float *altitude, float *pressure, float *temperature)
     gazebo::math::Pose current_state_LFU = link_->GetWorldPose();
 
     // Invert measurement model for pressure and temperature
-    *altitude = current_state_LFU.pos.z;
-    *pressure = 101325.0*pow(1- (2.25577e-5 * current_state_LFU.pos.z), 5.25588);;
+    double alt = current_state_LFU.pos.z;
+
+    if(noise_on_)
+      alt += 0.5*standard_normal_distribution_(random_generator_);
+
+    *altitude = alt;
+    *pressure = 101325.0*pow(1- (2.25577e-5 * alt), 5.25588);;
     *temperature = 27;
 }
 
@@ -271,11 +293,8 @@ uint16_t SIL_Board::pwm_read(uint8_t channel)
     return latestRC_.values[channel];
   }
 
-  //no publishers, so center everything and throttle low
-  if(mav_type_ == "fixedwing" && channel == 2)
-      return 1000;
-
-  if(mav_type_ == "multirotor" && channel < 4)
+  //no publishers, so throttle low and center everything else
+  if(channel == 2)
       return 1000;
 
   return 1500;
@@ -300,6 +319,8 @@ bool SIL_Board::memory_read(void * dest, size_t len)
 {
   std::ifstream memory_file;
   memory_file.open("rosflight_memory.bin", std::ios::binary);
+  if(!memory_file.is_open())
+      return false;
   memory_file.read((char*) dest, len);
   memory_file.close();
   return true;
