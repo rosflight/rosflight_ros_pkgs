@@ -4,16 +4,19 @@ project(rosflight_firmware)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 find_package(catkin REQUIRED COMPONENTS)
+find_package(Boost REQUIRED COMPONENTS system thread)
 
+include_directories(include)
 include_directories(
   firmware/include
   firmware/lib/turbotrig
   firmware/lib
 )
+include_directories(${Boost_INCLUDE_DIRS})
 
 catkin_package(
-  INCLUDE_DIRS firmware/include firmware/lib/turbotrig firmware/lib/mavlink firmware/lib
-  LIBRARIES rosflight_firmware
+  INCLUDE_DIRS include firmware/include firmware/lib/turbotrig firmware/lib/mavlink firmware/lib
+  LIBRARIES rosflight_firmware udp_board
 )
 
 add_library(rosflight_firmware
@@ -33,8 +36,13 @@ add_library(rosflight_firmware
   firmware/lib/turbotrig/turbovec.c
 )
 
+add_library(rosflight_udp_board
+  src/udp_board.cpp
+)
+target_link_libraries(rosflight_udp_board rosflight_firmware ${Boost_LIBRARIES})
+
 install(
-  TARGETS rosflight_firmware
+  TARGETS rosflight_firmware rosflight_udp_board
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
