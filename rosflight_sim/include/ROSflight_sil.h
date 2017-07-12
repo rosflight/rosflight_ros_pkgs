@@ -51,9 +51,10 @@
 #include "multirotor_forces_and_moments.h"
 #include "fixedwing_forces_and_moments.h"
 
-namespace rf = rosflight_firmware;
+using namespace rosflight_sim;
 
-namespace gazebo {
+namespace gazebo
+{
 
 class ROSflightSIL : public ModelPlugin {
 public:
@@ -72,8 +73,8 @@ protected:
   void OnUpdate(const common::UpdateInfo & /*_info*/);
 
 private:
-  rosflight::SIL_Board board_;
-  rf::ROSflight firmware_;
+  SIL_Board board_;
+  rosflight_firmware::ROSflight firmware_;
 
   std::string mav_type_;
   std::string namespace_;

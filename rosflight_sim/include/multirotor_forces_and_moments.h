@@ -38,6 +38,9 @@
 #include <geometry_msgs/Vector3.h>
 #include <gazebo/gazebo.hh>
 
+namespace rosflight_sim
+{
+
 class Multirotor : public MAVForcesAndMoments {
 private:
     ros::NodeHandle* nh_;
@@ -104,5 +107,7 @@ public:
 
     virtual ForcesAndTorques updateForcesAndTorques(Pose pos, Velocities vel, const int act_cmd[], double sample_time);
 };
+
+}
 
 #endif

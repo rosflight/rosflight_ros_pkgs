@@ -31,6 +31,9 @@
 
 #include "fixedwing_forces_and_moments.h"
 
+namespace rosflight_sim
+{
+
 Fixedwing::Fixedwing(ros::NodeHandle* nh)
 {
     nh_ = nh;
@@ -212,4 +215,6 @@ Fixedwing::ForcesAndTorques Fixedwing::updateForcesAndTorques(Pose pos, Velociti
     }
 
     return forces;
+}
+
 }

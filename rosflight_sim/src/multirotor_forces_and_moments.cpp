@@ -31,6 +31,9 @@
 
 #include "multirotor_forces_and_moments.h"
 
+namespace rosflight_sim
+{
+
 Multirotor::Multirotor(ros::NodeHandle *nh)
 {
   nh_ = nh;
@@ -181,4 +184,6 @@ void Multirotor::WindSpeedCallback(const geometry_msgs::Vector3 &wind)
   W_wind_speed_.x = wind.x;
   W_wind_speed_.y = wind.y;
   W_wind_speed_.z = wind.z;
+}
+
 }

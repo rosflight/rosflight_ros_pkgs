@@ -32,7 +32,7 @@
 #include "SIL_board.h"
 #include <fstream>
 
-namespace rosflight {
+namespace rosflight_sim {
 
 void SIL_Board::init_board(void)
 {

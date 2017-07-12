@@ -36,6 +36,9 @@
 
 #include <ros/ros.h>
 
+namespace rosflight_sim
+{
+
 class Fixedwing : public MAVForcesAndMoments
 {
 private:
@@ -111,5 +114,7 @@ public:
 
     virtual ForcesAndTorques updateForcesAndTorques(Pose pos, Velocities vel, const int act_cmd[], double sample_time);
 };
+
+}
 
 #endif

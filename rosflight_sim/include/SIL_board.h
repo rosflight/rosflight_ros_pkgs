@@ -48,7 +48,7 @@
 
 using namespace rosflight_firmware;
 
-namespace rosflight {
+namespace rosflight_sim {
 
 class SIL_Board : public Board
 {

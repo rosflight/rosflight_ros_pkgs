@@ -40,12 +40,15 @@
 #include "SIL_board.h"
 #include "rosflight.h"
 
+using namespace rosflight_sim;
 
 namespace gazebo
 {
 
 ROSflightSIL::ROSflightSIL() :
-  ModelPlugin(), nh_(nullptr), prev_sim_time_(0),
+  ModelPlugin(),
+  nh_(nullptr),
+  prev_sim_time_(0),
   firmware_(board_)  {
 }
 

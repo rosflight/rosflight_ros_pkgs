@@ -32,6 +32,9 @@
 #ifndef MAV_FORCES_AND_MOMENTS_H
 #define MAV_FORCES_AND_MOMENTS_H
 
+namespace rosflight_sim
+{
+
 class MAVForcesAndMoments {
 protected:
     double sat(double x, double max, double min)
@@ -80,5 +83,7 @@ public:
 
     virtual ForcesAndTorques updateForcesAndTorques(Pose pos, Velocities vel, const int act_cmds[], double sample_time) = 0;
 };
+
+}
 
 #endif
