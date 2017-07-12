@@ -58,6 +58,7 @@ add_library(mavrosflight
   src/mavrosflight/mavrosflight.cpp
   src/mavrosflight/mavlink_comm.cpp
   src/mavrosflight/mavlink_serial.cpp
+  src/mavrosflight/mavlink_udp.cpp
   src/mavrosflight/param_manager.cpp
   src/mavrosflight/param.cpp
   src/mavrosflight/time_manager.cpp

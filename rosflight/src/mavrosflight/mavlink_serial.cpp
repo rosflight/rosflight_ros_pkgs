@@ -35,6 +35,7 @@
  */
 
 #include <rosflight/mavrosflight/mavlink_serial.h>
+#include <rosflight/mavrosflight/serial_exception.h>
 
 namespace mavrosflight
 {

@@ -39,7 +39,6 @@
 
 #include <rosflight/mavrosflight/mavlink_bridge.h>
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
-#include <rosflight/mavrosflight/serial_exception.h>
 
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
