@@ -43,6 +43,7 @@
 #include <thread>
 
 #include <boost/asio.hpp>
+#include <boost/thread.hpp>
 
 #include "board.h"
 #include "mavlink.h"
@@ -148,9 +149,13 @@ private:
 
     const uint8_t * dpos() const { return data + pos; }
     size_t nbytes() const { return len - pos; }
+    void add_byte(uint8_t byte) { data[pos++] = byte; }
+    uint8_t consume_byte() { return data[pos++]; }
+    bool empty() const { return pos >= len; }
+    bool full() const { return len >= MAVLINK_MAX_PACKET_LEN; }
   };
 
-  typedef std::lock_guard<std::recursive_mutex> mutex_lock;
+  typedef boost::lock_guard<boost::recursive_mutex> MutexLock;
 
   void async_read();
   void async_read_end(const boost::system::error_code& error, size_t bytes_transferred);
@@ -158,24 +163,28 @@ private:
   void async_write(bool check_write_state);
   void async_write_end(const boost::system::error_code& error, size_t bytes_transferred);
 
-  std::thread io_thread_;
-  std::recursive_mutex mutex_;
-
-  uint8_t read_buffer_[MAVLINK_MAX_PACKET_LEN];
-  std::list<Buffer*> read_queue_;
-
-  std::list<Buffer*> write_queue_;
-  bool write_in_progress_;
-
   std::string bind_host_;
   uint16_t bind_port_;
 
   std::string remote_host_;
   uint16_t remote_port_;
 
+  boost::thread io_thread_;
+  boost::recursive_mutex write_mutex_;
+  boost::recursive_mutex read_mutex_;
+
+  boost::asio::io_service io_service_;
+
   boost::asio::ip::udp::socket socket_;
   boost::asio::ip::udp::endpoint bind_endpoint_;
   boost::asio::ip::udp::endpoint remote_endpoint_;
+
+  uint8_t read_buffer_[MAVLINK_MAX_PACKET_LEN];
+  std::list<Buffer*> read_queue_;
+
+  Buffer * current_write_buffer_;
+  std::list<Buffer*> write_queue_;
+  bool write_in_progress_;
 };
 
 } // namespace rosflight_firmware

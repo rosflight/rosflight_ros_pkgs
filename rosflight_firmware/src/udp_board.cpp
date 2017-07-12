@@ -36,49 +36,164 @@
 
 #include <rosflight_firmware/udp_board.h>
 
+using boost::asio::ip::udp;
+
 namespace rosflight_firmware
 {
 
-UDPBoard::UDPBoard(std::string bind_host, uint16_t bind_port, std::string remote_host, uint16_t remote_port)
+UDPBoard::UDPBoard(std::string bind_host, uint16_t bind_port, std::string remote_host, uint16_t remote_port) :
+  bind_host_(bind_host),
+  bind_port_(bind_port),
+  remote_host_(remote_host),
+  remote_port_(remote_port),
+  io_service_(),
+  socket_(io_service_),
+  current_write_buffer_(new Buffer),
+  write_in_progress_(false)
 {
 }
 
 UDPBoard::~UDPBoard()
 {
+  MutexLock read_lock(read_mutex_);
+  MutexLock write_lock(write_mutex_);
+
+  io_service_.stop();
+  socket_.close();
+
+  if (io_thread_.joinable())
+    io_thread_.join();
 }
 
 void UDPBoard::serial_init(uint32_t baud_rate)
 {
+  // can throw an uncaught boost::system::system_error exception
+
+  udp::resolver resolver(io_service_);
+
+  bind_endpoint_ = *resolver.resolve({udp::v4(), bind_host_, ""});
+  bind_endpoint_.port(bind_port_);
+
+  remote_endpoint_ = *resolver.resolve({udp::v4(), remote_host_, ""});
+  remote_endpoint_.port(remote_port_);
+
+  socket_.open(udp::v4());
+  socket_.bind(bind_endpoint_);
+
+  socket_.set_option(udp::socket::reuse_address(true));
+  socket_.set_option(udp::socket::send_buffer_size(MAVLINK_MAX_PACKET_LEN));
+  socket_.set_option(udp::socket::receive_buffer_size(MAVLINK_MAX_PACKET_LEN));
+
+  async_read();
+  io_thread_ = boost::thread(boost::bind(&boost::asio::io_service::run, &io_service_));
 }
 
 void UDPBoard::serial_write(uint8_t byte)
 {
+  current_write_buffer_->add_byte(byte);
+  if (current_write_buffer_->full())
+  {
+    {
+      MutexLock lock(write_mutex_);
+      write_queue_.push_back(current_write_buffer_);
+    }
+    current_write_buffer_ = new Buffer;
+    async_write(true);
+  }
 }
 
 uint16_t UDPBoard::serial_bytes_available()
 {
+  MutexLock lock(read_mutex_);
+  return !read_queue_.empty();
 }
 
 uint8_t UDPBoard::serial_read()
 {
+  MutexLock lock(read_mutex_);
+
   if (read_queue_.empty())
     return 0;
+
+  Buffer *buffer = read_queue_.front();
+  uint8_t byte = buffer->consume_byte();
+
+  if (buffer->empty())
+  {
+    read_queue_.pop_front();
+    delete buffer;
+  }
+
+  return byte;
 }
 
 void UDPBoard::async_read()
 {
+  if (!socket_.is_open()) return;
+
+  MutexLock lock(read_mutex_);
+  socket_.async_receive_from(boost::asio::buffer(read_buffer_, MAVLINK_MAX_PACKET_LEN),
+                             remote_endpoint_,
+                             boost::bind(&UDPBoard::async_read_end,
+                                         this,
+                                         boost::asio::placeholders::error,
+                                         boost::asio::placeholders::bytes_transferred));
 }
 
 void UDPBoard::async_read_end(const boost::system::error_code &error, size_t bytes_transferred)
 {
+  if (!error)
+  {
+    MutexLock lock(read_mutex_);
+    read_queue_.push_back(new Buffer(read_buffer_, bytes_transferred));
+  }
+  async_read();
 }
 
 void UDPBoard::async_write(bool check_write_state)
 {
+  if (check_write_state && write_in_progress_)
+    return;
+
+  MutexLock lock(write_mutex_);
+  if (write_queue_.empty())
+    return;
+
+  write_in_progress_ = true;
+  Buffer *buffer = write_queue_.front();
+  socket_.async_send_to(boost::asio::buffer(buffer->dpos(), buffer->nbytes()),
+                        remote_endpoint_,
+                        boost::bind(&UDPBoard::async_write_end,
+                                    this,
+                                    boost::asio::placeholders::error,
+                                    boost::asio::placeholders::bytes_transferred));
 }
 
 void UDPBoard::async_write_end(const boost::system::error_code &error, size_t bytes_transferred)
 {
+  if (!error)
+  {
+    MutexLock lock(write_mutex_);
+
+    if (write_queue_.empty())
+    {
+      write_in_progress_ = false;
+      return;
+    }
+
+    Buffer *buffer = write_queue_.front();
+    buffer->pos += bytes_transferred;
+    if (buffer->empty())
+    {
+      write_queue_.pop_front();
+      delete buffer;
+    }
+
+    if (write_queue_.empty())
+      write_in_progress_ = false;
+    else
+      async_write(false);
+  }
 }
 
 } // namespace rosflight_firmware
