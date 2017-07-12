@@ -143,24 +143,41 @@ public:
 
 private:
   double gyro_stdev_;
-  double acc_stdev_;
-  double gyro_bias_range_;
-  double acc_bias_range_;
   double gyro_bias_walk_stdev_;
+  double gyro_bias_range_;
+
+  double acc_stdev_;
+  double acc_bias_range_;
   double acc_bias_walk_stdev_;
+
   double baro_bias_walk_stdev_;
   double baro_stdev_;
   double baro_bias_range_;
+
   double mag_bias_walk_stdev_;
   double mag_stdev_;
   double mag_bias_range_;
 
-  gazebo::math::Vector3 gravity_;
+  double airspeed_bias_walk_stdev_;
+  double airspeed_stdev_;
+  double airspeed_bias_range_;
+
+  double sonar_stdev_;
+  double sonar_max_range_;
+  double sonar_min_range_;
+
   gazebo::math::Vector3 gyro_bias_;
   gazebo::math::Vector3 acc_bias_;
+  gazebo::math::Vector3 mag_bias_;
+  double baro_bias_;
+  double airspeed_bias_;
+
   std::default_random_engine random_generator_;
   std::normal_distribution<double> normal_distribution_;
   std::uniform_real_distribution<double> uniform_distribution_;
+
+  gazebo::math::Vector3 gravity_;
+  double ground_altitude_;
 
   gazebo::physics::WorldPtr world_;
   gazebo::physics::ModelPtr model_;

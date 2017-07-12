@@ -48,12 +48,31 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   mav_type_ = mav_type;
 
   // Get Parameters
+  ground_altitude_ = nh->param<double>("ground_altitude", 1387.0);
+
   gyro_stdev_ = nh->param<double>("gyro_stdev", 0.13);
   gyro_bias_range_ = nh->param<double>("gyro_bias_range", 0.15);
   gyro_bias_walk_stdev_ = nh->param<double>("gyro_bias_walk_stdev", 0.001);
+
   acc_stdev_ = nh->param<double>("acc_stdev", 1.15);
   acc_bias_range_ = nh->param<double>("acc_bias_range", 0.15);
   acc_bias_walk_stdev_ = nh->param<double>("acc_bias_walk_stdev", 0.001);
+
+  mag_stdev_ = nh->param<double>("mag_stdev", 1.15);
+  mag_bias_range_ = nh->param<double>("mag_bias_range", 0.15);
+  mag_bias_walk_stdev_ = nh->param<double>("mag_bias_walk_stdev", 0.001);
+
+  baro_stdev_ = nh->param<double>("baro_stdev", 1.15);
+  baro_bias_range_ = nh->param<double>("baro_bias_range", 0.15);
+  baro_bias_walk_stdev_ = nh->param<double>("baro_bias_walk_stdev", 0.001);
+
+  airspeed_stdev_ = nh_->param<double>("airspeed_stdev", 1.15);
+  airspeed_bias_range_ = nh_->param<double>("airspeed_bias_range", 0.15);
+  airspeed_bias_walk_stdev_ = nh_->param<double>("airspeed_bias_walk_stdev", 0.001);
+
+  sonar_stdev_ = nh_->param<double>("sonar_stdev", 1.15);
+  sonar_min_range_ = nh_->param<double>("sonar_min_range", 0.25);
+  sonar_max_range_ = nh_->param<double>("sonar_max_range", 8.0);
 
   // Configure Noise
   random_generator_= std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
@@ -69,6 +88,11 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   acc_bias_.x = acc_bias_range_*uniform_distribution_(random_generator_);
   acc_bias_.y = acc_bias_range_*uniform_distribution_(random_generator_);
   acc_bias_.z = acc_bias_range_*uniform_distribution_(random_generator_);
+  mag_bias_.x = mag_bias_range_*uniform_distribution_(random_generator_);
+  mag_bias_.y = mag_bias_range_*uniform_distribution_(random_generator_);
+  mag_bias_.z = mag_bias_range_*uniform_distribution_(random_generator_);
+  baro_bias_ = baro_bias_range_*uniform_distribution_(random_generator_);
+  airspeed_bias_ = airspeed_bias_range_*uniform_distribution_(random_generator_);
 }
 
 void SIL_Board::board_reset(bool bootloader)
@@ -258,20 +282,31 @@ bool SIL_Board::baro_present(void)
 void SIL_Board::baro_read(float *altitude, float *pressure, float *temperature)
 {
   // pull z measurement out of Gazebo
-  gazebo::math::Pose current_state_LFU = link_->GetWorldPose();
+  gazebo::math::Pose current_state_NWU = link_->GetWorldPose();
 
   // Invert measurement model for pressure and temperature
-  double alt = current_state_LFU.pos.z;
+  double alt = current_state_NWU.pos.z + ground_altitude_;
 
-  alt += 0.5*normal_distribution_(random_generator_);
+  // Convert to the true pressure reading
+  double y_baro = 101325.0 * pow(1- (2.25577e-5 * alt), 5.25588);
 
-  *altitude = alt;
-  *pressure = 101325.0*pow(1- (2.25577e-5 * alt), 5.25588);;
-  *temperature = 27;
+  // Add noise
+  y_baro += baro_stdev_*normal_distribution_(random_generator_);
+
+  // Perform random walk
+  baro_bias_ += baro_bias_walk_stdev_*normal_distribution_(random_generator_);
+
+  // Add random walk
+  y_baro += baro_bias_;
+
+  (*pressure) = (float)y_baro;
+  (*temperature) = 27.0f;
+  (*altitude) = (1.0 - pow(y_baro/101325.0, 0.1902631)) * 39097.63;
 }
 
 void SIL_Board::baro_calibrate()
 {
+  baro_bias_ = 0.0;
 }
 
 bool SIL_Board::diff_pressure_present(void)
@@ -279,60 +314,75 @@ bool SIL_Board::diff_pressure_present(void)
   if(mav_type_ == "fixedwing")
     return true;
   else
-    return false;//this->_diff_pressure_present;
+    return false;
 }
 
 bool SIL_Board::diff_pressure_check(void)
 {
+  return diff_pressure_present();
 }
 
 void SIL_Board::diff_pressure_calibrate()
 {
+  airspeed_bias_ = 0.0;
 }
 
 void SIL_Board::diff_pressure_set_atm(float barometric_pressure)
 {
+  (void)barometric_pressure;
 }
 
 void SIL_Board::diff_pressure_read(float *diff_pressure, float *temperature, float *velocity)
 {
-  double rho_ = 1.225;
+  static double rho_ = 1.225;
   // Calculate Airspeed
-  gazebo::math::Vector3 C_linear_velocity_W_C = link_->GetRelativeLinearVel();
-  double u = C_linear_velocity_W_C.x;
-  double v = -C_linear_velocity_W_C.y;
-  double w = -C_linear_velocity_W_C.z;
+  gazebo::math::Vector3 uvw_B_NWU = link_->GetRelativeLinearVel();
 
   /// TODO: Wind is being applied in the inertial frame, not the body-fixed frame
   //  double ur = u - wind_.N;
   //  double vr = v - wind_.E;
   //  double wr = w - wind_.D;
   //  double Va = sqrt(pow(ur,2.0) + pow(vr,2.0) + pow(wr,2.0));
-  double Va = sqrt(pow(u,2.0) + pow(v,2.0) + pow(w,2.0));
+  double Va = uvw_B_NWU.GetLength();
 
   // Invert Airpseed to get sensor measurement
-  double y = rho_*Va*Va/2.0; // Page 130 in the UAV Book
-  //  y += pressure_bias_ + pressure_noise_sigma_*standard_normal_distribution_(random_generator_);
+  double y_as = rho_*Va*Va/2.0; // Page 130 in the UAV Book
 
-  //  y = (y>max_pressure_)?max_pressure_:y;
-  //  y = (y<min_pressure_)?min_pressure_:y;
+  // Add noise
+  y_as += airspeed_stdev_*normal_distribution_(random_generator_);
+  airspeed_bias_ += airspeed_bias_walk_stdev_*normal_distribution_(random_generator_);
+  y_as += airspeed_bias_;
 
-  *diff_pressure = y;
+  *diff_pressure = y_as;
   *temperature = 27.0;
-  *velocity = Va;
+  *velocity = sqrt(2*y_as/rho_);
 }
 
 bool SIL_Board::sonar_present(void)
 {
-  return false;
+  return true;
 }
 
 bool SIL_Board::sonar_check(void)
 {
+  return true;
 }
 
 float SIL_Board::sonar_read(void)
 {
+  gazebo::math::Pose current_state_NWU = link_->GetWorldPose();
+  double alt = current_state_NWU.pos.z;
+
+  if (alt < sonar_min_range_)
+  {
+    return sonar_min_range_;
+  }
+  else if (alt > sonar_max_range_)
+  {
+    return sonar_max_range_;
+  }
+  else
+    return alt + sonar_stdev_*normal_distribution_(random_generator_);
 }
 
 // PWM
@@ -353,7 +403,7 @@ uint16_t SIL_Board::pwm_read(uint8_t channel)
     return latestRC_.values[channel];
   }
 
-  //no publishers, so throttle low and center everything else
+  //no publishers, set throttle low and center everything else
   if(channel == 2)
     return 1000;
 
@@ -367,20 +417,24 @@ void SIL_Board::pwm_write(uint8_t channel, uint16_t value)
 
 bool SIL_Board::pwm_lost()
 {
+  return false;
 }
 
 // non-volatile memory
-/// TODO there can only be one rosflight simulated at a time (unless they are identical)
-void SIL_Board::memory_init(void)
-{
-}
+void SIL_Board::memory_init(void) {}
 
 bool SIL_Board::memory_read(void * dest, size_t len)
 {
+  std::string directory = "rosflight_memory/" + nh_->getNamespace();
   std::ifstream memory_file;
-  memory_file.open("rosflight_memory.bin", std::ios::binary);
+  memory_file.open(directory + "/mem.bin", std::ios::binary);
+
   if(!memory_file.is_open())
+  {
+    ROS_ERROR("Unable to load rosflight memory file %s/mem.bin", directory.c_str());
     return false;
+  }
+
   memory_file.read((char*) dest, len);
   memory_file.close();
   return true;
@@ -388,8 +442,18 @@ bool SIL_Board::memory_read(void * dest, size_t len)
 
 bool SIL_Board::memory_write(const void * src, size_t len)
 {
+  std::string directory = "rosflight_memory/" + nh_->getNamespace();
+  std::string mkdir_command = "mkdir -p" + directory;
+  const int dir_err = system(mkdir_command.c_str());
+
+  if (dir_err == -1)
+  {
+    ROS_ERROR("Unable to write rosflight memory file %s/mem.bin", directory.c_str());
+    return false;
+  }
+
   std::ofstream memory_file;
-  memory_file.open("rosflight_memory.bin", std::ios::binary);
+  memory_file.open(directory + "/mem.bin", std::ios::binary);
   memory_file.write((char*) src, len);
   memory_file.close();
   return true;
