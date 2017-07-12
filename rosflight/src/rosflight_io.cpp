@@ -34,6 +34,8 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
+#include <rosflight/mavrosflight/mavlink_serial.h>
+#include <rosflight/mavrosflight/mavlink_udp.h>
 #include <rosflight/mavrosflight/serial_exception.h>
 #include <string>
 #include <stdint.h>
@@ -65,14 +67,32 @@ rosflightIO::rosflightIO() :
   reboot_srv_ = nh_.advertiseService("reboot", &rosflightIO::rebootSrvCallback, this);
 
   ros::NodeHandle nh_private("~");
-  std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
-  int baud_rate = nh_private.param<int>("baud_rate", 921600);
 
-  ROS_INFO("Connecting to %s, at %d baud", port.c_str(), baud_rate);
+  if (nh_private.param<bool>("udp", false))
+  {
+    std::string bind_host = nh_private.param<std::string>("bind_host", "localhost");
+    uint16_t bind_port = (uint16_t) nh_private.param<int>("bind_port", 14520);
+    std::string remote_host = nh_private.param<std::string>("remote_host", bind_host);
+    uint16_t remote_port = (uint16_t) nh_private.param<int>("remote_port", 14525);
+
+    ROS_INFO("Connecting over UDP to \"%s:%d\", from \"%s:%d\"", remote_host.c_str(), remote_port, bind_host.c_str(), bind_port);
+
+    mavlink_comm_ = new mavrosflight::MavlinkUDP(bind_host, bind_port, remote_host, remote_port);
+  }
+  else
+  {
+    std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
+    int baud_rate = nh_private.param<int>("baud_rate", 921600);
+
+    ROS_INFO("Connecting to serial port \"%s\", at %d baud", port.c_str(), baud_rate);
+
+    mavlink_comm_ = new mavrosflight::MavlinkSerial(port, baud_rate);
+  }
 
   try
   {
-    mavrosflight_ = new mavrosflight::MavROSflight(port, baud_rate);
+    mavlink_comm_->open(); //! \todo move this into the MavROSflight constructor
+    mavrosflight_ = new mavrosflight::MavROSflight(*mavlink_comm_);
   }
   catch (mavrosflight::SerialException e)
   {
@@ -80,7 +100,7 @@ rosflightIO::rosflightIO() :
     ros::shutdown();
   }
 
-  mavrosflight_->serial.register_mavlink_listener(this);
+  mavrosflight_->comm.register_mavlink_listener(this);
   mavrosflight_->param.register_param_listener(this);
 
   // request the param list
@@ -103,6 +123,7 @@ rosflightIO::rosflightIO() :
 rosflightIO::~rosflightIO()
 {
   delete mavrosflight_;
+  delete mavlink_comm_;
 }
 
 void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
@@ -685,7 +706,7 @@ void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
 
   mavlink_message_t mavlink_msg;
   mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg, mode, ignore, x, y, z, F);
-  mavrosflight_->serial.send_message(mavlink_msg);
+  mavrosflight_->comm.send_message(mavlink_msg);
 }
 
 bool rosflightIO::paramGetSrvCallback(rosflight_msgs::ParamGet::Request &req, rosflight_msgs::ParamGet::Response &res)
@@ -727,7 +748,7 @@ bool rosflightIO::calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, s
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_ACCEL_CALIBRATION);
-  mavrosflight_->serial.send_message(msg);
+  mavrosflight_->comm.send_message(msg);
 
   res.success = true;
   return true;
@@ -737,7 +758,7 @@ bool rosflightIO::calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, st
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_RC_CALIBRATION);
-  mavrosflight_->serial.send_message(msg);
+  mavrosflight_->comm.send_message(msg);
   res.success = true;
   return true;
 }
@@ -766,7 +787,7 @@ void rosflightIO::request_version()
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_SEND_VERSION);
-  mavrosflight_->serial.send_message(msg);
+  mavrosflight_->comm.send_message(msg);
 }
 
 bool rosflightIO::calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
@@ -791,7 +812,7 @@ bool rosflightIO::calibrateAirspeedSrvCallback(std_srvs::Trigger::Request &req, 
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_AIRSPEED_CALIBRATION);
-  mavrosflight_->serial.send_message(msg);
+  mavrosflight_->comm.send_message(msg);
   res.success = true;
   return true;
 }
@@ -800,7 +821,7 @@ bool rosflightIO::calibrateBaroSrvCallback(std_srvs::Trigger::Request &req, std_
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_BARO_CALIBRATION);
-  mavrosflight_->serial.send_message(msg);
+  mavrosflight_->comm.send_message(msg);
   res.success = true;
   return true;
 }
@@ -809,7 +830,7 @@ bool rosflightIO::rebootSrvCallback(std_srvs::Trigger::Request &req, std_srvs::T
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_REBOOT);
-  mavrosflight_->serial.send_message(msg);
+  mavrosflight_->comm.send_message(msg);
   res.success = true;
   return true;
 }

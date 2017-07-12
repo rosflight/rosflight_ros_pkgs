@@ -39,14 +39,14 @@
 namespace mavrosflight
 {
 
-TimeManager::TimeManager(MavlinkSerial *serial) :
-  serial_(serial),
+TimeManager::TimeManager(MavlinkComm *comm) :
+  comm_(comm),
   offset_alpha_(0.6),
   offset_ns_(0),
   offset_(0.0),
   initialized_(false)
 {
-  serial_->register_mavlink_listener(this);
+  comm_->register_mavlink_listener(this);
 
   ros::NodeHandle nh;
   ros::TimerEvent event;
@@ -103,7 +103,7 @@ void TimeManager::timer_callback(const ros::TimerEvent &event)
 {
   mavlink_message_t msg;
   mavlink_msg_timesync_pack(1, 50, &msg, 0, ros::Time::now().toNSec());
-  serial_->send_message(msg);
+  comm_->send_message(msg);
 }
 
 } // namespace mavrosflight

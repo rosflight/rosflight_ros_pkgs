@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(rosflight)
 
+set(CMAKE_BUILD_TYPE Debug)
+
 # Use this to make Eigen run REALLY fast
-set(CMAKE_CXX_FLAGS "-std=c++0x -O3")
+set(CMAKE_CXX_FLAGS "-std=c++0x")
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -54,7 +56,9 @@ include_directories(
 # mavrosflight library
 add_library(mavrosflight
   src/mavrosflight/mavrosflight.cpp
+  src/mavrosflight/mavlink_comm.cpp
   src/mavrosflight/mavlink_serial.cpp
+  src/mavrosflight/mavlink_udp.cpp
   src/mavrosflight/param_manager.cpp
   src/mavrosflight/param.cpp
   src/mavrosflight/time_manager.cpp

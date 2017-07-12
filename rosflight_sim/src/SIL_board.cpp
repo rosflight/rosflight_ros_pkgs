@@ -116,25 +116,6 @@ void SIL_Board::clock_delay(uint32_t milliseconds)
 {
 }
 
-// serial
-
-void SIL_Board::serial_init(uint32_t baud_rate)
-{
-
-}
-
-void SIL_Board::serial_write(uint8_t byte)
-{
-}
-
-uint16_t SIL_Board::serial_bytes_available(void)
-{
-}
-
-uint8_t SIL_Board::serial_read(void)
-{
-}
-
 // sensors
 /// TODO these sensors have noise, no bias
 /// noise params are hard coded

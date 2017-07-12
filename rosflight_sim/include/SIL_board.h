@@ -42,15 +42,15 @@
 #include <cmath>
 
 #include <ros/ros.h>
-#include "rosflight_msgs/RCRaw.h"
+#include <rosflight_msgs/RCRaw.h>
 
-#include "board.h"
+#include <rosflight_firmware/udp_board.h>
 
 using namespace rosflight_firmware;
 
 namespace rosflight_sim {
 
-class SIL_Board : public Board
+class SIL_Board : public UDPBoard
 {
 
 private:
@@ -78,12 +78,6 @@ public:
   uint32_t clock_millis();
   uint64_t clock_micros();
   void clock_delay(uint32_t milliseconds);
-
-  // serial
-  void serial_init(uint32_t baud_rate);
-  void serial_write(uint8_t byte);
-  uint16_t serial_bytes_available(void);
-  uint8_t serial_read(void);
 
   // sensors
   void sensors_init();
