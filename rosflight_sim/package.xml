@@ -1,12 +1,14 @@
-<package>
+<?xml version="1.0"?>
+<package format="2">
   <name>rosflight_sim</name>
   <version>0.1.3</version>
-  <description>The rosflight_sim package</description>
+  <description>Software-in-the-loop (SIL) simulator for the ROSflight firmware</description>
 
   <maintainer email="superjax08@gmail.com">James Jackson</maintainer>
 
   <author>James Jackson</author>
   <author>Gary Ellingson</author>
+  <author>Daniel Koch</author>
 
   <license>BSD</license>
 
@@ -16,28 +18,13 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <!-- Dependencies needed to compile this package. -->
-  <build_depend>cmake_modules</build_depend>
   <build_depend>gazebo</build_depend>
-  <build_depend>gazebo_ros</build_depend>
-  <build_depend>gazebo_plugins</build_depend>
-  <build_depend>gazebo_ros</build_depend>
-  <build_depend>rosbag</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>rosflight_msgs</build_depend>
-  <build_depend>rosflight_utils</build_depend>
-  <build_depend>rosflight_firmware</build_depend>
-  <build_depend>geometry_msgs</build_depend>
 
-  <!-- Dependencies needed after this package is compiled. -->
-  <run_depend>gazebo_ros</run_depend>
-  <run_depend>gazebo_plugins</run_depend>
-  <run_depend>gazebo_ros</run_depend>
-  <run_depend>rosbag</run_depend>
-  <run_depend>roscpp</run_depend>
-  <run_depend>rosflight_msgs</run_depend>
-  <run_depend>rosflight_utils</run_depend>
-  <run_depend>rosflight_firmware</run_depend>
-  <run_depend>geometry_msgs</run_depend>
+  <depend>gazebo_ros</depend>
+  <depend>gazebo_plugins</depend>
+  <depend>roscpp</depend>
+  <depend>rosflight_msgs</depend>
+  <depend>rosflight_firmware</depend>
+  <depend>geometry_msgs</depend>
 
 </package>

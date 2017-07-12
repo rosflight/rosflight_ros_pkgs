@@ -7,46 +7,57 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 add_definitions(-DROS_ASSERT_ENABLED)
 
 find_package(catkin REQUIRED COMPONENTS
-  cmake_modules
-  rosbag
   roscpp
-  rosflight_msgs
-  rosflight_utils
-  rosflight_firmware
-  gazebo_ros
   gazebo_plugins
+  gazebo_ros
   geometry_msgs
+  rosflight_firmware
+  rosflight_msgs
 )
 
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(gazebo REQUIRED)
-link_directories(${GAZEBO_LIBRARY_DIRS})
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
 
 catkin_package(
-  INCLUDE_DIRS include ${Eigen_INCLUDE_DIRS}
-  CATKIN_DEPENDS rosbag roscpp roscpp gazebo_plugins gazebo_ros
-  DEPENDS Eigen gazebo opencv rosflight_msgs SDF roscpp gazebo_ros 
+  INCLUDE_DIRS include
+  CATKIN_DEPENDS roscpp gazebo_plugins gazebo_ros geometry_msgs rosflight_firmware rosflight_msgs
+  DEPENDS EIGEN3 GAZEBO YAML_CPP
 )
 
-include_directories(include ${catkin_INCLUDE_DIRS})
-include_directories(${Eigen_INCLUDE_DIRS})
-include_directories(${GAZEBO_INCLUDE_DIRS})
-include_directories(${OpenCV_INCLUDE_DIRS})
-include_directories(lib/SIL_board)
+include_directories(include)
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+  ${Eigen_INCLUDE_DIRS}
+  ${GAZEBO_INCLUDE_DIRS}
+  ${YAML_CPP_INCLUDEDIR}
+)
+link_directories(${GAZEBO_LIBRARY_DIRS})
 
-add_library(ROSflight_sil_plugin
- src/ROSflight_sil.cpp
- src/SIL_board.cpp
- src/multirotor_forces_and_moments.cpp
- src/fixedwing_forces_and_moments.cpp
- )
-target_link_libraries(ROSflight_sil_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} yaml-cpp rosflight_firmware)
-add_dependencies(ROSflight_sil_plugin ${catkin_EXPORTED_TARGETS} rosflight_msgs_generate_messages_cpp)
-set_property( TARGET ROSflight_sil_plugin APPEND_STRING PROPERTY COMPILE_FLAGS -Wno-format-extra-args )
+add_library(rosflight_sil_plugin
+  src/rosflight_sil.cpp
+  src/sil_board.cpp
+  src/multirotor_forces_and_moments.cpp
+  src/fixedwing_forces_and_moments.cpp
+)
+target_link_libraries(rosflight_sil_plugin
+  ${catkin_LIBRARIES}
+  ${GAZEBO_LIBRARIES}
+  yaml-cpp
+)
+add_dependencies(rosflight_sil_plugin ${catkin_EXPORTED_TARGETS})
 
-#install(
-#  TARGETS
-#    ROSflight_sil_plugin
-#  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-#  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#)
+install(
+  TARGETS rosflight_sil_plugin
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(
+  DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+)

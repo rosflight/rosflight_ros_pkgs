@@ -29,92 +29,88 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FIXEDWING_FORCES_AND_MOMENTS_H
-#define FIXEDWING_FORCES_AND_MOMENTS_H
+#ifndef ROSFLIGHT_SIM_MULTIROTOR_FORCES_AND_MOMENTS_H
+#define ROSFLIGHT_SIM_MULTIROTOR_FORCES_AND_MOMENTS_H
 
-#include "mav_forces_and_moments.h"
+#include <eigen3/Eigen/Dense>
 
 #include <ros/ros.h>
+#include <geometry_msgs/Vector3.h>
+
+#include <gazebo/gazebo.hh>
+
+#include <rosflight_sim/mav_forces_and_moments.h>
 
 namespace rosflight_sim
 {
 
-class Fixedwing : public MAVForcesAndMoments
-{
+class Multirotor : public MAVForcesAndMoments {
 private:
     ros::NodeHandle* nh_;
 
-    // physical parameters
-    double mass_;
-    double Jx_;
-    double Jy_;
-    double Jz_;
-    double Jxz_;
-    double rho_;
+    ros::Subscriber wind_speed_sub_;
+    void WindSpeedCallback(const geometry_msgs::Vector3& wind);
+    gazebo::math::Vector3 W_wind_speed_;
 
-    // aerodynamic coefficients
-    struct WingCoeff{
-      double S;
-      double b;
-      double c;
-      double M;
-      double epsilon;
-      double alpha0;
-    } wing_;
-
-    // Propeller Coefficients
-    struct PropCoeff{
-      double k_motor;
-      double k_T_P;
-      double k_Omega;
-      double e;
-      double S;
-      double C;
-    } prop_;
-
-    // Lift Coefficients
-    struct LiftCoeff{
-      double O;
-      double alpha;
-      double beta;
-      double p;
-      double q;
-      double r;
-      double delta_a;
-      double delta_e;
-      double delta_r;
+    struct Rotor{
+      double max;
+      std::vector<double> F_poly;
+      std::vector<double> T_poly;
+      double tau_up; // time constants for response
+      double tau_down;
     };
 
-    LiftCoeff CL_;
-    LiftCoeff CD_;
-    LiftCoeff Cm_;
-    LiftCoeff CY_;
-    LiftCoeff Cell_;
-    LiftCoeff Cn_;
+    struct Motor{
+      Rotor rotor;
+      Eigen::Vector3d position;
+      Eigen::Vector3d normal;
+      int direction; // 1 for CW -1 for CCW
+    };
 
-    // not constants
-    // actuators
+    int num_rotors_;
+    std::vector<Motor> motors_;
+
+    double linear_mu_;
+    double angular_mu_;
+    std::vector<double> ground_effect_;
+
+    double mass_;
+
+    // Container for an Actuator
+    struct Actuator{
+      double max;
+      double tau_up;
+      double tau_down;
+    };
+
+    // Struct of Actuators
+    // This organizes the physical limitations of the abstract torques and Force
     struct Actuators{
-      double e;
-      double a;
-      double r;
-      double t;
-    } delta_;
+      Actuator l;
+      Actuator m;
+      Actuator n;
+      Actuator F;
+    } actuators_;
 
-      // wind
-    struct Wind{
-      double N;
-      double E;
-      double D;
-    } wind_;
+    Eigen::MatrixXd rotor_position_;
+    Eigen::MatrixXd rotor_plane_normal_;
+    Eigen::VectorXd rotor_rotation_direction_;
+
+    Eigen::MatrixXd force_allocation_matrix_;
+    Eigen::MatrixXd torque_allocation_matrix_;
+//    Eigen::VectorXd motor_signals_;
+    Eigen::VectorXd desired_forces_;
+    Eigen::VectorXd desired_torques_;
+    Eigen::VectorXd actual_forces_;
+    Eigen::VectorXd actual_torques_;
 
 public:
-    Fixedwing(ros::NodeHandle* nh);
-    ~Fixedwing();
+    Multirotor(ros::NodeHandle* nh);
+    ~Multirotor();
 
     virtual ForcesAndTorques updateForcesAndTorques(Pose pos, Velocities vel, const int act_cmd[], double sample_time);
 };
 
-}
+} // namespace rosflight_sim
 
-#endif
+#endif // ROSFLIGHT_SIM_MULTIROTOR_FORCES_AND_MOMENTS_H

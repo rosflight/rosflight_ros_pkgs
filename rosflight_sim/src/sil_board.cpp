@@ -29,7 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "SIL_board.h"
+#include <rosflight_sim/sil_board.h>
 #include <fstream>
 
 namespace rosflight_sim {

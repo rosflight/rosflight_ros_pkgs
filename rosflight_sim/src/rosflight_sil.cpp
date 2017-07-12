@@ -31,18 +31,15 @@
 
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
-#include "ROSflight_sil.h"
 #include <sstream>
 #include <stdint.h>
-
 #include <stdio.h>
 
-#include "SIL_board.h"
-#include "rosflight.h"
+#include <rosflight_sim/rosflight_sil.h>
+#include <rosflight_sim/sil_board.h>
+#include <rosflight.h>
 
-using namespace rosflight_sim;
-
-namespace gazebo
+namespace rosflight_sim
 {
 
 ROSflightSIL::ROSflightSIL() :
@@ -52,17 +49,16 @@ ROSflightSIL::ROSflightSIL() :
   firmware_(board_)  {
 }
 
-
 ROSflightSIL::~ROSflightSIL()
 {
-  event::Events::DisconnectWorldUpdateBegin(updateConnection_);
+  gazebo::event::Events::DisconnectWorldUpdateBegin(updateConnection_);
   if (nh_) {
     nh_->shutdown();
     delete nh_;
   }
 }
 
-void ROSflightSIL::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
+void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
 {
   model_ = _model;
   world_ = model_->GetWorld();
@@ -110,43 +106,45 @@ void ROSflightSIL::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   firmware_.init();
 
   // Connect the update function to the simulation
-  updateConnection_ = event::Events::ConnectWorldUpdateBegin(boost::bind(&ROSflightSIL::OnUpdate, this, _1));
+  updateConnection_ = gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&ROSflightSIL::OnUpdate, this, _1));
 
   initial_pose_ = link_->GetWorldCoGPose();
 }
 
 
 // This gets called by the world update event.
-void ROSflightSIL::OnUpdate(const common::UpdateInfo& _info)
+void ROSflightSIL::OnUpdate(const gazebo::common::UpdateInfo& _info)
 {
   sampling_time_ = _info.simTime.Double() - prev_sim_time_;
   prev_sim_time_ = _info.simTime.Double();
 
   MAVForcesAndMoments::Pose pos;
-  math::Pose W_pose_W_C = link_->GetWorldCoGPose();
+  gazebo::math::Pose W_pose_W_C = link_->GetWorldCoGPose();
   pos.pn = W_pose_W_C.pos.x; // We should check to make sure that this is right
   pos.pe = -W_pose_W_C.pos.y;
   pos.pd = -W_pose_W_C.pos.z;
-  math::Vector3 euler_angles = W_pose_W_C.rot.GetAsEuler();
+  gazebo::math::Vector3 euler_angles = W_pose_W_C.rot.GetAsEuler();
   pos.phi = euler_angles.x;
   pos.theta = -euler_angles.y;
   pos.psi = -euler_angles.z;
 
   MAVForcesAndMoments::Velocities vel;
-  math::Vector3 C_linear_velocity_W_C = link_->GetRelativeLinearVel();
+  gazebo::math::Vector3 C_linear_velocity_W_C = link_->GetRelativeLinearVel();
   vel.u = C_linear_velocity_W_C.x;
   vel.v = -C_linear_velocity_W_C.y;
   vel.w = -C_linear_velocity_W_C.z;
-  math::Vector3 C_angular_velocity_W_C = link_->GetRelativeAngularVel();
+  gazebo::math::Vector3 C_angular_velocity_W_C = link_->GetRelativeAngularVel();
   vel.p = C_angular_velocity_W_C.x;
   vel.q = -C_angular_velocity_W_C.y;
   vel.r = -C_angular_velocity_W_C.z;
 
+  firmware_.run();
+
   forces_ = mav_dynamics_->updateForcesAndTorques(pos, vel, board_.get_outputs(), sampling_time_);
 
   // apply the forces and torques to the joint
-  link_->AddRelativeForce(math::Vector3(forces_.Fx, -forces_.Fy, -forces_.Fz));
-  link_->AddRelativeTorque(math::Vector3(forces_.l, -forces_.m, -forces_.n));
+  link_->AddRelativeForce(gazebo::math::Vector3(forces_.Fx, -forces_.Fy, -forces_.Fz));
+  link_->AddRelativeTorque(gazebo::math::Vector3(forces_.l, -forces_.m, -forces_.n));
 }
 
 void ROSflightSIL::Reset()
@@ -157,9 +155,6 @@ void ROSflightSIL::Reset()
 //  rosflight_init();
 }
 
+GZ_REGISTER_MODEL_PLUGIN(ROSflightSIL)
 
-GZ_REGISTER_MODEL_PLUGIN(ROSflightSIL);
-}
-
-
-
+} // namespace rosflight_sim

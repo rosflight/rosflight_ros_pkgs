@@ -29,7 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "multirotor_forces_and_moments.h"
+#include <rosflight_sim/multirotor_forces_and_moments.h>
 
 namespace rosflight_sim
 {

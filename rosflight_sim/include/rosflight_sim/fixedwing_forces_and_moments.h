@@ -29,80 +29,92 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef ROSFLIGHT_SIM_FIXEDWING_FORCES_AND_MOMENTS_H
+#define ROSFLIGHT_SIM_FIXEDWING_FORCES_AND_MOMENTS_H
 
-#ifndef ROSFLIGHT_SIL_H
-#define ROSFLIGHT_SIL_H
+#include <rosflight_sim/mav_forces_and_moments.h>
 
-#include <stdio.h>
-
-#include <boost/bind.hpp>
-#include <Eigen/Eigen>
-
-#include <gazebo/common/common.hh>
-#include <gazebo/common/Plugin.hh>
-#include <gazebo/gazebo.hh>
-#include <gazebo/physics/physics.hh>
 #include <ros/ros.h>
 
-#include "rosflight.h"
-#include "SIL_board.h"
-
-#include "mav_forces_and_moments.h"
-#include "multirotor_forces_and_moments.h"
-#include "fixedwing_forces_and_moments.h"
-
-using namespace rosflight_sim;
-
-namespace gazebo
+namespace rosflight_sim
 {
 
-class ROSflightSIL : public ModelPlugin {
-public:
-  ROSflightSIL();
-
-  ~ROSflightSIL();
-
- // void SendForces();
-
-
-protected:
-  void UpdateForcesAndMoments();
-  void UpdateEstimator();
-  void Reset();
-  void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
-  void OnUpdate(const common::UpdateInfo & /*_info*/);
-
+class Fixedwing : public MAVForcesAndMoments
+{
 private:
-  SIL_Board board_;
-  rosflight_firmware::ROSflight firmware_;
+    ros::NodeHandle* nh_;
 
-  std::string mav_type_;
-  std::string namespace_;
-  std::string link_name_;
+    // physical parameters
+    double mass_;
+    double Jx_;
+    double Jy_;
+    double Jz_;
+    double Jxz_;
+    double rho_;
 
-  physics::WorldPtr world_;
-  physics::ModelPtr model_;
-  physics::LinkPtr link_;
-  physics::JointPtr joint_;
-  physics::EntityPtr parent_link_;
-  event::ConnectionPtr updateConnection_; // Pointer to the update event connection.
+    // aerodynamic coefficients
+    struct WingCoeff{
+      double S;
+      double b;
+      double c;
+      double M;
+      double epsilon;
+      double alpha0;
+    } wing_;
 
+    // Propeller Coefficients
+    struct PropCoeff{
+      double k_motor;
+      double k_T_P;
+      double k_Omega;
+      double e;
+      double S;
+      double C;
+    } prop_;
 
-  MAVForcesAndMoments* mav_dynamics_;
+    // Lift Coefficients
+    struct LiftCoeff{
+      double O;
+      double alpha;
+      double beta;
+      double p;
+      double q;
+      double r;
+      double delta_a;
+      double delta_e;
+      double delta_r;
+    };
 
-  // container for forces
-  MAVForcesAndMoments::ForcesAndTorques forces_, applied_forces_;
+    LiftCoeff CL_;
+    LiftCoeff CD_;
+    LiftCoeff Cm_;
+    LiftCoeff CY_;
+    LiftCoeff Cell_;
+    LiftCoeff Cn_;
 
-  // Time Counters
-  double sampling_time_;
-  double prev_sim_time_;
-  uint64_t start_time_us_;
+    // not constants
+    // actuators
+    struct Actuators{
+      double e;
+      double a;
+      double r;
+      double t;
+    } delta_;
 
-  ros::NodeHandle* nh_;
+      // wind
+    struct Wind{
+      double N;
+      double E;
+      double D;
+    } wind_;
 
-  // For reset handling
-  math::Pose initial_pose_;
+public:
+    Fixedwing(ros::NodeHandle* nh);
+    ~Fixedwing();
+
+    virtual ForcesAndTorques updateForcesAndTorques(Pose pos, Velocities vel, const int act_cmd[], double sample_time);
 };
-}
 
-#endif // ROSFLIGHT_SIL_H
+} // namespace rosflight_sim
+
+#endif // ROSFLIGHT_SIM_FIXEDWING_FORCES_AND_MOMENTS_H

@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MAV_FORCES_AND_MOMENTS_H
-#define MAV_FORCES_AND_MOMENTS_H
+#ifndef ROSFLIGHT_SIM_MAV_FORCES_AND_MOMENTS_H
+#define ROSFLIGHT_SIM_MAV_FORCES_AND_MOMENTS_H
 
 namespace rosflight_sim
 {
@@ -84,6 +84,6 @@ public:
     virtual ForcesAndTorques updateForcesAndTorques(Pose pos, Velocities vel, const int act_cmds[], double sample_time) = 0;
 };
 
-}
+} // namespace rosflight_sim
 
-#endif
+#endif // ROSFLIGHT_SIM_MAV_FORCES_AND_MOMENTS_H

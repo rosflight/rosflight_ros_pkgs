@@ -29,7 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#ifndef ROSFLIGHT_SIM_SIL_BOARD_H
+#define ROSFLIGHT_SIM_SIL_BOARD_H
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -46,11 +47,9 @@
 
 #include <rosflight_firmware/udp_board.h>
 
-using namespace rosflight_firmware;
-
 namespace rosflight_sim {
 
-class SIL_Board : public UDPBoard
+class SIL_Board : public rosflight_firmware::UDPBoard
 {
 
 private:
@@ -168,4 +167,6 @@ private:
   int pwm_outputs_[14];  //assumes maximum of 14 channels
 };
 
-}
+} // namespace rosflight_sim
+
+#endif // ROSFLIGHT_SIM_SIL_BOARD_H
