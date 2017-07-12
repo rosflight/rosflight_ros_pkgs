@@ -46,6 +46,8 @@
 
 #include "board.h"
 
+using namespace rosflight_firmware;
+
 namespace rosflight {
 
 class SIL_Board : public Board
@@ -62,6 +64,9 @@ private:
   float _gyro_scale = 1.0;
 
   gazebo::math::Vector3 inertial_magnetic_field_;
+
+  double next_imu_update_time_ = 0.0;
+  double imu_update_rate_ = 1000.0;
 
 public:
 
@@ -84,10 +89,10 @@ public:
   void sensors_init();
   uint16_t num_sensor_errors(void);
 
-  void imu_register_callback(void (*callback)(void));
+  bool new_imu_data();
   void imu_read_accel(float accel[3]);
   void imu_read_gyro(float gyro[3]);
-  bool imu_read_all(float accel[3], float* temperature, float gyro[3]);
+  bool imu_read_all(float accel[3], float* temperature, float gyro[3], uint64_t* time_us);
   float imu_read_temperature(void);
   void imu_not_responding_error();
 
@@ -95,6 +100,7 @@ public:
   bool mag_present(void);
   void mag_read(float mag[3]);
 
+  bool baro_check(void);
   bool baro_present(void);
   void baro_read(float *altitude, float *pressure, float *temperature); // TODO move altitude calculation outside this function
   void baro_calibrate();
@@ -131,36 +137,37 @@ public:
   void led1_toggle(void);
 
   // Gazebo stuff
-  void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world, gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type)
-  {
-      link_ = link;
-      world_ = world;
-      model_ = model;
-      nh_ = nh;
-      mav_type_ = mav_type;
+  void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world, gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type);
+  void RCCallback(const rosflight_msgs::RCRaw& msg);
+  inline const int* get_outputs() const { return pwm_outputs_; }
 
-      // Configure Noise
-      random_generator_= std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
-      standard_normal_distribution_ = std::normal_distribution<double>(0.0, 1.0);
+private:
+  double gyro_stdev_;
+  double acc_stdev_;
+  double gyro_bias_range_;
+  double acc_bias_range_;
+  double gyro_bias_walk_stdev_;
+  double acc_bias_walk_stdev_;
+  double baro_bias_walk_stdev_;
+  double baro_stdev_;
+  double baro_bias_range_;
+  double mag_bias_walk_stdev_;
+  double mag_stdev_;
+  double mag_bias_range_;
 
-      /// TODO read a param to set this
-      noise_on_ = true;
-  }
-
-  // Random Engine for noise
+  gazebo::math::Vector3 gravity_;
+  gazebo::math::Vector3 gyro_bias_;
+  gazebo::math::Vector3 acc_bias_;
   std::default_random_engine random_generator_;
-  std::normal_distribution<double> standard_normal_distribution_;
-  bool noise_on_;
+  std::normal_distribution<double> normal_distribution_;
+  std::uniform_real_distribution<double> uniform_distribution_;
 
   gazebo::physics::WorldPtr world_;
   gazebo::physics::ModelPtr model_;
   gazebo::physics::LinkPtr link_;
-//  gazebo::physics::JointPtr joint_;
-//  gazebo::physics::EntityPtr parent_link_;
 
   ros::NodeHandle* nh_;
   ros::Subscriber rc_sub_;
-  void RCCallback(const rosflight_msgs::RCRaw& msg);
   rosflight_msgs::RCRaw latestRC_;
 
   std::string mav_type_;

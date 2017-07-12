@@ -126,7 +126,7 @@ Fixedwing::Fixedwing(ros::NodeHandle* nh)
     CY_.delta_r = nh_->param<double>("C_Y_delta_r", -0.017);
 }
 
-Fixedwing::ForcesAndTorques Fixedwing::updateFrocesAndTorques(Pose pos, Velocities vel, int act_cmd[], double sample_time)
+Fixedwing::ForcesAndTorques Fixedwing::updateForcesAndTorques(Pose pos, Velocities vel, const int act_cmd[], double sample_time)
 {
     delta_.a = (act_cmd[0] - 1500.0)/500;
     delta_.e = (act_cmd[1] - 1500.0)/500;

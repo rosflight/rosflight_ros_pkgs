@@ -18,27 +18,30 @@ catkin_package(
 add_library(rosflight_firmware
 
  firmware/src/rosflight.cpp
- firmware/src/printf.c
+ firmware/src/nanoprintf.cpp
  firmware/src/estimator.cpp
  firmware/src/mixer.cpp
  firmware/src/controller.cpp
  firmware/src/param.cpp
- firmware/src/mode.cpp
+ firmware/src/state_manager.cpp
  firmware/src/rc.cpp
- firmware/src/mux.cpp
+ firmware/src/command_manager.cpp
  firmware/src/sensors.cpp
 
- firmware/lib/turbotrig/turbotrig.c
- firmware/lib/turbotrig/turbovec.c
+ firmware/src/mavlink.cpp
 
- firmware/lib/mavlink/mavlink.cpp
- firmware/lib/mavlink/mavlink_param.cpp
- firmware/lib/mavlink/mavlink_stream.cpp
- firmware/lib/mavlink/mavlink_util.cpp
+ firmware/lib/turbotrig/turbotrig.cpp
+ firmware/lib/turbotrig/turbovec.cpp
 )
 
 install(
   TARGETS rosflight_firmware
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
+
+install(
+  DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
 )

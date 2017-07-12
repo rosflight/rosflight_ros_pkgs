@@ -78,7 +78,7 @@ public:
       double psi;
     };
 
-    virtual ForcesAndTorques updateFrocesAndTorques(Pose pos, Velocities vel, int act_cmds[], double sample_time) = 0;
+    virtual ForcesAndTorques updateForcesAndTorques(Pose pos, Velocities vel, const int act_cmds[], double sample_time) = 0;
 };
 
 #endif

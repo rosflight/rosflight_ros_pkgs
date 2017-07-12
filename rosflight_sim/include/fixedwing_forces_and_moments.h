@@ -109,7 +109,7 @@ public:
     Fixedwing(ros::NodeHandle* nh);
     ~Fixedwing();
 
-    virtual ForcesAndTorques updateFrocesAndTorques(Pose pos, Velocities vel, int act_cmd[], double sample_time);
+    virtual ForcesAndTorques updateForcesAndTorques(Pose pos, Velocities vel, const int act_cmd[], double sample_time);
 };
 
 #endif

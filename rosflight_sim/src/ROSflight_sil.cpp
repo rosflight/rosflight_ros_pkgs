@@ -46,7 +46,7 @@ namespace gazebo
 
 ROSflightSIL::ROSflightSIL() :
   ModelPlugin(), nh_(nullptr), prev_sim_time_(0),
-  firmware_(&board_)  {
+  firmware_(board_)  {
 }
 
 
@@ -104,7 +104,7 @@ void ROSflightSIL::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   // Initialize the Firmware
   board_.gazebo_setup(link_, world_, model_, nh_, mav_type_);
   board_.init_board();
-  firmware_.rosflight_init();
+  firmware_.init();
 
   // Connect the update function to the simulation
   updateConnection_ = event::Events::ConnectWorldUpdateBegin(boost::bind(&ROSflightSIL::OnUpdate, this, _1));
@@ -139,7 +139,7 @@ void ROSflightSIL::OnUpdate(const common::UpdateInfo& _info)
   vel.q = -C_angular_velocity_W_C.y;
   vel.r = -C_angular_velocity_W_C.z;
 
-  forces_ = mav_dynamics_->updateFrocesAndTorques(pos, vel, board_.pwm_outputs_, sampling_time_);
+  forces_ = mav_dynamics_->updateForcesAndTorques(pos, vel, board_.get_outputs(), sampling_time_);
 
   // apply the forces and torques to the joint
   link_->AddRelativeForce(math::Vector3(forces_.Fx, -forces_.Fy, -forces_.Fz));

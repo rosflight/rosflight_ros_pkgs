@@ -40,7 +40,7 @@ add_library(ROSflight_sil_plugin
  src/multirotor_forces_and_moments.cpp
  src/fixedwing_forces_and_moments.cpp
  )
-target_link_libraries(ROSflight_sil_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} yaml-cpp)
+target_link_libraries(ROSflight_sil_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} yaml-cpp rosflight_firmware)
 add_dependencies(ROSflight_sil_plugin ${catkin_EXPORTED_TARGETS} rosflight_msgs_generate_messages_cpp)
 set_property( TARGET ROSflight_sil_plugin APPEND_STRING PROPERTY COMPILE_FLAGS -Wno-format-extra-args )
 

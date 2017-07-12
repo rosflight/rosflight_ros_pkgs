@@ -116,7 +116,7 @@ Multirotor::Multirotor(ros::NodeHandle *nh)
   wind_speed_sub_ = nh_->subscribe("wind", 1, &Multirotor::WindSpeedCallback, this);
 }
 
-Multirotor::ForcesAndTorques Multirotor::updateFrocesAndTorques(Pose pos, Velocities vel, int act_cmd[], double sample_time)
+Multirotor::ForcesAndTorques Multirotor::updateForcesAndTorques(Pose pos, Velocities vel, const int act_cmd[], double sample_time)
 {
     double pd = pos.pd;
 
