@@ -1,0 +1,49 @@
+<!-- This is a launch file that runs the bare minimum requirements fly a fixedwing in gazebo.   -->
+
+<launch>
+  <arg name="mav_name"            default="fixedwing"/>
+
+  <!-- Start Simulator -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <!-- <arg name="world_name" value="$(find rosflight_sim)/worlds/basic.world"/> -->
+    <arg name="paused" value="true"/>
+    <arg name="verbose" value="false"/>
+    <arg name="gui" value="true"/>
+    <arg name="debug" value="true"/>
+  </include>
+
+  <!-- Spawn MAV -->
+  <include file="$(find rosflight_sim)/launch/spawn_mav.launch">
+    <arg name="mav_name"  value="$(arg mav_name)" />
+    <arg name="model"     value="$(find rosflight_sim)/xacro/$(arg mav_name).xacro" />
+  </include>
+
+  <!-- <node name="rosflight_io" pkg="rosflight" type="rosflight_io" >
+    <param name="connection" type="string" value="udp"/>
+  </node> -->
+
+  <group ns="$(arg mav_name)">
+    <!-- Load Global Parameters for this MAV -->
+    <rosparam command="load" file="$(find rosflight_sim)/params/$(arg mav_name).yaml"/>
+
+    <!-- <node name="autopilot" pkg="ros_plane" type="ros_plane_controller" >
+      <remap from="state" to="truth"/>
+    </node>
+
+    <node name="estimator" pkg="ros_plane" type="ros_plane_estimator" output="screen"/>
+
+    <node name="pathfollower" pkg="ros_plane" type="ros_plane_path_follower">
+       <remap from="state" to="truth"/>
+    </node>
+
+    <node name="chase" pkg="image_view" type="image_view">
+      <remap from="image" to="chase/camera/rgb"/>
+    </node>
+
+    <node name="reconfig" pkg="rqt_reconfigure" type="rqt_reconfigure"/> 
+
+    <node name="current_path_publisher" pkg="rostopic" type="rostopic"
+      args="pub current_path ros_plane/Current_Path 'false' '30.0'  '[0.0, 0.0, -100.0]'  '[1.0, 0.0, 0.0]'  '[0.0, 0.0, -100.0]'  '100.0' '1'"/>  -->
+
+  </group>
+</launch>
