@@ -32,6 +32,8 @@
 #ifndef MAV_FORCES_AND_MOMENTS_H
 #define MAV_FORCES_AND_MOMENTS_H
 
+#include <Eigen/Core>
+
 namespace rosflight_sim
 {
 
@@ -54,34 +56,16 @@ protected:
 
 public:
 
-    struct ForcesAndTorques{
-      double Fx;
-      double Fy;
-      double Fz;
-      double l;
-      double m;
-      double n;
+    struct Current_State{
+        Eigen::Vector3d pos; // Position of MAV in NED wrt initial position
+        Eigen::Matrix3d rot; // Rotation of MAV in NED wrt initial position
+        Eigen::Vector3d vel; // Body-fixed velocity of MAV wrt initial position (NED)
+        Eigen::Vector3d omega; // Body-fixed angular velocity of MAV (NED)
+        double t; // current time
     };
 
-    struct Velocities{
-      double u;
-      double v;
-      double w;
-      double p;
-      double q;
-      double r;
-    };
-
-    struct Pose{
-      double pn;
-      double pe;
-      double pd;
-      double phi;
-      double theta;
-      double psi;
-    };
-
-    virtual ForcesAndTorques updateForcesAndTorques(Pose pos, Velocities vel, const int act_cmds[], double sample_time) = 0;
+    virtual Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x, const int act_cmds[]) = 0;
+    virtual void set_wind(Eigen::Vector3d wind) = 0;
 };
 
 }

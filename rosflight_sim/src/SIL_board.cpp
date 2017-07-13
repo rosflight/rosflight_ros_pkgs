@@ -47,9 +47,7 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   nh_ = nh;
   mav_type_ = mav_type;
 
-  // Get Parameters
-  ground_altitude_ = nh->param<double>("ground_altitude", 1387.0);
-
+  // Get Sensor Parameters
   gyro_stdev_ = nh->param<double>("gyro_stdev", 0.13);
   gyro_bias_range_ = nh->param<double>("gyro_bias_range", 0.15);
   gyro_bias_walk_stdev_ = nh->param<double>("gyro_bias_walk_stdev", 0.001);
@@ -74,14 +72,31 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   sonar_min_range_ = nh_->param<double>("sonar_min_range", 0.25);
   sonar_max_range_ = nh_->param<double>("sonar_max_range", 8.0);
 
+  imu_update_rate_ = nh_->param<double>("imu_update_rate", 1000.0);
+
+
+  // Calculate Magnetic Field Vector (for mag simulation)
+  double inclination = nh_->param<double>("inclination", 1.14316156541);
+  double declination = nh_->param<double>("declination", 0.198584539676);
+  inertial_magnetic_field_.z = sin(-inclination);
+  inertial_magnetic_field_.x = cos(-inclination)*cos(-declination);
+  inertial_magnetic_field_.y = cos(-inclination)*sin(-declination);
+
+
+  // Get the desired altitude at the ground (for baro simulation)
+  ground_altitude_ = nh->param<double>("ground_altitude", 1387.0);
+
+
   // Configure Noise
   random_generator_= std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
   normal_distribution_ = std::normal_distribution<double>(0.0, 1.0);
   uniform_distribution_ = std::uniform_real_distribution<double>(-1.0, 1.0);
 
+
   gravity_ = world_->GetPhysicsEngine()->GetGravity();
 
-  // Initialize the Biases
+
+  // Initialize the Sensor Biases
   gyro_bias_.x = gyro_bias_range_*uniform_distribution_(random_generator_);
   gyro_bias_.y = gyro_bias_range_*uniform_distribution_(random_generator_);
   gyro_bias_.z = gyro_bias_range_*uniform_distribution_(random_generator_);
@@ -97,7 +112,6 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
 
 void SIL_Board::board_reset(bool bootloader)
 {
-
 }
 
 // clock
@@ -215,12 +229,6 @@ void SIL_Board::imu_not_responding_error(void)
 
 bool SIL_Board::mag_present(void)
 {
-  // Gazebo coordinates is NWU and Earth's magnetic field is defined in NED, hence the negative signs
-  double inclination_ = 1.14316156541;
-  double declination_ = 0.198584539676;
-  inertial_magnetic_field_.z = sin(-inclination_);
-  inertial_magnetic_field_.x = cos(-inclination_)*cos(-declination_);
-  inertial_magnetic_field_.y = cos(-inclination_)*sin(-declination_);
   return true;
 }
 
@@ -228,21 +236,22 @@ void SIL_Board::mag_read(float mag[3])
 {
   gazebo::math::Pose I_to_B = link_->GetWorldPose();
   gazebo::math::Vector3 noise;
-  noise.x = 0.02*normal_distribution_(random_generator_);
-  noise.y = 0.02*normal_distribution_(random_generator_);
-  noise.z = 0.02*normal_distribution_(random_generator_);
+  noise.x = mag_stdev_*normal_distribution_(random_generator_);
+  noise.y = mag_stdev_*normal_distribution_(random_generator_);
+  noise.z = mag_stdev_*normal_distribution_(random_generator_);
+
+  // Random Walk for bias
+  mag_bias_.x += mag_bias_walk_stdev_*normal_distribution_(random_generator_);
+  mag_bias_.y += mag_bias_walk_stdev_*normal_distribution_(random_generator_);
+  mag_bias_.z += mag_bias_walk_stdev_*normal_distribution_(random_generator_);
 
   // combine parts to create a measurement
-  gazebo::math::Vector3 measurement = I_to_B.rot.RotateVectorReverse(inertial_magnetic_field_);
+  gazebo::math::Vector3 y_mag = I_to_B.rot.RotateVectorReverse(inertial_magnetic_field_) + mag_bias_ + noise;
 
-  measurement += noise;
-
-  // normalize measurement
-  gazebo::math::Vector3 normalized = measurement.Normalize();
-
-  mag[0] = normalized.x;
-  mag[1] = -normalized.y;
-  mag[2] = -normalized.z;
+  // Convert measurement to NED
+  mag[0] = y_mag.x;
+  mag[1] = -y_mag.y;
+  mag[2] = -y_mag.z;;
 }
 
 bool SIL_Board::mag_check(void)
@@ -317,14 +326,11 @@ void SIL_Board::diff_pressure_read(float *diff_pressure, float *temperature, flo
 {
   static double rho_ = 1.225;
   // Calculate Airspeed
-  gazebo::math::Vector3 uvw_B_NWU = link_->GetRelativeLinearVel();
+  gazebo::math::Vector3 vel = link_->GetRelativeLinearVel();
 
-  /// TODO: Wind is being applied in the inertial frame, not the body-fixed frame
-  //  double ur = u - wind_.N;
-  //  double vr = v - wind_.E;
-  //  double wr = w - wind_.D;
-  //  double Va = sqrt(pow(ur,2.0) + pow(vr,2.0) + pow(wr,2.0));
-  double Va = uvw_B_NWU.GetLength();
+
+
+  double Va = vel.GetLength();
 
   // Invert Airpseed to get sensor measurement
   double y_as = rho_*Va*Va/2.0; // Page 130 in the UAV Book

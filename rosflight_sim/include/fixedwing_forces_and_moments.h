@@ -33,8 +33,9 @@
 #define FIXEDWING_FORCES_AND_MOMENTS_H
 
 #include "mav_forces_and_moments.h"
-
 #include <ros/ros.h>
+
+#include <Eigen/Dense>
 
 namespace rosflight_sim
 {
@@ -101,18 +102,15 @@ private:
       double t;
     } delta_;
 
-      // wind
-    struct Wind{
-      double N;
-      double E;
-      double D;
-    } wind_;
+    // wind
+    Eigen::Vector3d wind_;
 
 public:
     Fixedwing(ros::NodeHandle* nh);
     ~Fixedwing();
 
-    virtual ForcesAndTorques updateForcesAndTorques(Pose pos, Velocities vel, const int act_cmd[], double sample_time);
+    Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x, const int act_cmds[]);
+    void set_wind(Eigen::Vector3d wind);
 };
 
 }

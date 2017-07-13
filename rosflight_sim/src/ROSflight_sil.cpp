@@ -39,6 +39,7 @@
 
 #include "SIL_board.h"
 #include "rosflight.h"
+#include "Eigen/Core"
 
 using namespace rosflight_sim;
 
@@ -48,7 +49,6 @@ namespace gazebo
 ROSflightSIL::ROSflightSIL() :
   ModelPlugin(),
   nh_(nullptr),
-  prev_sim_time_(0),
   firmware_(board_)  {
 }
 
@@ -119,34 +119,28 @@ void ROSflightSIL::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 // This gets called by the world update event.
 void ROSflightSIL::OnUpdate(const common::UpdateInfo& _info)
 {
-  sampling_time_ = _info.simTime.Double() - prev_sim_time_;
-  prev_sim_time_ = _info.simTime.Double();
+  Eigen::Matrix3d NWU_to_NED;
+  NWU_to_NED << 1, 0, 0, 0, -1, 0, 0, 0, -1;
 
-  MAVForcesAndMoments::Pose pos;
-  math::Pose W_pose_W_C = link_->GetWorldCoGPose();
-  pos.pn = W_pose_W_C.pos.x; // We should check to make sure that this is right
-  pos.pe = -W_pose_W_C.pos.y;
-  pos.pd = -W_pose_W_C.pos.z;
-  math::Vector3 euler_angles = W_pose_W_C.rot.GetAsEuler();
-  pos.phi = euler_angles.x;
-  pos.theta = -euler_angles.y;
-  pos.psi = -euler_angles.z;
+  MAVForcesAndMoments::Current_State state;
+  math::Pose pose = link_->GetWorldCoGPose();
+  math::Vector3 vel = link_->GetRelativeLinearVel();
+  math::Vector3 omega = link_->GetRelativeAngularVel();
 
-  MAVForcesAndMoments::Velocities vel;
-  math::Vector3 C_linear_velocity_W_C = link_->GetRelativeLinearVel();
-  vel.u = C_linear_velocity_W_C.x;
-  vel.v = -C_linear_velocity_W_C.y;
-  vel.w = -C_linear_velocity_W_C.z;
-  math::Vector3 C_angular_velocity_W_C = link_->GetRelativeAngularVel();
-  vel.p = C_angular_velocity_W_C.x;
-  vel.q = -C_angular_velocity_W_C.y;
-  vel.r = -C_angular_velocity_W_C.z;
+  // Convert gazebo types to Eigen and switch to NED frame
+  state.pos = NWU_to_NED * vec3_to_eigen_from_gazebo(pose.pos) ;
+  state.rot = NWU_to_NED * rotation_to_eigen_from_gazebo(pose.rot);
+  state.vel = NWU_to_NED * vec3_to_eigen_from_gazebo(vel);
+  state.omega = NWU_to_NED * vec3_to_eigen_from_gazebo(omega);
+  state.t = _info.simTime.Double();
 
-  forces_ = mav_dynamics_->updateForcesAndTorques(pos, vel, board_.get_outputs(), sampling_time_);
+  forces_ = mav_dynamics_->updateForcesAndTorques(state, board_.get_outputs());
 
-  // apply the forces and torques to the joint
-  link_->AddRelativeForce(math::Vector3(forces_.Fx, -forces_.Fy, -forces_.Fz));
-  link_->AddRelativeTorque(math::Vector3(forces_.l, -forces_.m, -forces_.n));
+  // apply the forces and torques to the joint (apply in NWU)
+  math::Vector3 force = vec3_to_gazebo_from_eigen(NWU_to_NED * forces_.block<3,1>(0,0));
+  math::Vector3 torque = vec3_to_gazebo_from_eigen(NWU_to_NED *  forces_.block<3,1>(3,0));
+  link_->AddRelativeForce(force);
+  link_->AddRelativeTorque(torque);
 }
 
 void ROSflightSIL::Reset()
@@ -157,6 +151,31 @@ void ROSflightSIL::Reset()
 //  rosflight_init();
 }
 
+void ROSflightSIL::windCallback(const geometry_msgs::Vector3 &msg)
+{
+  Eigen::Vector3d wind;
+  wind << msg.x, msg.y, msg.z;
+  mav_dynamics_->set_wind(wind);
+}
+
+Eigen::Vector3d ROSflightSIL::vec3_to_eigen_from_gazebo(math::Vector3 vec)
+{
+  Eigen::Vector3d out;
+  out << vec.x, vec.y, vec.z;
+  return out;
+}
+
+math::Vector3 ROSflightSIL::vec3_to_gazebo_from_eigen(Eigen::Vector3d vec)
+{
+  math::Vector3 out(vec(0), vec(1), vec(2));
+  return out;
+}
+
+Eigen::Matrix3d ROSflightSIL::rotation_to_eigen_from_gazebo(math::Quaternion quat)
+{
+  Eigen::Quaterniond eig_quat(quat.w, quat.x, quat.y, quat.z);
+  return eig_quat.toRotationMatrix();
+}
 
 GZ_REGISTER_MODEL_PLUGIN(ROSflightSIL);
 }

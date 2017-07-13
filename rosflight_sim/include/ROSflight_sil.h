@@ -43,6 +43,7 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 #include <ros/ros.h>
+#include <geometry_msgs/Vector3.h>
 
 #include "rosflight.h"
 #include "SIL_board.h"
@@ -71,6 +72,7 @@ protected:
   void Reset();
   void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
   void OnUpdate(const common::UpdateInfo & /*_info*/);
+  void windCallback(const geometry_msgs::Vector3 &msg);
 
 private:
   SIL_Board board_;
@@ -87,21 +89,27 @@ private:
   physics::EntityPtr parent_link_;
   event::ConnectionPtr updateConnection_; // Pointer to the update event connection.
 
+  ros::Subscriber wind_sub_;
+
 
   MAVForcesAndMoments* mav_dynamics_;
 
   // container for forces
-  MAVForcesAndMoments::ForcesAndTorques forces_, applied_forces_;
+  Eigen::Matrix<double, 6, 1> forces_, applied_forces_;
 
   // Time Counters
-  double sampling_time_;
-  double prev_sim_time_;
   uint64_t start_time_us_;
 
   ros::NodeHandle* nh_;
 
   // For reset handling
   math::Pose initial_pose_;
+
+  // helper functions for converting to and from eigen
+  Eigen::Vector3d vec3_to_eigen_from_gazebo(math::Vector3 vec);
+  math::Vector3 vec3_to_gazebo_from_eigen(Eigen::Vector3d vec);
+  Eigen::Matrix3d rotation_to_eigen_from_gazebo(math::Quaternion vec);
+
 };
 }
 
