@@ -88,24 +88,22 @@ void UDPBoard::serial_init(uint32_t baud_rate)
   io_thread_ = boost::thread(boost::bind(&boost::asio::io_service::run, &io_service_));
 }
 
-void UDPBoard::serial_write(uint8_t byte)
+void UDPBoard::serial_write(const uint8_t *src, size_t len)
 {
-  current_write_buffer_->add_byte(byte);
-  if (current_write_buffer_->full())
+  Buffer *buffer = new Buffer(src, len);
+
   {
-    {
-      MutexLock lock(write_mutex_);
-      write_queue_.push_back(current_write_buffer_);
-    }
-    current_write_buffer_ = new Buffer;
-    async_write(true);
+    MutexLock lock(write_mutex_);
+    write_queue_.push_back(buffer);
   }
+
+  async_write(true);
 }
 
 uint16_t UDPBoard::serial_bytes_available()
 {
   MutexLock lock(read_mutex_);
-  return !read_queue_.empty();
+  return !read_queue_.empty(); //! \todo This should return a number, not a bool
 }
 
 uint8_t UDPBoard::serial_read()

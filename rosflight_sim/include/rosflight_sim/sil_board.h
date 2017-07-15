@@ -32,6 +32,7 @@
 #ifndef ROSFLIGHT_SIM_SIL_BOARD_H
 #define ROSFLIGHT_SIM_SIL_BOARD_H
 
+#include <cmath>
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -40,34 +41,19 @@
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
-#include <cmath>
 
 #include <ros/ros.h>
 #include <rosflight_msgs/RCRaw.h>
 
 #include <rosflight_firmware/udp_board.h>
 
-namespace rosflight_sim {
+namespace rosflight_sim
+{
 
 class SIL_Board : public rosflight_firmware::UDPBoard
 {
-
-private:
-  bool _baro_present = false;
-  bool _mag_present = false;
-  bool _sonar_present = false;
-  bool _diff_pressure_present = false;
-  int _board_revision = 2;
-
-  float _accel_scale = 1.0;
-  float _gyro_scale = 1.0;
-
-  gazebo::math::Vector3 inertial_magnetic_field_;
-
-  double next_imu_update_time_ = 0.0;
-  double imu_update_rate_ = 1000.0;
-
 public:
+  SIL_Board();
 
   // setup
   void init_board(void);
@@ -131,10 +117,14 @@ public:
 
   // Gazebo stuff
   void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world, gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type);
-  void RCCallback(const rosflight_msgs::RCRaw& msg);
   inline const int* get_outputs() const { return pwm_outputs_; }
 
 private:
+  void RCCallback(const rosflight_msgs::RCRaw& msg);
+
+  uint64_t next_imu_update_time_us_ = 0;
+  uint64_t imu_update_period_us_ = 1000;
+
   double gyro_stdev_;
   double acc_stdev_;
   double gyro_bias_range_;
@@ -151,6 +141,9 @@ private:
   gazebo::math::Vector3 gravity_;
   gazebo::math::Vector3 gyro_bias_;
   gazebo::math::Vector3 acc_bias_;
+
+  gazebo::math::Vector3 inertial_magnetic_field_;
+
   std::default_random_engine random_generator_;
   std::normal_distribution<double> normal_distribution_;
   std::uniform_real_distribution<double> uniform_distribution_;
@@ -162,9 +155,12 @@ private:
   ros::NodeHandle* nh_;
   ros::Subscriber rc_sub_;
   rosflight_msgs::RCRaw latestRC_;
+  bool rc_received_;
 
   std::string mav_type_;
   int pwm_outputs_[14];  //assumes maximum of 14 channels
+
+  double boot_time_;
 };
 
 } // namespace rosflight_sim

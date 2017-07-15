@@ -29,11 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
 #define ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
-
-#include <stdio.h>
 
 #include <gazebo/common/common.hh>
 #include <gazebo/common/Plugin.hh>
@@ -51,15 +48,15 @@
 namespace rosflight_sim
 {
 
-class ROSflightSIL : public gazebo::ModelPlugin {
+class ROSflightSIL : public gazebo::ModelPlugin
+{
 public:
   ROSflightSIL();
   ~ROSflightSIL();
 
-protected:
-  void Reset();
-  void Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf);
-  void OnUpdate(const gazebo::common::UpdateInfo & /*_info*/);
+  void Reset() override;
+  void Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf) override;
+  void OnUpdate(const gazebo::common::UpdateInfo& _info);
 
 private:
   SIL_Board board_;

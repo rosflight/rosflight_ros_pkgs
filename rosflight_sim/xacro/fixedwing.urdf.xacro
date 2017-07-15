@@ -52,7 +52,7 @@ Author: Gary Ellingson
       </geometry>
     </collision>
 
-    <!-- Wheels 
+    <!-- Wheels
     <xacro:include filename="$(find fcu_sim_plugins)/xacro/wheel.xacro"/>
     <xacro:caster
       radius="0.05">
@@ -69,10 +69,8 @@ Author: Gary Ellingson
   </link>
 
   <!-- ROSflight_sill -->
-  <xacro:include filename="$(find rosflight_sim)/xacro/ROSflight_SIL.xacro"/>
-  <xacro:generic_fixedwing
-    namespace="${namespace}"
-    parent_link="${namespace}/base_link"/>
+  <xacro:include filename="$(find rosflight_sim)/xacro/rosflight_sil.xacro"/>
+  <xacro:generic_fixedwing namespace="${namespace}" parent_link="${namespace}/base_link"/>
 
   <!-- Chase Camera
   <xacro:include filename="$(find fcu_sim_plugins)/xacro/camera.xacro"/>

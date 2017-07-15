@@ -18,13 +18,10 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(Eigen3 REQUIRED)
 find_package(gazebo REQUIRED)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
-
 catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp gazebo_plugins gazebo_ros geometry_msgs rosflight_firmware rosflight_msgs
-  DEPENDS EIGEN3 GAZEBO YAML_CPP
+  DEPENDS EIGEN3 GAZEBO
 )
 
 include_directories(include)
@@ -32,11 +29,11 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
   ${GAZEBO_INCLUDE_DIRS}
-  ${YAML_CPP_INCLUDEDIR}
+  ${SDFormat_INCLUDE_DIRS}
 )
 link_directories(${GAZEBO_LIBRARY_DIRS})
 
-add_library(rosflight_sil_plugin
+add_library(rosflight_sil_plugin SHARED
   src/rosflight_sil.cpp
   src/sil_board.cpp
   src/multirotor_forces_and_moments.cpp
@@ -45,7 +42,6 @@ add_library(rosflight_sil_plugin
 target_link_libraries(rosflight_sil_plugin
   ${catkin_LIBRARIES}
   ${GAZEBO_LIBRARIES}
-  yaml-cpp
 )
 add_dependencies(rosflight_sil_plugin ${catkin_EXPORTED_TARGETS})
 
