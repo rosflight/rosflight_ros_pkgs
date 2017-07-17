@@ -102,7 +102,6 @@ Multirotor::Multirotor(ros::NodeHandle *nh)
   desired_torques_.resize(num_rotors_);
   actual_forces_.resize(num_rotors_);
   actual_torques_.resize(num_rotors_);
-//  motor_signals_.resize(num_rotors_);
 
   for (int i = 0; i < num_rotors_; i++)
   {
@@ -110,80 +109,65 @@ Multirotor::Multirotor(ros::NodeHandle *nh)
     desired_torques_(i)=0.0;
     actual_forces_(i)=0.0;
     actual_torques_(i)=0.0;
-//    motor_signals_(i)=1000;
   }
 
-  W_wind_speed_.x = 0;
-  W_wind_speed_.y = 0;
-  W_wind_speed_.z = 0;
-  wind_speed_sub_ = nh_->subscribe("wind", 1, &Multirotor::WindSpeedCallback, this);
+  wind_ = Eigen::Vector3d::Zero();
+  prev_time_ = -1;
 }
 
-Multirotor::ForcesAndTorques Multirotor::updateForcesAndTorques(Pose pos, Velocities vel, const int act_cmd[], double sample_time)
+Eigen::Matrix<double, 6, 1> Multirotor::updateForcesAndTorques(Current_State x, const int act_cmds[])
 {
-    double pd = pos.pd;
+  if (prev_time_ < 0)
+  {
+    prev_time_ = x.t;
+    return Eigen::Matrix<double, 6, 1>::Zero();
+  }
 
-    double u = vel.u;
-    double v = vel.v;
-    double w = vel.w;
+  double dt = x.t - prev_time_;
+  double pd = x.pos[2];
 
-    double p = vel.p;
-    double q = vel.q;
-    double r = vel.r;
+  // Get airspeed vector for drag force calculation (rotate wind into body frame and add to inertial velocity)
+  Eigen::Vector3d Va = x.vel + x.rot.inverse()*wind_;
 
-    // wind info is available in the wind_ struct
-    // Rotate into body frame and relative velocity
-    /// TODO remove the reconscrtuction of the gazebo pose, because it's a quick hack
-    /// gazebo.h is only included for these two lines
-    gazebo::math::Pose W_pose_W_C(pos.pn, -pos.pe, -pos.pd, pos.phi, -pos.theta, -pos.psi);
-    /// TODO using gazebo's rotation functions will make the wind be north-west-up not ned
-    gazebo::math::Vector3 C_wind_speed = W_pose_W_C.rot.RotateVector(W_wind_speed_);
-    double ur = u - C_wind_speed.x;
-    double vr = v - C_wind_speed.y;
-    double wr = w - C_wind_speed.z;
+  // Calculate Forces
+  for (int i = 0; i<num_rotors_; i++)
+  {
+    // First, figure out the desired force output from passing the signal into the quadratic approximation
+    double signal = act_cmds[i];
+    desired_forces_(i,0) = motors_[i].rotor.F_poly[0]*signal*signal + motors_[i].rotor.F_poly[1]*signal + motors_[i].rotor.F_poly[2];
+    desired_torques_(i,0) = motors_[i].rotor.T_poly[0]*signal*signal + motors_[i].rotor.T_poly[1]*signal + motors_[i].rotor.T_poly[2];
 
-    // Calculate Forces
-    for (int i = 0; i<num_rotors_; i++)
-    {
-      // First, figure out the desired force output from passing the signal into the quadratic approximation
-      double signal = act_cmd[i];
-      desired_forces_(i,0) = motors_[i].rotor.F_poly[0]*signal*signal + motors_[i].rotor.F_poly[1]*signal + motors_[i].rotor.F_poly[2];
-      desired_torques_(i,0) = motors_[i].rotor.T_poly[0]*signal*signal + motors_[i].rotor.T_poly[1]*signal + motors_[i].rotor.T_poly[2];
+    // Then, Calculate Actual force and torque for each rotor using first-order dynamics
+    double tau = (desired_forces_(i,0) > actual_forces_(i,0)) ? motors_[i].rotor.tau_up : motors_[i].rotor.tau_down;
+    double alpha = dt/(tau + dt);
+    actual_forces_(i,0) = sat((1-alpha)*actual_forces_(i) + alpha*desired_forces_(i), motors_[i].rotor.max, 0.0);
+    actual_torques_(i,0) = sat((1-alpha)*actual_torques_(i) + alpha*desired_torques_(i), motors_[i].rotor.max, 0.0);
+  }
 
-      // Then, Calculate Actual force and torque for each rotor using first-order dynamics
-      double tau = (desired_forces_(i,0) > actual_forces_(i,0)) ? motors_[i].rotor.tau_up : motors_[i].rotor.tau_down;
-      double alpha = sample_time/(tau + sample_time);
-      actual_forces_(i,0) = sat((1-alpha)*actual_forces_(i) + alpha*desired_forces_(i), motors_[i].rotor.max, 0.0);
-      actual_torques_(i,0) = sat((1-alpha)*actual_torques_(i) + alpha*desired_torques_(i), motors_[i].rotor.max, 0.0);
-    }
+  // Use the allocation matrix to calculate the body-fixed force and torques
+  Eigen::Vector4d output_forces = force_allocation_matrix_*actual_forces_;
+  Eigen::Vector4d output_torques = torque_allocation_matrix_*actual_torques_;
+  Eigen::Vector4d output_forces_and_torques = output_forces + output_torques;
 
-    // Use the allocation matrix to calculate the body-fixed force and torques
-    Eigen::Vector4d output_forces = force_allocation_matrix_*actual_forces_;
-    Eigen::Vector4d output_torques = torque_allocation_matrix_*actual_torques_;
-    Eigen::Vector4d output_forces_and_torques = output_forces + output_torques;
+  // Calculate Ground Effect
+  double z = -pd;
+  double ground_effect = max(ground_effect_[0]*z*z*z*z + ground_effect_[1]*z*z*z + ground_effect_[2]*z*z + ground_effect_[3]*z + ground_effect_[4], 0);
 
-    // Calculate Ground Effect
-    double z = -pd;
-    double ground_effect = max(ground_effect_[0]*z*z*z*z + ground_effect_[1]*z*z*z + ground_effect_[2]*z*z + ground_effect_[3]*z + ground_effect_[4], 0);
+  Eigen::Matrix<double, 6,1> forces;
+  // Apply other forces (drag) <- follows "Quadrotors and Accelerometers - State Estimation With an Improved Dynamic Model"
+  // By Rob Leishman et al.
+  forces.block<3,1>(3,0) = -linear_mu_ * Va;
+  forces.block<3,1>(3,0) = -angular_mu_ * x.omega + output_forces_and_torques.block<3,1>(0,0);
 
-    Multirotor::ForcesAndTorques forces;
-    // Apply other forces (wind) <- follows "Quadrotors and Accelerometers - State Estimation With an Improved Dynamic Model"
-    // By Rob Leishman et al.
-    forces.Fx = -linear_mu_*ur;
-    forces.Fy = -linear_mu_*vr;
-    forces.Fz = -linear_mu_*wr - ground_effect + output_forces_and_torques(3);
-    forces.l = -angular_mu_*p + output_forces_and_torques(0);
-    forces.m = -angular_mu_*q + output_forces_and_torques(1);
-    forces.n = -angular_mu_*r + output_forces_and_torques(2);
+  // Apply ground effect and thrust
+  forces(2) += output_forces_and_torques(3) - ground_effect;
 
-    return forces;
+  return forces;
 }
 
-void Multirotor::WindSpeedCallback(const geometry_msgs::Vector3 &wind)
+void Multirotor::set_wind(Eigen::Vector3d wind)
 {
-  W_wind_speed_.x = wind.x;
-  W_wind_speed_.y = wind.y;
-  W_wind_speed_.z = wind.z;
+  wind_ = wind;
 }
 
 }

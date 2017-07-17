@@ -33,11 +33,7 @@
 #define ROSFLIGHT_SIM_MULTIROTOR_FORCES_AND_MOMENTS_H
 
 #include <eigen3/Eigen/Dense>
-
 #include <ros/ros.h>
-#include <geometry_msgs/Vector3.h>
-
-#include <gazebo/gazebo.hh>
 
 #include <rosflight_sim/mav_forces_and_moments.h>
 
@@ -47,10 +43,9 @@ namespace rosflight_sim
 class Multirotor : public MAVForcesAndMoments {
 private:
     ros::NodeHandle* nh_;
+    Eigen::Vector3d wind_;
 
-    ros::Subscriber wind_speed_sub_;
-    void WindSpeedCallback(const geometry_msgs::Vector3& wind);
-    gazebo::math::Vector3 W_wind_speed_;
+    double prev_time_;
 
     struct Rotor{
       double max;
@@ -98,7 +93,6 @@ private:
 
     Eigen::MatrixXd force_allocation_matrix_;
     Eigen::MatrixXd torque_allocation_matrix_;
-//    Eigen::VectorXd motor_signals_;
     Eigen::VectorXd desired_forces_;
     Eigen::VectorXd desired_torques_;
     Eigen::VectorXd actual_forces_;
@@ -108,7 +102,8 @@ public:
     Multirotor(ros::NodeHandle* nh);
     ~Multirotor();
 
-    virtual ForcesAndTorques updateForcesAndTorques(Pose pos, Velocities vel, const int act_cmd[], double sample_time);
+    Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x, const int act_cmds[]);
+    void set_wind(Eigen::Vector3d wind);
 };
 
 } // namespace rosflight_sim

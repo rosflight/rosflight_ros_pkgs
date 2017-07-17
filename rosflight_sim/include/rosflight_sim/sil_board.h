@@ -51,21 +51,59 @@ namespace rosflight_sim {
 
 class SIL_Board : public rosflight_firmware::UDPBoard
 {
-
 private:
-  bool _baro_present = false;
-  bool _mag_present = false;
-  bool _sonar_present = false;
-  bool _diff_pressure_present = false;
-  int _board_revision = 2;
-
-  float _accel_scale = 1.0;
-  float _gyro_scale = 1.0;
-
   gazebo::math::Vector3 inertial_magnetic_field_;
 
-  double next_imu_update_time_ = 0.0;
-  double imu_update_rate_ = 1000.0;
+  double next_imu_update_time_;
+  double imu_update_rate_;
+
+  double gyro_stdev_;
+  double gyro_bias_walk_stdev_;
+  double gyro_bias_range_;
+
+  double acc_stdev_;
+  double acc_bias_range_;
+  double acc_bias_walk_stdev_;
+
+  double baro_bias_walk_stdev_;
+  double baro_stdev_;
+  double baro_bias_range_;
+
+  double mag_bias_walk_stdev_;
+  double mag_stdev_;
+  double mag_bias_range_;
+
+  double airspeed_bias_walk_stdev_;
+  double airspeed_stdev_;
+  double airspeed_bias_range_;
+
+  double sonar_stdev_;
+  double sonar_max_range_;
+  double sonar_min_range_;
+
+  gazebo::math::Vector3 gyro_bias_;
+  gazebo::math::Vector3 acc_bias_;
+  gazebo::math::Vector3 mag_bias_;
+  double baro_bias_;
+  double airspeed_bias_;
+
+  std::default_random_engine random_generator_;
+  std::normal_distribution<double> normal_distribution_;
+  std::uniform_real_distribution<double> uniform_distribution_;
+
+  gazebo::math::Vector3 gravity_;
+  double ground_altitude_;
+
+  gazebo::physics::WorldPtr world_;
+  gazebo::physics::ModelPtr model_;
+  gazebo::physics::LinkPtr link_;
+
+  ros::NodeHandle* nh_;
+  ros::Subscriber rc_sub_;
+  rosflight_msgs::RCRaw latestRC_;
+
+  std::string mav_type_;
+  int pwm_outputs_[14];  //assumes maximum of 14 channels
 
 public:
 
@@ -133,38 +171,6 @@ public:
   void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world, gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type);
   void RCCallback(const rosflight_msgs::RCRaw& msg);
   inline const int* get_outputs() const { return pwm_outputs_; }
-
-private:
-  double gyro_stdev_;
-  double acc_stdev_;
-  double gyro_bias_range_;
-  double acc_bias_range_;
-  double gyro_bias_walk_stdev_;
-  double acc_bias_walk_stdev_;
-  double baro_bias_walk_stdev_;
-  double baro_stdev_;
-  double baro_bias_range_;
-  double mag_bias_walk_stdev_;
-  double mag_stdev_;
-  double mag_bias_range_;
-
-  gazebo::math::Vector3 gravity_;
-  gazebo::math::Vector3 gyro_bias_;
-  gazebo::math::Vector3 acc_bias_;
-  std::default_random_engine random_generator_;
-  std::normal_distribution<double> normal_distribution_;
-  std::uniform_real_distribution<double> uniform_distribution_;
-
-  gazebo::physics::WorldPtr world_;
-  gazebo::physics::ModelPtr model_;
-  gazebo::physics::LinkPtr link_;
-
-  ros::NodeHandle* nh_;
-  ros::Subscriber rc_sub_;
-  rosflight_msgs::RCRaw latestRC_;
-
-  std::string mav_type_;
-  int pwm_outputs_[14];  //assumes maximum of 14 channels
 };
 
 } // namespace rosflight_sim
