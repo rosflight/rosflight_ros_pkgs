@@ -34,6 +34,7 @@
 
 
 #include <rosflight_sim/mav_forces_and_moments.h>
+#include <eigen3/Eigen/Dense>
 #include <ros/ros.h>
 
 namespace rosflight_sim
