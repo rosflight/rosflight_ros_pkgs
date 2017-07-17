@@ -34,10 +34,15 @@
 
 namespace rosflight_sim {
 
+SIL_Board::SIL_Board() :
+  rosflight_firmware::UDPBoard()
+{ }
+
 void SIL_Board::init_board(void)
 {
-
+  boot_time_ = world_->GetSimTime().Double();
 }
+
 
 void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world, gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type)
 {
@@ -73,6 +78,7 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   sonar_max_range_ = nh_->param<double>("sonar_max_range", 8.0);
 
   imu_update_rate_ = nh_->param<double>("imu_update_rate", 1000.0);
+  imu_update_period_us_ = (uint64_t)(1e6/imu_update_rate_);
 
 
   // Calculate Magnetic Field Vector (for mag simulation)
@@ -86,12 +92,10 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   // Get the desired altitude at the ground (for baro simulation)
   ground_altitude_ = nh->param<double>("ground_altitude", 1387.0);
 
-
   // Configure Noise
   random_generator_= std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
   normal_distribution_ = std::normal_distribution<double>(0.0, 1.0);
   uniform_distribution_ = std::uniform_real_distribution<double>(-1.0, 1.0);
-
 
   gravity_ = world_->GetPhysicsEngine()->GetGravity();
 
@@ -118,12 +122,12 @@ void SIL_Board::board_reset(bool bootloader)
 
 uint32_t SIL_Board::clock_millis()
 {
-  return (uint32_t)(world_->GetSimTime().Double()*1e3);
+  return (uint32_t)((world_->GetSimTime().Double() - boot_time_)*1e3);
 }
 
 uint64_t SIL_Board::clock_micros()
 {
-  return (uint64_t)(world_->GetSimTime().Double()*1e6);
+  return (uint64_t)((world_->GetSimTime().Double() - boot_time_)*1e6);
 }
 
 void SIL_Board::clock_delay(uint32_t milliseconds)
@@ -135,24 +139,38 @@ void SIL_Board::clock_delay(uint32_t milliseconds)
 /// noise params are hard coded
 void SIL_Board::sensors_init()
 {
+  // Initialize the Biases
+  gyro_bias_.x = gyro_bias_range_*uniform_distribution_(random_generator_);
+  gyro_bias_.y = gyro_bias_range_*uniform_distribution_(random_generator_);
+  gyro_bias_.z = gyro_bias_range_*uniform_distribution_(random_generator_);
+  acc_bias_.x = acc_bias_range_*uniform_distribution_(random_generator_);
+  acc_bias_.y = acc_bias_range_*uniform_distribution_(random_generator_);
+  acc_bias_.z = acc_bias_range_*uniform_distribution_(random_generator_);
+
+  // Gazebo coordinates is NWU and Earth's magnetic field is defined in NED, hence the negative signs
+  double inclination_ = 1.14316156541;
+  double declination_ = 0.198584539676;
+  inertial_magnetic_field_.z = sin(-inclination_);
+  inertial_magnetic_field_.x = cos(-inclination_)*cos(-declination_);
+  inertial_magnetic_field_.y = cos(-inclination_)*sin(-declination_);
 }
 
 uint16_t SIL_Board::num_sensor_errors(void)
 {
+  return 0;
 }
 
 
 bool SIL_Board::new_imu_data()
 {
-  double now = world_->GetSimTime().Double();
-  if (now > next_imu_update_time_)
+  uint64_t now_us = clock_micros();
+  if (now_us > next_imu_update_time_us_)
   {
-    next_imu_update_time_ += 1/imu_update_rate_;
+    next_imu_update_time_us_ = now_us + imu_update_period_us_;
     return true;
   }
   else
     return false;
-
 }
 
 void SIL_Board::imu_read_accel(float accel[3])
@@ -162,7 +180,7 @@ void SIL_Board::imu_read_accel(float accel[3])
   gazebo::math::Vector3 uvw_B_NWU = link_->GetRelativeLinearVel();
 
   // y_acc = vdot - R*g + w X v
-  gazebo::math::Vector3 y_acc = link_->GetRelativeLinearAccel() - q_I_NWU.RotateVectorReverse(gravity_) + omega_B_NWU.Cross(uvw_B_NWU);
+  gazebo::math::Vector3 y_acc = link_->GetRelativeLinearAccel() - q_I_NWU.RotateVectorReverse(gravity_);
 
   // Apply normal noise
   y_acc.x += acc_stdev_*normal_distribution_(random_generator_);
@@ -214,7 +232,8 @@ bool SIL_Board::imu_read_all(float accel[3], float* temperature, float gyro[3], 
   imu_read_accel(accel);
   imu_read_gyro(gyro);
   *temperature = imu_read_temperature();
-  *time_us = (uint64_t)(world_->GetSimTime().Double() * 1e6);
+  *time_us = clock_micros();
+  return true;
 }
 
 float SIL_Board::imu_read_temperature(void)
@@ -375,12 +394,18 @@ float SIL_Board::sonar_read(void)
 // PWM
 void SIL_Board::pwm_init(bool cppm, uint32_t refresh_rate, uint16_t idle_pwm)
 {
-  rc_sub_ = nh_->subscribe("RC", 1, &SIL_Board::RCCallback, this);
-}
+  rc_received_ = false;
+  latestRC_.values[0] = 1500; // x
+  latestRC_.values[1] = 1500; // y
+  latestRC_.values[3] = 1500; // z
+  latestRC_.values[2] = 1000; // F
+  latestRC_.values[4] = 1000; // attitude override
+  latestRC_.values[5] = 1000; // arm
 
-void SIL_Board::RCCallback(const rosflight_msgs::RCRaw& msg)
-{
-  latestRC_ = msg;
+  for (size_t i = 0; i < 14; i++)
+    pwm_outputs_[i] = 1000;
+
+  rc_sub_ = nh_->subscribe("RC", 1, &SIL_Board::RCCallback, this);
 }
 
 uint16_t SIL_Board::pwm_read(uint8_t channel)
@@ -404,7 +429,7 @@ void SIL_Board::pwm_write(uint8_t channel, uint16_t value)
 
 bool SIL_Board::pwm_lost()
 {
-  return false;
+  return !rc_received_;
 }
 
 // non-volatile memory
@@ -455,5 +480,11 @@ void SIL_Board::led0_toggle(void) { }
 void SIL_Board::led1_on(void) { }
 void SIL_Board::led1_off(void) { }
 void SIL_Board::led1_toggle(void) { }
+
+void SIL_Board::RCCallback(const rosflight_msgs::RCRaw& msg)
+{
+  rc_received_ = true;
+  latestRC_ = msg;
+}
 
 }

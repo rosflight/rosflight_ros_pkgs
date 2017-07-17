@@ -9,6 +9,7 @@
   <arg name="y"                   default="0"/>
   <arg name="z"                   default="0.1"/>
   <arg name="yaw"                 default="0"/>
+  <arg name="debug"               default="false"/>
 
   <!-- Start Simulator -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -16,13 +17,13 @@
     <arg name="paused" value="true"/>
     <arg name="gui" value="true"/>
     <arg name="verbose" value="false"/>
-    <arg name="debug" value="true"/>
+    <arg name="debug" value="$(arg debug)"/>
   </include>
 
   <!-- Spawn Model in Gazebo -->
   <include file="$(find rosflight_sim)/launch/spawn_mav.launch">
     <arg name="mav_name"            value="$(arg mav_name)" />
-    <arg name="model"               value="$(find rosflight_sim)/xacro/$(arg mav_name).xacro" />
+    <arg name="model"               value="$(find rosflight_sim)/xacro/$(arg mav_name).urdf.xacro" />
     <arg name="x"                   value="$(arg x)"/>
     <arg name="y"                   value="$(arg y)"/>
     <arg name="z"                   value="$(arg z)"/>

@@ -18,13 +18,19 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>gazebo</build_depend>
-
-  <depend>gazebo_ros</depend>
   <depend>gazebo_plugins</depend>
-  <depend>roscpp</depend>
-  <depend>rosflight_msgs</depend>
-  <depend>rosflight_firmware</depend>
+  <depend>gazebo_ros</depend>
   <depend>geometry_msgs</depend>
+  <depend>roscpp</depend>
+  <depend>rosflight_firmware</depend>
+  <depend>rosflight_msgs</depend>
+
+  <depend>eigen</depend>
+  <depend>gazebo</depend>
+  <depend>xacro</depend>
+
+  <export>
+    <gazebo_ros plugin_path="${prefix}/lib" gazebo_media_path="${prefix}" />
+  </export>
 
 </package>

@@ -39,19 +39,16 @@
 
 #include <rosflight_sim/rosflight_sil.h>
 #include <rosflight_sim/sil_board.h>
-#include <rosflight.h>
 
-
-using namespace rosflight_sim;
 
 namespace rosflight_sim
 {
 
 ROSflightSIL::ROSflightSIL() :
-  ModelPlugin(),
+  gazebo::ModelPlugin(),
   nh_(nullptr),
-  firmware_(board_)  {
-}
+  firmware_(board_)
+{}
 
 ROSflightSIL::~ROSflightSIL()
 {
@@ -64,14 +61,21 @@ ROSflightSIL::~ROSflightSIL()
 
 void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
 {
+  if (!ros::isInitialized())
+  {
+    ROS_FATAL("A ROS node for Gazebo has not been initialized, unable to load plugin");
+    return;
+  }
+  ROS_INFO("Loaded the ROSflight SIL plugin");
+
   model_ = _model;
   world_ = model_->GetWorld();
 
   namespace_.clear();
 
   /*
-     * Connect the Plugin to the Robot and Save pointers to the various elements in the simulation
-     */
+   * Connect the Plugin to the Robot and Save pointers to the various elements in the simulation
+   */
   if (_sdf->HasElement("namespace"))
     namespace_ = _sdf->GetElement("namespace")->Get<std::string>();
   else
@@ -98,16 +102,16 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   }
 
   if(mav_type_ == "multirotor")
-      mav_dynamics_ = new Multirotor(nh_);
+    mav_dynamics_ = new Multirotor(nh_);
   else if(mav_type_ == "fixedwing")
-      mav_dynamics_ = new Fixedwing(nh_);
+    mav_dynamics_ = new Fixedwing(nh_);
   else
-      gzthrow("unknown or unsupported mav type\n");
+    gzthrow("unknown or unsupported mav type\n");
 
-  // Initialize the Firmware
-  board_.gazebo_setup(link_, world_, model_, nh_, mav_type_);
-  board_.init_board();
-  firmware_.init();
+   // Initialize the Firmware
+   board_.gazebo_setup(link_, world_, model_, nh_, mav_type_);
+   board_.init_board();
+   firmware_.init();
 
   // Connect the update function to the simulation
   updateConnection_ = gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&ROSflightSIL::OnUpdate, this, _1));

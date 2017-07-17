@@ -29,8 +29,8 @@
   <depend>eigen</depend>
   <depend>yaml-cpp</depend>
 
-  <build_depend>git</build_depend>
-  <build_depend>pkg-config</build_depend>
+  <depend>git</depend>
+  <depend>pkg-config</depend>
 
   <export>
   </export>

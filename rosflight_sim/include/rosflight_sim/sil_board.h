@@ -32,6 +32,7 @@
 #ifndef ROSFLIGHT_SIM_SIL_BOARD_H
 #define ROSFLIGHT_SIM_SIL_BOARD_H
 
+#include <cmath>
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -40,19 +41,21 @@
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
-#include <cmath>
 
 #include <ros/ros.h>
 #include <rosflight_msgs/RCRaw.h>
 
 #include <rosflight_firmware/udp_board.h>
 
-namespace rosflight_sim {
+namespace rosflight_sim
+{
 
 class SIL_Board : public rosflight_firmware::UDPBoard
 {
 private:
   gazebo::math::Vector3 inertial_magnetic_field_;
+
+
 
   double next_imu_update_time_;
   double imu_update_rate_;
@@ -101,11 +104,20 @@ private:
   ros::NodeHandle* nh_;
   ros::Subscriber rc_sub_;
   rosflight_msgs::RCRaw latestRC_;
+  bool rc_received_;
 
   std::string mav_type_;
   int pwm_outputs_[14];  //assumes maximum of 14 channels
 
+  // Time variables
+  double boot_time_;
+  uint64_t next_imu_update_time_us_;
+  uint64_t imu_update_period_us_;
+
+  void RCCallback(const rosflight_msgs::RCRaw& msg);
+
 public:
+  SIL_Board();
 
   // setup
   void init_board(void);
@@ -169,8 +181,8 @@ public:
 
   // Gazebo stuff
   void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world, gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type);
-  void RCCallback(const rosflight_msgs::RCRaw& msg);
   inline const int* get_outputs() const { return pwm_outputs_; }
+
 };
 
 } // namespace rosflight_sim

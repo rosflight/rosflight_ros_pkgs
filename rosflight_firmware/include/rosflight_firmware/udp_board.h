@@ -38,9 +38,7 @@
 #define ROSFLIGHT_FIRMWARE_UDP_BOARD_H
 
 #include <list>
-#include <mutex>
 #include <string>
-#include <thread>
 
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
@@ -54,84 +52,18 @@ namespace rosflight_firmware
 class UDPBoard : public Board
 {
 public:
-  UDPBoard(std::string bind_host = DEFAULT_BIND_HOST,
-           uint16_t bind_port = DEFAULT_BIND_PORT,
-           std::string remote_host = DEFAULT_REMOTE_HOST,
-           uint16_t remote_port = DEFAULT_REMOTE_PORT);
+  UDPBoard(std::string bind_host = "localhost",
+           uint16_t bind_port = 14525,
+           std::string remote_host = "localhost",
+           uint16_t remote_port = 14520);
   ~UDPBoard();
 
-  // function overrides (serial)
   void serial_init(uint32_t baud_rate) override;
-  void serial_write(uint8_t byte) override;
+  void serial_write(const uint8_t *src, size_t len) override;
   uint16_t serial_bytes_available(void) override;
   uint8_t serial_read(void) override;
 
-  // setup
-  virtual void init_board(void) = 0;
-  virtual void board_reset(bool bootloader) = 0;
-
-  // clock
-  virtual uint32_t clock_millis() = 0;
-  virtual uint64_t clock_micros() = 0;
-  virtual void clock_delay(uint32_t milliseconds) = 0;
-
-  // sensors
-  virtual void sensors_init() = 0;
-  virtual uint16_t num_sensor_errors(void)  = 0;
-
-  virtual bool new_imu_data() = 0;
-  virtual void imu_read_accel(float accel[3]) = 0;
-  virtual void imu_read_gyro(float gyro[3]) = 0;
-  virtual bool imu_read_all(float accel[3], float *temperature, float gyro[3], uint64_t* time) = 0;
-  virtual float imu_read_temperature(void) = 0;
-  virtual void imu_not_responding_error(void) = 0;
-
-  virtual bool mag_check(void) = 0;
-  virtual bool mag_present(void) = 0;
-  virtual void mag_read(float mag[3]) = 0;
-
-  virtual bool baro_present(void) = 0;
-  virtual bool baro_check(void) = 0;
-  virtual void baro_read(float *altitude, float *pressure,
-                         float *temperature) = 0; // TODO move altitude calculation outside this function
-  virtual void baro_calibrate() = 0;
-
-  virtual bool diff_pressure_present(void) = 0;
-  virtual bool diff_pressure_check(void) = 0;
-  virtual void diff_pressure_set_atm(float barometric_pressure) = 0;
-  virtual void diff_pressure_calibrate() = 0;
-  virtual void diff_pressure_read(float *diff_pressure, float *temperature,
-                                  float *velocity) = 0; // TODO move velocity calculation outside this function
-
-  virtual bool sonar_present(void) = 0;
-  virtual bool sonar_check(void) = 0;
-  virtual float sonar_read(void) = 0;
-
-  // PWM
-  virtual void pwm_init(bool cppm, uint32_t refresh_rate, uint16_t idle_pwm) = 0;
-  virtual bool pwm_lost() = 0;
-  virtual uint16_t pwm_read(uint8_t channel) = 0;
-  virtual void pwm_write(uint8_t channel, uint16_t value) = 0;
-
-  // non-volatile memory
-  virtual void memory_init(void) = 0;
-  virtual bool memory_read(void *dest, size_t len) = 0;
-  virtual bool memory_write(const void *src, size_t len) = 0;
-
-  // LEDs
-  virtual void led0_on(void) = 0;
-  virtual void led0_off(void) = 0;
-  virtual void led0_toggle(void) = 0;
-
-  virtual void led1_on(void) = 0;
-  virtual void led1_off(void) = 0;
-  virtual void led1_toggle(void) = 0;
-
 private:
-  static constexpr char DEFAULT_BIND_HOST[] = "localhost";
-  static constexpr uint16_t DEFAULT_BIND_PORT = 14525;
-  static constexpr char DEFAULT_REMOTE_HOST[] = "localhost";
-  static constexpr uint16_t DEFAULT_REMOTE_PORT = 14520;
 
   struct Buffer
   {
@@ -149,7 +81,7 @@ private:
 
     const uint8_t * dpos() const { return data + pos; }
     size_t nbytes() const { return len - pos; }
-    void add_byte(uint8_t byte) { data[pos++] = byte; }
+    void add_byte(uint8_t byte) { data[len++] = byte; }
     uint8_t consume_byte() { return data[pos++]; }
     bool empty() const { return pos >= len; }
     bool full() const { return len >= MAVLINK_MAX_PACKET_LEN; }
