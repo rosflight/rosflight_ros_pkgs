@@ -69,15 +69,15 @@ void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
       if (!initialized_ || std::abs(offset_ns_ - offset_ns) > 1e7) // if difference > 10ms, use it directly
       {
         offset_ns_ = offset_ns;
-        ROS_INFO("Detected time offset of %0.9f s", offset_ns/1e9);
+        ROS_INFO("Detected time offset of %0.9f s.  FCU time: %0.9f, System time: %0.9f", \
+                 offset_ns/1e9, tsync.ts1*1e-9, tsync.tc1*1e-9);
         initialized_ = true;
+        time_sync_timer_.stop();
       }
       else // otherwise low-pass filter the offset
       {
-        offset_ns_ = offset_alpha_*offset_ns + (1.0 - offset_alpha_)*offset_ns_;
+//        offset_ns_ = offset_alpha_*offset_ns + (1.0 - offset_alpha_)*offset_ns_;
       }
-
-      offset_ = ros::Duration(offset_ns_ / 1000000000, offset_ns_ % 1000000000);
     }
   }
 }
@@ -87,7 +87,14 @@ ros::Time TimeManager::get_ros_time_ms(uint32_t boot_ms)
   if (!initialized_)
     return ros::Time::now();
 
-  return ros::Time(boot_ms / 1000, 1000000*(boot_ms % 1000)) + offset_;
+  int64_t ns = boot_ms*1000000 + offset_ns_;
+  if (ns < 0)
+  {
+    return ros::Time::now();
+  }
+  ros::Time now;
+  now.fromNSec(ns);
+  return now;
 }
 
 ros::Time TimeManager::get_ros_time_us(uint32_t boot_us)
@@ -95,7 +102,14 @@ ros::Time TimeManager::get_ros_time_us(uint32_t boot_us)
   if (!initialized_)
     return ros::Time::now();
 
-  return ros::Time(boot_us / 1000000, 1000*(boot_us % 1000000)) + offset_;
+  int64_t ns = boot_us * 1000 + offset_ns_;
+  if (ns < 0)
+  {
+    return ros::Time::now();
+  }
+  ros::Time now;
+  now.fromNSec(ns);
+  return now;
 }
 
 void TimeManager::timer_callback(const ros::TimerEvent &event)

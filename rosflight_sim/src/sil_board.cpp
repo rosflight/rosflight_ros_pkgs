@@ -32,6 +32,8 @@
 #include <rosflight_sim/sil_board.h>
 #include <fstream>
 
+#include <iostream>
+
 namespace rosflight_sim {
 
 SIL_Board::SIL_Board() :
@@ -231,8 +233,8 @@ bool SIL_Board::imu_read_all(float accel[3], float* temperature, float gyro[3], 
 {
   imu_read_accel(accel);
   imu_read_gyro(gyro);
-  *temperature = imu_read_temperature();
-  *time_us = clock_micros();
+  (*temperature) = imu_read_temperature();
+  (*time_us) = clock_micros();
   return true;
 }
 

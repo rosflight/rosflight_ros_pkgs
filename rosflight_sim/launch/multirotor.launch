@@ -13,9 +13,8 @@
 
   <!-- Start Simulator -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <!-- <arg name="world_name" value="$(find rosflight_sim)/worlds/basic.world"/> -->
-    <arg name="paused" value="true"/>
-    <arg name="gui" value="true"/>
+    <arg name="paused" value="false"/>
+    <arg name="gui" value="false"/>
     <arg name="verbose" value="false"/>
     <arg name="debug" value="$(arg debug)"/>
   </include>
@@ -33,6 +32,9 @@
 
   <!-- Controller -->
   <group ns="$(arg mav_name)">
+    <node name="rosflight_io" pkg="rosflight" type="rosflight_io" output="screen">
+      <param name="udp" value="true"/>
+    </node>
 
     <!-- Load common parameters (mass, thrust, rotor configuration) -->
     <rosparam command="load" file="$(find rosflight_sim)/params/$(arg mav_name).yaml"/>

@@ -35,6 +35,7 @@
  */
 
 #include <rosflight_firmware/udp_board.h>
+#include <iostream>
 
 using boost::asio::ip::udp;
 
@@ -121,7 +122,6 @@ uint8_t UDPBoard::serial_read()
     read_queue_.pop_front();
     delete buffer;
   }
-
   return byte;
 }
 
