@@ -30,57 +30,20 @@
  */
 
 /**
- * \file mavrosflight.h
+ * \file calibrate_accel_temp_node.cpp
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#ifndef MAVROSFLIGHT_MAVROSFLIGHT_H
-#define MAVROSFLIGHT_MAVROSFLIGHT_H
+#include <ros/ros.h>
+#include <rosflight/calibrate_accel_temp.h>
 
-#include <rosflight/mavrosflight/mavlink_bridge.h>
-#include <rosflight/mavrosflight/mavlink_comm.h>
-#include <rosflight/mavrosflight/param_manager.h>
-#include <rosflight/mavrosflight/time_manager.h>
-
-#include <rosflight/mavrosflight/mavlink_listener_interface.h>
-#include <rosflight/mavrosflight/param_listener_interface.h>
-
-#include <boost/function.hpp>
-
-#include <stdint.h>
-#include <string>
-
-namespace mavrosflight
+int main(int argc, char **argv)
 {
+  ros::init(argc, argv, "calibrate_accel_temp");
 
-class MavROSflight
-{
-public:
+  rosflight::CalibrateAccelTemp calibrate;
+  calibrate.run();
 
-  /**
-   * \brief Instantiates the class and begins communication on the specified serial port
-   * \param mavlink_comm Reference to a MavlinkComm object (serial or UDP)
-   * \param baud_rate Serial communication baud rate
-   */
-  MavROSflight(MavlinkComm& mavlink_comm, uint8_t sysid = 1, uint8_t compid = 50);
-
-  /**
-   * \brief Stops communication and closes the serial port before the object is destroyed
-   */
-  ~MavROSflight();
-
-  // public member objects
-  MavlinkComm& comm;
-  ParamManager param;
-  TimeManager time;
-
-private:
-
-  // member variables
-  uint8_t sysid_;
-  uint8_t compid_;
-};
-
-} // namespace mavrosflight
-
-#endif // MAVROSFLIGHT_MAVROSFLIGHT_H
+  ros::shutdown();
+  return 0;
+}

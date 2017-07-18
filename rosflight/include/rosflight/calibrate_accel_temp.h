@@ -30,63 +30,54 @@
  */
 
 /**
- * \file imu.h
+ * \file calibrate_accel_temp.h
  * \author Daniel Koch <daniel.koch@byu.edu>
  * \author James Jackson <me@jamessjackson.com>
  */
 
-#ifndef MAVROSFLIGHT_SENSORS_IMU_H
-#define MAVROSFLIGHT_SENSORS_IMU_H
+#ifndef ROSFLIGHT_SENSORS_CALIBRATE_IMU_H
+#define ROSFLIGHT_SENSORS_CALIBRATE_IMU_H
 
-#include <rosflight/mavrosflight/mavlink_bridge.h>
+#include <ros/ros.h>
+#include <message_filters/subscriber.h>
+#include <message_filters/time_synchronizer.h>
+
+#include <rosflight_msgs/ParamSet.h>
+
+#include <sensor_msgs/Imu.h>
+#include <sensor_msgs/Temperature.h>
+
 #include <eigen3/Eigen/Core>
+
 #include <deque>
 
-namespace mavrosflight
-{
-namespace sensors
+namespace rosflight
 {
 
 /**
  * \brief IMU sensor class
  */
-class Imu
+class CalibrateAccelTemp
 {
 public:
 
-  Imu();
+  CalibrateAccelTemp();
+
+  void run();
 
   /**
    * \brief Begin the temperature calibration routine
    */
   void start_temp_calibration();
 
-  /**
-   * \brief Check if a temperature calibration is in progress
-   * \return True if a temperature calibration is currently in progress
-   */
-  bool is_calibrating() { return calibrating_; }
+  void do_temp_calibration();
 
   /**
    * \brief Calibrate the IMU for temperature and bias compensation
    * \param msg The raw IMU message
    * \return True if the calibration is done
    */
-  bool calibrate_temp(mavlink_small_imu_t msg);
-
-  /**
-   * \brief Get corrected measurement values
-   * \param msg The raw IMU message
-   * \param[out] xacc The accelerometer X value (m/s^2)
-   * \param[out] yacc The accelerometer Y value (m/s^2)
-   * \param[out] zacc The accelerometer Z value (m/s^2)
-   * \param[out] xgyro The rate gyro X value (rad/s)
-   * \param[out] ygyro The rate gyro Y value (rad/s)
-   * \param[out] zgyro The rate gyro Z value (rad/s)
-   * \return True if the measurement is valid
-   */
-  bool correct(mavlink_small_imu_t msg,
-               double *xacc, double *yacc, double *zacc, double *xgyro, double *ygyro, double *zgyro, double *temperature);
+  bool imu_callback(const sensor_msgs::Imu::ConstPtr& imu, const sensor_msgs::Temperature::ConstPtr& temp);
 
   /// These are the publicly available versions of the accel calibration
   /// The const stuff is to make it read-only
@@ -98,6 +89,8 @@ public:
   const double zb() const { return x_[2](1); }
 
 private:
+  bool set_param(std::string name, double value);
+
   Eigen::Vector2d x_[3];
 
   bool calibrating_; //!< whether a temperature calibration is in progress
@@ -107,12 +100,21 @@ private:
   double Tmax_; //!< maximum temperature seen
   bool first_time_; //!< waiting for first measurement for calibration
   double start_time_; //!< timestamp of first calibration measurement
+  int measurement_skip_; //!< the number of measurements to skip
   int measurement_throttle_;
   std::deque<double> A_;
   std::deque<Eigen::Vector3d> B_;
+
+  ros::NodeHandle nh_;
+  ros::NodeHandle nh_private_;
+
+  message_filters::Subscriber<sensor_msgs::Imu> imu_subscriber_; //!< subscriber for the IMU messages
+  message_filters::Subscriber<sensor_msgs::Temperature> temp_subscriber_; //!< subscriber for the temperature messages
+  message_filters::TimeSynchronizer<sensor_msgs::Imu, sensor_msgs::Temperature> synchronizer_; //!< synchronizer for the IMU and temperature messages
+
+  ros::ServiceClient param_set_client_;
 };
 
-} // namespace sensors
-} // namespace mavrosflight
+} // namespace rosflight
 
-#endif // MAVROSFLIGHT_SENSORS_IMU_H
+#endif // ROSFLIGHT_SENSORS_CALIBRATE_IMU_H

@@ -9,6 +9,7 @@ set(CMAKE_CXX_FLAGS "-std=c++0x")
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   geometry_msgs
+  message_filters
   rosflight_msgs
   sensor_msgs
   std_msgs
@@ -62,7 +63,6 @@ add_library(mavrosflight
   src/mavrosflight/param_manager.cpp
   src/mavrosflight/param.cpp
   src/mavrosflight/time_manager.cpp
-  src/mavrosflight/sensors/imu.cpp
 )
 add_dependencies(mavrosflight ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(mavrosflight
@@ -83,12 +83,22 @@ target_link_libraries(rosflight_io
   ${Boost_LIBRARES}
 )
 
+# IMU calibration node
+add_executable(calibrate_accel_temp
+  src/calibrate_accel_temp_node.cpp
+  src/calibrate_accel_temp.cpp
+)
+add_dependencies(calibrate_accel_temp ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(calibrate_accel_temp
+  ${catkin_LIBRARIES}
+)
+
 #############
 ## Install ##
 #############
 
 # Mark executables and libraries for installation
-install(TARGETS mavrosflight rosflight_io
+install(TARGETS mavrosflight rosflight_io calibrate_accel_temp
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
