@@ -492,7 +492,7 @@ void SIL_Board::memory_init(void) {}
 
 bool SIL_Board::memory_read(void * dest, size_t len)
 {
-  std::string directory = "rosflight_memory/" + nh_->getNamespace();
+  std::string directory = "rosflight_memory" + nh_->getNamespace();
   std::ifstream memory_file;
   memory_file.open(directory + "/mem.bin", std::ios::binary);
 
@@ -509,8 +509,8 @@ bool SIL_Board::memory_read(void * dest, size_t len)
 
 bool SIL_Board::memory_write(const void * src, size_t len)
 {
-  std::string directory = "rosflight_memory/" + nh_->getNamespace();
-  std::string mkdir_command = "mkdir -p" + directory;
+  std::string directory = "rosflight_memory" + nh_->getNamespace();
+  std::string mkdir_command = "mkdir -p " + directory;
   const int dir_err = system(mkdir_command.c_str());
 
   if (dir_err == -1)
