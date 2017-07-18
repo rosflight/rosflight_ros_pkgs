@@ -45,7 +45,6 @@ void SIL_Board::init_board(void)
   boot_time_ = world_->GetSimTime().Double();
 }
 
-
 void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
                              gazebo::physics::ModelPtr model, ros::NodeHandle* nh,
                              std::string mav_type)
@@ -84,14 +83,12 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   imu_update_rate_ = nh_->param<double>("imu_update_rate", 1000.0);
   imu_update_period_us_ = (uint64_t)(1e6/imu_update_rate_);
 
-
   // Calculate Magnetic Field Vector (for mag simulation)
   double inclination = nh_->param<double>("inclination", 1.14316156541);
   double declination = nh_->param<double>("declination", 0.198584539676);
   inertial_magnetic_field_.z = sin(-inclination);
   inertial_magnetic_field_.x = cos(-inclination)*cos(-declination);
   inertial_magnetic_field_.y = cos(-inclination)*sin(-declination);
-
 
   // Get the desired altitude at the ground (for baro simulation)
   ground_altitude_ = nh->param<double>("ground_altitude", 1387.0);
@@ -102,7 +99,6 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   uniform_distribution_ = std::uniform_real_distribution<double>(-1.0, 1.0);
 
   gravity_ = world_->GetPhysicsEngine()->GetGravity();
-
 
   // Initialize the Sensor Biases
   gyro_bias_.x = gyro_bias_range_*uniform_distribution_(random_generator_);
@@ -163,7 +159,6 @@ uint16_t SIL_Board::num_sensor_errors(void)
 {
   return 0;
 }
-
 
 bool SIL_Board::new_imu_data()
 {
@@ -402,8 +397,6 @@ void SIL_Board::diff_pressure_read(float *diff_pressure, float *temperature, flo
   // Calculate Airspeed
   gazebo::math::Vector3 vel = link_->GetRelativeLinearVel();
 
-
-
   double Va = vel.GetLength();
 
   // Invert Airpseed to get sensor measurement
@@ -552,4 +545,4 @@ void SIL_Board::RCCallback(const rosflight_msgs::RCRaw& msg)
   latestRC_ = msg;
 }
 
-}
+} // namespace rosflight_sim

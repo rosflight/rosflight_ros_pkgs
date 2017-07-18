@@ -3,7 +3,7 @@ project(rosflight_firmware)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-find_package(catkin REQUIRED COMPONENTS)
+find_package(catkin REQUIRED COMPONENTS roscpp)
 find_package(Boost REQUIRED COMPONENTS system thread)
 
 set(FIRMWARE_INCLUDE_DIRS
@@ -14,6 +14,7 @@ set(FIRMWARE_INCLUDE_DIRS
 catkin_package(
   INCLUDE_DIRS include ${FIRMWARE_INCLUDE_DIRS}
   LIBRARIES rosflight_firmware rosflight_udp_board
+  CATKIN_DEPENDS roscpp
 )
 
 include_directories(include)
@@ -40,7 +41,11 @@ add_library(rosflight_firmware
 add_library(rosflight_udp_board
   src/udp_board.cpp
 )
-target_link_libraries(rosflight_udp_board rosflight_firmware ${Boost_LIBRARIES})
+target_link_libraries(rosflight_udp_board
+  rosflight_firmware
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
+)
 
 install(
   TARGETS rosflight_firmware rosflight_udp_board

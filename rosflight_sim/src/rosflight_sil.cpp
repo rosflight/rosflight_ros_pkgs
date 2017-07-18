@@ -108,10 +108,9 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   else
     gzthrow("unknown or unsupported mav type\n");
 
-   // Initialize the Firmware
-   board_.gazebo_setup(link_, world_, model_, nh_, mav_type_);
-   board_.init_board();
-   firmware_.init();
+  // Initialize the Firmware
+  board_.gazebo_setup(link_, world_, model_, nh_, mav_type_);
+  firmware_.init();
 
   // Connect the update function to the simulation
   updateConnection_ = gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&ROSflightSIL::OnUpdate, this, _1));

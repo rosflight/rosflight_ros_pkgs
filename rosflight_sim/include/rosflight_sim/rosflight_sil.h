@@ -56,13 +56,13 @@ public:
   ~ROSflightSIL();
 
 protected:
-  void Reset();
-  void Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf);
-  void OnUpdate(const gazebo::common::UpdateInfo & /*_info*/);
-  void windCallback(const geometry_msgs::Vector3 &msg);
-
+  void Reset() override;
+  void Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf) override;
+  void OnUpdate(const gazebo::common::UpdateInfo &_info);
 
 private:
+  void windCallback(const geometry_msgs::Vector3 &msg);
+
   SIL_Board board_;
   rosflight_firmware::ROSflight firmware_;
 
