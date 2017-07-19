@@ -32,6 +32,6 @@ add_library(rosflight_utils
 add_dependencies(${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(rosflight_utils ${catkin_LIBRARIES})
 
-add_executable(joy src/joy.cpp)
-add_dependencies(joy ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(joy ${catkin_LIBRARIES})
+#add_executable(joy src/joy.cpp)
+#add_dependencies(joy ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(joy ${catkin_LIBRARIES})

@@ -30,33 +30,42 @@
  */
 
 /**
- * \file mavrosflight.cpp
+ * \file write_buffer.h
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#include <rosflight/mavrosflight/mavrosflight.h>
+#ifndef MAVROSFLIGHT_WRITE_BUFFER_H
+#define MAVROSFLIGHT_WRITE_BUFFER_H
 
-#include <ros/ros.h>
+#include <rosflight/mavrosflight/mavlink_bridge.h>
+
+#include <stdint.h>
 
 namespace mavrosflight
 {
 
-using boost::asio::serial_port_base;
-
-MavROSflight::MavROSflight(MavlinkComm &mavlink_comm, uint8_t sysid /* = 1 */, uint8_t compid /* = 50 */) :
-  comm(mavlink_comm),
-  param(&comm),
-  time(&comm),
-  sysid_(sysid),
-  compid_(compid)
+/**
+ * \brief Struct for buffering the contents of a mavlink message
+ */
+struct WriteBuffer
 {
-  //! \todo Fix constructors so that we can open the port in here
-  // comm.open();
-}
+  uint8_t data[MAVLINK_MAX_PACKET_LEN];
+  size_t len;
+  size_t pos;
 
-MavROSflight::~MavROSflight()
-{
-  comm.close();
-}
+  WriteBuffer() : len(0), pos(0) {}
+
+  WriteBuffer(const uint8_t * buf, uint16_t len) : len(len), pos(0)
+  {
+    assert(len <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
+    memcpy(data, buf, len);
+  }
+
+  uint8_t * dpos() { return data + pos; }
+
+  size_t nbytes() { return len - pos; }
+};
 
 } // namespace mavrosflight
+
+#endif // MAVROSFLIGHT_WRITE_BUFFER_H

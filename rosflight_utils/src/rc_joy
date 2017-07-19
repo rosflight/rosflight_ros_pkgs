@@ -1,0 +1,67 @@
+#!/usr/bin/python
+
+# author: James Jackson
+
+import time
+import rospy
+from rosflight_msgs.msg import RCRaw
+import pygame
+import re
+
+rospy.init_node('rc_joy')
+rc_pub = rospy.Publisher('RC', RCRaw, queue_size=10)
+
+pygame.display.init()
+pygame.joystick.init()
+
+joy = pygame.joystick.Joystick(0)
+joy.init()
+
+print "joystick:", joy.get_name()
+
+m = re.search(r'\bTaranis\b', joy.get_name())
+if m:
+    print "found Taranis"
+    # create a Taranis mapping
+else:
+    print "no Taranis found...using realflght mapping"
+    # use realflight mappping
+
+
+# Main event loop
+next_update_time = time.time()
+while not rospy.is_shutdown():
+    pygame.event.pump()
+
+    # 50 Hz update
+    if time.time() > next_update_time:
+        next_update_time += 0.02
+
+        msg = RCRaw()
+        msg.header.stamp = rospy.Time.now()
+
+        # Taranis mapping (assuming mixer set to Ail,Ele,Thr,Rud)
+        if m:
+            msg.values[0] = joy.get_axis(0) * 500 + 1500
+            msg.values[1] = joy.get_axis(1) * -500 + 1500
+            msg.values[2] = joy.get_axis(2) * 500 + 1500
+            msg.values[3] = joy.get_axis(3) * 500 + 1500
+            msg.values[4] = joy.get_axis(4) * 500 + 1500
+            msg.values[5] = joy.get_button(0) * 1000 + 1000
+            msg.values[6] = joy.get_button(1) * 1000 + 1000
+            msg.values[7] = joy.get_button(2) * 1000 + 1000
+
+            rc_pub.publish(msg)
+            
+        # realflght mapping
+        else:
+            msg.values[0] = joy.get_axis(1) * 500 + 1500
+            msg.values[1] = joy.get_axis(2) * 500 + 1500
+            msg.values[2] = joy.get_axis(0) * 500 + 1500
+            msg.values[3] = joy.get_axis(4) * 500 + 1500
+            msg.values[4] = joy.get_axis(3) * 500 + 1500
+            msg.values[5] = joy.get_button(0) * 1000 + 1000
+            msg.values[6] = joy.get_button(1) * 1000 + 1000
+            msg.values[7] = joy.get_button(2) * 1000 + 1000
+
+            rc_pub.publish(msg)

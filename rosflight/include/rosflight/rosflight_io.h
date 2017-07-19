@@ -68,6 +68,7 @@
 #include <rosflight_msgs/ParamSet.h>
 
 #include <rosflight/mavrosflight/mavrosflight.h>
+#include <rosflight/mavrosflight/mavlink_comm.h>
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
 #include <rosflight/mavrosflight/param_listener_interface.h>
 
@@ -107,7 +108,7 @@ private:
   void handle_named_value_int_msg(const mavlink_message_t &msg);
   void handle_named_value_float_msg(const mavlink_message_t &msg);
   void handle_named_command_struct_msg(const mavlink_message_t &msg);
-  void handle_small_sonar(const mavlink_message_t &msg);
+  void handle_small_range_msg(const mavlink_message_t &msg);
   void handle_version_msg(const mavlink_message_t &msg);
 
   // ROS message callbacks
@@ -158,6 +159,7 @@ private:
   ros::Publisher euler_pub_;
   ros::Publisher status_pub_;
   ros::Publisher version_pub_;
+  ros::Publisher lidar_pub_;
   std::map<std::string, ros::Publisher> named_value_int_pubs_;
   std::map<std::string, ros::Publisher> named_value_float_pubs_;
   std::map<std::string, ros::Publisher> named_command_struct_pubs_;
@@ -178,12 +180,11 @@ private:
   ros::Timer version_timer_;
 
   geometry_msgs::Quaternion attitude_quat_;
-  uint8_t prev_status_;
-  uint8_t prev_error_code_;
-  uint8_t prev_control_mode_;
+  mavlink_rosflight_status_t prev_status_;
 
   std::string frame_id_;
 
+  mavrosflight::MavlinkComm *mavlink_comm_;
   mavrosflight::MavROSflight *mavrosflight_;
   mavrosflight::sensors::Imu imu_;
 };

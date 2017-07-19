@@ -1,0 +1,76 @@
+<!-- multirotor.launch - Author: James Jackson - BYU - 2016 -->
+<!-- This is a launch file that runs the bare minimum requirements to get -->
+<!-- gazebo running with a multirotor -->
+
+<launch>
+  <arg name="mav_name"            default="multirotor"/>
+  <arg name="color"               default="White"/>
+  <arg name="x"                   default="0"/>
+  <arg name="y"                   default="0"/>
+  <arg name="z"                   default="0.1"/>
+  <arg name="yaw"                 default="0"/>
+  <arg name="debug"               default="false"/>
+
+  <!-- Start Simulator -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="paused" value="false"/>
+    <arg name="gui" value="true"/>
+    <arg name="verbose" value="false"/>
+    <arg name="debug" value="$(arg debug)"/>
+  </include>
+
+  <!-- Spawn Model in Gazebo -->
+  <include file="$(find rosflight_sim)/launch/spawn_mav.launch">
+    <arg name="mav_name"            value="$(arg mav_name)" />
+    <arg name="model"               value="$(find rosflight_sim)/xacro/$(arg mav_name).urdf.xacro" />
+    <arg name="x"                   value="$(arg x)"/>
+    <arg name="y"                   value="$(arg y)"/>
+    <arg name="z"                   value="$(arg z)"/>
+    <arg name="yaw"                 value="$(arg yaw)"/>
+    <arg name="color"               value="$(arg color)"/>
+  </include>
+
+  <!-- Controller -->
+  <group ns="$(arg mav_name)">
+    <node name="rosflight_io" pkg="rosflight" type="rosflight_io" output="screen">
+      <param name="udp" value="true"/>
+    </node>
+
+    <!-- Load common parameters (mass, thrust, rotor configuration) -->
+    <rosparam command="load" file="$(find rosflight_sim)/params/$(arg mav_name).yaml"/>
+
+    <!-- Is Flying Publisher -->
+    <!-- <node pkg="rostopic" type="rostopic" name="is_flying_pub" args="pub is_flying std_msgs/Bool true"/> -->
+
+    <!-- PID Position Controller -->
+    <!-- <rosparam command="load" file="$(find ros_copter)/params/mikey.yaml" ns="controller"/>
+    <node name="controller" pkg="ros_copter" type="controller">
+      <remap from="estimate" to="ground_truth/odometry"/>
+    </node> -->
+
+    <!-- Waypoint Manager -->
+    <!-- <node name="waypoint_manager" pkg="ros_copter" type="waypoint_manager.py" output="screen">
+      <rosparam command="load" file="$(find ros_copter)/params/waypoints.yaml"/>
+      <remap from="waypoint" to="high_level_command"/>
+      <remap from="state" to="ground_truth/odometry"/>
+    </node> -->
+
+    <!-- Joysticks -->
+<!--     <node name="joy" type="joy_node" pkg="joy">
+      <param name="coalesce_interval" value="0.02"/>
+      <param name="autorepeat_rate" value="50"/>
+    </node>
+    <node name="xbox" type="joy" pkg="fcu_common">
+      <rosparam command="load" file="$(find fcu_common)/param/xbox.yaml"/>
+      <param name="max_yaw_rate" value="1.507"/>
+      <param name="max_roll_angle" value="0.785"/>
+      <param name="max_pitch_angle" value="0.785"/>
+    </node> -->
+
+
+    <!-- FPV -->
+    <!-- <node name="fpv" pkg="image_view" type="image_view">
+      <remap from="image" to="/$(arg mav_name)/camera/rgb"/>
+    </node> -->
+  </group>
+</launch>

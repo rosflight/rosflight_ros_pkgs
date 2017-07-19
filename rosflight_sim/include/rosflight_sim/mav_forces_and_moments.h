@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Daniel Koch and James Jackson, BYU MAGICC Lab.
+ * Copyright (c) 2017 Daniel Koch, James Jackson and Gary Ellingson, BYU MAGICC Lab.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,34 +29,45 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * \file mavrosflight.cpp
- * \author Daniel Koch <daniel.koch@byu.edu>
- */
+#ifndef ROSFLIGHT_SIM_MAV_FORCES_AND_MOMENTS_H
+#define ROSFLIGHT_SIM_MAV_FORCES_AND_MOMENTS_H
 
-#include <rosflight/mavrosflight/mavrosflight.h>
+#include <eigen3/Eigen/Core>
 
-#include <ros/ros.h>
-
-namespace mavrosflight
+namespace rosflight_sim
 {
 
-using boost::asio::serial_port_base;
+class MAVForcesAndMoments {
+protected:
+    double sat(double x, double max, double min)
+    {
+      if(x > max)
+        return max;
+      else if(x < min)
+        return min;
+      else
+        return x;
+    }
 
-MavROSflight::MavROSflight(MavlinkComm &mavlink_comm, uint8_t sysid /* = 1 */, uint8_t compid /* = 50 */) :
-  comm(mavlink_comm),
-  param(&comm),
-  time(&comm),
-  sysid_(sysid),
-  compid_(compid)
-{
-  //! \todo Fix constructors so that we can open the port in here
-  // comm.open();
-}
+    double max(double x, double y)
+    {
+      return (x > y) ? x : y;
+    }
 
-MavROSflight::~MavROSflight()
-{
-  comm.close();
-}
+public:
 
-} // namespace mavrosflight
+    struct Current_State{
+        Eigen::Vector3d pos; // Position of MAV in NED wrt initial position
+        Eigen::Matrix3d rot; // Rotation of MAV in NED wrt initial position
+        Eigen::Vector3d vel; // Body-fixed velocity of MAV wrt initial position (NED)
+        Eigen::Vector3d omega; // Body-fixed angular velocity of MAV (NED)
+        double t; // current time
+    };
+
+    virtual Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x, const int act_cmds[]) = 0;
+    virtual void set_wind(Eigen::Vector3d wind) = 0;
+};
+
+} // namespace rosflight_sim
+
+#endif // ROSFLIGHT_SIM_MAV_FORCES_AND_MOMENTS_H

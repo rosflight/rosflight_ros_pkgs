@@ -34,6 +34,8 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
+#include <rosflight/mavrosflight/mavlink_serial.h>
+#include <rosflight/mavrosflight/mavlink_udp.h>
 #include <rosflight/mavrosflight/serial_exception.h>
 #include <string>
 #include <stdint.h>
@@ -45,10 +47,7 @@
 
 namespace rosflight_io
 {
-rosflightIO::rosflightIO() :
-  prev_status_(0),
-  prev_error_code_(0),
-  prev_control_mode_(0)
+rosflightIO::rosflightIO()
 {
   command_sub_ = nh_.subscribe("command", 1, &rosflightIO::commandCallback, this);
 
@@ -65,14 +64,32 @@ rosflightIO::rosflightIO() :
   reboot_srv_ = nh_.advertiseService("reboot", &rosflightIO::rebootSrvCallback, this);
 
   ros::NodeHandle nh_private("~");
-  std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
-  int baud_rate = nh_private.param<int>("baud_rate", 921600);
 
-  ROS_INFO("Connecting to %s, at %d baud", port.c_str(), baud_rate);
+  if (nh_private.param<bool>("udp", false))
+  {
+    std::string bind_host = nh_private.param<std::string>("bind_host", "localhost");
+    uint16_t bind_port = (uint16_t) nh_private.param<int>("bind_port", 14520);
+    std::string remote_host = nh_private.param<std::string>("remote_host", bind_host);
+    uint16_t remote_port = (uint16_t) nh_private.param<int>("remote_port", 14525);
+
+    ROS_INFO("Connecting over UDP to \"%s:%d\", from \"%s:%d\"", remote_host.c_str(), remote_port, bind_host.c_str(), bind_port);
+
+    mavlink_comm_ = new mavrosflight::MavlinkUDP(bind_host, bind_port, remote_host, remote_port);
+  }
+  else
+  {
+    std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
+    int baud_rate = nh_private.param<int>("baud_rate", 921600);
+
+    ROS_INFO("Connecting to serial port \"%s\", at %d baud", port.c_str(), baud_rate);
+
+    mavlink_comm_ = new mavrosflight::MavlinkSerial(port, baud_rate);
+  }
 
   try
   {
-    mavrosflight_ = new mavrosflight::MavROSflight(port, baud_rate);
+    mavlink_comm_->open(); //! \todo move this into the MavROSflight constructor
+    mavrosflight_ = new mavrosflight::MavROSflight(*mavlink_comm_);
   }
   catch (mavrosflight::SerialException e)
   {
@@ -80,7 +97,7 @@ rosflightIO::rosflightIO() :
     ros::shutdown();
   }
 
-  mavrosflight_->serial.register_mavlink_listener(this);
+  mavrosflight_->comm.register_mavlink_listener(this);
   mavrosflight_->param.register_param_listener(this);
 
   // request the param list
@@ -103,6 +120,7 @@ rosflightIO::rosflightIO() :
 rosflightIO::~rosflightIO()
 {
   delete mavrosflight_;
+  delete mavlink_comm_;
 }
 
 void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
@@ -151,8 +169,8 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_SMALL_BARO:
       handle_small_baro_msg(msg);
       break;
-    case MAVLINK_MSG_ID_SMALL_SONAR:
-      handle_small_sonar(msg);
+    case MAVLINK_MSG_ID_SMALL_RANGE:
+      handle_small_range_msg(msg);
       break;
     case MAVLINK_MSG_ID_ROSFLIGHT_VERSION:
       handle_version_msg(msg);
@@ -203,61 +221,57 @@ void rosflightIO::handle_status_msg(const mavlink_message_t &msg)
   mavlink_rosflight_status_t status_msg;
   mavlink_msg_rosflight_status_decode(&msg, &status_msg);
 
-  // Print if change to status
-  if (prev_status_ != status_msg.status)
+  // armed state check
+  if (prev_status_.armed != status_msg.armed)
   {
-    // armed state check
-    if ((prev_status_ & ROSFLIGHT_STATUS_ARMED) != (status_msg.status & ROSFLIGHT_STATUS_ARMED))
-    {
-      if (status_msg.status & ROSFLIGHT_STATUS_ARMED)
-        ROS_WARN("Autopilot ARMED");
-      else
-        ROS_WARN("Autopilot DISARMED");
-    }
+    if (status_msg.armed)
+      ROS_WARN("Autopilot ARMED");
+    else
+      ROS_WARN("Autopilot DISARMED");
+  }
 
-    // failsafe check
-    if ((prev_status_ & ROSFLIGHT_STATUS_IN_FAILSAFE) != (status_msg.status & ROSFLIGHT_STATUS_IN_FAILSAFE))
-    {
-      if (status_msg.status & ROSFLIGHT_STATUS_IN_FAILSAFE)
-        ROS_ERROR("Autopilot FAILSAFE");
-      else
-        ROS_INFO("Autopilot FAILSAFE RECOVERED");
-    }
+  // failsafe check
+  if (prev_status_.failsafe != status_msg.failsafe)
+  {
+    if (status_msg.failsafe)
+      ROS_ERROR("Autopilot FAILSAFE");
+    else
+      ROS_INFO("Autopilot FAILSAFE RECOVERED");
+  }
 
-    // rc override check
-    if ((prev_status_ & ROSFLIGHT_STATUS_RC_OVERRIDE) != (status_msg.status & ROSFLIGHT_STATUS_RC_OVERRIDE))
-    {
-      if (status_msg.status & ROSFLIGHT_STATUS_RC_OVERRIDE)
-        ROS_WARN("RC override active");
-      else
-        ROS_WARN("Returned to computer control");
-    }
+  // rc override check
+  if (prev_status_.rc_override != status_msg.rc_override)
+  {
+    if (status_msg.rc_override)
+      ROS_WARN("RC override active");
+    else
+      ROS_WARN("Returned to computer control");
+  }
 
-    // offboard control check
-    if ((prev_status_ & ROSFLIGHT_STATUS_OFFBOARD_CONTROL_ACTIVE) != (status_msg.status & ROSFLIGHT_STATUS_OFFBOARD_CONTROL_ACTIVE))
-    {
-      if (status_msg.status & ROSFLIGHT_STATUS_OFFBOARD_CONTROL_ACTIVE)
-        ROS_WARN("Computer control active");
-      else
-        ROS_WARN("Computer control lost");
-    }
-    prev_status_ = status_msg.status;
+  // offboard control check
+  if (prev_status_.offboard != status_msg.offboard)
+  {
+    if (status_msg.offboard)
+      ROS_WARN("Computer control active");
+    else
+      ROS_WARN("Computer control lost");
   }
 
   // Print if got error code
-  if (prev_error_code_ != status_msg.error_code)
+  if (prev_status_.error_code != status_msg.error_code)
   {
-    check_error_code(status_msg.error_code, prev_error_code_, ROSFLIGHT_ERROR_INVALID_MIXER, "Invalid mixer");
-    check_error_code(status_msg.error_code, prev_error_code_, ROSFLIGHT_ERROR_IMU_NOT_RESPONDING, "IMU not responding");
-    check_error_code(status_msg.error_code, prev_error_code_, ROSFLIGHT_ERROR_RC_LOST, "RC lost");
-    check_error_code(status_msg.error_code, prev_error_code_, ROSFLIGHT_ERROR_UNHEALTHY_ESTIMATOR, "Unhealthy estimator");
+    check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_INVALID_MIXER, "Invalid mixer");
+    check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_IMU_NOT_RESPONDING, "IMU not responding");
+    check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_RC_LOST, "RC lost");
+    check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_UNHEALTHY_ESTIMATOR, "Unhealthy estimator");
+    check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_TIME_GOING_BACKWARDS, "Time going backwards");
+    check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_UNCALIBRATED_IMU, "Uncalibrated IMU");
 
     ROS_DEBUG("Autopilot ERROR 0x%02x", status_msg.error_code);
-    prev_error_code_ = status_msg.error_code;
   }
 
   // Print if change in control mode
-  if (prev_control_mode_ != status_msg.control_mode)
+  if (prev_status_.control_mode != status_msg.control_mode)
   {
     std::string mode_string;
     switch (status_msg.control_mode)
@@ -275,15 +289,19 @@ void rosflightIO::handle_status_msg(const mavlink_message_t &msg)
         mode_string = "UNKNOWN";
     }
     ROS_WARN_STREAM("Autopilot now in " << mode_string << " mode");
-    prev_control_mode_ = status_msg.control_mode;
   }
+
+  prev_status_ = status_msg;
 
   // Build the status message and send it
   rosflight_msgs::Status out_status;
   out_status.header.stamp = ros::Time::now();
-  out_status.armed = status_msg.status & ROSFLIGHT_STATUS_ARMED;
-  out_status.failsafe = status_msg.status & ROSFLIGHT_STATUS_IN_FAILSAFE;
-  out_status.rc_override = status_msg.status & ROSFLIGHT_STATUS_RC_OVERRIDE;
+  out_status.armed = status_msg.armed;
+  out_status.failsafe = status_msg.failsafe;
+  out_status.rc_override = status_msg.rc_override;
+  out_status.offboard = status_msg.offboard;
+  out_status.control_mode = status_msg.control_mode;
+  out_status.error_code = status_msg.error_code;
   out_status.num_errors = status_msg.num_errors;
   out_status.loop_time_us = status_msg.loop_time_us;
   if (status_pub_.getTopic().empty())
@@ -621,25 +639,42 @@ void rosflightIO::handle_small_mag_msg(const mavlink_message_t &msg)
   mag_pub_.publish(mag_msg);
 }
 
-void rosflightIO::handle_small_sonar(const mavlink_message_t &msg)
+void rosflightIO::handle_small_range_msg(const mavlink_message_t &msg)
 {
-  mavlink_small_sonar_t sonar;
-  mavlink_msg_small_sonar_decode(&msg, &sonar);
+  mavlink_small_range_t range;
+  mavlink_msg_small_range_decode(&msg, &range);
 
   sensor_msgs::Range alt_msg;
   alt_msg.header.stamp = ros::Time::now();
-  alt_msg.max_range = sonar.max_range;
-  alt_msg.min_range = sonar.min_range;
-  alt_msg.range = sonar.range;
+  alt_msg.max_range = range.max_range;
+  alt_msg.min_range = range.min_range;
+  alt_msg.range = range.range;
 
-  alt_msg.radiation_type = sensor_msgs::Range::ULTRASOUND;
-  alt_msg.field_of_view = 1.0472;  // approx 60 deg
+  switch(range.type) {
+    case ROSFLIGHT_RANGE_SONAR:
+      alt_msg.radiation_type  = sensor_msgs::Range::ULTRASOUND;
+      alt_msg.field_of_view   = 1.0472;  // approx 60 deg
 
-  if (sonar_pub_.getTopic().empty())
-  {
-    sonar_pub_ = nh_.advertise<sensor_msgs::Range>("sonar", 1);
+      if (sonar_pub_.getTopic().empty())
+      {
+        sonar_pub_ = nh_.advertise<sensor_msgs::Range>("sonar", 1);
+      }
+      sonar_pub_.publish(alt_msg);
+      break;
+    case ROSFLIGHT_RANGE_LIDAR:
+      alt_msg.radiation_type  = sensor_msgs::Range::INFRARED;
+      alt_msg.field_of_view   = .0349066; //approx 2 deg
+      
+      if (lidar_pub_.getTopic().empty())
+      {
+        lidar_pub_ = nh_.advertise<sensor_msgs::Range>("lidar", 1);
+      }
+      lidar_pub_.publish(alt_msg);
+      break;
+    default:
+      break;
   }
-  sonar_pub_.publish(alt_msg);
+
 }
 
 void rosflightIO::handle_version_msg(const mavlink_message_t &msg)
@@ -690,7 +725,7 @@ void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
 
   mavlink_message_t mavlink_msg;
   mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg, mode, ignore, x, y, z, F);
-  mavrosflight_->serial.send_message(mavlink_msg);
+  mavrosflight_->comm.send_message(mavlink_msg);
 }
 
 bool rosflightIO::paramGetSrvCallback(rosflight_msgs::ParamGet::Request &req, rosflight_msgs::ParamGet::Response &res)
@@ -732,7 +767,7 @@ bool rosflightIO::calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, s
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_ACCEL_CALIBRATION);
-  mavrosflight_->serial.send_message(msg);
+  mavrosflight_->comm.send_message(msg);
 
   res.success = true;
   return true;
@@ -742,7 +777,7 @@ bool rosflightIO::calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, st
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_RC_CALIBRATION);
-  mavrosflight_->serial.send_message(msg);
+  mavrosflight_->comm.send_message(msg);
   res.success = true;
   return true;
 }
@@ -771,7 +806,7 @@ void rosflightIO::request_version()
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_SEND_VERSION);
-  mavrosflight_->serial.send_message(msg);
+  mavrosflight_->comm.send_message(msg);
 }
 
 void rosflightIO::check_error_code(uint8_t current, uint8_t previous, ROSFLIGHT_ERROR_CODE code, std::string name)
@@ -807,7 +842,7 @@ bool rosflightIO::calibrateAirspeedSrvCallback(std_srvs::Trigger::Request &req, 
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_AIRSPEED_CALIBRATION);
-  mavrosflight_->serial.send_message(msg);
+  mavrosflight_->comm.send_message(msg);
   res.success = true;
   return true;
 }
@@ -816,7 +851,7 @@ bool rosflightIO::calibrateBaroSrvCallback(std_srvs::Trigger::Request &req, std_
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_BARO_CALIBRATION);
-  mavrosflight_->serial.send_message(msg);
+  mavrosflight_->comm.send_message(msg);
   res.success = true;
   return true;
 }
@@ -825,7 +860,7 @@ bool rosflightIO::rebootSrvCallback(std_srvs::Trigger::Request &req, std_srvs::T
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_REBOOT);
-  mavrosflight_->serial.send_message(msg);
+  mavrosflight_->comm.send_message(msg);
   res.success = true;
   return true;
 }
