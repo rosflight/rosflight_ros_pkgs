@@ -55,7 +55,6 @@ class SIL_Board : public rosflight_firmware::UDPBoard
 private:
   gazebo::math::Vector3 inertial_magnetic_field_;
 
-  double next_imu_update_time_;
   double imu_update_rate_;
 
   double gyro_stdev_;
@@ -114,6 +113,9 @@ private:
 
   void RCCallback(const rosflight_msgs::RCRaw& msg);
   bool motors_spinning();
+
+  gazebo::math::Vector3 prev_velocity_;
+  double last_time_;
 
 public:
   SIL_Board();

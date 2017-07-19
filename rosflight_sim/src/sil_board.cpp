@@ -31,6 +31,7 @@
 
 #include <rosflight_sim/sil_board.h>
 #include <fstream>
+#include <ros/ros.h>
 
 #include <iostream>
 
@@ -112,6 +113,10 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   mag_bias_.z = mag_bias_range_*uniform_distribution_(random_generator_);
   baro_bias_ = baro_bias_range_*uniform_distribution_(random_generator_);
   airspeed_bias_ = airspeed_bias_range_*uniform_distribution_(random_generator_);
+
+  prev_velocity_ = link_->GetRelativeLinearVel();
+  last_time_ = world_->GetSimTime().Double();
+  next_imu_update_time_us_ = 0;
 }
 
 void SIL_Board::board_reset(bool bootloader)
@@ -163,21 +168,23 @@ uint16_t SIL_Board::num_sensor_errors(void)
 bool SIL_Board::new_imu_data()
 {
   uint64_t now_us = clock_micros();
-  if (now_us > next_imu_update_time_us_)
+  if (now_us >= next_imu_update_time_us_)
   {
     next_imu_update_time_us_ = now_us + imu_update_period_us_;
     return true;
   }
   else
+  {
     return false;
+  }
 }
 
 bool SIL_Board::imu_read(float accel[3], float* temperature, float gyro[3], uint64_t* time_us)
 {
   gazebo::math::Quaternion q_I_NWU = link_->GetWorldPose().rot;
 
-  // y_acc = vdot - R*g + w X v
-  gazebo::math::Vector3 y_acc = link_->GetRelativeLinearAccel() - q_I_NWU.RotateVectorReverse(gravity_);
+  // y_acc = dv/dt - R*g + w X v
+  gazebo::math::Vector3 y_acc =  link_->GetRelativeForce()/link_->GetInertial()->GetMass(); - q_I_NWU.RotateVectorReverse(gravity_);;
 
   // Apply normal noise (only if armed, because most of the noise comes from motors
   if (motors_spinning())
@@ -234,7 +241,7 @@ bool SIL_Board::imu_read(float accel[3], float* temperature, float gyro[3], uint
 
 void SIL_Board::imu_not_responding_error(void)
 {
-  gzerr << "[gazebo_rosflight_sil] imu not responding.\n";
+  ROS_ERROR("[gazebo_rosflight_sil] imu not responding");
 }
 
 void SIL_Board::mag_read(float mag[3])
