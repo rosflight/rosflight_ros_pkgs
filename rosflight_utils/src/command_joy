@@ -17,14 +17,14 @@ pygame.joystick.init()
 joy = pygame.joystick.Joystick(0)
 joy.init()
 
-print "joystick", joy.get_name()
+print "joystick:", joy.get_name()
 
 m = re.search(r'\bTaranis\b', joy.get_name())
 if m:
     print "found Taranis"
     # create a Taranis mapping
 else:
-    print "didn't find Taranis"
+    print "no Taranis found...using realflght mapping"
     # use realflight mappping
 
 # Main event loop
@@ -41,10 +41,22 @@ while not rospy.is_shutdown():
 
         msg.mode = 2
 
-        msg.x = joy.get_axis(1) * 0.785
-        msg.y = joy.get_axis(2) * 0.785
-        msg.z = joy.get_axis(4) * 1.507
-        msg.F = joy.get_axis(0) * 0.5 + 0.5
+        # Taranis mapping (assuming mixer set to Ail,Ele,Thr,Rud)
+        if m:
+            msg.x = joy.get_axis(0) * 0.785
+            msg.y = joy.get_axis(1) * -0.785
+            msg.z = joy.get_axis(3) * 1.507
+            msg.F = joy.get_axis(2) * 0.5 + 0.5
 
-        msg.ignore = 0
-        command_pub.publish(msg)
+            msg.ignore = 0
+            command_pub.publish(msg)
+
+        # realflght mapping
+        else:
+            msg.x = joy.get_axis(1) * 0.785
+            msg.y = joy.get_axis(2) * 0.785
+            msg.z = joy.get_axis(4) * 1.507
+            msg.F = joy.get_axis(0) * 0.5 + 0.5
+
+            msg.ignore = 0
+            command_pub.publish(msg)
