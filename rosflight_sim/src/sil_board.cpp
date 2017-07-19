@@ -172,7 +172,7 @@ bool SIL_Board::new_imu_data()
     return false;
 }
 
-bool SIL_Board::imu_read_all(float accel[3], float* temperature, float gyro[3], uint64_t* time_us)
+bool SIL_Board::imu_read(float accel[3], float* temperature, float gyro[3], uint64_t* time_us)
 {
   gazebo::math::Quaternion q_I_NWU = link_->GetWorldPose().rot;
 
@@ -227,7 +227,7 @@ bool SIL_Board::imu_read_all(float accel[3], float* temperature, float gyro[3], 
   gyro[1] = -y_gyro.y;
   gyro[2] = -y_gyro.z;
 
-  (*temperature) = imu_read_temperature();
+  (*temperature) = 27.0;
   (*time_us) = clock_micros();
   return true;
 }
