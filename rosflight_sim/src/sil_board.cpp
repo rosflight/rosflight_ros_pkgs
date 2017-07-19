@@ -177,60 +177,6 @@ bool SIL_Board::new_imu_data()
     return false;
 }
 
-void SIL_Board::imu_read_accel(float accel[3])
-{
-  gazebo::math::Quaternion q_I_NWU = link_->GetWorldPose().rot;
-  gazebo::math::Vector3 omega_B_NWU = link_->GetRelativeAngularVel();
-  gazebo::math::Vector3 uvw_B_NWU = link_->GetRelativeLinearVel();
-
-  // y_acc = F/m - R*g
-  gazebo::math::Vector3 y_acc = link_->GetRelativeForce()/link_->GetInertial()->GetMass() - q_I_NWU.RotateVectorReverse(gravity_);
-
-  // Apply normal noise
-  y_acc.x += acc_stdev_*normal_distribution_(random_generator_);
-  y_acc.y += acc_stdev_*normal_distribution_(random_generator_);
-  y_acc.z += acc_stdev_*normal_distribution_(random_generator_);
-
-  // Perform Random Walk for biases
-  acc_bias_.x += acc_bias_walk_stdev_*normal_distribution_(random_generator_);
-  acc_bias_.y += acc_bias_walk_stdev_*normal_distribution_(random_generator_);
-  acc_bias_.z += acc_bias_walk_stdev_*normal_distribution_(random_generator_);
-
-  // Add constant Bias to measurement
-  y_acc.x += acc_bias_.x;
-  y_acc.y += acc_bias_.y;
-  y_acc.z += acc_bias_.z;
-
-  // Convert to NED for output
-  accel[0] = y_acc.x;
-  accel[1] = -y_acc.y;
-  accel[2] = -y_acc.z;
-}
-
-void SIL_Board::imu_read_gyro(float gyro[3])
-{
-  gazebo::math::Vector3 y_gyro = link_->GetRelativeAngularVel();
-
-  // Normal Noise
-  y_gyro.x += gyro_stdev_*normal_distribution_(random_generator_);
-  y_gyro.y += gyro_stdev_*normal_distribution_(random_generator_);
-  y_gyro.z += gyro_stdev_*normal_distribution_(random_generator_);
-
-  // Random Walk for bias
-  gyro_bias_.x += gyro_bias_walk_stdev_*normal_distribution_(random_generator_);
-  gyro_bias_.y += gyro_bias_walk_stdev_*normal_distribution_(random_generator_);
-  gyro_bias_.z += gyro_bias_walk_stdev_*normal_distribution_(random_generator_);
-
-  // Apply Constant Bias
-  y_gyro.x += gyro_bias_.x;
-  y_gyro.y += gyro_bias_.y;
-  y_gyro.z += gyro_bias_.z;
-
-  gyro[0] = y_gyro.x;
-  gyro[1] = -y_gyro.y;
-  gyro[2] = -y_gyro.z;
-}
-
 bool SIL_Board::imu_read_all(float accel[3], float* temperature, float gyro[3], uint64_t* time_us)
 {
   gazebo::math::Quaternion q_I_NWU = link_->GetWorldPose().rot;
@@ -289,11 +235,6 @@ bool SIL_Board::imu_read_all(float accel[3], float* temperature, float gyro[3], 
   (*temperature) = imu_read_temperature();
   (*time_us) = clock_micros();
   return true;
-}
-
-float SIL_Board::imu_read_temperature(void)
-{
-  return 27.0f;
 }
 
 void SIL_Board::imu_not_responding_error(void)
