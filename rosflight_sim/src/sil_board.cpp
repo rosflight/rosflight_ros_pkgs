@@ -183,8 +183,8 @@ void SIL_Board::imu_read_accel(float accel[3])
   gazebo::math::Vector3 omega_B_NWU = link_->GetRelativeAngularVel();
   gazebo::math::Vector3 uvw_B_NWU = link_->GetRelativeLinearVel();
 
-  // y_acc = vdot - R*g + w X v
-  gazebo::math::Vector3 y_acc = link_->GetRelativeLinearAccel() - q_I_NWU.RotateVectorReverse(gravity_);
+  // y_acc = F/m - R*g
+  gazebo::math::Vector3 y_acc = link_->GetRelativeForce()/link_->GetInertial()->GetMass() - q_I_NWU.RotateVectorReverse(gravity_);
 
   // Apply normal noise
   y_acc.x += acc_stdev_*normal_distribution_(random_generator_);
@@ -301,11 +301,6 @@ void SIL_Board::imu_not_responding_error(void)
   gzerr << "[gazebo_rosflight_sil] imu not responding.\n";
 }
 
-bool SIL_Board::mag_present(void)
-{
-  return true;
-}
-
 void SIL_Board::mag_read(float mag[3])
 {
   gazebo::math::Pose I_to_B = link_->GetWorldPose();
@@ -338,12 +333,7 @@ bool SIL_Board::baro_check()
   return true;
 }
 
-bool SIL_Board::baro_present(void)
-{
-  return true;
-}
-
-void SIL_Board::baro_read(float *altitude, float *pressure, float *temperature)
+void SIL_Board::baro_read(float *pressure, float *temperature)
 {
   // pull z measurement out of Gazebo
   gazebo::math::Pose current_state_NWU = link_->GetWorldPose();
@@ -365,15 +355,9 @@ void SIL_Board::baro_read(float *altitude, float *pressure, float *temperature)
 
   (*pressure) = (float)y_baro;
   (*temperature) = 27.0f;
-  (*altitude) = (1.0 - pow(y_baro/101325.0, 0.1902631)) * 39097.63;
 }
 
-void SIL_Board::baro_calibrate()
-{
-  baro_bias_ = 0.0;
-}
-
-bool SIL_Board::diff_pressure_present(void)
+bool SIL_Board::diff_pressure_check(void)
 {
   if(mav_type_ == "fixedwing")
     return true;
@@ -381,22 +365,7 @@ bool SIL_Board::diff_pressure_present(void)
     return false;
 }
 
-bool SIL_Board::diff_pressure_check(void)
-{
-  return diff_pressure_present();
-}
-
-void SIL_Board::diff_pressure_calibrate()
-{
-  airspeed_bias_ = 0.0;
-}
-
-void SIL_Board::diff_pressure_set_atm(float barometric_pressure)
-{
-  (void)barometric_pressure;
-}
-
-void SIL_Board::diff_pressure_read(float *diff_pressure, float *temperature, float *velocity)
+void SIL_Board::diff_pressure_read(float *diff_pressure, float *temperature)
 {
   static double rho_ = 1.225;
   // Calculate Airspeed
@@ -416,12 +385,6 @@ void SIL_Board::diff_pressure_read(float *diff_pressure, float *temperature, flo
 
   *diff_pressure = y_as;
   *temperature = 27.0;
-  *velocity = sqrt(2*y_as/rho_);
-}
-
-bool SIL_Board::sonar_present(void)
-{
-  return true;
 }
 
 bool SIL_Board::sonar_check(void)
