@@ -178,9 +178,7 @@ private:
   ros::Timer version_timer_;
 
   geometry_msgs::Quaternion attitude_quat_;
-  uint8_t prev_status_;
-  uint8_t prev_error_code_;
-  uint8_t prev_control_mode_;
+  mavlink_rosflight_status_t prev_status_;
 
   std::string frame_id_;
 

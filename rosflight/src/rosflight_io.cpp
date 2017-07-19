@@ -47,10 +47,7 @@
 
 namespace rosflight_io
 {
-rosflightIO::rosflightIO() :
-  prev_status_(0),
-  prev_error_code_(0),
-  prev_control_mode_(0)
+rosflightIO::rosflightIO()
 {
   command_sub_ = nh_.subscribe("command", 1, &rosflightIO::commandCallback, this);
 
@@ -224,56 +221,50 @@ void rosflightIO::handle_status_msg(const mavlink_message_t &msg)
   mavlink_rosflight_status_t status_msg;
   mavlink_msg_rosflight_status_decode(&msg, &status_msg);
 
-  // Print if change to status
-  if (prev_status_ != status_msg.status)
+  // armed state check
+  if (prev_status_.armed != status_msg.armed)
   {
-    // armed state check
-    if ((prev_status_ & ROSFLIGHT_STATUS_ARMED) != (status_msg.status & ROSFLIGHT_STATUS_ARMED))
-    {
-      if (status_msg.status & ROSFLIGHT_STATUS_ARMED)
-        ROS_WARN("Autopilot ARMED");
-      else
-        ROS_WARN("Autopilot DISARMED");
-    }
+    if (status_msg.armed)
+      ROS_WARN("Autopilot ARMED");
+    else
+      ROS_WARN("Autopilot DISARMED");
+  }
 
-    // failsafe check
-    if ((prev_status_ & ROSFLIGHT_STATUS_IN_FAILSAFE) != (status_msg.status & ROSFLIGHT_STATUS_IN_FAILSAFE))
-    {
-      if (status_msg.status & ROSFLIGHT_STATUS_IN_FAILSAFE)
-        ROS_ERROR("Autopilot FAILSAFE");
-      else
-        ROS_INFO("Autopilot FAILSAFE RECOVERED");
-    }
+  // failsafe check
+  if (prev_status_.failsafe != status_msg.failsafe)
+  {
+    if (status_msg.failsafe)
+      ROS_ERROR("Autopilot FAILSAFE");
+    else
+      ROS_INFO("Autopilot FAILSAFE RECOVERED");
+  }
 
-    // rc override check
-    if ((prev_status_ & ROSFLIGHT_STATUS_RC_OVERRIDE) != (status_msg.status & ROSFLIGHT_STATUS_RC_OVERRIDE))
-    {
-      if (status_msg.status & ROSFLIGHT_STATUS_RC_OVERRIDE)
-        ROS_WARN("RC override active");
-      else
-        ROS_WARN("Returned to computer control");
-    }
+  // rc override check
+  if (prev_status_.rc_override != status_msg.rc_override)
+  {
+    if (status_msg.rc_override)
+      ROS_WARN("RC override active");
+    else
+      ROS_WARN("Returned to computer control");
+  }
 
-    // offboard control check
-    if ((prev_status_ & ROSFLIGHT_STATUS_OFFBOARD_CONTROL_ACTIVE) != (status_msg.status & ROSFLIGHT_STATUS_OFFBOARD_CONTROL_ACTIVE))
-    {
-      if (status_msg.status & ROSFLIGHT_STATUS_OFFBOARD_CONTROL_ACTIVE)
-        ROS_WARN("Computer control active");
-      else
-        ROS_WARN("Computer control lost");
-    }
-    prev_status_ = status_msg.status;
+  // offboard control check
+  if (prev_status_.offboard != status_msg.offboard)
+  {
+    if (status_msg.offboard)
+      ROS_WARN("Computer control active");
+    else
+      ROS_WARN("Computer control lost");
   }
 
   // Print if got error code
-  if (prev_error_code_ != status_msg.error_code)
+  if (prev_status_.error_code != status_msg.error_code)
   {
     ROS_ERROR("Autopilot ERROR 0x%02x", status_msg.error_code);
-    prev_error_code_ = status_msg.error_code;
   }
 
   // Print if change in control mode
-  if (prev_control_mode_ != status_msg.control_mode)
+  if (prev_status_.control_mode != status_msg.control_mode)
   {
     std::string mode_string;
     switch (status_msg.control_mode)
@@ -291,15 +282,19 @@ void rosflightIO::handle_status_msg(const mavlink_message_t &msg)
         mode_string = "UNKNOWN";
     }
     ROS_WARN_STREAM("Autopilot now in " << mode_string << " mode");
-    prev_control_mode_ = status_msg.control_mode;
   }
+
+  prev_status_ = status_msg;
 
   // Build the status message and send it
   rosflight_msgs::Status out_status;
   out_status.header.stamp = ros::Time::now();
-  out_status.armed = status_msg.status & ROSFLIGHT_STATUS_ARMED;
-  out_status.failsafe = status_msg.status & ROSFLIGHT_STATUS_IN_FAILSAFE;
-  out_status.rc_override = status_msg.status & ROSFLIGHT_STATUS_RC_OVERRIDE;
+  out_status.armed = status_msg.armed;
+  out_status.failsafe = status_msg.failsafe;
+  out_status.rc_override = status_msg.rc_override;
+  out_status.offboard = status_msg.offboard;
+  out_status.control_mode = status_msg.control_mode;
+  out_status.error_code = status_msg.error_code;
   out_status.num_errors = status_msg.num_errors;
   out_status.loop_time_us = status_msg.loop_time_us;
   if (status_pub_.getTopic().empty())
