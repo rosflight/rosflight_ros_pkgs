@@ -115,6 +115,13 @@ rosflightIO::rosflightIO()
 
   // Set up a few other random things
   frame_id_ = nh_private.param<std::string>("frame_id", "world");
+
+  prev_status_.armed = false;
+  prev_status_.failsafe = false;
+  prev_status_.rc_override = false;
+  prev_status_.offboard = false;
+  prev_status_.control_mode = OFFBOARD_CONTROL_MODE_ENUM_END;
+  prev_status_.error_code = ROSFLIGHT_ERROR_NONE;
 }
 
 rosflightIO::~rosflightIO()
