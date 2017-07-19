@@ -172,60 +172,6 @@ bool SIL_Board::new_imu_data()
     return false;
 }
 
-void SIL_Board::imu_read_accel(float accel[3])
-{
-  gazebo::math::Quaternion q_I_NWU = link_->GetWorldPose().rot;
-  gazebo::math::Vector3 omega_B_NWU = link_->GetRelativeAngularVel();
-  gazebo::math::Vector3 uvw_B_NWU = link_->GetRelativeLinearVel();
-
-  // y_acc = vdot - R*g + w X v
-  gazebo::math::Vector3 y_acc = link_->GetRelativeLinearAccel() - q_I_NWU.RotateVectorReverse(gravity_);
-
-  // Apply normal noise
-  y_acc.x += acc_stdev_*normal_distribution_(random_generator_);
-  y_acc.y += acc_stdev_*normal_distribution_(random_generator_);
-  y_acc.z += acc_stdev_*normal_distribution_(random_generator_);
-
-  // Perform Random Walk for biases
-  acc_bias_.x += acc_bias_walk_stdev_*normal_distribution_(random_generator_);
-  acc_bias_.y += acc_bias_walk_stdev_*normal_distribution_(random_generator_);
-  acc_bias_.z += acc_bias_walk_stdev_*normal_distribution_(random_generator_);
-
-  // Add constant Bias to measurement
-  y_acc.x += acc_bias_.x;
-  y_acc.y += acc_bias_.y;
-  y_acc.z += acc_bias_.z;
-
-  // Convert to NED for output
-  accel[0] = y_acc.x;
-  accel[1] = -y_acc.y;
-  accel[2] = -y_acc.z;
-}
-
-void SIL_Board::imu_read_gyro(float gyro[3])
-{
-  gazebo::math::Vector3 y_gyro = link_->GetRelativeAngularVel();
-
-  // Normal Noise
-  y_gyro.x += gyro_stdev_*normal_distribution_(random_generator_);
-  y_gyro.y += gyro_stdev_*normal_distribution_(random_generator_);
-  y_gyro.z += gyro_stdev_*normal_distribution_(random_generator_);
-
-  // Random Walk for bias
-  gyro_bias_.x += gyro_bias_walk_stdev_*normal_distribution_(random_generator_);
-  gyro_bias_.y += gyro_bias_walk_stdev_*normal_distribution_(random_generator_);
-  gyro_bias_.z += gyro_bias_walk_stdev_*normal_distribution_(random_generator_);
-
-  // Apply Constant Bias
-  y_gyro.x += gyro_bias_.x;
-  y_gyro.y += gyro_bias_.y;
-  y_gyro.z += gyro_bias_.z;
-
-  gyro[0] = y_gyro.x;
-  gyro[1] = -y_gyro.y;
-  gyro[2] = -y_gyro.z;
-}
-
 bool SIL_Board::imu_read_all(float accel[3], float* temperature, float gyro[3], uint64_t* time_us)
 {
   gazebo::math::Quaternion q_I_NWU = link_->GetWorldPose().rot;
@@ -286,19 +232,9 @@ bool SIL_Board::imu_read_all(float accel[3], float* temperature, float gyro[3], 
   return true;
 }
 
-float SIL_Board::imu_read_temperature(void)
-{
-  return 27.0f;
-}
-
 void SIL_Board::imu_not_responding_error(void)
 {
   gzerr << "[gazebo_rosflight_sil] imu not responding.\n";
-}
-
-bool SIL_Board::mag_present(void)
-{
-  return true;
 }
 
 void SIL_Board::mag_read(float mag[3])
@@ -333,12 +269,7 @@ bool SIL_Board::baro_check()
   return true;
 }
 
-bool SIL_Board::baro_present(void)
-{
-  return true;
-}
-
-void SIL_Board::baro_read(float *altitude, float *pressure, float *temperature)
+void SIL_Board::baro_read(float *pressure, float *temperature)
 {
   // pull z measurement out of Gazebo
   gazebo::math::Pose current_state_NWU = link_->GetWorldPose();
@@ -360,15 +291,9 @@ void SIL_Board::baro_read(float *altitude, float *pressure, float *temperature)
 
   (*pressure) = (float)y_baro;
   (*temperature) = 27.0f;
-  (*altitude) = (1.0 - pow(y_baro/101325.0, 0.1902631)) * 39097.63;
 }
 
-void SIL_Board::baro_calibrate()
-{
-  baro_bias_ = 0.0;
-}
-
-bool SIL_Board::diff_pressure_present(void)
+bool SIL_Board::diff_pressure_check(void)
 {
   if(mav_type_ == "fixedwing")
     return true;
@@ -376,22 +301,7 @@ bool SIL_Board::diff_pressure_present(void)
     return false;
 }
 
-bool SIL_Board::diff_pressure_check(void)
-{
-  return diff_pressure_present();
-}
-
-void SIL_Board::diff_pressure_calibrate()
-{
-  airspeed_bias_ = 0.0;
-}
-
-void SIL_Board::diff_pressure_set_atm(float barometric_pressure)
-{
-  (void)barometric_pressure;
-}
-
-void SIL_Board::diff_pressure_read(float *diff_pressure, float *temperature, float *velocity)
+void SIL_Board::diff_pressure_read(float *diff_pressure, float *temperature)
 {
   static double rho_ = 1.225;
   // Calculate Airspeed
@@ -409,12 +319,6 @@ void SIL_Board::diff_pressure_read(float *diff_pressure, float *temperature, flo
 
   *diff_pressure = y_as;
   *temperature = 27.0;
-  *velocity = sqrt(2*y_as/rho_);
-}
-
-bool SIL_Board::sonar_present(void)
-{
-  return true;
 }
 
 bool SIL_Board::sonar_check(void)
@@ -485,7 +389,7 @@ void SIL_Board::memory_init(void) {}
 
 bool SIL_Board::memory_read(void * dest, size_t len)
 {
-  std::string directory = "rosflight_memory/" + nh_->getNamespace();
+  std::string directory = "rosflight_memory" + nh_->getNamespace();
   std::ifstream memory_file;
   memory_file.open(directory + "/mem.bin", std::ios::binary);
 
@@ -502,8 +406,8 @@ bool SIL_Board::memory_read(void * dest, size_t len)
 
 bool SIL_Board::memory_write(const void * src, size_t len)
 {
-  std::string directory = "rosflight_memory/" + nh_->getNamespace();
-  std::string mkdir_command = "mkdir -p" + directory;
+  std::string directory = "rosflight_memory" + nh_->getNamespace();
+  std::string mkdir_command = "mkdir -p " + directory;
   const int dir_err = system(mkdir_command.c_str());
 
   if (dir_err == -1)
