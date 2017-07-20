@@ -4,34 +4,7 @@ linear_mu: 0.2
 angular_mu: 0.3
 ground_effect: [-55.3516, 181.8265, -203.9874, 85.3735, -7.6619]
 
-
-# Simplified Dynamics
-max_l: 6.5080
-max_m: 5.087
-max_n: 0.25
-max_F: 59.844
-tau_up_l: 0.1904
-tau_up_m: 0.1904
-tau_up_n: 0.1644
-tau_up_F: 0.1644
-tau_down_l: 0.1904
-tau_down_m: 0.1904
-tau_down_n: 0.2164
-tau_down_F: 0.2164
-roll_P: 25.0
-roll_I: 0.0
-roll_D: 8.0
-pitch_P: 25.0
-pitch_I: 0.0
-pitch_D: 8.0
-yaw_P: 25.0
-yaw_I: 0.0
-yaw_D: 0.0
-alt_P: 16.0
-alt_I: 5.0
-alt_D: 32.0
-
-# Full Dynamics
+# Dynamics
 num_rotors: 4
 rotor_positions: [ 0.1926,  0.230, -0.0762,
                   -0.1907,  0.205, -0.0762,
@@ -77,3 +50,6 @@ airspeed_bias_walk_stdev: 0.001
 mag_stdev: 1.15
 mag_bias_range: 0.15
 mag_bias_walk_stdev: 0.001
+
+inclination: 1.14316156541
+declination: 0.198584539676
