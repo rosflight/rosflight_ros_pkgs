@@ -133,7 +133,7 @@ void CalibrateMag::start_mag_calibration()
 void CalibrateMag::do_mag_calibration()
 {
   // fit ellipsoid to measurements according to Li paper but in RANSAC form
-  ROS_INFO("Collected %lu measurements. Fitting ellipsoid.", measurements_.size());
+  ROS_INFO("Collected %u measurements. Fitting ellipsoid.", (uint32_t)measurements_.size());
   Eigen::MatrixXd u = ellipsoidRANSAC(measurements_, ransac_iters_, inlier_thresh_);
 
   // magnetometer calibration parameters according to Renaudin paper
