@@ -55,6 +55,7 @@ CalibrateMag::CalibrateMag() :
   measurement_skip_ = nh_private_.param<int>("measurement_skip", 20);
 
   param_set_client_ = nh_.serviceClient<rosflight_msgs::ParamSet>("param_set"); 
+  mag_subscriber_.registerCallback(boost::bind(&CalibrateMag::mag_callback, this, _1));
 }
 
 void CalibrateMag::run()
@@ -84,7 +85,7 @@ void CalibrateMag::run()
   }
 
   // collect data
-  ROS_WARN("Calibrating Mag, Do your thing for %g seconds!", calibration_time_);
+  ROS_WARN("Calibrating Mag, do the mag dance for %g seconds!", calibration_time_);
   start_mag_calibration();
   while(calibrating_)
   {
