@@ -59,7 +59,6 @@ rosflightIO::rosflightIO()
   param_save_to_file_srv_ = nh_.advertiseService("param_save_to_file", &rosflightIO::paramSaveToFileCallback, this);
   param_load_from_file_srv_ = nh_.advertiseService("param_load_from_file", &rosflightIO::paramLoadFromFileCallback, this);
   imu_calibrate_bias_srv_ = nh_.advertiseService("calibrate_imu", &rosflightIO::calibrateImuBiasSrvCallback, this);
-//  imu_calibrate_temp_srv_ = nh_.advertiseService("calibrate_imu_temp", &rosflightIO::calibrateImuTempSrvCallback, this);
   calibrate_rc_srv_ = nh_.advertiseService("calibrate_rc_trim", &rosflightIO::calibrateRCTrimSrvCallback, this);
   reboot_srv_ = nh_.advertiseService("reboot", &rosflightIO::rebootSrvCallback, this);
 
@@ -407,51 +406,30 @@ void rosflightIO::handle_small_imu_msg(const mavlink_message_t &msg)
   sensor_msgs::Imu imu_msg;
   imu_msg.header.stamp = mavrosflight_->time.get_ros_time_us(imu.time_boot_us);
   imu_msg.header.frame_id = frame_id_;
+  imu_msg.linear_acceleration.x = imu.xacc;
+  imu_msg.linear_acceleration.y = imu.yacc;
+  imu_msg.linear_acceleration.z = imu.zacc;
+  imu_msg.angular_velocity.x = imu.xgyro;
+  imu_msg.angular_velocity.y = imu.ygyro;
+  imu_msg.angular_velocity.z = imu.zgyro;
+  imu_msg.orientation = attitude_quat_;
 
   sensor_msgs::Temperature temp_msg;
   temp_msg.header.stamp = imu_msg.header.stamp;
   temp_msg.header.frame_id = frame_id_;
+  temp_msg.temperature = imu.temperature;
 
-  // This is so we can eventually make calibrating the IMU an external service
-  if (imu_.is_calibrating())
+  if (imu_pub_.getTopic().empty())
   {
-    if (imu_.calibrate_temp(imu))
-    {
-      ROS_INFO("IMU temperature calibration complete:\n xm = %f, ym = %f, zm = %f xb = %f yb = %f, zb = %f", imu_.xm(),
-               imu_.ym(), imu_.zm(), imu_.xb(), imu_.yb(), imu_.zb());
-
-      // calibration is done, send params to the param server
-      mavrosflight_->param.set_param_value("ACC_X_TEMP_COMP", imu_.xm());
-      mavrosflight_->param.set_param_value("ACC_Y_TEMP_COMP", imu_.ym());
-      mavrosflight_->param.set_param_value("ACC_Z_TEMP_COMP", imu_.zm());
-      mavrosflight_->param.set_param_value("ACC_X_BIAS", imu_.xb());
-      mavrosflight_->param.set_param_value("ACC_Y_BIAS", imu_.yb());
-      mavrosflight_->param.set_param_value("ACC_Z_BIAS", imu_.zb());
-
-      ROS_WARN("Write params to save new temperature calibration!");
-    }
+    imu_pub_ = nh_.advertise<sensor_msgs::Imu>("imu/data", 1);
   }
+  imu_pub_.publish(imu_msg);
 
-  bool valid = imu_.correct(imu, &imu_msg.linear_acceleration.x, &imu_msg.linear_acceleration.y,
-                            &imu_msg.linear_acceleration.z, &imu_msg.angular_velocity.x, &imu_msg.angular_velocity.y,
-                            &imu_msg.angular_velocity.z, &temp_msg.temperature);
-
-  imu_msg.orientation = attitude_quat_;
-
-  if (valid)
+  if (imu_temp_pub_.getTopic().empty())
   {
-    if (imu_pub_.getTopic().empty())
-    {
-      imu_pub_ = nh_.advertise<sensor_msgs::Imu>("imu/data", 1);
-    }
-    imu_pub_.publish(imu_msg);
-
-    if (imu_temp_pub_.getTopic().empty())
-    {
-      imu_temp_pub_ = nh_.advertise<sensor_msgs::Temperature>("imu/temperature", 1);
-    }
-    imu_temp_pub_.publish(temp_msg);
+    imu_temp_pub_ = nh_.advertise<sensor_msgs::Temperature>("imu/temperature", 1);
   }
+  imu_temp_pub_.publish(temp_msg);
 }
 
 void rosflightIO::handle_rosflight_output_raw_msg(const mavlink_message_t &msg)
@@ -825,24 +803,6 @@ void rosflightIO::check_error_code(uint8_t current, uint8_t previous, ROSFLIGHT_
     else
       ROS_INFO("Autopilot RECOVERED ERROR: %s", name.c_str());
   }
-}
-
-bool rosflightIO::calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
-{
-  // First, reset the previous calibration
-  mavrosflight_->param.set_param_value("ACC_X_TEMP_COMP", 0);
-  mavrosflight_->param.set_param_value("ACC_Y_TEMP_COMP", 0);
-  mavrosflight_->param.set_param_value("ACC_Z_TEMP_COMP", 0);
-  mavrosflight_->param.set_param_value("ACC_X_BIAS", 0);
-  mavrosflight_->param.set_param_value("ACC_Y_BIAS", 0);
-  mavrosflight_->param.set_param_value("ACC_Z_BIAS", 0);
-
-  // tell the IMU to start a temperature calibration
-  imu_.start_temp_calibration();
-  ROS_WARN("IMU temperature calibration started");
-
-  res.success = true;
-  return true;
 }
 
 bool rosflightIO::calibrateAirspeedSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)

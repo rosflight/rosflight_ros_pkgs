@@ -45,8 +45,6 @@
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
 #include <rosflight/mavrosflight/param_listener_interface.h>
 
-#include <rosflight/mavrosflight/sensors/imu.h>
-
 #include <boost/function.hpp>
 
 #include <stdint.h>
