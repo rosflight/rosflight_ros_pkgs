@@ -51,7 +51,8 @@
 
 #include <boost/bind.hpp>
 
-#include <deque>
+#include <eigen_stl_containers/eigen_stl_vector_container.h>
+#include <vector>
 
 namespace rosflight
 {
@@ -126,10 +127,10 @@ private:
   int measurement_throttle_;
   double inlier_thresh_; //!< threshold to consider measurement an inlier in ellipsoidRANSAC
   Eigen::Vector3d measurement_prev_;
-  std::deque<Eigen::Vector3d> measurements_;
+  EigenSTL::vector_Vector3d measurements_;
 
   // function to perform RANSAC on ellipsoid data
-  Eigen::MatrixXd ellipsoidRANSAC(std::deque<Eigen::Vector3d> meas, int iters, double inlier_thresh);
+  Eigen::MatrixXd ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, int iters, double inlier_thresh);
 
   // function to vector from ellipsoid center to surface along input vector
   Eigen::Vector3d intersect(Eigen::Vector3d r_m, Eigen::Vector3d r_e, Eigen::MatrixXd Q, Eigen::MatrixXd ub, double k);
@@ -144,7 +145,7 @@ private:
       according to the paper: Li, Qingde, and John G. Griffiths. "Least squares ellipsoid 
       specific fitting." Geometric modeling and processing, 2004. proceedings. IEEE, 2004.
   */
-  Eigen::MatrixXd ellipsoidLS(std::deque<Eigen::Vector3d> meas);
+  Eigen::MatrixXd ellipsoidLS(EigenSTL::vector_Vector3d meas);
 
   /*
       This function compute magnetometer calibration parameters according to Section 5.3 of the

@@ -178,7 +178,7 @@ bool CalibrateMag::mag_callback(const sensor_msgs::MagneticField::ConstPtr& mag)
 
 }
 
-Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(std::deque<Eigen::Vector3d> meas, int iters, double inlier_thresh)
+Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, int iters, double inlier_thresh)
 {
   // initialize random number generator
   std::random_device random_dev;
@@ -186,7 +186,7 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(std::deque<Eigen::Vector3d> meas, 
 
   // RANSAC to find a good ellipsoid fit
   int inlier_count_best = 0; // number of inliers for best fit
-  std::deque<Eigen::Vector3d> inliers_best; // container for inliers to best fit
+  EigenSTL::vector_Vector3d inliers_best; // container for inliers to best fit
   double dist_sum = 0; // sum distances of all measurements from ellipsoid surface
   int dist_count = 0; // count number distances of all measurements from ellipsoid surface
   for (unsigned i = 0; i < iters; i++)
@@ -194,7 +194,7 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(std::deque<Eigen::Vector3d> meas, 
     // pick 9 random, unique measurements by shuffling measurements
     // and grabbing the first 9
     std::shuffle(meas.begin(), meas.end(), generator);
-    std::deque<Eigen::Vector3d> meas_sample;
+    EigenSTL::vector_Vector3d meas_sample;
     for (unsigned j = 0; j < 9; j++)
     {
       meas_sample.push_back(meas[j]);
@@ -243,7 +243,7 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(std::deque<Eigen::Vector3d> meas, 
 
     // count inliers and store inliers
     int inlier_count = 0;
-    std::deque<Eigen::Vector3d> inliers;
+    EigenSTL::vector_Vector3d inliers;
     for (unsigned j = 0; j < meas.size(); j++)
     {
       // compute the vector from ellipsoid center to surface along 
@@ -368,7 +368,7 @@ void CalibrateMag::eigSort(Eigen::MatrixXd &w, Eigen::MatrixXd &v)
    according to the paper: Li, Qingde, and John G. Griffiths. "Least squares ellipsoid 
    specific fitting." Geometric modeling and processing, 2004. proceedings. IEEE, 2004.
    */
-Eigen::MatrixXd CalibrateMag::ellipsoidLS(std::deque<Eigen::Vector3d> meas)
+Eigen::MatrixXd CalibrateMag::ellipsoidLS(EigenSTL::vector_Vector3d meas)
 {
   // form D matrix from eq. 6
   Eigen::MatrixXd D(10, meas.size());

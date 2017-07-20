@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   std_srvs
   tf
+  eigen_stl_containers
 )
 find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(Eigen3 REQUIRED)
