@@ -82,8 +82,8 @@ void UDPBoard::serial_init(uint32_t baud_rate)
   socket_.bind(bind_endpoint_);
 
   socket_.set_option(udp::socket::reuse_address(true));
-  socket_.set_option(udp::socket::send_buffer_size(MAVLINK_MAX_PACKET_LEN));
-  socket_.set_option(udp::socket::receive_buffer_size(MAVLINK_MAX_PACKET_LEN));
+  socket_.set_option(udp::socket::send_buffer_size(1000*MAVLINK_MAX_PACKET_LEN));
+  socket_.set_option(udp::socket::receive_buffer_size(1000*MAVLINK_MAX_PACKET_LEN));
 
   async_read();
   io_thread_ = boost::thread(boost::bind(&boost::asio::io_service::run, &io_service_));

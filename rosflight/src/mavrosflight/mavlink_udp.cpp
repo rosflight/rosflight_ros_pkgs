@@ -80,8 +80,8 @@ void MavlinkUDP::do_open()
     socket_.bind(bind_endpoint_);
 
     socket_.set_option(udp::socket::reuse_address(true));
-    socket_.set_option(udp::socket::send_buffer_size(MAVLINK_MAX_PACKET_LEN));
-    socket_.set_option(udp::socket::receive_buffer_size(MAVLINK_SERIAL_READ_BUF_SIZE));
+    socket_.set_option(udp::socket::send_buffer_size(1000*MAVLINK_MAX_PACKET_LEN));
+    socket_.set_option(udp::socket::receive_buffer_size(1000*MAVLINK_SERIAL_READ_BUF_SIZE));
   }
   catch (boost::system::system_error e)
   {
