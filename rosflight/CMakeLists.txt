@@ -37,8 +37,8 @@ endif()
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES mavrosflight
-  CATKIN_DEPENDS roscpp geometry_msgs rosflight_msgs sensor_msgs std_msgs
-  DEPENDS Boost EIGEN3 YAML_CPP
+  CATKIN_DEPENDS roscpp geometry_msgs rosflight_msgs sensor_msgs std_msgs tf
+  DEPENDS Boost EIGEN3 YAML_CPP tf
 )
 
 ###########
@@ -81,6 +81,25 @@ target_link_libraries(rosflight_io
   mavrosflight
   ${catkin_LIBRARIES}
   ${Boost_LIBRARES}
+)
+
+add_executable(viz_mag
+    src/viz_mag.cpp
+    )
+add_dependencies(viz_mag ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(viz_mag
+  ${catkin_LIBRARIES}
+)
+
+add_executable(calibrate_mag
+    src/mag_cal_node.cpp
+    src/mag_cal.cpp
+)
+add_dependencies(calibrate_mag ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+target_link_libraries(calibrate_mag
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
 )
 
 #############

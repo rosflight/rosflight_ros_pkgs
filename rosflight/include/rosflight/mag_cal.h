@@ -49,6 +49,8 @@
 #include <math.h>
 #include <random>
 
+#include <boost/bind.hpp>
+
 #include <deque>
 
 namespace rosflight
