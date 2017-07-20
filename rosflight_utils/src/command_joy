@@ -19,13 +19,38 @@ joy.init()
 
 print "joystick:", joy.get_name()
 
-m = re.search(r'\bTaranis\b', joy.get_name())
-if m:
+mapping = dict()
+
+if 'Taranis' in joy.get_name():
     print "found Taranis"
-    # create a Taranis mapping
+    mapping['x'] = 0
+    mapping['y'] = 1
+    mapping['z'] = 3
+    mapping['F'] = 2
+    mapping['xsign'] = 1
+    mapping['ysign'] = 1
+    mapping['zsign'] = 1
+    mapping['Fsign'] = 1
+elif 'Xbox' in joy.get_name():
+    print "found xbox"
+    mapping['x'] = 3
+    mapping['y'] = 4
+    mapping['z'] = 0
+    mapping['F'] = 1
+    mapping['xsign'] = 1
+    mapping['ysign'] = 1
+    mapping['zsign'] = 1
+    mapping['Fsign'] = -1
 else:
-    print "no Taranis found...using realflght mapping"
-    # use realflight mappping
+    print "using realflght mapping"
+    mapping['x'] = 1
+    mapping['y'] = 2
+    mapping['z'] = 4
+    mapping['F'] = 0
+    mapping['xsign'] = 1
+    mapping['ysign'] = 1
+    mapping['zsign'] = 1
+    mapping['Fsign'] = 1
 
 # Main event loop
 next_update_time = time.time()
@@ -41,22 +66,10 @@ while not rospy.is_shutdown():
 
         msg.mode = 2
 
-        # Taranis mapping (assuming mixer set to Ail,Ele,Thr,Rud)
-        if m:
-            msg.x = joy.get_axis(0) * 0.785
-            msg.y = joy.get_axis(1) * 0.785
-            msg.z = joy.get_axis(3) * 1.507
-            msg.F = joy.get_axis(2) * 0.5 + 0.5
+        msg.x = joy.get_axis(mapping['x']) * mapping['xsign'] * 0.785
+        msg.y = joy.get_axis(mapping['y']) * mapping['ysign'] * 0.785
+        msg.z = joy.get_axis(mapping['z']) * mapping['zsign'] * 1.507
+        msg.F = joy.get_axis(mapping['F']) * mapping['Fsign'] * 0.5 + 0.5
 
-            msg.ignore = 0
-            command_pub.publish(msg)
-
-        # realflght mapping
-        else:
-            msg.x = joy.get_axis(1) * 0.785
-            msg.y = joy.get_axis(2) * 0.785
-            msg.z = joy.get_axis(4) * 1.507
-            msg.F = joy.get_axis(0) * 0.5 + 0.5
-
-            msg.ignore = 0
-            command_pub.publish(msg)
+        msg.ignore = 0
+        command_pub.publish(msg)
