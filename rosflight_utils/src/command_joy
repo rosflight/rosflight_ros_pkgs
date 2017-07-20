@@ -44,7 +44,7 @@ while not rospy.is_shutdown():
         # Taranis mapping (assuming mixer set to Ail,Ele,Thr,Rud)
         if m:
             msg.x = joy.get_axis(0) * 0.785
-            msg.y = joy.get_axis(1) * -0.785
+            msg.y = joy.get_axis(1) * 0.785
             msg.z = joy.get_axis(3) * 1.507
             msg.F = joy.get_axis(2) * 0.5 + 0.5
 
