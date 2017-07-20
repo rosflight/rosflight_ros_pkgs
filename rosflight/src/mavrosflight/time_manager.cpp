@@ -87,7 +87,7 @@ ros::Time TimeManager::get_ros_time_ms(uint32_t boot_ms)
   if (!initialized_)
     return ros::Time::now();
 
-  int64_t ns = boot_ms*1000000 + offset_ns_;
+  int64_t ns = (uint64_t)boot_ms*1000000 + offset_ns_;
   if (ns < 0)
   {
     return ros::Time::now();
@@ -102,7 +102,7 @@ ros::Time TimeManager::get_ros_time_us(uint32_t boot_us)
   if (!initialized_)
     return ros::Time::now();
 
-  int64_t ns = boot_us * 1000 + offset_ns_;
+  int64_t ns = (uint64_t)boot_us * 1000 + offset_ns_;
   if (ns < 0)
   {
     return ros::Time::now();

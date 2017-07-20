@@ -3,7 +3,6 @@ project(rosflight)
 
 set(CMAKE_BUILD_TYPE Debug)
 
-# Use this to make Eigen run REALLY fast
 set(CMAKE_CXX_FLAGS "-std=c++0x")
 
 find_package(catkin REQUIRED COMPONENTS
