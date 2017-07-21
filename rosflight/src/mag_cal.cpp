@@ -36,6 +36,7 @@
  */
 
 #include <rosflight/mag_cal.h>
+#include <stdio.h>
 
 namespace rosflight
 {
@@ -44,7 +45,7 @@ CalibrateMag::CalibrateMag() :
   calibrating_(false),
   nh_private_("~"),
   reference_field_strength_(1.0),
-  mag_subscriber_(nh_, "magnetometer", 1)
+  mag_subscriber_(nh_, "/magnetometer", 1)
 {
   A_ = Eigen::MatrixXd::Zero(3, 3);
   b_ = Eigen::MatrixXd::Zero(3, 1);
@@ -84,33 +85,49 @@ void CalibrateMag::run()
     return;
   }
 
-  // collect data
-  ROS_WARN("Calibrating Mag, do the mag dance for %g seconds!", calibration_time_);
   start_mag_calibration();
-  while(calibrating_)
+
+  // wait for data to arrive
+  ros::Duration timeout(3.0);
+  ros::Time start = ros::Time::now();
+  while (ros::Time::now() - start < timeout && first_time_ && ros::ok())
   {
     ros::spinOnce();
   }
 
-  //compute calibration
-  do_mag_calibration();
+  if (first_time_)
+  {
+    ROS_FATAL("No messages on magnetometer topic, unable to calibrate");
+    return;
+  }
 
-  // set calibration parameters
-  // set soft iron parameters
-  success = success && set_param("MAG_A11_COMP", a11());
-  success = success && set_param("MAG_A12_COMP", a12());
-  success = success && set_param("MAG_A13_COMP", a13());
-  success = success && set_param("MAG_A21_COMP", a21());
-  success = success && set_param("MAG_A22_COMP", a22());
-  success = success && set_param("MAG_A23_COMP", a23());
-  success = success && set_param("MAG_A31_COMP", a31());
-  success = success && set_param("MAG_A32_COMP", a32());
-  success = success && set_param("MAG_A33_COMP", a33());
+  while(calibrating_ && ros::ok())
+  {
+    ros::spinOnce();
+  }
 
-  // set hard iron parameters
-  success = success && set_param("MAG_X_BIAS", bx());
-  success = success && set_param("MAG_Y_BIAS", by());
-  success = success && set_param("MAG_Z_BIAS", bz());
+  if (! calibrating_)
+  {
+    //compute calibration
+    do_mag_calibration();
+
+    // set calibration parameters
+    // set soft iron parameters
+    success = success && set_param("MAG_A11_COMP", a11());
+    success = success && set_param("MAG_A12_COMP", a12());
+    success = success && set_param("MAG_A13_COMP", a13());
+    success = success && set_param("MAG_A21_COMP", a21());
+    success = success && set_param("MAG_A22_COMP", a22());
+    success = success && set_param("MAG_A23_COMP", a23());
+    success = success && set_param("MAG_A31_COMP", a31());
+    success = success && set_param("MAG_A32_COMP", a32());
+    success = success && set_param("MAG_A33_COMP", a33());
+
+    // set hard iron parameters
+    success = success && set_param("MAG_X_BIAS", bx());
+    success = success && set_param("MAG_Y_BIAS", by());
+    success = success && set_param("MAG_Z_BIAS", bz());
+  }
 
 }
 
@@ -143,16 +160,20 @@ void CalibrateMag::do_mag_calibration()
 
 bool CalibrateMag::mag_callback(const sensor_msgs::MagneticField::ConstPtr& mag)
 {
+
   if (calibrating_)
   {
     if (first_time_)
     {
       first_time_ = false;
+      ROS_WARN_ONCE("Calibrating Mag, do the mag dance for %g seconds!", calibration_time_);
       start_time_ = ros::Time::now().toSec();
     }
   
 
     double elapsed = ros::Time::now().toSec() - start_time_;
+
+    printf("\r%.1f seconds remaining", calibration_time_ - elapsed);
 
     // if still in calibration mode
     if (elapsed < calibration_time_)
@@ -172,6 +193,7 @@ bool CalibrateMag::mag_callback(const sensor_msgs::MagneticField::ConstPtr& mag)
     }
     else
     {
+      ROS_WARN("\rdone!");
       calibrating_ = false;
     }
   }
