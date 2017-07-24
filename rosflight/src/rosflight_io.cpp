@@ -379,6 +379,7 @@ void rosflightIO::handle_attitude_quaternion_msg(const mavlink_message_t &msg)
   attitude_msg.angular_velocity.z = attitude.yawspeed;
 
   geometry_msgs::Vector3Stamped euler_msg;
+  euler_msg.header.stamp = attitude_msg.header.stamp;
 
   tf::Quaternion quat(attitude.q2, attitude.q3, attitude.q4, attitude.q1);
   tf::Matrix3x3(quat).getEulerYPR(euler_msg.vector.z, euler_msg.vector.y, euler_msg.vector.x);
