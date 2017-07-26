@@ -34,7 +34,7 @@ if 'Taranis' in joy.get_name():
     mapping['ysign'] = 1
     mapping['zsign'] = 1
     mapping['Fsign'] = 1
-elif 'Xbox' in joy.get_name():
+elif 'Xbox' in joy.get_name() or 'X-Box' in joy.get_name():
     print "found xbox"
     mapping['x'] = 3
     mapping['y'] = 4

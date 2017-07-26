@@ -40,7 +40,7 @@ Multirotor::Multirotor(ros::NodeHandle *nh)
 
   // Pull Parameters off of rosparam server
   num_rotors_ = 0;
-  ROS_ASSERT(nh_->getParam("ground_effect", ground_effect_));
+  ROS_ASSERT_MSG(nh_->getParam("ground_effect", ground_effect_), "missing parameters in %s namespace", nh_->getNamespace().c_str());
   ROS_ASSERT(nh_->getParam("mass", mass_));
   ROS_ASSERT(nh_->getParam("linear_mu", linear_mu_));
   ROS_ASSERT(nh_->getParam("angular_mu", angular_mu_));

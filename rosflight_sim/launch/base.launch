@@ -14,6 +14,10 @@
   <arg name="gui"                 default="true"/>
   <arg name="verbose"             default="false"/>
   <arg name="debug"               default="false"/>
+  <arg name="xacro_file"          default="$(find rosflight_sim)/xacro/$(arg mav_name).urdf.xacro"/>
+  <arg name="param_file"          default="$(find rosflight_sim)/params/$(arg mav_name).yaml"/>
+  <arg name="world_file"          default="worlds/empty.world"/>
+
 
   <!-- Start Simulator -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -21,12 +25,13 @@
     <arg name="gui" value="$(arg gui)"/>
     <arg name="verbose" value="$(arg verbose)"/>
     <arg name="debug" value="$(arg debug)"/>
+    <arg name="world_name" value="$(arg world_file)"/>
   </include>
 
   <!-- Spawn Model in Gazebo -->
   <include file="$(find rosflight_sim)/launch/spawn_mav.launch">
     <arg name="mav_name"            value="$(arg mav_name)" />
-    <arg name="model"               value="$(find rosflight_sim)/xacro/$(arg mav_name).urdf.xacro" />
+    <arg name="model"               value="$(arg xacro_file)" />
     <arg name="x"                   value="$(arg x)"/>
     <arg name="y"                   value="$(arg y)"/>
     <arg name="z"                   value="$(arg z)"/>
@@ -34,6 +39,6 @@
     <arg name="color"               value="$(arg color)"/>
   </include>
 
-  <rosparam ns="$(arg mav_name)" command="load" file="$(find rosflight_sim)/params/$(arg mav_name).yaml"/>
+  <rosparam ns="$(arg mav_name)" command="load" file="$(arg param_file)"/>
 
 </launch>

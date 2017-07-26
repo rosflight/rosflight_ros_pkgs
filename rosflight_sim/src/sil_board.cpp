@@ -184,7 +184,7 @@ bool SIL_Board::imu_read(float accel[3], float* temperature, float gyro[3], uint
   gazebo::math::Quaternion q_I_NWU = link_->GetWorldPose().rot;
 
   // y_acc = dv/dt - R*g + w X v
-  gazebo::math::Vector3 y_acc =  link_->GetRelativeForce()/link_->GetInertial()->GetMass() - q_I_NWU.RotateVectorReverse(gravity_);
+  gazebo::math::Vector3 y_acc =  link_->GetRelativeLinearAccel() - q_I_NWU.RotateVectorReverse(gravity_);
 
   // Apply normal noise (only if armed, because most of the noise comes from motors
   if (motors_spinning())

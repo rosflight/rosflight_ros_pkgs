@@ -38,6 +38,7 @@
 #include <gazebo/physics/physics.hh>
 #include <ros/ros.h>
 #include <geometry_msgs/Vector3.h>
+#include <nav_msgs/Odometry.h>
 
 #include <rosflight.h>
 #include <rosflight_sim/sil_board.h>
@@ -62,6 +63,7 @@ protected:
 
 private:
   void windCallback(const geometry_msgs::Vector3 &msg);
+  void publishTruth();
 
   SIL_Board board_;
   rosflight_firmware::ROSflight firmware_;
@@ -78,6 +80,8 @@ private:
   gazebo::event::ConnectionPtr updateConnection_; // Pointer to the update event connection.
 
   ros::Subscriber wind_sub_;
+  ros::Publisher truth_NED_pub_;
+  ros::Publisher truth_NWU_pub_;
 
   MAVForcesAndMoments* mav_dynamics_;
 
@@ -96,6 +100,7 @@ private:
   Eigen::Vector3d vec3_to_eigen_from_gazebo(gazebo::math::Vector3 vec);
   gazebo::math::Vector3 vec3_to_gazebo_from_eigen(Eigen::Vector3d vec);
   Eigen::Matrix3d rotation_to_eigen_from_gazebo(gazebo::math::Quaternion vec);
+
 };
 
 } // namespace rosflight_sim

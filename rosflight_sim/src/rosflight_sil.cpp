@@ -116,6 +116,9 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   updateConnection_ = gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&ROSflightSIL::OnUpdate, this, _1));
 
   initial_pose_ = link_->GetWorldCoGPose();
+
+  truth_NED_pub_ = nh_->advertise<nav_msgs::Odometry>("truth/NED", 1);
+  truth_NWU_pub_ = nh_->advertise<nav_msgs::Odometry>("truth/NWU", 1);
 }
 
 
@@ -145,6 +148,9 @@ void ROSflightSIL::OnUpdate(const gazebo::common::UpdateInfo& _info)
   gazebo::math::Vector3 torque = vec3_to_gazebo_from_eigen(NWU_to_NED *  forces_.block<3,1>(3,0));
   link_->AddRelativeForce(force);
   link_->AddRelativeTorque(torque);
+
+  publishTruth();
+
 }
 
 void ROSflightSIL::Reset()
@@ -160,6 +166,45 @@ void ROSflightSIL::windCallback(const geometry_msgs::Vector3 &msg)
   Eigen::Vector3d wind;
   wind << msg.x, msg.y, msg.z;
   mav_dynamics_->set_wind(wind);
+}
+
+void ROSflightSIL::publishTruth()
+{
+  gazebo::math::Pose pose = link_->GetWorldCoGPose();
+  gazebo::math::Vector3 vel = link_->GetRelativeLinearVel();
+  gazebo::math::Vector3 omega = link_->GetRelativeAngularVel();
+
+  // Publish truth
+  nav_msgs::Odometry truth;
+  truth.header.stamp.sec = world_->GetSimTime().sec;
+  truth.header.stamp.nsec = world_->GetSimTime().nsec;
+  truth.header.frame_id = link_name_ + "_NWU";
+  truth.pose.pose.orientation.w = pose.rot.w;
+  truth.pose.pose.orientation.x = pose.rot.x;
+  truth.pose.pose.orientation.y = pose.rot.y;
+  truth.pose.pose.orientation.z = pose.rot.z;
+  truth.pose.pose.position.x = pose.pos.x;
+  truth.pose.pose.position.y = pose.pos.y;
+  truth.pose.pose.position.z = pose.pos.z;
+  truth.twist.twist.linear.x = vel.x;
+  truth.twist.twist.linear.y = vel.y;
+  truth.twist.twist.linear.z = vel.z;
+  truth.twist.twist.angular.x = omega.x;
+  truth.twist.twist.angular.y = omega.y;
+  truth.twist.twist.angular.z = omega.z;
+  truth_NWU_pub_.publish(truth);
+
+  // Convert to NED
+  truth.header.frame_id = link_name_ + "_NED";
+  truth.pose.pose.orientation.y *= -1.0;
+  truth.pose.pose.orientation.z *= -1.0;
+  truth.pose.pose.position.y *= -1.0;
+  truth.pose.pose.position.z *= -1.0;
+  truth.twist.twist.linear.y *= -1.0;
+  truth.twist.twist.linear.z *= -1.0;
+  truth.twist.twist.angular.y *= -1.0;
+  truth.twist.twist.angular.z *= -1.0;
+  truth_NED_pub_.publish(truth);
 }
 
 Eigen::Vector3d ROSflightSIL::vec3_to_eigen_from_gazebo(gazebo::math::Vector3 vec)
