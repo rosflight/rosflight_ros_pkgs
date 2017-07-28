@@ -1,7 +1,7 @@
 # Common Global Physical Parameters
-mass: 2.856
+mass: 2.0
 linear_mu: 0.2
-angular_mu: 0.3
+angular_mu: 0.0005
 ground_effect: [-55.3516, 181.8265, -203.9874, 85.3735, -7.6619]
 
 # Dynamics
@@ -26,13 +26,13 @@ rotor_tau_down: 0.1644
 ground_altitude: 1387  #Default in Provo, UT (4551 ft)
 
 # Sensor Noise Parameters (These are empirically-determined)
-gyro_stdev: 0.13
-gyro_bias_range:  0.15
-gyro_bias_walk_stdev: 0.0002
+gyro_stdev: 0.25
+gyro_bias_range:  0.25
+gyro_bias_walk_stdev: 0.00001
 
-acc_stdev: 1.15
-acc_bias_range: 0.15
-acc_bias_walk_stdev: 0.0002
+acc_stdev: 0.561
+acc_bias_range: 0.6
+acc_bias_walk_stdev: 0.00001
 
 baro_stdev: 4.0
 baro_bias_range: 500

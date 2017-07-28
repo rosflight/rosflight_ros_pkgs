@@ -114,8 +114,8 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   baro_bias_ = baro_bias_range_*uniform_distribution_(random_generator_);
   airspeed_bias_ = airspeed_bias_range_*uniform_distribution_(random_generator_);
 
-  prev_velocity_ = link_->GetRelativeLinearVel();
-  last_time_ = world_->GetSimTime().Double();
+  prev_vel_ = link_->GetRelativeLinearVel();
+  last_time_ = world_->GetSimTime();
   next_imu_update_time_us_ = 0;
 }
 
@@ -183,8 +183,12 @@ bool SIL_Board::imu_read(float accel[3], float* temperature, float gyro[3], uint
 {
   gazebo::math::Quaternion q_I_NWU = link_->GetWorldPose().rot;
 
-  // y_acc = dv/dt - R*g + w X v
-  gazebo::math::Vector3 y_acc =  link_->GetRelativeLinearAccel() - q_I_NWU.RotateVectorReverse(gravity_);
+  // y_acc = dv/dt - R*g + w X v  (you have to differentiate v because GetRelativeAccel doesn't include coriolis)
+  double dt = last_time_.Double() - world_->GetSimTime().Double();
+  gazebo::math::Vector3 current_vel = link_->GetRelativeLinearVel();
+  gazebo::math::Vector3 y_acc = (current_vel - prev_vel_)/dt - q_I_NWU.RotateVectorReverse(gravity_);
+  last_time_ = world_->GetSimTime();
+  prev_vel_ = current_vel;
 
   // Apply normal noise (only if armed, because most of the noise comes from motors
   if (motors_spinning())
