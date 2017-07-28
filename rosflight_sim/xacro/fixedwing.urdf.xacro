@@ -46,10 +46,18 @@ Author: Gary Ellingson
       <geometry>
         <cylinder length="${body_height}" radius="${body_width}"/>
       </geometry>
+      <surface>
+        <friction>
+          <ode>
+            <mu>0.00</mu>
+            <mu2>0.00</mu2>
+          </ode>
+        </friction>
+      </surface>
     </collision>
   </link>
 
-  <!-- ROSflight SIL Plugin -->
+  <!-- ROSflight SIL -->
   <xacro:include filename="$(find rosflight_sim)/xacro/rosflight_sil.xacro"/>
   <xacro:generic_fixedwing namespace="${namespace}" parent_link="${namespace}/base_link"/>
 
