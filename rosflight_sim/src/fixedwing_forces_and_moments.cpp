@@ -127,6 +127,8 @@ Fixedwing::Fixedwing(ros::NodeHandle* nh)
   CY_.delta_a = nh_->param<double>("C_Y_delta_a", 0.0);
   CY_.delta_e = nh_->param<double>("C_Y_delta_e", 0.0);
   CY_.delta_r = nh_->param<double>("C_Y_delta_r", -0.017);
+
+  wind_ = Eigen::Vector3d::Zero();
 }
 
 Eigen::Matrix<double, 6, 1> Fixedwing::updateForcesAndTorques(Current_State x, const int act_cmds[])
@@ -150,8 +152,8 @@ Eigen::Matrix<double, 6, 1> Fixedwing::updateForcesAndTorques(Current_State x, c
 
   Eigen::Matrix<double, 6, 1> forces;
 
-  // Don't divide by zero, and don't let NaN's get through (sometimes GetRelativeLinearVel returns NaNs)
-  if(Va > 0.000001 && std::isfinite(Va))
+  // Be sure that we have some significant airspeed before we run aerodynamics, and don't let NaNs get through
+  if(Va > 1.0 && std::isfinite(Va))
   {
     /*
        * The following math follows the method described in chapter 4 of

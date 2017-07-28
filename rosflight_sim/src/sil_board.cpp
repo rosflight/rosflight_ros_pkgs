@@ -436,12 +436,10 @@ bool SIL_Board::memory_write(const void * src, size_t len)
 
 bool SIL_Board::motors_spinning()
 {
-  for (int i = 0; i < 14; i++)
-  {
-    if(pwm_outputs_[i] > 1200)
+  if(pwm_outputs_[2] > 1100)
       return true;
-  }
-  return false;
+  else
+    return false;
 }
 
 // LED
