@@ -8,3 +8,9 @@
 .settings
 *.pyc
 *.gch
+*.cbp
+*.cmake
+*CMakeFiles*
+*catkin_generated*
+*Makefile
+*cmake*
