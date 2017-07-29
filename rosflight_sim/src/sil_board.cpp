@@ -186,7 +186,7 @@ bool SIL_Board::imu_read(float accel[3], float* temperature, float gyro[3], uint
   // y_acc = dv/dt - R*g + w X v  (you have to differentiate v because GetRelativeAccel doesn't include coriolis)
   double dt = last_time_.Double() - world_->GetSimTime().Double();
   gazebo::math::Vector3 current_vel = link_->GetRelativeLinearVel();
-  gazebo::math::Vector3 y_acc = (current_vel - prev_vel_)/dt - q_I_NWU.RotateVectorReverse(gravity_);
+  gazebo::math::Vector3 y_acc = (prev_vel_ -  current_vel)/dt - q_I_NWU.RotateVectorReverse(gravity_);
   last_time_ = world_->GetSimTime();
   prev_vel_ = current_vel;
 

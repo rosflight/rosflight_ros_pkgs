@@ -125,6 +125,8 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
 // This gets called by the world update event.
 void ROSflightSIL::OnUpdate(const gazebo::common::UpdateInfo& _info)
 {
+  // We run twice so that that functions that take place when we don't have new IMU data get run
+  firmware_.run();
   firmware_.run();
   Eigen::Matrix3d NWU_to_NED;
   NWU_to_NED << 1, 0, 0, 0, -1, 0, 0, 0, -1;
