@@ -78,9 +78,9 @@ while not rospy.is_shutdown():
     # realflght mapping
     else:
         msg.values[0] = joy.get_axis(0) * 500 + 1500
-        msg.values[1] = joy.get_axis(1) * -500 + 1500
+        msg.values[1] = joy.get_axis(1) * 500 + 1500
         msg.values[2] = joy.get_axis(2) * -500 + 1500
-        msg.values[3] = joy.get_axis(4) * -500 + 1500
+        msg.values[3] = joy.get_axis(4) * 500 + 1500
         msg.values[4] = joy.get_axis(3) * 500 + 1500
         msg.values[5] = joy.get_button(0) * 1000 + 1000
         msg.values[6] = joy.get_button(1) * 1000 + 1000
