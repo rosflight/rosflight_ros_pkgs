@@ -66,6 +66,14 @@ UDPBoard::~UDPBoard()
     io_thread_.join();
 }
 
+void UDPBoard::set_ports(std::string bind_host, uint16_t bind_port, std::string remote_host, uint16_t remote_port)
+{
+  bind_host_ = bind_host;
+  bind_port_ = bind_port;
+  remote_host_ = remote_host;
+  remote_port_ = remote_port;
+}
+
 void UDPBoard::serial_init(uint32_t baud_rate)
 {
   // can throw an uncaught boost::system::system_error exception

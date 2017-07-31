@@ -7,9 +7,14 @@ Author: James Jackson
 
 -->
 
+
+
 <robot name="multirotor" xmlns:xacro="http://ros.org/wiki/xacro">
   <!-- Properties -->
-  <xacro:property name="namespace" value="multirotor" />
+  <xacro:arg name="mav_name" default="multirotor"/>
+  <xacro:arg name="color" default="White"/>
+
+  <xacro:property name="namespace" value="$(arg mav_name)" />
   <xacro:property name="use_mesh_file" value="true" />
   <xacro:property name="mesh_file" value="model://quadrotor/meshes/quadrotor_base.dae" />
   <xacro:property name="mass" value="2.856" />
@@ -18,7 +23,7 @@ Author: James Jackson
   <xacro:property name="body_inertia">
     <inertia ixx="0.07" ixy="0.0" ixz="0.0" iyy="0.08" iyz="0.0" izz="0.12" />
   </xacro:property>
-  <xacro:property name="color" value="White" />
+  <xacro:property name="color" value="$(arg color)" />
 
   <!-- *********************** GAZEBO ROBOT DEFINITION ******************* -->
   <link name="${namespace}/base_link">

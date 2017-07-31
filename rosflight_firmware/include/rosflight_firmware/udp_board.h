@@ -63,6 +63,7 @@ public:
   uint16_t serial_bytes_available(void) override;
   uint8_t serial_read(void) override;
 
+  void set_ports(std::string bind_host, uint16_t bind_port, std::string remote_host, uint16_t remote_port);
 private:
 
   struct Buffer

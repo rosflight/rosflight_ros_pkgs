@@ -47,14 +47,21 @@ void SIL_Board::init_board(void)
 }
 
 void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
-                             gazebo::physics::ModelPtr model, ros::NodeHandle* nh,
-                             std::string mav_type)
+                             gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type)
 {
   link_ = link;
   world_ = world;
   model_ = model;
   nh_ = nh;
   mav_type_ = mav_type;
+
+
+  std::string bind_host = nh->param<std::string>("gazebo_host", "localhost");
+  int bind_port = nh->param<int>("gazebo_port", 14525);
+  std::string remote_host = nh->param<std::string>("ROS_host", "localhost");
+  int remote_port = nh->param<int>("ROS_port", 14520);
+
+  set_ports(bind_host, bind_port, remote_host, remote_port);
 
   // Get Sensor Parameters
   gyro_stdev_ = nh->param<double>("gyro_stdev", 0.13);

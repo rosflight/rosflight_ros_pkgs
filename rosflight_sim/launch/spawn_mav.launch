@@ -13,7 +13,7 @@
   <arg name="log_file" default="$(arg mav_name)"/>
   <arg name="enable_wind" default="true"/>
   <arg name="color" default="Black"/>
-  <arg name="robot_namespace" default="/"/>
+  <arg name="robot_namespace" default="$(arg mav_name)"/>
   <arg name="gazebo_namespace" default=""/>
 
 
