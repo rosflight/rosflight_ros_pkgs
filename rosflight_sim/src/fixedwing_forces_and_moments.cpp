@@ -134,9 +134,9 @@ Fixedwing::Fixedwing(ros::NodeHandle* nh)
 Eigen::Matrix<double, 6, 1> Fixedwing::updateForcesAndTorques(Current_State x, const int act_cmds[])
 {
   delta_.a = (act_cmds[0] - 1500.0)/500.0;
-  delta_.e = (act_cmds[1] - 1500.0)/500.0;
+  delta_.e = -(act_cmds[1] - 1500.0)/500.0;
   delta_.t = (act_cmds[2] - 1000.0)/1000.0;
-  delta_.r = (act_cmds[3] - 1500.0)/500.0;
+  delta_.r = -(act_cmds[3] - 1500.0)/500.0;
 
   double p = x.omega(0);
   double q = x.omega(1);
