@@ -1,0 +1,17 @@
+<!-- This is a launch file that runs the bare minimum requirements fly a fixedwing in gazebo.   -->
+
+<launch>
+  <arg name="mav_name"            default="fixedwing"/>
+
+  <!-- Start Simulator -->
+  <include file="$(find rosflight_sim)/launch/fixedwing.launch"/>
+
+  <!-- ROS interface rosflight_io -->
+  <node name="rosflight_io" pkg="rosflight" type="rosflight_io" output="screen" ns="$(arg mav_name)">
+    <param name="udp" value="true"/>
+  </node>
+
+  <!-- Node for RC from a joystick to implement safety pilot override -->
+  <node name="safety_pilot" pkg="rosflight_utils" type="rc_joy" ns="$(arg mav_name)"/>
+
+</launch>
