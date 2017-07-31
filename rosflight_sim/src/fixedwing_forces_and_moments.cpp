@@ -138,9 +138,9 @@ Eigen::Matrix<double, 6, 1> Fixedwing::updateForcesAndTorques(Current_State x, c
   delta_.t = (act_cmds[2] - 1000.0)/1000.0;
   delta_.r = (act_cmds[3] - 1500.0)/500.0;
 
-  double p = x.vel(0);
-  double q = x.vel(1);
-  double r = x.vel(2);
+  double p = x.omega(0);
+  double q = x.omega(1);
+  double r = x.omega(2);
 
   // Calculate airspeed
   Eigen::Vector3d V_airspeed = x.vel + x.rot.inverse()*wind_;
