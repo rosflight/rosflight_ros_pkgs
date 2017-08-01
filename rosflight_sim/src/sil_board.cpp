@@ -121,7 +121,9 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   baro_bias_ = baro_bias_range_*uniform_distribution_(random_generator_);
   airspeed_bias_ = airspeed_bias_range_*uniform_distribution_(random_generator_);
 
-  prev_vel_ = link_->GetRelativeLinearVel();
+  prev_vel_1_ = link_->GetRelativeLinearVel();
+  prev_vel_2_ = link_->GetRelativeLinearVel();
+  prev_vel_3_ = link_->GetRelativeLinearVel();
   last_time_ = world_->GetSimTime();
   next_imu_update_time_us_ = 0;
 }
@@ -190,12 +192,20 @@ bool SIL_Board::imu_read(float accel[3], float* temperature, float gyro[3], uint
 {
   gazebo::math::Quaternion q_I_NWU = link_->GetWorldPose().rot;
 
-  // y_acc = dv/dt - R*g + w X v  (you have to differentiate v because GetRelativeAccel doesn't include coriolis)
+  // (you have to differentiate v because GetRelativeAccel doesn't include coriolis)
   double dt = last_time_.Double() - world_->GetSimTime().Double();
   gazebo::math::Vector3 current_vel = link_->GetRelativeLinearVel();
-  gazebo::math::Vector3 y_acc = (prev_vel_ -  current_vel)/dt - q_I_NWU.RotateVectorReverse(gravity_);
+
+  // Use a third-order finite difference to differentiate velocity
+  // https://en.wikipedia.org/wiki/Finite_difference_coefficient
+  gazebo::math::Vector3 acceleration = (11.0/6.0 * current_vel - 3.0 * prev_vel_1_ + 1.5 * prev_vel_2_ - 1.0/3.0 * prev_vel_3_)/dt;
+  prev_vel_3_ = prev_vel_2_;
+  prev_vel_2_ = prev_vel_1_;
+  prev_vel_1_ = current_vel;
+
+  gazebo::math::Vector3 y_acc = acceleration - q_I_NWU.RotateVectorReverse(gravity_);
+
   last_time_ = world_->GetSimTime();
-  prev_vel_ = current_vel;
 
   // Apply normal noise (only if armed, because most of the noise comes from motors
   if (motors_spinning())

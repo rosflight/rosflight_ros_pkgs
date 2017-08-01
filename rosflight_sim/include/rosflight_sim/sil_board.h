@@ -114,7 +114,9 @@ private:
   void RCCallback(const rosflight_msgs::RCRaw& msg);
   bool motors_spinning();
 
-  gazebo::math::Vector3 prev_vel_;
+  gazebo::math::Vector3 prev_vel_1_;
+  gazebo::math::Vector3 prev_vel_2_;
+  gazebo::math::Vector3 prev_vel_3_;
   gazebo::common::Time last_time_;
 
 public:

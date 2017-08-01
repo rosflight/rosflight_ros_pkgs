@@ -7,8 +7,6 @@ Author: James Jackson
 
 -->
 
-
-
 <robot name="multirotor" xmlns:xacro="http://ros.org/wiki/xacro">
   <!-- Properties -->
   <xacro:arg name="mav_name" default="multirotor"/>
