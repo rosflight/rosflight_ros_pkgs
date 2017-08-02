@@ -191,22 +191,14 @@ bool SIL_Board::new_imu_data()
 bool SIL_Board::imu_read(float accel[3], float* temperature, float gyro[3], uint64_t* time_us)
 {
   gazebo::math::Quaternion q_I_NWU = link_->GetWorldPose().rot;
+  gazebo::math::Vector3 current_vel = link_->GetRelativeLinearVel();
+  gazebo::math::Vector3 y_acc;
 
-  // (you have to differentiate v because GetRelativeAccel doesn't include coriolis)
-//  double dt = last_time_.Double() - world_->GetSimTime().Double();
-//  gazebo::math::Vector3 current_vel = link_->GetWorldLinearVel();
-
-  // Use a third-order finite difference to differentiate velocity
-  // https://en.wikipedia.org/wiki/Finite_difference_coefficient
-//  gazebo::math::Vector3 acceleration_I = (current_vel - prev_vel_1_)/dt;
-//  gazebo::math::Vector3 acceleration = (11.0/6.0 * current_vel - 3.0 * prev_vel_1_ + 1.5 * prev_vel_2_ - 1.0/3.0 * prev_vel_3_)/dt;
-//  prev_vel_3_ = prev_vel_2_;
-//  prev_vel_2_ = prev_vel_1_;
-//  prev_vel_1_ = current_vel;
-
-  gazebo::math::Vector3 y_acc = q_I_NWU.RotateVectorReverse(link_->GetWorldLinearAccel() - gravity_);
-
-  last_time_ = world_->GetSimTime();
+  // this is James' egregious hack to overcome wild imu while sitting on the ground
+  if (current_vel.GetLength() < 0.05)
+    y_acc = q_I_NWU.RotateVectorReverse(-gravity_);
+  else
+    y_acc = q_I_NWU.RotateVectorReverse(link_->GetWorldLinearAccel() - gravity_);
 
   // Apply normal noise (only if armed, because most of the noise comes from motors
   if (motors_spinning())
