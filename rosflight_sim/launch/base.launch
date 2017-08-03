@@ -6,7 +6,7 @@
   <arg name="mav_name"/>
 
   <arg name="color"               default="White"/>
-  <arg name="x"                   default="0"/>
+<arg name="x"                   default="0"/>
   <arg name="y"                   default="0"/>
   <arg name="z"                   default="0.1"/>
   <arg name="yaw"                 default="0"/>
