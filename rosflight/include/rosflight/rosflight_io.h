@@ -125,6 +125,7 @@ private:
   bool calibrateBaroSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateAirspeedSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool rebootSrvCallback(std_srvs::Trigger::Request & req, std_srvs::Trigger::Response &res);
+  bool rebootToBootloaderSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
 
   // timer callbacks
   void paramTimerCallback(const ros::TimerEvent &e);
@@ -174,6 +175,7 @@ private:
   ros::ServiceServer calibrate_baro_srv_;
   ros::ServiceServer calibrate_airspeed_srv_;
   ros::ServiceServer reboot_srv_;
+  ros::ServiceServer reboot_bootloader_srv_;
 
   ros::Timer param_timer_;
   ros::Timer version_timer_;
