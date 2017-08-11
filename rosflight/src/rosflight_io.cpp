@@ -193,7 +193,7 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
 
 void rosflightIO::on_new_param_received(std::string name, double value)
 {
-  ROS_INFO("Got parameter %s with value %g", name.c_str(), value);
+  ROS_DEBUG("Got parameter %s with value %g", name.c_str(), value);
 }
 
 void rosflightIO::on_param_value_updated(std::string name, double value)
@@ -778,7 +778,7 @@ void rosflightIO::paramTimerCallback(const ros::TimerEvent &e)
   else
   {
     mavrosflight_->param.request_params();
-    ROS_INFO("Received %d of %d parameters. Requesting missing parameters...",
+    ROS_ERROR("Received %d of %d parameters. Requesting missing parameters...",
              mavrosflight_->param.get_params_received(), mavrosflight_->param.get_num_params());
   }
 }
