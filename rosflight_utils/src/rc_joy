@@ -57,7 +57,7 @@ next_update_time = time.time()
 while not rospy.is_shutdown():
     pygame.event.pump()
 
-    sleep(0.02)
+    time.sleep(0.02)
 
     # 50 Hz update
     if time.time() > next_update_time:
