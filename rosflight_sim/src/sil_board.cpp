@@ -299,7 +299,7 @@ void SIL_Board::baro_read(float *pressure, float *temperature)
   double alt = current_state_NWU.pos.z + ground_altitude_;
 
   // Convert to the true pressure reading
-  double y_baro = 101325.0 * pow(1- (2.25577e-5 * alt), 5.25588);
+  double y_baro = 101325.0f*(float)pow((1-2.25694e-5 * alt), 5.2553);
 
   // Add noise
   y_baro += baro_stdev_*normal_distribution_(random_generator_);
