@@ -1,0 +1,90 @@
+#!/usr/bin/python
+
+# author: James Jackson
+
+import time
+import rospy
+from rosflight_msgs.msg import RCRaw
+import pygame
+import re
+
+rospy.init_node('rc_joy')
+rc_pub = rospy.Publisher('RC', RCRaw, queue_size=10)
+
+pygame.display.init()
+pygame.joystick.init()
+
+joy = pygame.joystick.Joystick(0)
+joy.init()
+
+print "joystick:", joy.get_name()
+
+mapping = dict()
+
+if 'Taranis' in joy.get_name():
+    print "found Taranis"
+    mapping['x'] = 0
+    mapping['y'] = 1
+    mapping['z'] = 3
+    mapping['F'] = 2
+    mapping['xsign'] = 1
+    mapping['ysign'] = 1
+    mapping['zsign'] = 1
+    mapping['Fsign'] = 1
+elif 'Xbox' in joy.get_name() or 'X-Box' in joy.get_name():
+    print "found xbox"
+    mapping['x'] = 3
+    mapping['y'] = 4
+    mapping['z'] = 0
+    mapping['F'] = 1
+    mapping['xsign'] = 1
+    mapping['ysign'] = 1
+    mapping['zsign'] = 1
+    mapping['Fsign'] = -1
+else:
+    print "using realflght mapping"
+    mapping['x'] = 1
+    mapping['y'] = 2
+    mapping['z'] = 4
+    mapping['F'] = 0
+    mapping['xsign'] = 1
+    mapping['ysign'] = 1
+    mapping['zsign'] = 1
+    mapping['Fsign'] = 1
+
+# Main event loop
+next_update_time = time.time()
+while not rospy.is_shutdown():
+    pygame.event.pump()
+
+    time.sleep(0.02)
+
+    # 50 Hz update
+    if time.time() > next_update_time:
+
+        msg = RCRaw()
+        msg.header.stamp = rospy.Time.now()
+
+        msg.values[0] = joy.get_axis(0) * 500 + 1500
+        msg.values[1] = joy.get_axis(1) * 500 + 1500
+        msg.values[2] = joy.get_axis(2) * 500 + 1500
+        msg.values[3] = joy.get_axis(3) * 500 + 1500
+        msg.values[4] = joy.get_axis(4) * 500 + 1500
+        msg.values[5] = joy.get_button(0) * 1000 + 1000
+        msg.values[6] = joy.get_button(1) * 1000 + 1000
+        msg.values[7] = joy.get_button(2) * 1000 + 1000
+
+        rc_pub.publish(msg)
+
+    # realflght mapping
+    else:
+        msg.values[0] = joy.get_axis(0) * 500 + 1500
+        msg.values[1] = joy.get_axis(1) * 500 + 1500
+        msg.values[2] = joy.get_axis(2) * -500 + 1500
+        msg.values[3] = joy.get_axis(4) * 500 + 1500
+        msg.values[4] = joy.get_axis(3) * 500 + 1500
+        msg.values[5] = joy.get_button(0) * 1000 + 1000
+        msg.values[6] = joy.get_button(1) * 1000 + 1000
+        msg.values[7] = joy.get_button(2) * 1000 + 1000
+
+        rc_pub.publish(msg)

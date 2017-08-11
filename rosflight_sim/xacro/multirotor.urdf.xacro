@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+
+<!--
+
+Gazebo Multirotor Definition File
+Author: James Jackson
+
+-->
+
+<robot name="multirotor" xmlns:xacro="http://ros.org/wiki/xacro">
+  <!-- Properties -->
+  <xacro:arg name="mav_name" default="multirotor"/>
+  <xacro:arg name="color" default="White"/>
+
+  <xacro:property name="namespace" value="$(arg mav_name)" />
+  <xacro:property name="use_mesh_file" value="true" />
+  <xacro:property name="mesh_file" value="model://quadrotor/meshes/quadrotor_base.dae" />
+  <xacro:property name="mass" value="2.856" />
+  <xacro:property name="body_width" value="0.505" />
+  <xacro:property name="body_height" value="0.1" />
+  <xacro:property name="body_inertia">
+    <inertia ixx="0.07" ixy="0.0" ixz="0.0" iyy="0.08" iyz="0.0" izz="0.12" />
+  </xacro:property>
+  <xacro:property name="color" value="$(arg color)" />
+
+  <!-- *********************** GAZEBO ROBOT DEFINITION ******************* -->
+  <link name="${namespace}/base_link">
+    <inertial>
+      <mass value="${mass}" />  <!-- [kg] -->
+      <origin xyz="0 0 0" />
+      <xacro:insert_block name="body_inertia" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <xacro:if value="${use_mesh_file}">
+          <mesh filename="${mesh_file}" scale="1 1 1" />
+        </xacro:if>
+        <xacro:unless value="${use_mesh_file}">
+          <cylinder length="${body_height}" radius="${body_width}"/>
+        </xacro:unless>
+      </geometry>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <cylinder length="${body_height}" radius="${body_width}"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <gazebo reference="${namespace}/base_link">
+    <material>Gazebo/${color}</material>
+  </gazebo>
+
+  <!-- ROSflight SIL Plugin -->
+  <xacro:include filename="$(find rosflight_sim)/xacro/rosflight_sil.xacro"/>
+  <xacro:generic_multirotor namespace="${namespace}" parent_link="${namespace}/base_link"/>
+
+</robot>

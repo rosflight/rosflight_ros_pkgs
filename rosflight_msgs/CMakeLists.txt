@@ -17,7 +17,6 @@ add_message_files(
   Barometer.msg
   Airspeed.msg
   Attitude.msg
-  State.msg
   Status.msg
 )
 

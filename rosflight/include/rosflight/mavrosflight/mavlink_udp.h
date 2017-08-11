@@ -30,57 +30,68 @@
  */
 
 /**
- * \file mavrosflight.h
+ * \file mavlink_udp.h
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#ifndef MAVROSFLIGHT_MAVROSFLIGHT_H
-#define MAVROSFLIGHT_MAVROSFLIGHT_H
+#ifndef MAVROSFLIGHT_MAVLINK_UDP_H
+#define MAVROSFLIGHT_MAVLINK_UDP_H
 
-#include <rosflight/mavrosflight/mavlink_bridge.h>
 #include <rosflight/mavrosflight/mavlink_comm.h>
-#include <rosflight/mavrosflight/param_manager.h>
-#include <rosflight/mavrosflight/time_manager.h>
 
-#include <rosflight/mavrosflight/mavlink_listener_interface.h>
-#include <rosflight/mavrosflight/param_listener_interface.h>
-
+#include <boost/asio.hpp>
 #include <boost/function.hpp>
 
-#include <stdint.h>
 #include <string>
 
 namespace mavrosflight
 {
 
-class MavROSflight
+class MavlinkUDP : public MavlinkComm
 {
 public:
 
   /**
    * \brief Instantiates the class and begins communication on the specified serial port
-   * \param mavlink_comm Reference to a MavlinkComm object (serial or UDP)
-   * \param baud_rate Serial communication baud rate
+   * \param bind_host Host where this node is running
+   * \param bind_port Port number for this node
+   * \param remote_host Host where the other node is running
+   * \param remote_port Port number for the other node
    */
-  MavROSflight(MavlinkComm& mavlink_comm, uint8_t sysid = 1, uint8_t compid = 50);
+  MavlinkUDP(std::string bind_host, uint16_t bind_port, std::string remote_host, uint16_t remote_port);
 
   /**
    * \brief Stops communication and closes the serial port before the object is destroyed
    */
-  ~MavROSflight();
-
-  // public member objects
-  MavlinkComm& comm;
-  ParamManager param;
-  TimeManager time;
+  ~MavlinkUDP();
 
 private:
 
+  //===========================================================================
+  // methods
+  //===========================================================================
+
+  virtual bool is_open();
+  virtual void do_open();
+  virtual void do_close();
+  virtual void do_async_read(const boost::asio::mutable_buffers_1 &buffer, boost::function<void(const boost::system::error_code&, size_t)> handler);
+  virtual void do_async_write(const boost::asio::const_buffers_1 &buffer, boost::function<void(const boost::system::error_code&, size_t)> handler);
+
+  //===========================================================================
   // member variables
-  uint8_t sysid_;
-  uint8_t compid_;
+  //===========================================================================
+
+  std::string bind_host_;
+  uint16_t bind_port_;
+
+  std::string remote_host_;
+  uint16_t remote_port_;
+
+  boost::asio::ip::udp::socket socket_;
+  boost::asio::ip::udp::endpoint bind_endpoint_;
+  boost::asio::ip::udp::endpoint remote_endpoint_;
 };
 
 } // namespace mavrosflight
 
-#endif // MAVROSFLIGHT_MAVROSFLIGHT_H
+#endif // MAVROSFLIGHT_MAVLINK_UDP_H

@@ -30,57 +30,42 @@
  */
 
 /**
- * \file baro.h
- * \author James Jackson <superjax08@gmail.com>
+ * \file write_buffer.h
+ * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#ifndef MAVROSFLIGHT_SENSORS_BARO_H
-#define MAVROSFLIGHT_SENSORS_BARO_H
+#ifndef MAVROSFLIGHT_WRITE_BUFFER_H
+#define MAVROSFLIGHT_WRITE_BUFFER_H
 
 #include <rosflight/mavrosflight/mavlink_bridge.h>
 
+#include <stdint.h>
+
 namespace mavrosflight
-{
-namespace sensors
 {
 
 /**
- * \brief Barometer sensor class
+ * \brief Struct for buffering the contents of a mavlink message
  */
-class Baro
+struct WriteBuffer
 {
-public:
+  uint8_t data[MAVLINK_MAX_PACKET_LEN];
+  size_t len;
+  size_t pos;
 
-  Baro(double alpha, double ground, int settling_count, int calibration_count);
-  Baro();
+  WriteBuffer() : len(0), pos(0) {}
 
-  // The Alpha in the LPF of the barometer
-  double alt_alpha_;
+  WriteBuffer(const uint8_t * buf, uint16_t len) : len(len), pos(0)
+  {
+    assert(len <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
+    memcpy(data, buf, len);
+  }
 
-  // The position of the ground in the barometer
-  double alt_ground_;
+  uint8_t * dpos() { return data + pos; }
 
-  /**
-   * \brief Get corrected measurement values
-   * \param msg The raw barometer message
-   * \param[out] alt The altitude in meters
-   * \return True if the measurement is valid
-   */
-  bool correct(mavlink_small_baro_t msg, double *alt);
-
-private:
-  // calibration variables
-  int calibration_counter_;
-  double calibration_sum_;
-  int settling_count_; // settle for a second or so
-  int calibration_count_;
-
-  // offsets and filters
-  double prev_alt_;
-
+  size_t nbytes() { return len - pos; }
 };
 
-} // namespace sensors
 } // namespace mavrosflight
 
-#endif // MAVROSFLIGHT_SENSORS_IMU_H
+#endif // MAVROSFLIGHT_WRITE_BUFFER_H
