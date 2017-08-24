@@ -74,10 +74,10 @@ private:
 
     Buffer() : len(0), pos(0) {}
 
-    Buffer(const uint8_t *src, size_t len) : len(len), pos(0)
+    Buffer(const uint8_t *src, size_t length) : len(length), pos(0)
     {
-      assert(len <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
-      memcpy(data, src, len);
+      assert(length <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
+      memcpy(data, src, length);
     }
 
     const uint8_t * dpos() const { return data + pos; }

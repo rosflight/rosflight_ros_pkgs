@@ -41,7 +41,7 @@ namespace mavrosflight
 
 TimeManager::TimeManager(MavlinkComm *comm) :
   comm_(comm),
-  offset_alpha_(0.6),
+  offset_alpha_(0.95),
   offset_ns_(0),
   offset_(0.0),
   initialized_(false)
@@ -49,8 +49,8 @@ TimeManager::TimeManager(MavlinkComm *comm) :
   comm_->register_mavlink_listener(this);
 
   ros::NodeHandle nh;
-  time_sync_timer_ = nh.createTimer(ros::Duration(0.01), &TimeManager::timer_callback, this, true);
-  // time_sync_timer_ = nh.createTimer(ros::Duration(ros::Rate(1)), &TimeManager::timer_callback, this);
+  first_time_sync_timer_ = nh.createTimer(ros::Duration(0.001), &TimeManager::timer_callback, this);
+  time_sync_update_timer_ = nh.createTimer(ros::Duration(ros::Rate(1)), &TimeManager::timer_callback, this);
 }
 
 void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
@@ -69,14 +69,14 @@ void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
       if (!initialized_ || std::abs(offset_ns_ - offset_ns) > 1e7) // if difference > 10ms, use it directly
       {
         offset_ns_ = offset_ns;
-        ROS_INFO("Detected time offset of %0.9f s.  FCU time: %0.9f, System time: %0.9f", \
-                 offset_ns/1e9, tsync.ts1*1e-9, tsync.tc1*1e-9);
+        ROS_INFO("Detected time offset of %ld ns.", offset_ns);
+        ROS_INFO("FCU time: %ld, System time: %ld", tsync.tc1, tsync.ts1);
         initialized_ = true;
-        time_sync_timer_.stop();
+        first_time_sync_timer_.stop();
       }
       else // otherwise low-pass filter the offset
       {
-//        offset_ns_ = offset_alpha_*offset_ns + (1.0 - offset_alpha_)*offset_ns_;
+        offset_ns_ = offset_alpha_*offset_ns + (1.0 - offset_alpha_)*offset_ns_;
       }
     }
   }
@@ -87,9 +87,13 @@ ros::Time TimeManager::get_ros_time_ms(uint32_t boot_ms)
   if (!initialized_)
     return ros::Time::now();
 
-  int64_t ns = (uint64_t)boot_ms*1000000 + offset_ns_;
+  int64_t boot_ns = (uint64_t)boot_ms*1000000;
+
+  int64_t ns = boot_ns + offset_ns_;
   if (ns < 0)
   {
+    ROS_ERROR("negative time calculated from FCU: boot_ns=%d, offset_ns=%d.  Using system time",
+              boot_ns, offset_ns_);
     return ros::Time::now();
   }
   ros::Time now;
@@ -102,9 +106,13 @@ ros::Time TimeManager::get_ros_time_us(uint32_t boot_us)
   if (!initialized_)
     return ros::Time::now();
 
-  int64_t ns = (uint64_t)boot_us * 1000 + offset_ns_;
+  int64_t boot_ns = (int64_t) boot_us * 1000;
+
+  int64_t ns = boot_ns + offset_ns_;
   if (ns < 0)
   {
+    ROS_ERROR("negative time calculated from FCU: boot_ns=%d, offset_ns=%d.  Using system time",
+              boot_ns, offset_ns_);
     return ros::Time::now();
   }
   ros::Time now;
