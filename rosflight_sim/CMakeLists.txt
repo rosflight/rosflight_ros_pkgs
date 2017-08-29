@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(rosflight_sim)
 
 find_package(gazebo)
-IF(gazebo_plugins_FOUND)
+IF(gazebo_FOUND)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
