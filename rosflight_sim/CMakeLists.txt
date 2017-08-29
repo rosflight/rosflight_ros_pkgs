@@ -6,7 +6,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 # To enable assertions when compiled in release mode.
 add_definitions(-DROS_ASSERT_ENABLED)
 
-find_package(catkin REQUIRED COMPONENTS
+find_package(catkin COMPONENTS
   roscpp
   gazebo_plugins
   gazebo_ros
@@ -14,9 +14,10 @@ find_package(catkin REQUIRED COMPONENTS
   rosflight_firmware
   rosflight_msgs
 )
-
 find_package(Eigen3 REQUIRED)
-find_package(gazebo REQUIRED)
+find_package(gazebo)
+
+IF(gazebo_plugins_FOUND)
 
 catkin_package(
   INCLUDE_DIRS include
@@ -57,3 +58,5 @@ install(
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.h"
 )
+
+ENDIF()
