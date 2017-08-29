@@ -49,8 +49,7 @@ TimeManager::TimeManager(MavlinkComm *comm) :
   comm_->register_mavlink_listener(this);
 
   ros::NodeHandle nh;
-  first_time_sync_timer_ = nh.createTimer(ros::Duration(0.001), &TimeManager::timer_callback, this);
-  time_sync_update_timer_ = nh.createTimer(ros::Duration(ros::Rate(1)), &TimeManager::timer_callback, this);
+  time_sync_timer_ = nh.createTimer(ros::Duration(ros::Rate(10)), &TimeManager::timer_callback, this);
 }
 
 void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
@@ -72,7 +71,6 @@ void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
         ROS_INFO("Detected time offset of %0.3f s.", offset_ns/1e9);
         ROS_DEBUG("FCU time: %0.3f, System time: %0.3f", tsync.tc1*1e-9, tsync.ts1*1e-9);
         initialized_ = true;
-        first_time_sync_timer_.stop();
       }
       else // otherwise low-pass filter the offset
       {

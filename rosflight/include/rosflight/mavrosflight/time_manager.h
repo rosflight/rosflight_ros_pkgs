@@ -62,8 +62,7 @@ public:
 private:
   MavlinkComm *comm_;
 
-  ros::Timer first_time_sync_timer_;
-  ros::Timer time_sync_update_timer_;
+  ros::Timer time_sync_timer_;
   void timer_callback(const ros::TimerEvent &event);
 
   double offset_alpha_;
