@@ -38,8 +38,8 @@
 #define MAVROSFLIGHT_TIME_MANAGER_H
 
 #include <rosflight/mavrosflight/mavlink_bridge.h>
+#include <rosflight/mavrosflight/mavlink_comm.h>
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
-#include <rosflight/mavrosflight/mavlink_serial.h>
 
 #include <ros/ros.h>
 
@@ -52,7 +52,7 @@ namespace mavrosflight
 class TimeManager : MavlinkListenerInterface
 {
 public:
-  TimeManager(MavlinkSerial *serial);
+  TimeManager(MavlinkComm *comm);
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
 
@@ -60,7 +60,7 @@ public:
   ros::Time get_ros_time_us(uint32_t boot_us);
 
 private:
-  MavlinkSerial *serial_;
+  MavlinkComm *comm_;
 
   ros::Timer time_sync_timer_;
   void timer_callback(const ros::TimerEvent &event);

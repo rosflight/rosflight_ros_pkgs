@@ -39,19 +39,17 @@
 namespace mavrosflight
 {
 
-TimeManager::TimeManager(MavlinkSerial *serial) :
-  serial_(serial),
-  offset_alpha_(0.6),
+TimeManager::TimeManager(MavlinkComm *comm) :
+  comm_(comm),
+  offset_alpha_(0.95),
   offset_ns_(0),
   offset_(0.0),
   initialized_(false)
 {
-  serial_->register_mavlink_listener(this);
+  comm_->register_mavlink_listener(this);
 
   ros::NodeHandle nh;
-  ros::TimerEvent event;
-  timer_callback(event);
-  // time_sync_timer_ = nh.createTimer(ros::Duration(ros::Rate(1)), &TimeManager::timer_callback, this);
+  time_sync_timer_ = nh.createTimer(ros::Duration(ros::Rate(10)), &TimeManager::timer_callback, this);
 }
 
 void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
@@ -70,15 +68,14 @@ void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
       if (!initialized_ || std::abs(offset_ns_ - offset_ns) > 1e7) // if difference > 10ms, use it directly
       {
         offset_ns_ = offset_ns;
-        ROS_INFO("Detected time offset of %0.9f s", offset_ns/1e9);
+        ROS_INFO("Detected time offset of %0.3f s.", offset_ns/1e9);
+        ROS_DEBUG("FCU time: %0.3f, System time: %0.3f", tsync.tc1*1e-9, tsync.ts1*1e-9);
         initialized_ = true;
       }
       else // otherwise low-pass filter the offset
       {
         offset_ns_ = offset_alpha_*offset_ns + (1.0 - offset_alpha_)*offset_ns_;
       }
-
-      offset_ = ros::Duration(offset_ns_ / 1000000000, offset_ns_ % 1000000000);
     }
   }
 }
@@ -88,7 +85,18 @@ ros::Time TimeManager::get_ros_time_ms(uint32_t boot_ms)
   if (!initialized_)
     return ros::Time::now();
 
-  return ros::Time(boot_ms / 1000, 1000000*(boot_ms % 1000)) + offset_;
+  int64_t boot_ns = (int64_t)boot_ms*1000000;
+
+  int64_t ns = boot_ns + offset_ns_;
+  if (ns < 0)
+  {
+    ROS_ERROR_THROTTLE(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time",
+              boot_ns, offset_ns_);
+    return ros::Time::now();
+  }
+  ros::Time now;
+  now.fromNSec(ns);
+  return now;
 }
 
 ros::Time TimeManager::get_ros_time_us(uint32_t boot_us)
@@ -96,14 +104,25 @@ ros::Time TimeManager::get_ros_time_us(uint32_t boot_us)
   if (!initialized_)
     return ros::Time::now();
 
-  return ros::Time(boot_us / 1000000, 1000*(boot_us % 1000000)) + offset_;
+  int64_t boot_ns = (int64_t) boot_us * 1000;
+
+  int64_t ns = boot_ns + offset_ns_;
+  if (ns < 0)
+  {
+    ROS_ERROR_THROTTLE(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time",
+              boot_ns, offset_ns_);
+    return ros::Time::now();
+  }
+  ros::Time now;
+  now.fromNSec(ns);
+  return now;
 }
 
 void TimeManager::timer_callback(const ros::TimerEvent &event)
 {
   mavlink_message_t msg;
   mavlink_msg_timesync_pack(1, 50, &msg, 0, ros::Time::now().toNSec());
-  serial_->send_message(msg);
+  comm_->send_message(msg);
 }
 
 } // namespace mavrosflight

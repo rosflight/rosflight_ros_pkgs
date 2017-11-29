@@ -38,15 +38,12 @@
 #define MAVROSFLIGHT_MAVROSFLIGHT_H
 
 #include <rosflight/mavrosflight/mavlink_bridge.h>
-#include <rosflight/mavrosflight/mavlink_serial.h>
+#include <rosflight/mavrosflight/mavlink_comm.h>
 #include <rosflight/mavrosflight/param_manager.h>
 #include <rosflight/mavrosflight/time_manager.h>
 
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
 #include <rosflight/mavrosflight/param_listener_interface.h>
-
-#include <rosflight/mavrosflight/sensors/imu.h>
-#include <rosflight/mavrosflight/sensors/mag.h>
 
 #include <boost/function.hpp>
 
@@ -62,10 +59,10 @@ public:
 
   /**
    * \brief Instantiates the class and begins communication on the specified serial port
-   * \param port Name of the serial port (e.g. "/dev/ttyUSB0")
+   * \param mavlink_comm Reference to a MavlinkComm object (serial or UDP)
    * \param baud_rate Serial communication baud rate
    */
-  MavROSflight(std::string port, int baud_rate, uint8_t sysid = 1, uint8_t compid = 50);
+  MavROSflight(MavlinkComm& mavlink_comm, uint8_t sysid = 1, uint8_t compid = 50);
 
   /**
    * \brief Stops communication and closes the serial port before the object is destroyed
@@ -73,7 +70,7 @@ public:
   ~MavROSflight();
 
   // public member objects
-  MavlinkSerial serial;
+  MavlinkComm& comm;
   ParamManager param;
   TimeManager time;
 

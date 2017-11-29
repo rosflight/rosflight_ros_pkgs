@@ -1,0 +1,38 @@
+#!/usr/bin/python
+
+# author: James Jackson
+
+import time
+import rospy
+from rosflight_msgs.msg import RCRaw
+from std_srvs.srv import Trigger
+
+rospy.init_node('dummy_rc')
+rc_pub = rospy.Publisher('RC', RCRaw, queue_size=10)
+
+rc_message = RCRaw()
+
+for i in range(8):
+    rc_message.values[i] = 1500
+rc_message.values[2] = 1000
+
+def arm(req):
+    global rc_message
+    rc_message.values[4] = 2000
+    return True
+
+def disarm(req):
+    global rc_message
+    rc_message.values[4] = 1000
+    return True
+
+arm_service = rospy.Service('arm', Trigger, arm)
+disarm_service = rospy.Service('disarm', Trigger, disarm)
+
+next_update_time = time.time()
+
+while not rospy.is_shutdown():
+    if time.time() > next_update_time:
+        rc_message.header.stamp = rospy.Time.now()
+        rc_pub.publish(rc_message)
+        next_update_time = time.time() + 0.02

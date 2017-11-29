@@ -69,6 +69,7 @@
 #include <rosflight_msgs/ParamSet.h>
 
 #include <rosflight/mavrosflight/mavrosflight.h>
+#include <rosflight/mavrosflight/mavlink_comm.h>
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
 #include <rosflight/mavrosflight/param_listener_interface.h>
 
@@ -108,7 +109,7 @@ private:
   void handle_named_value_int_msg(const mavlink_message_t &msg);
   void handle_named_value_float_msg(const mavlink_message_t &msg);
   void handle_named_command_struct_msg(const mavlink_message_t &msg);
-  void handle_small_sonar(const mavlink_message_t &msg);
+  void handle_small_range_msg(const mavlink_message_t &msg);
   void handle_version_msg(const mavlink_message_t &msg);
 
   // ROS message callbacks
@@ -122,12 +123,11 @@ private:
   bool paramSaveToFileCallback(rosflight_msgs::ParamFile::Request &req, rosflight_msgs::ParamFile::Response &res);
   bool paramLoadFromFileCallback(rosflight_msgs::ParamFile::Request &req, rosflight_msgs::ParamFile::Response &res);
   bool calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool calibrateMagSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateBaroSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateAirspeedSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool rebootSrvCallback(std_srvs::Trigger::Request & req, std_srvs::Trigger::Response &res);
+  bool rebootToBootloaderSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
 
   // timer callbacks
   void paramTimerCallback(const ros::TimerEvent &e);
@@ -135,11 +135,13 @@ private:
 
   // helpers
   void request_version();
+  void check_error_code(uint8_t current, uint8_t previous, ROSFLIGHT_ERROR_CODE code, std::string name);
 
   template<class T> inline T saturate(T value, T min, T max)
   {
     return value < min ? min : (value > max ? max : value);
   }
+
 
   ros::NodeHandle nh_;
 
@@ -160,6 +162,7 @@ private:
   ros::Publisher euler_pub_;
   ros::Publisher status_pub_;
   ros::Publisher version_pub_;
+  ros::Publisher lidar_pub_;
   std::map<std::string, ros::Publisher> named_value_int_pubs_;
   std::map<std::string, ros::Publisher> named_value_float_pubs_;
   std::map<std::string, ros::Publisher> named_command_struct_pubs_;
@@ -171,25 +174,22 @@ private:
   ros::ServiceServer param_load_from_file_srv_;
   ros::ServiceServer imu_calibrate_bias_srv_;
   ros::ServiceServer imu_calibrate_temp_srv_;
-  ros::ServiceServer mag_calibrate_srv_;
   ros::ServiceServer calibrate_rc_srv_;
   ros::ServiceServer calibrate_baro_srv_;
   ros::ServiceServer calibrate_airspeed_srv_;
   ros::ServiceServer reboot_srv_;
+  ros::ServiceServer reboot_bootloader_srv_;
 
   ros::Timer param_timer_;
   ros::Timer version_timer_;
 
   geometry_msgs::Quaternion attitude_quat_;
-  uint8_t prev_status_;
-  uint8_t prev_error_code_;
-  uint8_t prev_control_mode_;
+  mavlink_rosflight_status_t prev_status_;
 
   std::string frame_id_;
 
+  mavrosflight::MavlinkComm *mavlink_comm_;
   mavrosflight::MavROSflight *mavrosflight_;
-  mavrosflight::sensors::Imu imu_;
-  mavrosflight::sensors::Mag mag_;
 };
 
 } // namespace rosflight_io

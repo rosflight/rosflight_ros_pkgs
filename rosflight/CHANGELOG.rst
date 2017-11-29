@@ -2,6 +2,14 @@
 Changelog for package rosflight
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.3 (2017-06-02)
+------------------
+* Temporarily removed magnetometer calibration
+* Updated package.xml files
+* Renamed sonar/data topic to sonar
+* Changed yaml-cpp dependency to a PkgConfig module
+* Contributors: Daniel Koch
+
 0.1.2 (2017-05-24)
 ------------------
 * Removed OpenMP compile flag for now

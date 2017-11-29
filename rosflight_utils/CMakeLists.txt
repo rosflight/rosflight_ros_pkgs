@@ -6,14 +6,12 @@ project(rosflight_utils)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  gazebo_msgs
   geometry_msgs
   rosflight_msgs
   rosgraph_msgs
   sensor_msgs
   std_srvs
 )
-
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES rosflight_utils
@@ -32,6 +30,6 @@ add_library(rosflight_utils
 add_dependencies(${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(rosflight_utils ${catkin_LIBRARIES})
 
-add_executable(joy src/joy.cpp)
-add_dependencies(joy ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(joy ${catkin_LIBRARIES})
+#add_executable(joy src/joy.cpp)
+#add_dependencies(joy ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(joy ${catkin_LIBRARIES})

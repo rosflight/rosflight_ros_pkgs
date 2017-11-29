@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Daniel Koch and James Jackson, BYU MAGICC Lab.
+ * Copyright (c) 2017 Daniel Koch, James Jackson and Gary Ellingson, BYU MAGICC Lab.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,46 +29,45 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * \file diff_pressure.h
- * \author Daniel Koch <daniel.koch@byu.edu>
- */
+#ifndef ROSFLIGHT_SIM_MAV_FORCES_AND_MOMENTS_H
+#define ROSFLIGHT_SIM_MAV_FORCES_AND_MOMENTS_H
 
-#ifndef MAVROSFLIGHT_SENSORS_DIFF_PRESSURE_H
-#define MAVROSFLIGHT_SENSORS_DIFF_PRESSURE_H
+#include <eigen3/Eigen/Core>
 
-#include <rosflight/mavrosflight/mavlink_bridge.h>
-
-namespace mavrosflight
-{
-namespace sensors
+namespace rosflight_sim
 {
 
-class DifferentialPressure
-{
+class MAVForcesAndMoments {
+protected:
+    double sat(double x, double max, double min)
+    {
+      if(x > max)
+        return max;
+      else if(x < min)
+        return min;
+      else
+        return x;
+    }
+
+    double max(double x, double y)
+    {
+      return (x > y) ? x : y;
+    }
+
 public:
-  DifferentialPressure();
 
-  /**
-   * \brief Get corrected measurement values
-   * \param msg The raw differential pressure message
-   * \param[out] pressure The pressure (Pa)
-   * \param[out] temperature The temperature (deg C)
-   * \return True if the measurement is valid
-   */
-  bool correct(mavlink_diff_pressure_t msg, double *pressure, double *temperature);
+    struct Current_State{
+        Eigen::Vector3d pos; // Position of MAV in NED wrt initial position
+        Eigen::Matrix3d rot; // Rotation of MAV in NED wrt initial position
+        Eigen::Vector3d vel; // Body-fixed velocity of MAV wrt initial position (NED)
+        Eigen::Vector3d omega; // Body-fixed angular velocity of MAV (NED)
+        double t; // current time
+    };
 
-private:
-  static const double P_MIN = -1.0;
-  static const double P_MAX = 1.0;
-  static const double PSI_TO_PA = 6894.757;
-
-  int calibration_counter_;
-  int calibration_count_;
-  double diff_press_offset_;
+    virtual Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x, const int act_cmds[]) = 0;
+    virtual void set_wind(Eigen::Vector3d wind) = 0;
 };
 
-} // namespace sensors
-} // namespace mavrosflight
+} // namespace rosflight_sim
 
-#endif // MAVROSFLIGHT_SENSORS_DIFF_PRESSURE_H
+#endif // ROSFLIGHT_SIM_MAV_FORCES_AND_MOMENTS_H

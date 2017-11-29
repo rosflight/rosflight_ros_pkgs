@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rosflight_utils</name>
-  <version>0.1.2</version>
+  <version>0.1.3</version>
   <description>Supporting utilities for ROSflight packages</description>
 
   <maintainer email="gary.ellingson@byu.edu">gary</maintainer>
 
-  <license>TODO</license>
+  <license>BSD</license>
 
   <url type="website">http://rosflight.org</url>
   <url type="repository">https://github.com/rosflight/rosflight</url>

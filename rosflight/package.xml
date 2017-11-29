@@ -1,13 +1,15 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rosflight</name>
-  <version>0.1.2</version>
+  <version>0.1.3</version>
   <description>Package for interfacing to the ROSflight autopilot firmware over MAVLink</description>
 
-  <author email="daniel.koch@byu.edu">Daniel Koch</author>
-  <maintainer email="daniel.koch@byu.edu">Daniel Koch</maintainer>
+  <maintainer email="daniel.p.koch@gmail.com">Daniel Koch</maintainer>
 
-  <license>TODO</license>
+  <author email="daniel.p.koch@gmail.com">Daniel Koch</author>
+  <author email="superjax08@gmail.com">James Jackson</author>
+
+  <license>BSD</license>
 
   <url type="website">http://rosflight.org</url>
   <url type="repository">https://github.com/rosflight/rosflight</url>
@@ -28,6 +30,7 @@
   <depend>yaml-cpp</depend>
 
   <build_depend>git</build_depend>
+  <build_depend>pkg-config</build_depend>
 
   <export>
   </export>

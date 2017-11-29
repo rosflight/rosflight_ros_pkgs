@@ -44,7 +44,7 @@ import libnmea_navsat_driver.parser
 
 class RosNMEADriver(object):
     def __init__(self):
-        self.fix_pub = rospy.Publisher('gps/data', GPS, queue_size=1)
+        self.fix_pub = rospy.Publisher('gps', GPS, queue_size=1)
         # self.vel_pub = rospy.Publisher('vel', TwistStamped, queue_size=1)
         self.time_ref_pub = rospy.Publisher('time_reference', TimeReference, queue_size=1)
 
@@ -94,7 +94,7 @@ class RosNMEADriver(object):
             gps_qual = data['fix_type']
             if gps_qual > 0:
                 current_fix.fix = True
-                current_fix.NumSat = 4
+                current_fix.NumSat = data['num_satellites']
             # current_fix.status.service = NavSatStatus.SERVICE_GPS
 
             current_fix.header.stamp = current_time
@@ -135,7 +135,7 @@ class RosNMEADriver(object):
             # Only publish a fix from RMC if the use_RMC flag is set.
             if self.use_RMC:
                 current_fix.fix = True
-                current_fix.NumSat = 4
+                current_fix.NumSat = data['num_satellites']
 
                 # current_fix.status.service = NavSatStatus.SERVICE_GPS
 

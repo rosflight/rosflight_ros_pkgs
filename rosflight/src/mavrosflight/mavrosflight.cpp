@@ -32,9 +32,6 @@
 /**
  * \file mavrosflight.cpp
  * \author Daniel Koch <daniel.koch@byu.edu>
- *
- * Sources:
- * https://gist.github.com/yoggy/3323808
  */
 
 #include <rosflight/mavrosflight/mavrosflight.h>
@@ -46,15 +43,20 @@ namespace mavrosflight
 
 using boost::asio::serial_port_base;
 
-MavROSflight::MavROSflight(std::string port, int baud_rate, uint8_t sysid /* = 1 */, uint8_t compid /* = 50 */) :
-  serial(port, baud_rate),
-  param(&serial),
-  time(&serial),
+MavROSflight::MavROSflight(MavlinkComm &mavlink_comm, uint8_t sysid /* = 1 */, uint8_t compid /* = 50 */) :
+  comm(mavlink_comm),
+  param(&comm),
+  time(&comm),
   sysid_(sysid),
   compid_(compid)
-{}
+{
+  //! \todo Fix constructors so that we can open the port in here
+  // comm.open();
+}
 
 MavROSflight::~MavROSflight()
-{}
+{
+  comm.close();
+}
 
 } // namespace mavrosflight
