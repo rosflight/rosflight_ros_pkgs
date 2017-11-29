@@ -9,6 +9,7 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 set(FIRMWARE_INCLUDE_DIRS
   firmware/include/
   firmware/lib/
+  firmware/comms/mavlink
 )
 
 catkin_package(
@@ -32,10 +33,9 @@ add_library(rosflight_firmware
   firmware/src/rc.cpp
   firmware/src/command_manager.cpp
   firmware/src/sensors.cpp
-  firmware/src/mavlink.cpp
+  firmware/comms/mavlink/mavlink.cpp
 
-  firmware/lib/turbotrig/turbotrig.cpp
-  firmware/lib/turbotrig/turbovec.cpp
+  firmware/lib/turbomath/turbomath.cpp
 )
 
 add_library(rosflight_udp_board
