@@ -727,7 +727,7 @@ void rosflightIO::auxCommandCallback(rosflight_msgs::AuxCommand::ConstPtr msg)
   }
   mavlink_message_t mavlink_msg;
   mavlink_msg_rosflight_aux_cmd_pack(1, 50, &mavlink_msg, types, values);
-  mavrosflight_->serial.send_message(mavlink_msg);
+  mavrosflight_->comm.send_message(mavlink_msg);
 }
 
 bool rosflightIO::paramGetSrvCallback(rosflight_msgs::ParamGet::Request &req, rosflight_msgs::ParamGet::Response &res)
