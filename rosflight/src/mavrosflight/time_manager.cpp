@@ -80,7 +80,7 @@ void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
   }
 }
 
-ros::Time TimeManager::get_ros_time_ms(uint32_t boot_ms)
+ros::Time TimeManager::get_ros_time_ms(uint64_t boot_ms)
 {
   if (!initialized_)
     return ros::Time::now();
@@ -99,7 +99,7 @@ ros::Time TimeManager::get_ros_time_ms(uint32_t boot_ms)
   return now;
 }
 
-ros::Time TimeManager::get_ros_time_us(uint32_t boot_us)
+ros::Time TimeManager::get_ros_time_us(uint64_t boot_us)
 {
   if (!initialized_)
     return ros::Time::now();
