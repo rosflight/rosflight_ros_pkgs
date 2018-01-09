@@ -57,7 +57,7 @@ public:
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
 
   ros::Time get_ros_time_ms(uint32_t boot_ms);
-  ros::Time get_ros_time_us(uint32_t boot_us);
+  ros::Time get_ros_time_us(uint64_t boot_us);
 
 private:
   MavlinkComm *comm_;
