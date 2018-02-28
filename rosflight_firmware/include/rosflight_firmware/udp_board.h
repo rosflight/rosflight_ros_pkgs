@@ -44,7 +44,7 @@
 #include <boost/thread.hpp>
 
 #include "board.h"
-#include "mavlink.h"
+#include "mavlink/mavlink.h"
 
 namespace rosflight_firmware
 {

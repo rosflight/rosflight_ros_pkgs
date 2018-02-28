@@ -47,7 +47,8 @@ namespace rosflight_sim
 ROSflightSIL::ROSflightSIL() :
   gazebo::ModelPlugin(),
   nh_(nullptr),
-  firmware_(board_)
+  comm_(board_),
+  firmware_(board_, comm_)
 {}
 
 ROSflightSIL::~ROSflightSIL()

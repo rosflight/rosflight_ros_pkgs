@@ -42,6 +42,7 @@
 
 #include <rosflight.h>
 #include <rosflight_sim/sil_board.h>
+#include <mavlink/mavlink.h>
 
 #include <rosflight_sim/mav_forces_and_moments.h>
 #include <rosflight_sim/multirotor_forces_and_moments.h>
@@ -66,6 +67,7 @@ private:
   void publishTruth();
 
   SIL_Board board_;
+  rosflight_firmware::Mavlink comm_;
   rosflight_firmware::ROSflight firmware_;
 
   std::string mav_type_;
