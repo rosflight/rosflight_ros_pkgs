@@ -6,6 +6,16 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 find_package(catkin REQUIRED COMPONENTS roscpp)
 find_package(Boost REQUIRED COMPONENTS system thread)
 
+# clone firmware submodule if it is missing
+set(FIRMWARE_SUBMODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/firmware")
+if(NOT EXISTS "${FIRMWARE_SUBMODULE_DIR}/.git")
+  message(STATUS "Firmware submodule not found at ${FIRMWARE_SUBMODULE_DIR}")
+  execute_process(
+    COMMAND git submodule update --init --recursive
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  )
+endif()
+
 set(FIRMWARE_INCLUDE_DIRS
   firmware/include/
   firmware/lib/
