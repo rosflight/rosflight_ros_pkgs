@@ -19,7 +19,7 @@ endif()
 set(FIRMWARE_INCLUDE_DIRS
   firmware/include/
   firmware/lib/
-  firmware/comms
+  firmware/comms/
 )
 
 catkin_package(
