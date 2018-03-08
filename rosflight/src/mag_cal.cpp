@@ -55,7 +55,7 @@ CalibrateMag::CalibrateMag() :
   calibration_time_ = nh_private_.param<double>("calibration_time", 60.0);
   measurement_skip_ = nh_private_.param<int>("measurement_skip", 20);
 
-  param_set_client_ = nh_.serviceClient<rosflight_msgs::ParamSet>("param_set"); 
+  param_set_client_ = nh_.serviceClient<rosflight_msgs::ParamSet>("param_set");
   mag_subscriber_.registerCallback(boost::bind(&CalibrateMag::mag_callback, this, _1));
 }
 
@@ -169,7 +169,7 @@ bool CalibrateMag::mag_callback(const sensor_msgs::MagneticField::ConstPtr& mag)
       ROS_WARN_ONCE("Calibrating Mag, do the mag dance for %g seconds!", calibration_time_);
       start_time_ = ros::Time::now().toSec();
     }
-  
+
 
     double elapsed = ros::Time::now().toSec() - start_time_;
 
@@ -260,7 +260,7 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, in
 
     // eq. 21 of Renaudin (should be negative according to eq. 16)
     // this is the vector to the ellipsoid center
-    Eigen::MatrixXd bb = -0.5 * Q.inverse() * ub;
+    Eigen::MatrixXd bb = -0.5 * (Q.inverse() * ub);
     Eigen::Vector3d r_e; r_e << bb(0), bb(1), bb(2);
 
     // count inliers and store inliers
@@ -268,7 +268,7 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, in
     EigenSTL::vector_Vector3d inliers;
     for (unsigned j = 0; j < meas.size(); j++)
     {
-      // compute the vector from ellipsoid center to surface along 
+      // compute the vector from ellipsoid center to surface along
       // measurement vector and a one from the perturbed measurement
       Eigen::Vector3d perturb = Eigen::Vector3d::Ones() * 0.1;
       Eigen::Vector3d r_int = intersect(meas[j], r_e, Q, ub, k);
@@ -387,7 +387,7 @@ void CalibrateMag::eigSort(Eigen::MatrixXd &w, Eigen::MatrixXd &v)
 
 /*
    This function gets ellipsoid parameters via least squares on ellipsoidal data
-   according to the paper: Li, Qingde, and John G. Griffiths. "Least squares ellipsoid 
+   according to the paper: Li, Qingde, and John G. Griffiths. "Least squares ellipsoid
    specific fitting." Geometric modeling and processing, 2004. proceedings. IEEE, 2004.
    */
 Eigen::MatrixXd CalibrateMag::ellipsoidLS(EigenSTL::vector_Vector3d meas)
@@ -451,7 +451,7 @@ Eigen::MatrixXd CalibrateMag::ellipsoidLS(EigenSTL::vector_Vector3d meas)
 
   // compute solution vector defined in paragraph below eq. 15
   Eigen::MatrixXd u1 = V.col(0);
-  Eigen::MatrixXd u2 = -S22.inverse() * S12.transpose() * u1;
+  Eigen::MatrixXd u2 = -(S22.inverse() * S12.transpose() * u1);
   Eigen::MatrixXd u(10, 1);
   u.block(0, 0, 6, 1) = u1;
   u.block(6, 0, 4, 1) = u2;
@@ -461,7 +461,7 @@ Eigen::MatrixXd CalibrateMag::ellipsoidLS(EigenSTL::vector_Vector3d meas)
 
 /*
    This function compute magnetometer calibration parameters according to Section 5.3 of the
-paper: Renaudin, Valérie, Muhammad Haris Afzal, and Gérard Lachapelle. "Complete triaxis 
+paper: Renaudin, Valérie, Muhammad Haris Afzal, and Gérard Lachapelle. "Complete triaxis
 magnetometer calibration in the magnetic domain." Journal of sensors 2010 (2010).
 */
 void CalibrateMag::magCal(Eigen::MatrixXd u, Eigen::MatrixXd &A, Eigen::MatrixXd &bb)
@@ -491,7 +491,7 @@ void CalibrateMag::magCal(Eigen::MatrixXd u, Eigen::MatrixXd &A, Eigen::MatrixXd
   double k = d;
 
   // extract bb according to eq. 21 of Renaudin (should be negative according to eq. 16)
-  bb = -0.5 * Q.inverse() * ub;
+  bb = -0.5 * (Q.inverse() * ub);
 
   // eigendecomposition of Q according to eq. 22 of Renaudin
   Eigen::EigenSolver<Eigen::MatrixXd> eigensolver(Q);
