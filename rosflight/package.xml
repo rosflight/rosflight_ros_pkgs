@@ -17,14 +17,17 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <!-- ROS packages -->
   <depend>roscpp</depend>
   <depend>rosflight_msgs</depend>
+  <depend>eigen_stl_containers</depend>
   <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>tf</depend>
 
+  <!-- system libraries -->
   <depend>boost</depend>
   <depend>eigen</depend>
   <depend>yaml-cpp</depend>

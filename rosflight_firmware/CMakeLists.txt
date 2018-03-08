@@ -19,13 +19,14 @@ endif()
 set(FIRMWARE_INCLUDE_DIRS
   firmware/include/
   firmware/lib/
-  firmware/comms
+  firmware/comms/
 )
 
 catkin_package(
   INCLUDE_DIRS include ${FIRMWARE_INCLUDE_DIRS}
   LIBRARIES rosflight_firmware rosflight_udp_board
   CATKIN_DEPENDS roscpp
+  CFG_EXTRAS rosflight_firmware-extras.cmake
 )
 
 include_directories(include)
