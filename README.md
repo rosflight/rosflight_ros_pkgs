@@ -1,5 +1,7 @@
 # ROSflight
 
+[![Build Status](http://build.ros.org/buildStatus/icon?job=Kdev__rosflight__ubuntu_xenial_amd64)](http://build.ros.org/job/Kdev__rosflight__ubuntu_xenial_amd64)
+
 This repository contains the ROS stack for interfacing with an autopilot running the ROSflight firmware. For more information on the ROSflight autopilot firmware stack, visit http://rosflight.org.
 
 The following sections describe each of the packages contained in this stack.
