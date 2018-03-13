@@ -2,7 +2,7 @@
 Changelog for package rosflight
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.0.0 (2018-03-13)
+Forthcoming
 -----------
 * Fixed Eigen build errors for debian
 * Fixed eigen_stl_containers dependency

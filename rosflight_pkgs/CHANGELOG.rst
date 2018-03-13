@@ -2,7 +2,7 @@
 Changelog for package rosflight_pkgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.0.0 (2018-03-13)
+Forthcoming
 -----------
 * Small updates to package.xml's and readme
 * Contributors: Daniel Koch, James Jackson

@@ -2,7 +2,7 @@
 Changelog for package rosflight_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.0.0 (2018-03-13)
+Forthcoming
 -----------
 * Small updates to package.xml's and readme
 * Updated mavlink and status message
