@@ -2,7 +2,7 @@
 Changelog for package rosflight_sim
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.0.0 (2018-03-13)
+Forthcoming
 -----------
 * Update firmware to v1.1.0
 * improved acceleration calculation in simulation
