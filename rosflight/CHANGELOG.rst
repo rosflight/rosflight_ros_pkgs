@@ -2,8 +2,8 @@
 Changelog for package rosflight
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.0 (2018-03-13)
+------------------
 * Fixed Eigen build errors for debian
 * Fixed eigen_stl_containers dependency
 * Added timer to throttle rate at which params are sent

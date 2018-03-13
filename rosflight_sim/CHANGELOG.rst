@@ -2,8 +2,8 @@
 Changelog for package rosflight_sim
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.0 (2018-03-13)
+------------------
 * Update firmware to v1.1.0
 * improved acceleration calculation in simulation
 * some tweaks to make multi-agent possible

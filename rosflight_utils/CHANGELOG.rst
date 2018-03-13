@@ -2,8 +2,8 @@
 Changelog for package rosflight_utils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.0 (2018-03-13)
+------------------
 * parse GLONASS nmea sentences
 * headless joy node
 * added xbox to command mappings
