@@ -86,6 +86,19 @@ run_test kinetic debian jessie arm64
 run_test kinetic ubuntu xenial armhf
 run_test kinetic ubuntu xenial arm64
 
+run_test lunar ubuntu xenial amd64
+run_test lunar debian stretch amd64
+run_test lunar debian stretch arm64
+run_test lunar ubuntu xenial armhf
+run_test lunar ubuntu xenial arm64
+
+#run_test melodic ubuntu artful amd64
+#run_test melodic ubuntu bionic amd64
+#run_test melodic debian stretch amd64
+#run_test melodic debian stretch arm64
+#run_test melodic ubuntu bionic armhf
+#run_test melodic ubuntu bionic arm64
+
 echo ""
 echo_cyan "Exit code: $EXIT_CODE"
 exit $EXIT_CODE
