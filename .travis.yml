@@ -1,0 +1,21 @@
+language: cpp
+
+sudo: required
+services:
+  - docker
+
+virtualenv:
+  system_site_packages: true
+
+install:
+  - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+  - sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+  - sudo apt-get update
+  - sudo apt-get install python3-ros-buildfarm
+  - sudo apt-get install python3-empy
+
+before_script:
+  - cd `mktemp -d -p .`
+
+script:
+  - ../prerelease_tests.sh ${TRAVIS_PULL_REQUEST_BRANCH}
