@@ -37,7 +37,7 @@
 #include <rosflight/mavrosflight/mavlink_udp.h>
 #include <rosflight/mavrosflight/serial_exception.h>
 
-using boost::asio::ip::udp;
+#include <async_comm/udp.h>
 
 namespace mavrosflight
 {
@@ -46,62 +46,23 @@ using boost::asio::serial_port_base;
 
 MavlinkUDP::MavlinkUDP(std::string bind_host, uint16_t bind_port, std::string remote_host, uint16_t remote_port) :
   MavlinkComm(),
-  socket_(io_service_),
   bind_host_(bind_host),
   bind_port_(bind_port),
   remote_host_(remote_host),
   remote_port_(remote_port)
 {
+  comm_ = new async_comm::UDP(bind_host_, bind_port_, remote_host_, remote_port_);
 }
 
 MavlinkUDP::~MavlinkUDP()
 {
-  do_close();
+  close();
+  delete comm_;
 }
 
-bool MavlinkUDP::is_open()
+std::string MavlinkUDP::get_description()
 {
-  return socket_.is_open();
-}
-
-void MavlinkUDP::do_open()
-{
-  try
-  {
-    udp::resolver resolver(io_service_);
-
-    bind_endpoint_ = *resolver.resolve({udp::v4(), bind_host_, ""});
-    bind_endpoint_.port(bind_port_);
-
-    remote_endpoint_ = *resolver.resolve({udp::v4(), remote_host_, ""});
-    remote_endpoint_.port(remote_port_);
-
-    socket_.open(udp::v4());
-    socket_.bind(bind_endpoint_);
-
-    socket_.set_option(udp::socket::reuse_address(true));
-    socket_.set_option(udp::socket::send_buffer_size(1000*MAVLINK_MAX_PACKET_LEN));
-    socket_.set_option(udp::socket::receive_buffer_size(1000*MAVLINK_SERIAL_READ_BUF_SIZE));
-  }
-  catch (boost::system::system_error e)
-  {
-    throw SerialException(e);
-  }
-}
-
-void MavlinkUDP::do_close()
-{
-  socket_.close();
-}
-
-void MavlinkUDP::do_async_read(const boost::asio::mutable_buffers_1 &buffer, boost::function<void(const boost::system::error_code&, size_t)> handler)
-{
-  socket_.async_receive_from(buffer, remote_endpoint_, handler);
-}
-
-void MavlinkUDP::do_async_write(const boost::asio::const_buffers_1 &buffer, boost::function<void(const boost::system::error_code&, size_t)> handler)
-{
-  socket_.async_send_to(buffer, remote_endpoint_, handler);
+  return "UDP socket at " + bind_host_ + ":" + std::to_string(bind_port_);
 }
 
 } // namespace mavrosflight

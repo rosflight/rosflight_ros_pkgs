@@ -40,6 +40,8 @@
 #include <rosflight/mavrosflight/mavlink_bridge.h>
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
 
+#include <async_comm/comm.h>
+
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 #include <boost/function.hpp>
@@ -60,17 +62,7 @@ class MavlinkComm
 {
 public:
 
-  /**
-   * \brief Instantiates the class and begins communication on the specified serial port
-   * \param port Name of the serial port (e.g. "/dev/ttyUSB0")
-   * \param baud_rate Serial communication baud rate
-   */
-  MavlinkComm();
-
-  /**
-   * \brief Stops communication and closes the serial port before the object is destroyed
-   */
-  ~MavlinkComm();
+  virtual ~MavlinkComm() {}
 
   /**
    * \brief Opens the port and begins communication
@@ -101,95 +93,22 @@ public:
   void send_message(const mavlink_message_t &msg);
 
 protected:
-  virtual bool is_open() = 0;
-  virtual void do_open() = 0;
-  virtual void do_close() = 0;
-  virtual void do_async_read(const boost::asio::mutable_buffers_1 &buffer, boost::function<void(const boost::system::error_code&, size_t)> handler) = 0;
-  virtual void do_async_write(const boost::asio::const_buffers_1 &buffer, boost::function<void(const boost::system::error_code&, size_t)> handler) = 0;
 
-  boost::asio::io_service io_service_; //!< boost io service provider
+  virtual std::string get_description() = 0;
+
+  async_comm::Comm *comm_;
 
 private:
 
-  //===========================================================================
-  // definitions
-  //===========================================================================
-
-  /**
-   * \brief Struct for buffering the contents of a mavlink message
-   */
-  struct WriteBuffer
-  {
-    uint8_t data[MAVLINK_MAX_PACKET_LEN];
-    size_t len;
-    size_t pos;
-
-    WriteBuffer() : len(0), pos(0) {}
-
-    WriteBuffer(const uint8_t * buf, uint16_t len) : len(len), pos(0)
-    {
-      assert(len <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
-      memcpy(data, buf, len);
-    }
-
-    const uint8_t * dpos() const { return data + pos; }
-
-    size_t nbytes() const { return len - pos; }
-  };
-
-  /**
-   * \brief Convenience typedef for mutex lock
-   */
-  typedef boost::lock_guard<boost::recursive_mutex> mutex_lock;
-
-  //===========================================================================
-  // methods
-  //===========================================================================
-
-  /**
-   * \brief Initiate an asynchronous read operation
-   */
-  void async_read();
-
-  /**
-   * \brief Handler for end of asynchronous read operation
-   * \param error Error code
-   * \param bytes_transferred Number of bytes received
-   */
-  void async_read_end(const boost::system::error_code& error, size_t bytes_transferred);
-
-  /**
-   * \brief Initialize an asynchronous write operation
-   * \param check_write_state If true, only start another write operation if a write sequence is not already running
-   */
-  void async_write(bool check_write_state);
-
-  /**
-   * \brief Handler for end of asynchronous write operation
-   * \param error Error code
-   * \param bytes_transferred Number of bytes sent
-   */
-  void async_write_end(const boost::system::error_code& error, size_t bytes_transferred);
-
-  //===========================================================================
-  // member variables
-  //===========================================================================
+  void receive_callback(uint8_t byte);
 
   std::vector<MavlinkListenerInterface*> listeners_; //!< listeners for mavlink messages
-
-  boost::thread io_thread_; //!< thread on which the io service runs
-  boost::recursive_mutex mutex_; //!< mutex for threadsafe operation
 
   uint8_t sysid_;
   uint8_t compid_;
 
-  uint8_t read_buf_raw_[MAVLINK_SERIAL_READ_BUF_SIZE];
-
   mavlink_message_t msg_in_;
   mavlink_status_t status_in_;
-
-  std::list<WriteBuffer*> write_queue_; //!< queue of buffers to be written to the serial port
-  bool write_in_progress_; //!< flag for whether async_write is already running
 };
 
 } // namespace mavrosflight

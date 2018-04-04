@@ -67,29 +67,13 @@ public:
 
 private:
 
-  //===========================================================================
-  // methods
-  //===========================================================================
-
-  virtual bool is_open();
-  virtual void do_open();
-  virtual void do_close();
-  virtual void do_async_read(const boost::asio::mutable_buffers_1 &buffer, boost::function<void(const boost::system::error_code&, size_t)> handler);
-  virtual void do_async_write(const boost::asio::const_buffers_1 &buffer, boost::function<void(const boost::system::error_code&, size_t)> handler);
-
-  //===========================================================================
-  // member variables
-  //===========================================================================
+  std::string get_description() override;
 
   std::string bind_host_;
   uint16_t bind_port_;
 
   std::string remote_host_;
   uint16_t remote_port_;
-
-  boost::asio::ip::udp::socket socket_;
-  boost::asio::ip::udp::endpoint bind_endpoint_;
-  boost::asio::ip::udp::endpoint remote_endpoint_;
 };
 
 } // namespace mavrosflight

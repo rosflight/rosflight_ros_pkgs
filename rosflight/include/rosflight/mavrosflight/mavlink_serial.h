@@ -65,30 +65,7 @@ public:
 
 private:
 
-  //===========================================================================
-  // methods
-  //===========================================================================
-
-  virtual bool is_open();
-  virtual void do_open();
-  virtual void do_close();
-
-  /**
-   * \brief Initiate an asynchronous read operation
-   */
-  virtual void do_async_read(const boost::asio::mutable_buffers_1 &buffer, boost::function<void(const boost::system::error_code&, size_t)> handler);
-
-  /**
-   * \brief Initialize an asynchronous write operation
-   * \param check_write_state If true, only start another write operation if a write sequence is not already running
-   */
-  virtual void do_async_write(const boost::asio::const_buffers_1 &buffer, boost::function<void(const boost::system::error_code&, size_t)> handler);
-
-  //===========================================================================
-  // member variables
-  //===========================================================================
-
-  boost::asio::serial_port serial_port_; //!< boost serial port object
+  std::string get_description() override;
 
   std::string port_;
   int baud_rate_;
