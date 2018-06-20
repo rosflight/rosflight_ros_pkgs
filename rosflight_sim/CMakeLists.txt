@@ -6,6 +6,15 @@ IF(gazebo_FOUND)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
+# Get the git commit hash
+execute_process(
+  COMMAND git log -1 --format=%h
+  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../rosflight_firmware/firmware
+  OUTPUT_VARIABLE GIT_COMMIT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+add_definitions("-DGIT_VERSION_HASH=0x${GIT_COMMIT_HASH}")
+
 # Default to release build for speed
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")

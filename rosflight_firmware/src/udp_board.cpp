@@ -115,6 +115,8 @@ uint16_t UDPBoard::serial_bytes_available()
   return !read_queue_.empty(); //! \todo This should return a number, not a bool
 }
 
+void UDPBoard::serial_flush() {}
+
 uint8_t UDPBoard::serial_read()
 {
   MutexLock lock(read_mutex_);

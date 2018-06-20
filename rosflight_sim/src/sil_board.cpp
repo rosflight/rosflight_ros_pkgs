@@ -130,16 +130,16 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
 
 void SIL_Board::board_reset(bool bootloader)
 {
+  (void)bootloader;
 }
 
 // clock
-
 uint32_t SIL_Board::clock_millis()
 {
   return (uint32_t)((world_->GetSimTime().Double() - boot_time_)*1e3);
 }
 
-uint64_t SIL_Board::clock_micros()
+uint64_t SIL_Board::clock_micros() 
 {
   return (uint64_t)((world_->GetSimTime().Double() - boot_time_)*1e6);
 }
@@ -280,12 +280,16 @@ void SIL_Board::mag_read(float mag[3])
   mag[2] = -y_mag.z;;
 }
 
-bool SIL_Board::mag_check(void)
+void SIL_Board::mag_update() {}
+
+bool SIL_Board::mag_present(void)
 {
   return true;
 }
 
-bool SIL_Board::baro_check()
+void SIL_Board::baro_update() {}
+
+bool SIL_Board::baro_present()
 {
   return true;
 }
@@ -314,13 +318,15 @@ void SIL_Board::baro_read(float *pressure, float *temperature)
   (*temperature) = 27.0f;
 }
 
-bool SIL_Board::diff_pressure_check(void)
+bool SIL_Board::diff_pressure_present(void)
 {
   if(mav_type_ == "fixedwing")
     return true;
   else
     return false;
 }
+
+void SIL_Board::diff_pressure_update(){}
 
 void SIL_Board::diff_pressure_read(float *diff_pressure, float *temperature)
 {
@@ -342,10 +348,12 @@ void SIL_Board::diff_pressure_read(float *diff_pressure, float *temperature)
   *temperature = 27.0;
 }
 
-bool SIL_Board::sonar_check(void)
+bool SIL_Board::sonar_present(void)
 {
   return true;
 }
+
+void SIL_Board::sonar_update() {}
 
 float SIL_Board::sonar_read(void)
 {
@@ -364,16 +372,44 @@ float SIL_Board::sonar_read(void)
     return alt + sonar_stdev_*normal_distribution_(random_generator_);
 }
 
-// PWM
-void SIL_Board::pwm_init(bool cppm, uint32_t refresh_rate, uint16_t idle_pwm)
+// RC
+void SIL_Board::rc_init(rc_type_t rc_type)
 {
+  (void)rc_type;
   rc_received_ = false;
   latestRC_.values[0] = 1500; // x
   latestRC_.values[1] = 1500; // y
   latestRC_.values[3] = 1500; // z
   latestRC_.values[2] = 1000; // F
-  latestRC_.values[4] = 1000; // attitude override
+  latestRC_.values[4] = 1000; // override
   latestRC_.values[5] = 1000; // arm
+}
+
+float SIL_Board::rc_read(uint8_t channel)
+{
+  if(rc_sub_.getNumPublishers() > 0)
+  {
+    // convert to float between 0 and 1
+    return (latestRC_.values[channel] - 1000)/1000.0;
+  }
+
+  //no publishers, set throttle low and center everything else
+  if(channel == 2)
+    return 1.0;
+
+  return 0.5;
+}
+
+bool SIL_Board::rc_lost()
+{
+  return !rc_received_;
+}
+
+// PWM
+void SIL_Board::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
+{
+  (void)refresh_rate;
+  (void)idle_pwm;
 
   for (size_t i = 0; i < 14; i++)
     pwm_outputs_[i] = 1000;
@@ -381,28 +417,9 @@ void SIL_Board::pwm_init(bool cppm, uint32_t refresh_rate, uint16_t idle_pwm)
   rc_sub_ = nh_->subscribe("RC", 1, &SIL_Board::RCCallback, this);
 }
 
-uint16_t SIL_Board::pwm_read(uint8_t channel)
+void SIL_Board::pwm_write(uint8_t channel, float value)
 {
-  if(rc_sub_.getNumPublishers() > 0)
-  {
-    return latestRC_.values[channel];
-  }
-
-  //no publishers, set throttle low and center everything else
-  if(channel == 2)
-    return 1000;
-
-  return 1500;
-}
-
-void SIL_Board::pwm_write(uint8_t channel, uint16_t value)
-{
-  pwm_outputs_[channel] = value;
-}
-
-bool SIL_Board::pwm_lost()
-{
-  return !rc_received_;
+  pwm_outputs_[channel] = (1000 * value) + 1000;
 }
 
 // non-volatile memory

@@ -62,6 +62,7 @@ public:
   void serial_write(const uint8_t *src, size_t len) override;
   uint16_t serial_bytes_available(void) override;
   uint8_t serial_read(void) override;
+  void serial_flush() override;
 
   void set_ports(std::string bind_host, uint16_t bind_port, std::string remote_host, uint16_t remote_port);
 private:
