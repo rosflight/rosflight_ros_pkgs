@@ -385,7 +385,7 @@ void SIL_Board::ins_read(float pos[3], float vel[3], float q[4], float omega[3],
   gazebo::math::Vector3 pos_NWU = link_->GetWorldPose().pos;
   gazebo::math::Quaternion q_i2b = link_->GetWorldPose().rot;
   gazebo::math::Vector3 lin_vel_NWU = link_->GetRelativeLinearVel();
-  gazebo::math::Vector3 ang_vel_NWU = link->GetRelativeAngularVel();
+  gazebo::math::Vector3 ang_vel_NWU = link_->GetRelativeAngularVel();
 
   // output NED
   pos[0] = pos_NWU.x;
