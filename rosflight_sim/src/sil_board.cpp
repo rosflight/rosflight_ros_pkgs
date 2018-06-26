@@ -372,6 +372,43 @@ float SIL_Board::sonar_read(void)
     return alt + sonar_stdev_*normal_distribution_(random_generator_);
 }
 
+bool SIL_board::ins_present(void)
+{
+  return true;
+}
+
+void SIL_board::ins_update() {}
+
+void SIL_board::ins_read(float pos[3], float vel[3], float q[4], float omega[3], uint64_t* time_us)
+{
+  // collect truth from gazebo
+  gazebo::math::Vector3 pos_NWU = link_->GetWorldPose().pos;
+  gazebo::math::Quaternion q_i2b = link_->GetWorldPose().rot;
+  gazebo::math::Vector3 lin_vel_NWU = link_->GetRelativeLinearVel();
+  gazebo::math::Vector3 ang_vel_NWU = link->GetRelativeAngularVel();
+
+  // output NED
+  pos[0] = pos_NWU.x;
+  pos[1] = -pos_NWU.y;
+  pos[2] = -pos_NWU.z;
+  vel[0] = lin_vel_NWU.x;
+  vel[1] = -lin_vel_NWU.y;
+  vel[2] = -lin_vel_NWU.z;
+  q[0] = q_i2b.w;
+  q[1] = q_i2b.x;
+  q[2] = q_i2b.y;
+  q[3] = q_i2b.z;
+  omega[0] = ang_vel_NWU.x;
+  omega[1] = -ang_vel_NWU.y;
+  omega[2] = -ang_vel_NWU.z;
+  *time_us = clock_micros();
+}
+
+void SIL_board::ins_sync_time(uint64_t* time) {}
+
+bool SIL_board::ins_fix() {}
+
+
 // RC
 void SIL_Board::rc_init(rc_type_t rc_type)
 {
