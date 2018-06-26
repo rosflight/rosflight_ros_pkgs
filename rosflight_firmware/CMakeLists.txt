@@ -5,6 +5,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 find_package(catkin REQUIRED COMPONENTS roscpp)
 find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(Eigen3 REQUIRED)
 
 # clone firmware submodule if it is missing
 set(FIRMWARE_SUBMODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/firmware")
@@ -38,9 +39,11 @@ catkin_package(
   CFG_EXTRAS rosflight_firmware-extras.cmake
 )
 
-include_directories(include)
-include_directories(${FIRMWARE_INCLUDE_DIRS})
-include_directories(${Boost_INCLUDE_DIRS})
+include_directories(include
+  ${FIRMWARE_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
+)
 
 add_library(rosflight_firmware
   firmware/src/rosflight.cpp
@@ -54,9 +57,7 @@ add_library(rosflight_firmware
   firmware/src/command_manager.cpp
   firmware/src/sensors.cpp
   firmware/src/comm_manager.cpp
-
   firmware/comms/mavlink/mavlink.cpp
-
   firmware/lib/turbomath/turbomath.cpp
 )
 

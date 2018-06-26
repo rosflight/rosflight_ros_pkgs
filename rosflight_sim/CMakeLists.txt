@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(rosflight_sim)
 
-find_package(gazebo)
+find_package(gazebo REQUIRED)
+find_package(Eigen3 REQUIRED)
 IF(gazebo_FOUND)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -42,7 +43,7 @@ catkin_package(
 include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
-  ${Eigen_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
   ${GAZEBO_INCLUDE_DIRS}
   ${SDFormat_INCLUDE_DIRS}
 )
@@ -89,3 +90,4 @@ install(
 )
 
 ENDIF()
+
