@@ -372,14 +372,14 @@ float SIL_Board::sonar_read(void)
     return alt + sonar_stdev_*normal_distribution_(random_generator_);
 }
 
-bool SIL_board::ins_present(void)
+bool SIL_Board::ins_present(void)
 {
   return true;
 }
 
-void SIL_board::ins_update() {}
+void SIL_Board::ins_update() {}
 
-void SIL_board::ins_read(float pos[3], float vel[3], float q[4], float omega[3], uint64_t* time_us)
+void SIL_Board::ins_read(float pos[3], float vel[3], float q[4], float omega[3], uint64_t* time_us)
 {
   // collect truth from gazebo
   gazebo::math::Vector3 pos_NWU = link_->GetWorldPose().pos;
@@ -404,9 +404,9 @@ void SIL_board::ins_read(float pos[3], float vel[3], float q[4], float omega[3],
   *time_us = clock_micros();
 }
 
-void SIL_board::ins_sync_time(uint64_t* time) {}
+void SIL_Board::ins_sync_time(uint64_t* time) {}
 
-bool SIL_board::ins_fix() {}
+bool SIL_Board::ins_fix() {}
 
 
 // RC
