@@ -12,3 +12,7 @@
 *CMakeFiles*
 *catkin_generated*
 *Makefile
+*.config
+*.creator
+*.files
+*.includes
