@@ -154,6 +154,12 @@ public:
   bool sonar_present() override;
   void sonar_update() override;
   float sonar_read() override;
+  
+  bool ins_present() override;
+  void ins_update() override;
+  bool ins_fix() override;
+  void ins_read(float pos[3], float vel[3], float q[4], uint64_t* time_us) override;
+  void reset_ins_origin() override;
 
   // RC
   void rc_init(rc_type_t rc_type) override;

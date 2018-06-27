@@ -53,6 +53,8 @@
 #include <sensor_msgs/Temperature.h>
 #include <sensor_msgs/Range.h>
 
+#include <nav_msgs/Odometry.h>
+
 #include <std_srvs/Trigger.h>
 
 #include <rosflight_msgs/Attitude.h>
@@ -100,6 +102,7 @@ private:
   void handle_statustext_msg(const mavlink_message_t &msg);
   void handle_attitude_quaternion_msg(const mavlink_message_t &msg);
   void handle_small_imu_msg(const mavlink_message_t &msg);
+  void handle_rosflight_ins_msg(const mavlink_message_t &msg);
   void handle_rosflight_output_raw_msg(const mavlink_message_t &msg);
   void handle_rc_channels_raw_msg(const mavlink_message_t &msg);
   void handle_diff_pressure_msg(const mavlink_message_t &msg);
@@ -124,6 +127,7 @@ private:
   bool calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateBaroSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateAirspeedSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+  bool resetOriginSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool rebootSrvCallback(std_srvs::Trigger::Request & req, std_srvs::Trigger::Response &res);
   bool rebootToBootloaderSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
 
@@ -160,6 +164,7 @@ private:
   ros::Publisher status_pub_;
   ros::Publisher version_pub_;
   ros::Publisher lidar_pub_;
+  ros::Publisher ins_pub_;
   std::map<std::string, ros::Publisher> named_value_int_pubs_;
   std::map<std::string, ros::Publisher> named_value_float_pubs_;
   std::map<std::string, ros::Publisher> named_command_struct_pubs_;
@@ -172,6 +177,7 @@ private:
   ros::ServiceServer imu_calibrate_bias_srv_;
   ros::ServiceServer imu_calibrate_temp_srv_;
   ros::ServiceServer calibrate_rc_srv_;
+  ros::ServiceServer reset_origin_srv_;
   ros::ServiceServer calibrate_baro_srv_;
   ros::ServiceServer calibrate_airspeed_srv_;
   ros::ServiceServer reboot_srv_;
@@ -181,6 +187,7 @@ private:
   ros::Timer version_timer_;
 
   geometry_msgs::Quaternion attitude_quat_;
+  geometry_msgs::Vector3 omega_;
   mavlink_rosflight_status_t prev_status_;
 
   std::string frame_id_;

@@ -62,6 +62,7 @@ rosflightIO::rosflightIO()
   calibrate_rc_srv_ = nh_.advertiseService("calibrate_rc_trim", &rosflightIO::calibrateRCTrimSrvCallback, this);
   reboot_srv_ = nh_.advertiseService("reboot", &rosflightIO::rebootSrvCallback, this);
   reboot_bootloader_srv_ = nh_.advertiseService("reboot_to_bootloader", &rosflightIO::rebootToBootloaderSrvCallback, this);
+  reset_origin_srv_ = nh_.advertiseService("reset_origin", &rosflightIO::resetOriginSrvCallback, this);
   
   ros::NodeHandle nh_private("~");
 
@@ -181,6 +182,9 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
       break;
     case MAVLINK_MSG_ID_ROSFLIGHT_VERSION:
       handle_version_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_ROSFLIGHT_INS:
+      handle_rosflight_ins_msg(msg);
       break;
     case MAVLINK_MSG_ID_PARAM_VALUE:
     case MAVLINK_MSG_ID_TIMESYNC:
@@ -415,6 +419,7 @@ void rosflightIO::handle_small_imu_msg(const mavlink_message_t &msg)
   imu_msg.angular_velocity.y = imu.ygyro;
   imu_msg.angular_velocity.z = imu.zgyro;
   imu_msg.orientation = attitude_quat_;
+  omega_ = imu_msg.angular_velocity;
 
   sensor_msgs::Temperature temp_msg;
   temp_msg.header.stamp = imu_msg.header.stamp;
@@ -432,6 +437,31 @@ void rosflightIO::handle_small_imu_msg(const mavlink_message_t &msg)
     imu_temp_pub_ = nh_.advertise<sensor_msgs::Temperature>("imu/temperature", 1);
   }
   imu_temp_pub_.publish(temp_msg);
+}
+
+void rosflightIO::handle_rosflight_ins_msg(const mavlink_message_t &msg)
+{
+  mavlink_rosflight_ins_t ins;
+  mavlink_msg_rosflight_ins_decode(&msg, &ins);
+  
+  nav_msgs::Odometry odom_msg;
+  odom_msg.header.stamp = mavrosflight_->time.get_ros_time_us(ins.stamp_us);
+  odom_msg.header.frame_id = frame_id_;
+  odom_msg.pose.pose.position.x = ins.pos_north;
+  odom_msg.pose.pose.position.y = ins.pos_east;
+  odom_msg.pose.pose.position.z = ins.pos_down;
+  odom_msg.pose.pose.orientation.w = ins.qw;
+  odom_msg.pose.pose.orientation.x = ins.qx;
+  odom_msg.pose.pose.orientation.y = ins.qy;
+  odom_msg.pose.pose.orientation.z = ins.qz;
+  odom_msg.twist.twist.linear.x = ins.u;
+  odom_msg.twist.twist.linear.y = ins.v;
+  odom_msg.twist.twist.linear.z = ins.w;
+  odom_msg.twist.twist.angular = omega_;
+  
+  if (ins_pub_.getTopic().empty())
+    ins_pub_ = nh_.advertise<rosflight_msgs::OutputRaw>("ins", 1);
+  ins_pub_.publish(odom_msg);
 }
 
 void rosflightIO::handle_rosflight_output_raw_msg(const mavlink_message_t &msg)
@@ -838,6 +868,15 @@ bool rosflightIO::rebootToBootloaderSrvCallback(std_srvs::Trigger::Request &req,
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_REBOOT_TO_BOOTLOADER);
+  mavrosflight_->comm.send_message(msg);
+  res.success = true;
+  return true;
+}
+
+bool rosflightIO::resetOriginSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+{
+  mavlink_message_t msg;
+  mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_RESET_ORIGIN);
   mavrosflight_->comm.send_message(msg);
   res.success = true;
   return true;
