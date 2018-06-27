@@ -157,9 +157,9 @@ public:
 
   bool ins_present() override;
   void ins_update() override;
-  void ins_read(float pos[3], float vel[3], float q[4], float omega[3], uint64_t* time_us) override;
-  void ins_sync_time(uint64_t* time) override;
   bool ins_fix() override;
+  void ins_read(float pos[3], float vel[3], float q[4], uint64_t* time_us) override;
+  void reset_ins_origin() override;
 
   // RC
   void rc_init(rc_type_t rc_type) override;

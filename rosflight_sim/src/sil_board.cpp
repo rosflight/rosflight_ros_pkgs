@@ -379,13 +379,14 @@ bool SIL_Board::ins_present(void)
 
 void SIL_Board::ins_update() {}
 
-void SIL_Board::ins_read(float pos[3], float vel[3], float q[4], float omega[3], uint64_t* time_us)
+bool SIL_Board::ins_fix() {}
+
+void SIL_Board::ins_read(float pos[3], float vel[3], float q[4], uint64_t* time_us)
 {
   // collect truth from gazebo
   gazebo::math::Vector3 pos_NWU = link_->GetWorldPose().pos;
   gazebo::math::Quaternion q_i2b = link_->GetWorldPose().rot;
   gazebo::math::Vector3 lin_vel_NWU = link_->GetRelativeLinearVel();
-  gazebo::math::Vector3 ang_vel_NWU = link_->GetRelativeAngularVel();
 
   // output NED
   pos[0] = pos_NWU.x;
@@ -398,15 +399,10 @@ void SIL_Board::ins_read(float pos[3], float vel[3], float q[4], float omega[3],
   q[1] = q_i2b.x;
   q[2] = q_i2b.y;
   q[3] = q_i2b.z;
-  omega[0] = ang_vel_NWU.x;
-  omega[1] = -ang_vel_NWU.y;
-  omega[2] = -ang_vel_NWU.z;
   *time_us = clock_micros();
 }
 
-void SIL_Board::ins_sync_time(uint64_t* time) {}
-
-bool SIL_Board::ins_fix() {}
+void SIL_Board::reset_ins_origin() {}
 
 
 // RC
