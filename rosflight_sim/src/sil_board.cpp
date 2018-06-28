@@ -372,6 +372,39 @@ float SIL_Board::sonar_read(void)
     return alt + sonar_stdev_*normal_distribution_(random_generator_);
 }
 
+bool SIL_Board::ins_present(void)
+{
+  return true;
+}
+
+void SIL_Board::ins_update() {}
+
+bool SIL_Board::ins_fix() {}
+
+void SIL_Board::ins_read(float pos[3], float vel[3], float q[4], uint64_t* time_us)
+{
+  // collect truth from gazebo
+  gazebo::math::Vector3 pos_NWU = link_->GetWorldPose().pos;
+  gazebo::math::Quaternion q_i2b = link_->GetWorldPose().rot;
+  gazebo::math::Vector3 lin_vel_NWU = link_->GetRelativeLinearVel();
+
+  // output NED
+  pos[0] = pos_NWU.x;
+  pos[1] = -pos_NWU.y;
+  pos[2] = -pos_NWU.z;
+  vel[0] = lin_vel_NWU.x;
+  vel[1] = -lin_vel_NWU.y;
+  vel[2] = -lin_vel_NWU.z;
+  q[0] = q_i2b.w;
+  q[1] = q_i2b.x;
+  q[2] = q_i2b.y;
+  q[3] = q_i2b.z;
+  *time_us = clock_micros();
+}
+
+void SIL_Board::reset_ins_origin() {}
+
+
 // RC
 void SIL_Board::rc_init(rc_type_t rc_type)
 {

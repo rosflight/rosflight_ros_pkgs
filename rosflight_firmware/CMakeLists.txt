@@ -25,6 +25,7 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 add_definitions("-DGIT_VERSION_HASH=0x${GIT_COMMIT_HASH}")
+# add_definitions("-DUSE_MATH_DOUBLE")
 
 set(FIRMWARE_INCLUDE_DIRS
   firmware/include/
