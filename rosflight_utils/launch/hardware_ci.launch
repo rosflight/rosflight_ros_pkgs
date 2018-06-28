@@ -2,7 +2,7 @@
   <group ns="continous_integration">
 
     <node name="rosflight_io" pkg="rosflight" type="rosflight_io">
-      <param name="port" value="/dev/ttyACM0"/>
+      <param name="port" value="/dev/ttyACM1"/>
     </node>
 
     <node name="hardware_test" pkg="rosflight_utils" type="hardware_test" output="screen"/>

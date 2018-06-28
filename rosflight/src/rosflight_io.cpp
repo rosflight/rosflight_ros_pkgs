@@ -715,16 +715,15 @@ void rosflightIO::handle_version_msg(const mavlink_message_t &msg)
 
 void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
 {
-  //! \todo these are hard-coded to match right now; may want to replace with something more robust
-  OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE)msg->mode;
-  OFFBOARD_CONTROL_IGNORE ignore = (OFFBOARD_CONTROL_IGNORE)msg->ignore;
+  OFFBOARD_CONTROL_MODE mode = mode_map[msg->mode];
+  OFFBOARD_CONTROL_IGNORE ignore = ignore_map[msg->ignore];
 
   float x = msg->x;
   float y = msg->y;
   float z = msg->z;
   float F = msg->F;
 
-  switch (mode)
+  switch (msg->mode)
   {
     case MODE_PASS_THROUGH:
       x = saturate(x, -1.0f, 1.0f);
@@ -737,6 +736,9 @@ void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
       F = saturate(F, 0.0f, 1.0f);
       break;
     case MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
+    case MODE_XVEL_YVEL_YAWRATE_ALTITUDE:
+    case MODE_XPOS_YPOS_YAW_ALTITUDE:    
+    default:
       break;
   }
 

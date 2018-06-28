@@ -196,6 +196,27 @@ private:
   mavrosflight::MavROSflight *mavrosflight_;
 };
 
+static std::map<uint8_t, OFFBOARD_CONTROL_MODE> mode_map = [] {
+  std::map<uint8_t, OFFBOARD_CONTROL_MODE> tmp;
+  tmp[rosflight_msgs::Command::MODE_PASS_THROUGH] = MODE_PASS_THROUGH;
+  tmp[rosflight_msgs::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE] = MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
+  tmp[rosflight_msgs::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE] = MODE_ROLL_PITCH_YAWRATE_THROTTLE;
+  tmp[rosflight_msgs::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE] = MODE_ROLL_PITCH_YAWRATE_ALTITUDE;
+  tmp[rosflight_msgs::Command::MODE_XPOS_YPOS_YAW_ALTITUDE] = MODE_XPOS_YPOS_YAW_ALTITUDE;
+  tmp[rosflight_msgs::Command::MODE_XVEL_YVEL_YAWRATE_ALTITUDE] = MODE_XVEL_YVEL_YAWRATE_ALTITUDE;
+  return tmp;
+}();
+
+static std::map<uint8_t, OFFBOARD_CONTROL_IGNORE> ignore_map = [] {
+  std::map<uint8_t, OFFBOARD_CONTROL_IGNORE> tmp;
+  tmp[rosflight_msgs::Command::IGNORE_NONE] = IGNORE_NONE;
+  tmp[rosflight_msgs::Command::IGNORE_X] = IGNORE_VALUE1;
+  tmp[rosflight_msgs::Command::IGNORE_Y] = IGNORE_VALUE2;
+  tmp[rosflight_msgs::Command::IGNORE_Z] = IGNORE_VALUE3;
+  tmp[rosflight_msgs::Command::IGNORE_F] = IGNORE_VALUE4;
+  return tmp;
+}();
+
 } // namespace rosflight_io
 
 #endif // ROSFLIGHT_IO_MAVROSFLIGHT_ROS_H
