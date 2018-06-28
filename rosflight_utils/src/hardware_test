@@ -10,6 +10,8 @@ __email__ = "superjax08@gmail.com"
 
 import time
 import rospy
+import smtplib
+from email.mime.text import MIMEText
 from sensor_msgs.msg import Imu, MagneticField
 from rosflight_msgs.msg import Attitude, Barometer, OutputRaw, RCRaw, Status, Airspeed
 
