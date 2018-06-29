@@ -608,6 +608,10 @@ void rosflightIO::handle_named_command_struct_msg(const mavlink_message_t &msg)
     command_msg.mode = rosflight_msgs::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE;
   else if (command.type == MODE_ROLL_PITCH_YAWRATE_ALTITUDE)
     command_msg.mode = rosflight_msgs::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE;
+  else if (command.type == MODE_XVEL_YVEL_YAWRATE_ALTITUDE)
+    command_msg.mode = rosflight_msgs::Command::MODE_XVEL_YVEL_YAWRATE_ALTITUDE;
+  else if (command.type == MODE_XPOS_YPOS_YAW_ALTITUDE)
+    command_msg.mode = rosflight_msgs::Command::MODE_XPOS_YPOS_YAW_ALTITUDE;
 
   command_msg.ignore = command.ignore;
   command_msg.x = command.x;
