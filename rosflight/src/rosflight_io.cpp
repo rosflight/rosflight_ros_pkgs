@@ -296,6 +296,12 @@ void rosflightIO::handle_status_msg(const mavlink_message_t &msg)
       case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
         mode_string = "ANGLE";
         break;
+      case MODE_XVEL_YVEL_YAWRATE_ALTITUDE:
+        mode_string = "VELOCITY";
+        break;
+      case MODE_XPOS_YPOS_YAW_ALTITUDE:
+        mode_string = "POSITION";
+        break;
       default:
         mode_string = "UNKNOWN";
     }
