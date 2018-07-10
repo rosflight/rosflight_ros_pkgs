@@ -109,7 +109,8 @@ class Stats():
             print(Message(self.name + " found", MSG_INFO))
             self.state = GOOD
         elif self.state == GOOD and self.t_diff > 1.0:
-            print(Message(self.name + " stalled out", MSG_ERROR))
+            elapsedTime = time.time() - self.start
+            print(Message(self.name + " stalled out after " + time.strftime("%H:%M:%S", time.gmtime(elapsedTime)), MSG_ERROR))
             self.state = STALLED
         elif self.state == STALLED and self.t_diff < 1.0:
             print(Message(self.name + " recovered", MSG_INFO))
@@ -201,6 +202,8 @@ class Tester():
                 if i != len(getattr(self, type).data['val'][-1]) -1:
                     string += ", "
             string += "]"
+            string += "\t" + str(getattr(self,type).state)
+
             print(string.format(*values), end='\n')
             return 1
         else:
@@ -222,7 +225,7 @@ class Tester():
             lines += self.print_status('airspeed')
             lines += self.print_status('baro')
             # lines += self.print_status('output')
-            # lines += self.print_status('rc')
+            lines += self.print_status('rc')
             lines += self.print_status('status')
             print('\n', end='')
             print(RST + CLEAR, end='')
