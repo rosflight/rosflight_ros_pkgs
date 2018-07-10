@@ -12,6 +12,7 @@ import time
 import rospy
 import smtplib
 from email.mime.text import MIMEText
+import sys
 from sensor_msgs.msg import Imu, MagneticField
 from rosflight_msgs.msg import Attitude, Barometer, OutputRaw, RCRaw, Status, Airspeed
 
@@ -132,6 +133,9 @@ class Tester():
         self.output = Stats(8, 'output')
         self.rc = Stats(8, 'rc')
         self.status = Stats(2, 'status')
+        self.stall_detected = False
+
+        self.stats_list = ['acc', 'gyro', 'mag', 'att', 'omega', 'airspeed', 'baro', 'output', 'rc', 'status']
 
         self.last_time = time.time()
         print(CLEAR_SCREEN, end='')
@@ -209,6 +213,16 @@ class Tester():
         else:
             return 0
 
+    def check_for_stall(self):
+        # loop through the stats objects and check the state of each one
+        for stat in self.stats_list:
+            if getattr(self,stat).state == STALLED:
+                self.stall_detected = True
+                # send an email notification that a stall occurred
+                #send_email(self, stat)
+
+    #def send_email(self, stalled_stat):
+        
 
     def render(self):
         if time.time() > self.last_time + 0.03333:
@@ -231,7 +245,6 @@ class Tester():
             print(RST + CLEAR, end='')
             print(GO_UP(lines), end='\r')
 
-
     def run(self):
 
         rospy.init_node("rosflight_hardware_test")
@@ -246,7 +259,10 @@ class Tester():
 
         start_time = time.time()
 
-        while not rospy.is_shutdown():
+        print(dir(self))
+
+        while not rospy.is_shutdown() and not self.stall_detected:
+            self.check_for_stall()
             self.render()
 
 
