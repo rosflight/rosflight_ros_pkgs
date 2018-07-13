@@ -112,7 +112,7 @@ class Stats():
             self.state = GOOD
         elif self.state == GOOD and self.t_diff > 1.0:
             elapsedTime = time.time() - self.start
-            print(Message(self.name + " stalled out after " + time.strftime("%H:%M:%S", time.gmtime(elapsedTime)), MSG_ERROR))
+            print(Message(self.name + " stalled out after running for " + time.strftime("%H:%M:%S", time.gmtime(elapsedTime)), MSG_ERROR))
             self.state = STALLED
         elif self.state == STALLED and self.t_diff < 1.0:
             print(Message(self.name + " recovered", MSG_INFO))
@@ -218,10 +218,15 @@ class Tester():
         # read email credentials from the credentials file
         credentials = open('credentials', 'r')
         email = credentials.readline()
+        email = email.rstrip() # remove the trailing \n
         password = credentials.readline()
         credentials.close()
 
         server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
+
         server.login(email, password)
 
         fromaddr = email
@@ -231,12 +236,13 @@ class Tester():
         msg['To'] = toaddr
         msg['Subject'] = "Rosflight Hardware CI Failed"
         elapsedTime = time.gmtime(time.time() - getattr(self, stalled_stat).start)
-        body = stalled_stat + " stalled after " + time.strftime("%H:%M:%S", elapsedTime)
+        body = stalled_stat + " stalled after running for " + time.strftime("%H:%M:%S", elapsedTime) + "\n\n- the Rosflight bot"
         msg.attach(MIMEText(body, 'plain'))
 
         # send message
         text = msg.as_string()
         server.sendmail(fromaddr, toaddr, text)
+        server.close()
 
     def check_for_stall(self):
         # loop through the stats objects and check the state of each one
@@ -280,8 +286,6 @@ class Tester():
         self.pitot_sub = rospy.Subscriber('airspeed', Airspeed, self.airspeed_callback)
 
         start_time = time.time()
-
-        print(dir(self))
 
         while not rospy.is_shutdown() and not self.stall_detected:
             self.check_for_stall()
