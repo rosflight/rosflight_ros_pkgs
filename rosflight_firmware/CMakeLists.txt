@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(rosflight_firmware)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
 
 find_package(catkin REQUIRED COMPONENTS roscpp)
 find_package(Boost REQUIRED COMPONENTS system thread)
@@ -19,11 +19,13 @@ endif()
 # Get the git commit hash
 execute_process(
   COMMAND git log -1 --format=%h
-  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/firmware
+  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
   OUTPUT_VARIABLE GIT_COMMIT_HASH
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-add_definitions("-DGIT_VERSION_HASH=0x${GIT_COMMIT_HASH}")
+message("GIT_COMMIT_HASH=0x${GIT_COMMIT_HASH}")
+add_definitions("-DGIT_VERSION_HASH=0x0${GIT_COMMIT_HASH}")
+#add_definitions("-DGIT_VERSION_HASH=23")
 
 set(FIRMWARE_INCLUDE_DIRS
   firmware/include/

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(rosflight_sim)
 
-find_package(gazebo)
+find_package(gazebo 7.0 EXACT)
 IF(gazebo_FOUND)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -13,7 +13,7 @@ execute_process(
   OUTPUT_VARIABLE GIT_COMMIT_HASH
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-add_definitions("-DGIT_VERSION_HASH=0x${GIT_COMMIT_HASH}")
+add_definitions("-DGIT_VERSION_HASH=0x0${GIT_COMMIT_HASH}")
 
 # Default to release build for speed
 if(NOT CMAKE_BUILD_TYPE)
