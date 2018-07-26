@@ -67,6 +67,8 @@ INIT = 0
 GOOD = 1
 STALLED = 2
 
+# dataset size for the standard deviation
+STD_DATASET_SIZE = 100
 
 class Stats():
     def __init__(self, size, name):
@@ -79,6 +81,8 @@ class Stats():
         self.name = name
         self.start = time.time()
         self.state = INIT
+        self.std_dataset = []
+        self.std = 0 # standard deviation
 
         self.m = [0 for i in range(size)]
         self.s = [0 for i in range(size)]
@@ -119,6 +123,7 @@ class Stats():
             self.state = GOOD
 
 
+MAX_LOOP_TIME_US = 1000
 
 
 
@@ -134,9 +139,9 @@ class Tester():
         self.output = Stats(8, 'output')
         self.rc = Stats(8, 'rc')
         self.status = Stats(2, 'status')
-        self.stall_detected = False
+        self.error = NO_ERROR
 
-        self.stats_list = ['acc', 'gyro', 'mag', 'att', 'omega', 'airspeed', 'baro', 'output', 'rc', 'status']
+        self.stats_list = ['acc', 'gyro', 'mag', 'att', 'omega', 'airspeed', 'baro', 'output', 'status']
 
         self.last_time = time.time()
         print(CLEAR_SCREEN, end='')
@@ -214,7 +219,7 @@ class Tester():
         else:
             return 0
     
-    def send_email(self, stalled_stat):
+    def send_email(self, stat, message):
         # read email credentials from the credentials file
         credentials = open('credentials', 'r')
         email = credentials.readline()
@@ -235,8 +240,8 @@ class Tester():
         msg['From'] = fromaddr
         msg['To'] = toaddr
         msg['Subject'] = "Rosflight Hardware CI Failed"
-        elapsedTime = time.gmtime(time.time() - getattr(self, stalled_stat).start)
-        body = stalled_stat + " stalled after running for " + time.strftime("%H:%M:%S", elapsedTime) + "\n\n- the Rosflight bot"
+        elapsedTime = time.gmtime(time.time() - getattr(self, stat).start)
+        body = stat + " " + message + " after running for " + time.strftime("%H:%M:%S", elapsedTime) + "\n\n- the Rosflight bot"
         msg.attach(MIMEText(body, 'plain'))
 
         # send message
@@ -244,13 +249,21 @@ class Tester():
         server.sendmail(fromaddr, toaddr, text)
         server.close()
 
-    def check_for_stall(self):
+    def check_for_error(self):
+        # check loop time
+        if getattr(self, 'status').last_val[1] > MAX_LOOP_TIME_US:
+            self.error = True
+            self.send_email('loop_time', 'exceeded 1000uS')
+
+        # check for stalled stats
         # loop through the stats objects and check the state of each one
         for stat in self.stats_list:
             if getattr(self,stat).state == STALLED:
-                self.stall_detected = True
                 # send an email notification that a stall occurred
-                self.send_email(stat)
+                self.send_email(stat, "stalled")
+                self.error = True
+
+        
 
     def render(self):
         if time.time() > self.last_time + 0.03333:
@@ -267,7 +280,7 @@ class Tester():
             lines += self.print_status('airspeed')
             lines += self.print_status('baro')
             # lines += self.print_status('output')
-            lines += self.print_status('rc')
+            # lines += self.print_status('rc')
             lines += self.print_status('status')
             print('\n', end='')
             print(RST + CLEAR, end='')
@@ -287,8 +300,8 @@ class Tester():
 
         start_time = time.time()
 
-        while not rospy.is_shutdown() and not self.stall_detected:
-            self.check_for_stall()
+        while not rospy.is_shutdown() and not self.error:
+            self.check_for_error()
             self.render()
 
 
