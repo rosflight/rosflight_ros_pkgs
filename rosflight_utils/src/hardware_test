@@ -11,6 +11,7 @@ __email__ = "superjax08@gmail.com"
 import time
 import rospy
 import smtplib
+import numpy
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 import sys
@@ -68,7 +69,7 @@ GOOD = 1
 STALLED = 2
 
 # dataset size for the standard deviation
-STD_DATASET_SIZE = 100
+STD_SAMPLE_SIZE = 500
 
 class Stats():
     def __init__(self, size, name):
@@ -100,6 +101,11 @@ class Stats():
         self.min = [min(internal, new) for internal, new in zip(self.max, val)]
         self.data['t'].append(t)
         self.data['val'].append(val)
+        # index for standard deviation starts at 0 if total dataset size is less than sample size
+        # otherwise find the standard deviation of the last STD_SAMPLE_SIZE points
+        start_index = 0 if (len(self.data['val']) < STD_SAMPLE_SIZE) else (len(self.data['val']) - STD_SAMPLE_SIZE)
+        arr = numpy.array(self.data['val'][start_index:])
+        self.std = numpy.std(arr, axis=0)
 
         if val != self.last_val:
             self.last_val = val
@@ -212,7 +218,7 @@ class Tester():
                 if i != len(getattr(self, type).data['val'][-1]) -1:
                     string += ", "
             string += "]"
-            string += "\t" + str(getattr(self,type).state)
+            string += GO_FORWARD(4) + "std: " + str(getattr(self,type).std)
 
             print(string.format(*values), end='\n')
             return 1
