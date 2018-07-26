@@ -139,7 +139,7 @@ class Tester():
         self.output = Stats(8, 'output')
         self.rc = Stats(8, 'rc')
         self.status = Stats(2, 'status')
-        self.error = NO_ERROR
+        self.error = False
 
         self.stats_list = ['acc', 'gyro', 'mag', 'att', 'omega', 'airspeed', 'baro', 'output', 'status']
 
@@ -253,7 +253,7 @@ class Tester():
         # check loop time
         if getattr(self, 'status').last_val[1] > MAX_LOOP_TIME_US:
             self.error = True
-            self.send_email('loop_time', 'exceeded 1000uS')
+            self.send_email('status', 'loop_time exceeded %duS' % MAX_LOOP_TIME_US)
 
         # check for stalled stats
         # loop through the stats objects and check the state of each one
