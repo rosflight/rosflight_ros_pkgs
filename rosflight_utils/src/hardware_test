@@ -12,6 +12,7 @@ import time
 import rospy
 import smtplib
 import numpy
+import subprocess
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 import sys
@@ -156,7 +157,8 @@ class Stats():
 
 MAX_LOOP_TIME_US = 1000
 
-
+gitHashCmd = "git rev-parse --short HEAD"
+gitBranchCmd = "git branch"
 
 class Tester():
     def __init__(self):
@@ -273,7 +275,17 @@ class Tester():
         msg['To'] = toaddr
         msg['Subject'] = "Rosflight Hardware CI Failed"
         elapsedTime = time.gmtime(time.time() - getattr(self, stat).start)
-        body = stat + " " + message + " after running for " + time.strftime("%H:%M:%S", elapsedTime) + "\n\n- the Rosflight bot"
+        commitHash = subprocess.check_output(gitHashCmd.split())
+        commitHash = commitHash.rstrip() # remove trailing \n
+        branchCmdOutput = subprocess.check_output(gitBranchCmd.split())
+        currentBranchMarker = "* "
+        startPos = branchCmdOutput.find(currentBranchMarker) + len(currentBranchMarker)
+        endPos = branchCmdOutput.find("\n")
+        branchName = branchCmdOutput[startPos:endPos].rstrip()
+        body = stat + " " + message + " after running for " + time.strftime("%H:%M:%S", elapsedTime) + ".  "
+        body += "Rosflight commit " + commitHash + " on branch " + branchName + ".  "
+        body += "Now go fix it!"
+        body += "\n\nSincerely,\nthe Rosflight bot"
         msg.attach(MIMEText(body, 'plain'))
 
         # send message
