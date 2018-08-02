@@ -110,7 +110,7 @@ class Stats():
 
         # update standard deviation and mean before the new values are added
         # this way, if the new value is an outlier, it will be easier to detect because it has not skewed our statistics
-        if self.check_for_outliers:
+        if self.check_for_outliers and len(self.data['val']) > 2:
             # index for standard deviation starts at 0 if total dataset size is less than sample size
             # otherwise find the standard deviation of the last STD_SAMPLE_SIZE points
             start_index = 0 if (len(self.data['val']) < STD_SAMPLE_SIZE) else -STD_SAMPLE_SIZE
@@ -167,14 +167,15 @@ class Tester():
         self.mag = Stats(3, 'mag')
         self.att = Stats(4, 'att')
         self.omega = Stats(3, 'omega')
-        self.airspeed = Stats(1, 'airspeed')
+        # self.airspeed = Stats(1, 'airspeed')
         self.baro = Stats(1, 'baro')
-        self.output = Stats(8, 'output')
-        self.rc = Stats(8, 'rc')
+        # self.output = Stats(8, 'output')
+        # self.rc = Stats(8, 'rc')
         self.status = Stats(2, 'status', check_outliers=False)
-        self.error = False
 
-        self.stats_list = ['acc', 'gyro', 'mag', 'att', 'omega', 'airspeed', 'baro', 'output', 'status']
+        self.stats_list = [key for key in self.__dict__.keys() if "__" not in key]
+
+        self.error = False
 
         self.last_time = time.time()
         print(CLEAR_SCREEN, end='')
@@ -187,36 +188,36 @@ class Tester():
     def imu_callback(self, msg):
         t = msg.header.stamp.to_sec()
         self.acc.update(msg.linear_acceleration, t, fields=['x', 'y', 'z'])
-        self.gyro.update(msg.angular_velocity, t, fields=['x', 'y', 'z'])
+        if hasattr(self, 'acc'): self.gyro.update(msg.angular_velocity, t, fields=['x', 'y', 'z'])
 
     def mag_callback(self, msg):
         t = msg.header.stamp.to_sec()
-        self.mag.update(msg.magnetic_field, t, fields=['x','y','z'])
+        if hasattr(self, 'mag'): self.mag.update(msg.magnetic_field, t, fields=['x','y','z'])
 
     def att_callback(self, msg):
         t = msg.header.stamp.to_sec()
-        self.att.update(msg.attitude, t, fields=['w','x','y','z'])
-        self.omega.update(msg.angular_velocity, t, fields=['x', 'y', 'z'])
+        if hasattr(self, 'att'): self.att.update(msg.attitude, t, fields=['w','x','y','z'])
+        if hasattr(self, 'omega'): self.omega.update(msg.angular_velocity, t, fields=['x', 'y', 'z']) # 
 
     def baro_callback(self, msg):
         t = msg.header.stamp.to_sec()
-        self.baro.update([msg.pressure], t)
+        if hasattr(self, 'baro'): self.baro.update([msg.pressure], t)
 
     def airspeed_callback(self, msg):
         t = msg.header.stamp.to_sec()
-        self.airspeed.update(msg.differential_pressure, t)
+        if hasattr(self, 'airspeed'): self.airspeed.update(msg.differential_pressure, t)
 
     def output_callback(self, msg):
         t = msg.header.stamp.to_sec()
-        self.output.update(list(msg.values), t)
+        if hasattr(self, 'output'): self.output.update(list(msg.values), t)
 
     def rc_callback(self, msg):
         t = msg.header.stamp.to_sec()
-        self.rc.update(list(msg.values), t)
+        if hasattr(self, 'rc'): self.rc.update(list(msg.values), t)
 
     def status_callback(self, msg):
         t = msg.header.stamp.to_sec()
-        self.status.update(msg, t, fields=['num_errors', 'loop_time_us'])
+        if hasattr(self, 'status'): self.status.update(msg, t, fields=['num_errors', 'loop_time_us'])
 
     def print_progress(self):
         if not hasattr(self, 'start_time'):
@@ -245,8 +246,8 @@ class Tester():
                 if i != len(getattr(self, type).data['val'][-1]) -1:
                     string += ", "
             string += "]"
-            #string += " | std:" + + str(getattr(self,type).std)
-            string += " | Outlier checking: %r" % getattr(self, type).check_for_outliers
+            string += " | std:" + str(getattr(self,type).std)
+            #string += " | Outlier checking: %r" % getattr(self, type).check_for_outliers
 
             print(string.format(*values), end='\n')
             return 1
@@ -326,10 +327,10 @@ class Tester():
             lines += self.print_status('mag')
             lines += self.print_status('att')
             lines += self.print_status('omega')
-            lines += self.print_status('airspeed')
+            #lines += self.print_status('airspeed')
             lines += self.print_status('baro')
-            lines += self.print_status('output')
-            lines += self.print_status('rc')
+            #lines += self.print_status('output')
+            #lines += self.print_status('rc')
             lines += self.print_status('status')
             print('\n', end='')
             print(RST + CLEAR, end='')
