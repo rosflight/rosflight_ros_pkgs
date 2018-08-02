@@ -102,7 +102,7 @@ class Stats():
     def outlier_check(self):
         retval = NO_OUTLIERS
         for val in self.last_val:
-            retval = OUTLIER_DETECTED if abs(self.mean - val) > self.std * Z else retvalz
+            retval = OUTLIER_DETECTED if abs(self.mean - val) > self.std * Z else retval
         return retval
 
     def update(self, val, t, fields=None):
@@ -244,6 +244,7 @@ class Tester():
                     string += ", "
             string += "]"
             #string += " | std:" + + str(getattr(self,type).std)
+            string += " | Outlier checking: %r" % getattr(self, type).check_for_outliers
 
             print(string.format(*values), end='\n')
             return 1
@@ -315,8 +316,8 @@ class Tester():
             lines += self.print_status('omega')
             lines += self.print_status('airspeed')
             lines += self.print_status('baro')
-            # lines += self.print_status('output')
-            # lines += self.print_status('rc')
+            lines += self.print_status('output')
+            lines += self.print_status('rc')
             lines += self.print_status('status')
             print('\n', end='')
             print(RST + CLEAR, end='')
