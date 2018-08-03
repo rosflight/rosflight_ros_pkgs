@@ -90,8 +90,10 @@ class Stats():
         self.start = time.time()
         self.state = INIT
         self.std_dataset = []
-        self.std = 0.0 # standard deviation
-        self.mean = 0.0
+        self.std = [0.0 for i in range(size)] # standard deviation
+        self.mean = [0.0 for i in range(size)] # mean value
+        self.upper_bound = [0.0 for i in range(size)] # upper bound for acceptible values
+        self.lower_bound = [0.0 for i in range(size)] # lower bound for acceptible values
         self.check_for_outliers = check_outliers
 
         self.m = [0 for i in range(size)]
@@ -102,8 +104,9 @@ class Stats():
     # returns true if the last data point recorded is an outlier, false otherwise
     def outlier_check(self):
         retval = NO_OUTLIERS
-        for val in self.last_val:
-            retval = OUTLIER_DETECTED if abs(self.mean - val) > self.std * Z else retval
+        for i in range(len(self.last_val)):
+            # retval = OUTLIER_DETECTED if abs(self.mean[i] - self.last_val[i]) > self.std[i] * Z else retval
+            retval = OUTLIER_DETECTED if self.last_val[i] > self.upper_bound[i] or self.last_val[i] < self.lower_bound[i] else retval
         return retval
 
     def update(self, val, t, fields=None):
@@ -117,6 +120,8 @@ class Stats():
             arr = numpy.array(self.data['val'][start_index:])
             self.std = numpy.std(arr, axis=0)
             self.mean = numpy.mean(arr, axis=0)
+            self.lower_bound = self.mean - Z * self.std
+            self.upper_bound = self.mean + Z * self.std
 
         if fields is not None:
             val = [getattr(val, field) for field in fields]
@@ -146,7 +151,7 @@ class Stats():
             print(Message(self.name + " stalled out after running for " + time.strftime("%H:%M:%S", time.gmtime(elapsedTime)), MSG_ERROR))
             self.state = STALLED
         # do outlier checking, if it is enabled
-        elif self.state == GOOD and self.check_for_outliers == True and self.outlier_check == OUTLIER_DETECTED:
+        elif self.state == GOOD and self.check_for_outliers == True and len(self.data['val']) > 5 and self.outlier_check() == OUTLIER_DETECTED:
             elapsedTime = time.time() - self.start
             print(Message(self.name + " detected an outlier after running for " + time.strftime("%H:%M:%S", time.gmtime(elapsedTime)), MSG_ERROR))
             self.state = OUTLIER
@@ -246,8 +251,27 @@ class Tester():
                 if i != len(getattr(self, type).data['val'][-1]) -1:
                     string += ", "
             string += "]"
-            string += " | std:" + str(getattr(self,type).std)
-            #string += " | Outlier checking: %r" % getattr(self, type).check_for_outliers
+            # string += " | std:" + str(getattr(self,type).std)
+
+            # print boundary values
+            string += " | bounds: [ "
+
+            # lower bound
+            for i, val in enumerate(getattr(self, type).lower_bound):
+                string += "{:5.2f}"
+                values.append(val)
+                if i != len(getattr(self, type).data['val'][-1]) -1:
+                    string += ", "
+            string += " ]"
+            
+            # upper bound
+            string += "   [ "
+            for i, val in enumerate(getattr(self, type).lower_bound):
+                string += "{:5.2f}"
+                values.append(val)
+                if i != len(getattr(self, type).data['val'][-1]) -1:
+                    string += ", "
+            string += " ]"
 
             print(string.format(*values), end='\n')
             return 1
@@ -255,44 +279,45 @@ class Tester():
             return 0
     
     def send_email(self, stat, message):
-        # read email credentials from the credentials file
-        credentials = open('credentials', 'r')
-        email = credentials.readline()
-        email = email.rstrip() # remove the trailing \n
-        password = credentials.readline()
-        credentials.close()
+        # # read email credentials from the credentials file
+        # credentials = open('credentials', 'r')
+        # email = credentials.readline()
+        # email = email.rstrip() # remove the trailing \n
+        # password = credentials.readline()
+        # credentials.close()
 
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.ehlo()
-        server.starttls()
-        server.ehlo()
+        # server = smtplib.SMTP('smtp.gmail.com', 587)
+        # server.ehlo()
+        # server.starttls()
+        # server.ehlo()
 
-        server.login(email, password)
+        # server.login(email, password)
 
-        fromaddr = email
-        toaddr = "cameron.mcquinn@gmail.com"
-        msg = MIMEMultipart()
-        msg['From'] = fromaddr
-        msg['To'] = toaddr
-        msg['Subject'] = "Rosflight Hardware CI Failed"
-        elapsedTime = time.gmtime(time.time() - getattr(self, stat).start)
-        commitHash = subprocess.check_output(gitHashCmd.split())
-        commitHash = commitHash.rstrip() # remove trailing \n
-        branchCmdOutput = subprocess.check_output(gitBranchCmd.split())
-        currentBranchMarker = "* "
-        startPos = branchCmdOutput.find(currentBranchMarker) + len(currentBranchMarker)
-        endPos = branchCmdOutput.find("\n")
-        branchName = branchCmdOutput[startPos:endPos].rstrip()
-        body = stat + " " + message + " after running for " + time.strftime("%H:%M:%S", elapsedTime) + ".  "
-        body += "Rosflight commit " + commitHash + " on branch " + branchName + ".  "
-        body += "Now go fix it!"
-        body += "\n\nSincerely,\nthe Rosflight bot"
-        msg.attach(MIMEText(body, 'plain'))
+        # fromaddr = email
+        # toaddr = "cameron.mcquinn@gmail.com"
+        # msg = MIMEMultipart()
+        # msg['From'] = fromaddr
+        # msg['To'] = toaddr
+        # msg['Subject'] = "Rosflight Hardware CI Failed"
+        # elapsedTime = time.gmtime(time.time() - getattr(self, stat).start)
+        # commitHash = subprocess.check_output(gitHashCmd.split())
+        # commitHash = commitHash.rstrip() # remove trailing \n
+        # branchCmdOutput = subprocess.check_output(gitBranchCmd.split())
+        # currentBranchMarker = "* "
+        # startPos = branchCmdOutput.find(currentBranchMarker) + len(currentBranchMarker)
+        # endPos = branchCmdOutput.find("\n")
+        # branchName = branchCmdOutput[startPos:endPos].rstrip()
+        # body = stat + " " + message + " after running for " + time.strftime("%H:%M:%S", elapsedTime) + ".  "
+        # body += "Rosflight commit " + commitHash + " on branch " + branchName + ".  "
+        # body += "Now go fix it!"
+        # body += "\n\nSincerely,\nthe Rosflight bot"
+        # msg.attach(MIMEText(body, 'plain'))
 
-        # send message
-        text = msg.as_string()
-        server.sendmail(fromaddr, toaddr, text)
-        server.close()
+        # # send message
+        # text = msg.as_string()
+        # server.sendmail(fromaddr, toaddr, text)
+        # server.close()
+        print("DANGER WILL ROBINSON!!")
 
     def check_for_error(self):
         # check loop time
