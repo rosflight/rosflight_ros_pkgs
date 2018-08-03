@@ -113,7 +113,7 @@ class Stats():
 
         # update standard deviation and mean before the new values are added
         # this way, if the new value is an outlier, it will be easier to detect because it has not skewed our statistics
-        if self.check_for_outliers and len(self.data['val']) > 2:
+        if self.check_for_outliers and len(self.data['val']) > 5:
             # index for standard deviation starts at 0 if total dataset size is less than sample size
             # otherwise find the standard deviation of the last STD_SAMPLE_SIZE points
             start_index = 0 if (len(self.data['val']) < STD_SAMPLE_SIZE) else -STD_SAMPLE_SIZE
@@ -151,8 +151,9 @@ class Stats():
             print(Message(self.name + " stalled out after running for " + time.strftime("%H:%M:%S", time.gmtime(elapsedTime)), MSG_ERROR))
             self.state = STALLED
         # do outlier checking, if it is enabled
-        elif self.state == GOOD and self.check_for_outliers == True and len(self.data['val']) > 5 and self.outlier_check() == OUTLIER_DETECTED:
+        elif self.state == GOOD and self.check_for_outliers == True and len(self.data['val']) > STD_SAMPLE_SIZE and self.outlier_check() == OUTLIER_DETECTED:
             elapsedTime = time.time() - self.start
+            print("\n" + RST + CLEAR, end='\n')
             print(Message(self.name + " detected an outlier after running for " + time.strftime("%H:%M:%S", time.gmtime(elapsedTime)), MSG_ERROR))
             self.state = OUTLIER
         elif self.state == STALLED and self.t_diff < 1.0:
@@ -299,7 +300,7 @@ class Tester():
         # msg['From'] = fromaddr
         # msg['To'] = toaddr
         # msg['Subject'] = "Rosflight Hardware CI Failed"
-        # elapsedTime = time.gmtime(time.time() - getattr(self, stat).start)
+        elapsedTime = time.gmtime(time.time() - getattr(self, stat).start)
         # commitHash = subprocess.check_output(gitHashCmd.split())
         # commitHash = commitHash.rstrip() # remove trailing \n
         # branchCmdOutput = subprocess.check_output(gitBranchCmd.split())
@@ -307,7 +308,17 @@ class Tester():
         # startPos = branchCmdOutput.find(currentBranchMarker) + len(currentBranchMarker)
         # endPos = branchCmdOutput.find("\n")
         # branchName = branchCmdOutput[startPos:endPos].rstrip()
-        # body = stat + " " + message + " after running for " + time.strftime("%H:%M:%S", elapsedTime) + ".  "
+        body = stat + " " + message + " after running for " + time.strftime("%H:%M:%S", elapsedTime) + ".  "
+        body += "\n"
+        body += "Last value: "
+        values = []
+        for i, val in enumerate(getattr(self, stat).last_val):
+                body += "{:10.4f}"
+                values.append(val)
+                if i != len(getattr(self, stat).data['val'][-1]) -1:
+                    body += ", "
+        body += " ]"
+        print(body.format(*values), end='\n')
         # body += "Rosflight commit " + commitHash + " on branch " + branchName + ".  "
         # body += "Now go fix it!"
         # body += "\n\nSincerely,\nthe Rosflight bot"
