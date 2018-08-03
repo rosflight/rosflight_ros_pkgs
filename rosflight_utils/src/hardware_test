@@ -310,7 +310,7 @@ class Tester():
         # branchName = branchCmdOutput[startPos:endPos].rstrip()
         body = stat + " " + message + " after running for " + time.strftime("%H:%M:%S", elapsedTime) + ".  "
         body += "\n"
-        body += "Last value: "
+        body += "Last value: [ "
         values = []
         for i, val in enumerate(getattr(self, stat).last_val):
                 body += "{:10.4f}"
