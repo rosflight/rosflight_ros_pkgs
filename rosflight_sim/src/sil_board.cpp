@@ -264,7 +264,6 @@ void SIL_Board::imu_not_responding_error(void)
 
 void SIL_Board::mag_read(float mag[3])
 {
-#if GAZEBO_MAJOR_VERSION >= 8
   GazeboPose I_to_B = GET_WORLD_POSE(link_);
   GazeboVector noise;
   SET_X(noise , (mag_stdev_*normal_distribution_(random_generator_)));
