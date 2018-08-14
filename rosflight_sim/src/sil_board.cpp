@@ -43,11 +43,7 @@ SIL_Board::SIL_Board() :
 
 void SIL_Board::init_board(void)
 {
-#if GAZEBO_MAJOR_VERSION >=8
-  boot_time_ = world_->SimTime().Double();
-#else
-  boot_time_ = world_->GetSimTime().Double();
-#endif
+  boot_time_ = GET_SIM_TIME(world_).Double();
 }
 
 void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
@@ -98,73 +94,42 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   // Calculate Magnetic Field Vector (for mag simulation)
   double inclination = nh_->param<double>("inclination", 1.14316156541);
   double declination = nh_->param<double>("declination", 0.198584539676);
+  SET_Z(inertial_magnetic_field_ , sin(-inclination));
+  SET_X(inertial_magnetic_field_ , cos(-inclination)*cos(-declination));
+  SET_Y(inertial_magnetic_field_ , cos(-inclination)*sin(-declination));
+
+  // Get the desired altitude at the ground (for baro simulation)
+  ground_altitude_ = nh->param<double>("ground_altitude", 1387.0);
+
+  // Configure Noise
+  random_generator_= std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
+  normal_distribution_ = std::normal_distribution<double>(0.0, 1.0);
+  uniform_distribution_ = std::uniform_real_distribution<double>(-1.0, 1.0);
+
 #if GAZEBO_MAJOR_VERSION >= 8
-  inertial_magnetic_field_.Z() = sin(-inclination);
-  inertial_magnetic_field_.X() = cos(-inclination)*cos(-declination);
-  inertial_magnetic_field_.Y() = cos(-inclination)*sin(-declination);
-
-  // Get the desired altitude at the ground (for baro simulation)
-  ground_altitude_ = nh->param<double>("ground_altitude", 1387.0);
-
-  // Configure Noise
-  random_generator_= std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
-  normal_distribution_ = std::normal_distribution<double>(0.0, 1.0);
-  uniform_distribution_ = std::uniform_real_distribution<double>(-1.0, 1.0);
-
   gravity_ = world_->Gravity();
-
-  // Initialize the Sensor Biases
-  gyro_bias_.X(gyro_bias_range_*uniform_distribution_(random_generator_));
-  gyro_bias_.Y(gyro_bias_range_*uniform_distribution_(random_generator_));
-  gyro_bias_.Z(gyro_bias_range_*uniform_distribution_(random_generator_));
-  acc_bias_.X(acc_bias_range_*uniform_distribution_(random_generator_));
-  acc_bias_.Y(acc_bias_range_*uniform_distribution_(random_generator_));
-  acc_bias_.Z(acc_bias_range_*uniform_distribution_(random_generator_));
-  mag_bias_.X(mag_bias_range_*uniform_distribution_(random_generator_));
-  mag_bias_.Y(mag_bias_range_*uniform_distribution_(random_generator_));
-  mag_bias_.Z(mag_bias_range_*uniform_distribution_(random_generator_));
-  baro_bias_ = baro_bias_range_*uniform_distribution_(random_generator_);
-  airspeed_bias_ = airspeed_bias_range_*uniform_distribution_(random_generator_);
-
-  prev_vel_1_ = link_->RelativeLinearVel();
-  prev_vel_2_ = link_->RelativeLinearVel();
-  prev_vel_3_ = link_->RelativeLinearVel();
-  last_time_ = world_->SimTime();
-  next_imu_update_time_us_ = 0;
 #else
-  inertial_magnetic_field_.z = sin(-inclination);
-  inertial_magnetic_field_.x = cos(-inclination)*cos(-declination);
-  inertial_magnetic_field_.y = cos(-inclination)*sin(-declination);
-
-  // Get the desired altitude at the ground (for baro simulation)
-  ground_altitude_ = nh->param<double>("ground_altitude", 1387.0);
-
-  // Configure Noise
-  random_generator_= std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
-  normal_distribution_ = std::normal_distribution<double>(0.0, 1.0);
-  uniform_distribution_ = std::uniform_real_distribution<double>(-1.0, 1.0);
-
   gravity_ = world_->GetPhysicsEngine()->GetGravity();
+#endif
 
   // Initialize the Sensor Biases
-  gyro_bias_.x = gyro_bias_range_*uniform_distribution_(random_generator_);
-  gyro_bias_.y = gyro_bias_range_*uniform_distribution_(random_generator_);
-  gyro_bias_.z = gyro_bias_range_*uniform_distribution_(random_generator_);
-  acc_bias_.x = acc_bias_range_*uniform_distribution_(random_generator_);
-  acc_bias_.y = acc_bias_range_*uniform_distribution_(random_generator_);
-  acc_bias_.z = acc_bias_range_*uniform_distribution_(random_generator_);
-  mag_bias_.x = mag_bias_range_*uniform_distribution_(random_generator_);
-  mag_bias_.y = mag_bias_range_*uniform_distribution_(random_generator_);
-  mag_bias_.z = mag_bias_range_*uniform_distribution_(random_generator_);
+  SET_X(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
+  SET_Y(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
+  SET_Z(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
+  SET_X(acc_bias_ , (acc_bias_range_*uniform_distribution_(random_generator_)));
+  SET_Y(acc_bias_ , (acc_bias_range_*uniform_distribution_(random_generator_)));
+  SET_Z(acc_bias_ , (acc_bias_range_*uniform_distribution_(random_generator_)));
+  SET_X(mag_bias_ , (mag_bias_range_*uniform_distribution_(random_generator_)));
+  SET_Y(mag_bias_ , (mag_bias_range_*uniform_distribution_(random_generator_)));
+  SET_Z(mag_bias_ , (mag_bias_range_*uniform_distribution_(random_generator_)));
   baro_bias_ = baro_bias_range_*uniform_distribution_(random_generator_);
   airspeed_bias_ = airspeed_bias_range_*uniform_distribution_(random_generator_);
 
-  prev_vel_1_ = link_->GetRelativeLinearVel();
-  prev_vel_2_ = link_->GetRelativeLinearVel();
-  prev_vel_3_ = link_->GetRelativeLinearVel();
-  last_time_ = world_->GetSimTime();
+  prev_vel_1_ = GET_RELATIVE_LINEAR_VEL(link_);
+  prev_vel_2_ = GET_RELATIVE_LINEAR_VEL(link_);
+  prev_vel_3_ = GET_RELATIVE_LINEAR_VEL(link_);
+  last_time_ = GET_SIM_TIME(world_);
   next_imu_update_time_us_ = 0;
-#endif
 }
 
 void SIL_Board::board_reset(bool bootloader)
@@ -175,20 +140,12 @@ void SIL_Board::board_reset(bool bootloader)
 
 uint32_t SIL_Board::clock_millis()
 {
-#if GAZEBO_MAJOR_VERSION >=8
-  return (uint32_t)((world_->SimTime().Double() - boot_time_)*1e3);
-#else
-  return (uint32_t)((world_->GetSimTime().Double() - boot_time_)*1e3);
-#endif
+  return (uint32_t)((GET_SIM_TIME(world_).Double() - boot_time_)*1e3);
 }
 
 uint64_t SIL_Board::clock_micros()
 {
-#if GAZEBO_MAJOR_VERSION >=8
-  return (uint64_t)((world_->SimTime().Double() - boot_time_)*1e6);
-#else
-  return (uint64_t)((world_->GetSimTime().Double() - boot_time_)*1e6);
-#endif
+  return (uint64_t)((GET_SIM_TIME(world_).Double() - boot_time_)*1e6);
 }
 
 void SIL_Board::clock_delay(uint32_t milliseconds)
@@ -200,37 +157,20 @@ void SIL_Board::clock_delay(uint32_t milliseconds)
 /// noise params are hard coded
 void SIL_Board::sensors_init()
 {
-#if GAZEBO_MAJOR_VERSION >= 8
   // Initialize the Biases
-  gyro_bias_.X(gyro_bias_range_*uniform_distribution_(random_generator_));
-  gyro_bias_.Y(gyro_bias_range_*uniform_distribution_(random_generator_));
-  gyro_bias_.Z(gyro_bias_range_*uniform_distribution_(random_generator_));
-  acc_bias_.X(acc_bias_range_*uniform_distribution_(random_generator_));
-  acc_bias_.Y(acc_bias_range_*uniform_distribution_(random_generator_));
-  acc_bias_.Z(acc_bias_range_*uniform_distribution_(random_generator_));
+  SET_X(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
+  SET_Y(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
+  SET_Z(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
+  SET_X(acc_bias_ , (acc_bias_range_*uniform_distribution_(random_generator_)));
+  SET_Y(acc_bias_ , (acc_bias_range_*uniform_distribution_(random_generator_)));
+  SET_Z(acc_bias_ , (acc_bias_range_*uniform_distribution_(random_generator_)));
 
   // Gazebo coordinates is NWU and Earth's magnetic field is defined in NED, hence the negative signs
   double inclination_ = 1.14316156541;
   double declination_ = 0.198584539676;
-  inertial_magnetic_field_.Z(sin(-inclination_));
-  inertial_magnetic_field_.X(cos(-inclination_)*cos(-declination_));
-  inertial_magnetic_field_.Y(cos(-inclination_)*sin(-declination_));
-#else
-  // Initialize the Biases
-  gyro_bias_.x = gyro_bias_range_*uniform_distribution_(random_generator_);
-  gyro_bias_.y = gyro_bias_range_*uniform_distribution_(random_generator_);
-  gyro_bias_.z = gyro_bias_range_*uniform_distribution_(random_generator_);
-  acc_bias_.x = acc_bias_range_*uniform_distribution_(random_generator_);
-  acc_bias_.y = acc_bias_range_*uniform_distribution_(random_generator_);
-  acc_bias_.z = acc_bias_range_*uniform_distribution_(random_generator_);
-
-  // Gazebo coordinates is NWU and Earth's magnetic field is defined in NED, hence the negative signs
-  double inclination_ = 1.14316156541;
-  double declination_ = 0.198584539676;
-  inertial_magnetic_field_.z = sin(-inclination_);
-  inertial_magnetic_field_.x = cos(-inclination_)*cos(-declination_);
-  inertial_magnetic_field_.y = cos(-inclination_)*sin(-declination_);
-#endif
+  SET_Z(inertial_magnetic_field_ , (sin(-inclination_)));
+  SET_X(inertial_magnetic_field_ , (cos(-inclination_)*cos(-declination_)));
+  SET_Y(inertial_magnetic_field_ , (cos(-inclination_)*sin(-declination_)));
 }
 
 uint16_t SIL_Board::num_sensor_errors(void)
@@ -254,123 +194,63 @@ bool SIL_Board::new_imu_data()
 
 bool SIL_Board::imu_read(float accel[3], float* temperature, float gyro[3], uint64_t* time_us)
 {
-#if GAZEBO_MAJOR_VERSION >= 8
-  ignition::math::Quaterniond q_I_NWU = link_->WorldPose().Rot();
-  ignition::math::Vector3d current_vel = link_->RelativeLinearVel();
-  ignition::math::Vector3d y_acc;
+  GazeboQuaternion q_I_NWU = GET_ROT(GET_WORLD_POSE(link_));
+  GazeboVector current_vel = GET_RELATIVE_LINEAR_VEL(link_);
+  GazeboVector y_acc;
 
   // this is James' egregious hack to overcome wild imu while sitting on the ground
-  if (current_vel.Length() < 0.05)
+  if (GET_LENGTH(current_vel) < 0.05)
     y_acc = q_I_NWU.RotateVectorReverse(-gravity_);
   else
-    y_acc = q_I_NWU.RotateVectorReverse(link_->WorldLinearAccel() - gravity_);
+    y_acc = q_I_NWU.RotateVectorReverse(GET_WORLD_LINEAR_ACCEL(link_) - gravity_);
 
   // Apply normal noise (only if armed, because most of the noise comes from motors
   if (motors_spinning())
   {
-    y_acc.X(y_acc.X() + acc_stdev_*normal_distribution_(random_generator_));
-    y_acc.Y(y_acc.Y() + acc_stdev_*normal_distribution_(random_generator_));
-    y_acc.Z(y_acc.Z() + acc_stdev_*normal_distribution_(random_generator_));
+    SET_X(y_acc , (GET_X(y_acc) + acc_stdev_*normal_distribution_(random_generator_)));
+    SET_Y(y_acc , (GET_Y(y_acc) + acc_stdev_*normal_distribution_(random_generator_)));
+    SET_Z(y_acc , (GET_Z(y_acc) + acc_stdev_*normal_distribution_(random_generator_)));
   }
 
   // Perform Random Walk for biases
-  acc_bias_.X(acc_bias_.X() + acc_bias_walk_stdev_*normal_distribution_(random_generator_));
-  acc_bias_.Y(acc_bias_.Y() + acc_bias_walk_stdev_*normal_distribution_(random_generator_));
-  acc_bias_.Z(acc_bias_.Z() + acc_bias_walk_stdev_*normal_distribution_(random_generator_));
+  SET_X(acc_bias_ , (GET_X(acc_bias_) + acc_bias_walk_stdev_*normal_distribution_(random_generator_)));
+  SET_Y(acc_bias_ , (GET_Y(acc_bias_) + acc_bias_walk_stdev_*normal_distribution_(random_generator_)));
+  SET_Z(acc_bias_ , (GET_Z(acc_bias_) + acc_bias_walk_stdev_*normal_distribution_(random_generator_)));
 
   // Add constant Bias to measurement
-  y_acc.X(y_acc.X() + acc_bias_.X());
-  y_acc.Y(y_acc.Y() + acc_bias_.Y());
-  y_acc.Z(y_acc.Z() + acc_bias_.Z());
+  SET_X(y_acc , (GET_X(y_acc) + GET_X(acc_bias_)));
+  SET_Y(y_acc , (GET_Y(y_acc) + GET_Y(acc_bias_)));
+  SET_Z(y_acc , (GET_Z(y_acc) + GET_Z(acc_bias_)));
 
   // Convert to NED for output
-  accel[0] = y_acc.X();
-  accel[1] = -y_acc.Y();
-  accel[2] = -y_acc.Z();
+  accel[0] = GET_X(y_acc);
+  accel[1] = -GET_Y(y_acc);
+  accel[2] = -GET_Z(y_acc);
 
-  ignition::math::Vector3d y_gyro = link_->RelativeAngularVel();
+  GazeboVector y_gyro = GET_RELATIVE_ANGULAR_VEL(link_);
 
   // Normal Noise from motors
   if (motors_spinning())
   {
-    y_gyro.X(y_gyro.X() + gyro_stdev_*normal_distribution_(random_generator_));
-    y_gyro.Y(y_gyro.Y() + gyro_stdev_*normal_distribution_(random_generator_));
-    y_gyro.Z(y_gyro.Z() + gyro_stdev_*normal_distribution_(random_generator_));
+    SET_X(y_gyro , (GET_X(y_gyro) + gyro_stdev_*normal_distribution_(random_generator_)));
+    SET_Y(y_gyro , (GET_Y(y_gyro) + gyro_stdev_*normal_distribution_(random_generator_)));
+    SET_Z(y_gyro , (GET_Z(y_gyro) + gyro_stdev_*normal_distribution_(random_generator_)));
   }
 
   // Random Walk for bias
-  gyro_bias_.X(gyro_bias_.X() + gyro_bias_walk_stdev_*normal_distribution_(random_generator_));
-  gyro_bias_.Y(gyro_bias_.Y() + gyro_bias_walk_stdev_*normal_distribution_(random_generator_));
-  gyro_bias_.Z(gyro_bias_.Z() + gyro_bias_walk_stdev_*normal_distribution_(random_generator_));
+  SET_X(gyro_bias_ , (GET_X(gyro_bias_) + gyro_bias_walk_stdev_*normal_distribution_(random_generator_)));
+  SET_Y(gyro_bias_ , (GET_Y(gyro_bias_) + gyro_bias_walk_stdev_*normal_distribution_(random_generator_)));
+  SET_Z(gyro_bias_ , (GET_Z(gyro_bias_) + gyro_bias_walk_stdev_*normal_distribution_(random_generator_)));
 
   // Apply Constant Bias
-  y_gyro.X(y_gyro.X() + gyro_bias_.X());
-  y_gyro.Y(y_gyro.Y() + gyro_bias_.Y());
-  y_gyro.Z(y_gyro.Z() + gyro_bias_.Z());
+  SET_X(y_gyro , (GET_X(y_gyro) + gyro_bias_.X()));
+  SET_Y(y_gyro , (GET_Y(y_gyro) + gyro_bias_.Y()));
+  SET_Z(y_gyro , (GET_Z(y_gyro) + gyro_bias_.Z()));
 
   // Convert to NED for output
-  gyro[0] = y_gyro.X();
-  gyro[1] = -y_gyro.Y();
-  gyro[2] = -y_gyro.Z();
-#else
-  gazebo::math::Quaternion q_I_NWU = link_->GetWorldPose().rot;
-  gazebo::math::Vector3 current_vel = link_->GetRelativeLinearVel();
-  gazebo::math::Vector3 y_acc;
-
-  // this is James' egregious hack to overcome wild imu while sitting on the ground
-  if (current_vel.GetLength() < 0.05)
-    y_acc = q_I_NWU.RotateVectorReverse(-gravity_);
-  else
-    y_acc = q_I_NWU.RotateVectorReverse(link_->GetWorldLinearAccel() - gravity_);
-
-  // Apply normal noise (only if armed, because most of the noise comes from motors
-  if (motors_spinning())
-  {
-    y_acc.x += acc_stdev_*normal_distribution_(random_generator_);
-    y_acc.y += acc_stdev_*normal_distribution_(random_generator_);
-    y_acc.z += acc_stdev_*normal_distribution_(random_generator_);
-  }
-
-  // Perform Random Walk for biases
-  acc_bias_.x += acc_bias_walk_stdev_*normal_distribution_(random_generator_);
-  acc_bias_.y += acc_bias_walk_stdev_*normal_distribution_(random_generator_);
-  acc_bias_.z += acc_bias_walk_stdev_*normal_distribution_(random_generator_);
-
-  // Add constant Bias to measurement
-  y_acc.x += acc_bias_.x;
-  y_acc.y += acc_bias_.y;
-  y_acc.z += acc_bias_.z;
-
-  // Convert to NED for output
-  accel[0] = y_acc.x;
-  accel[1] = -y_acc.y;
-  accel[2] = -y_acc.z;
-
-  gazebo::math::Vector3 y_gyro = link_->GetRelativeAngularVel();
-
-  // Normal Noise from motors
-  if (motors_spinning())
-  {
-    y_gyro.x += gyro_stdev_*normal_distribution_(random_generator_);
-    y_gyro.y += gyro_stdev_*normal_distribution_(random_generator_);
-    y_gyro.z += gyro_stdev_*normal_distribution_(random_generator_);
-  }
-
-  // Random Walk for bias
-  gyro_bias_.x += gyro_bias_walk_stdev_*normal_distribution_(random_generator_);
-  gyro_bias_.y += gyro_bias_walk_stdev_*normal_distribution_(random_generator_);
-  gyro_bias_.z += gyro_bias_walk_stdev_*normal_distribution_(random_generator_);
-
-  // Apply Constant Bias
-  y_gyro.x += gyro_bias_.x;
-  y_gyro.y += gyro_bias_.y;
-  y_gyro.z += gyro_bias_.z;
-
-  // Convert to NED for output
-  gyro[0] = y_gyro.x;
-  gyro[1] = -y_gyro.y;
-  gyro[2] = -y_gyro.z;
-#endif
+  gyro[0] = GET_X(y_gyro);
+  gyro[1] = -GET_Y(y_gyro);
+  gyro[2] = -GET_Z(y_gyro);
 
   (*temperature) = 27.0;
   (*time_us) = clock_micros();
@@ -385,44 +265,24 @@ void SIL_Board::imu_not_responding_error(void)
 void SIL_Board::mag_read(float mag[3])
 {
 #if GAZEBO_MAJOR_VERSION >= 8
-  ignition::math::Pose3d I_to_B = link_->WorldPose();
-  ignition::math::Vector3d noise;
-  noise.X(mag_stdev_*normal_distribution_(random_generator_));
-  noise.Y(mag_stdev_*normal_distribution_(random_generator_));
-  noise.Z(mag_stdev_*normal_distribution_(random_generator_));
+  GazeboPose I_to_B = GET_WORLD_POSE(link_);
+  GazeboVector noise;
+  SET_X(noise , (mag_stdev_*normal_distribution_(random_generator_)));
+  SET_Y(noise , (mag_stdev_*normal_distribution_(random_generator_)));
+  SET_Z(noise , (mag_stdev_*normal_distribution_(random_generator_)));
 
   // Random Walk for bias
-  mag_bias_.X(mag_bias_.X() + mag_bias_walk_stdev_*normal_distribution_(random_generator_));
-  mag_bias_.Y(mag_bias_.Y() + mag_bias_walk_stdev_*normal_distribution_(random_generator_));
-  mag_bias_.Z(mag_bias_.Z() + mag_bias_walk_stdev_*normal_distribution_(random_generator_));
+  SET_X(mag_bias_ , (GET_X(mag_bias_) + mag_bias_walk_stdev_*normal_distribution_(random_generator_)));
+  SET_Y(mag_bias_ , (GET_Y(mag_bias_) + mag_bias_walk_stdev_*normal_distribution_(random_generator_)));
+  SET_Z(mag_bias_ , (GET_Z(mag_bias_) + mag_bias_walk_stdev_*normal_distribution_(random_generator_)));
 
   // combine parts to create a measurement
-  ignition::math::Vector3d y_mag = I_to_B.Rot().RotateVectorReverse(inertial_magnetic_field_) + mag_bias_ + noise;
+  GazeboVector y_mag = GET_ROT(I_to_B).RotateVectorReverse(inertial_magnetic_field_) + mag_bias_ + noise;
 
   // Convert measurement to NED
-  mag[0] = y_mag.X();
-  mag[1] = -y_mag.Y();
-  mag[2] = -y_mag.Z();
-#else
-  gazebo::math::Pose I_to_B = link_->GetWorldPose();
-  gazebo::math::Vector3 noise;
-  noise.x = mag_stdev_*normal_distribution_(random_generator_);
-  noise.y = mag_stdev_*normal_distribution_(random_generator_);
-  noise.z = mag_stdev_*normal_distribution_(random_generator_);
-
-  // Random Walk for bias
-  mag_bias_.x += mag_bias_walk_stdev_*normal_distribution_(random_generator_);
-  mag_bias_.y += mag_bias_walk_stdev_*normal_distribution_(random_generator_);
-  mag_bias_.z += mag_bias_walk_stdev_*normal_distribution_(random_generator_);
-
-  // combine parts to create a measurement
-  gazebo::math::Vector3 y_mag = I_to_B.rot.RotateVectorReverse(inertial_magnetic_field_) + mag_bias_ + noise;
-
-  // Convert measurement to NED
-  mag[0] = y_mag.x;
-  mag[1] = -y_mag.y;
-  mag[2] = -y_mag.z;;
-#endif
+  mag[0] = GET_X(y_mag);
+  mag[1] = -GET_Y(y_mag);
+  mag[2] = -GET_Z(y_mag);
 }
 
 bool SIL_Board::mag_check(void)
@@ -437,19 +297,11 @@ bool SIL_Board::baro_check()
 
 void SIL_Board::baro_read(float *pressure, float *temperature)
 {
-#if GAZEBO_MAJOR_VERSION >= 8
   // pull z measurement out of Gazebo
-  ignition::math::Pose3d current_state_NWU = link_->WorldPose();
+  GazeboPose current_state_NWU = GET_WORLD_POSE(link_);
 
   // Invert measurement model for pressure and temperature
-  double alt = current_state_NWU.Pos().Z() + ground_altitude_;
-#else
-  // pull z measurement out of Gazebo
-  gazebo::math::Pose current_state_NWU = link_->GetWorldPose();
-
-  // Invert measurement model for pressure and temperature
-  double alt = current_state_NWU.pos.z + ground_altitude_;
-#endif
+  double alt = GET_Z(GET_POS(current_state_NWU)) + ground_altitude_;
 
   // Convert to the true pressure reading
   double y_baro = 101325.0f*(float)pow((1-2.25694e-5 * alt), 5.2553);
@@ -479,15 +331,9 @@ void SIL_Board::diff_pressure_read(float *diff_pressure, float *temperature)
 {
   static double rho_ = 1.225;
   // Calculate Airspeed
-#if GAZEBO_MAJOR_VERSION >=8
-  ignition::math::Vector3d vel = link_->RelativeLinearVel();
+  GazeboVector vel = GET_RELATIVE_LINEAR_VEL(link_);
 
-  double Va = vel.Length();
-#else
-  gazebo::math::Vector3 vel = link_->GetRelativeLinearVel();
-
-  double Va = vel.GetLength();
-#endif
+  double Va = GET_LENGTH(vel);
 
   // Invert Airpseed to get sensor measurement
   double y_as = rho_*Va*Va/2.0; // Page 130 in the UAV Book
@@ -508,13 +354,8 @@ bool SIL_Board::sonar_check(void)
 
 float SIL_Board::sonar_read(void)
 {
-#if GAZEBO_MAJOR_VERSION >= 8
-  ignition::math::Pose3d current_state_NWU = link_->WorldPose();
-  double alt = current_state_NWU.Pos().Z();
-#else
-  gazebo::math::Pose current_state_NWU = link_->GetWorldPose();
-  double alt = current_state_NWU.pos.z;
-#endif
+  GazeboPose current_state_NWU = GET_WORLD_POSE(link_);
+  double alt = GET_Z(GET_POS(current_state_NWU));
 
   if (alt < sonar_min_range_)
   {
