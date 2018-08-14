@@ -48,6 +48,8 @@
 #include <rosflight_sim/multirotor_forces_and_moments.h>
 #include <rosflight_sim/fixedwing_forces_and_moments.h>
 
+#include <rosflight_sim/gazebo_compat.h>
+
 namespace rosflight_sim
 {
 
@@ -95,23 +97,13 @@ private:
 
   ros::NodeHandle* nh_;
 
-#if GAZEBO_MAJOR_VERSION >= 8
   // For reset handlin
-  ignition::math::Pose3d initial_pose_;
+  GazeboPose initial_pose_;
 
   // helper functions for converting to and from eigen
-  Eigen::Vector3d vec3_to_eigen_from_gazebo(ignition::math::Vector3d vec);
-  ignition::math::Vector3d vec3_to_gazebo_from_eigen(Eigen::Vector3d vec);
-  Eigen::Matrix3d rotation_to_eigen_from_gazebo(ignition::math::Quaterniond vec);
-#else
-  // For reset handlin
-  gazebo::math::Pose initial_pose_;
-
-  // helper functions for converting to and from eigen
-  Eigen::Vector3d vec3_to_eigen_from_gazebo(gazebo::math::Vector3 vec);
-  gazebo::math::Vector3 vec3_to_gazebo_from_eigen(Eigen::Vector3d vec);
-  Eigen::Matrix3d rotation_to_eigen_from_gazebo(gazebo::math::Quaternion vec);
-#endif
+  Eigen::Vector3d vec3_to_eigen_from_gazebo(GazeboVector vec);
+  GazeboVector vec3_to_gazebo_from_eigen(Eigen::Vector3d vec);
+  Eigen::Matrix3d rotation_to_eigen_from_gazebo(GazeboQuaternion vec);
 
 };
 
