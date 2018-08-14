@@ -243,9 +243,9 @@ bool SIL_Board::imu_read(float accel[3], float* temperature, float gyro[3], uint
   SET_Z(gyro_bias_ , (GET_Z(gyro_bias_) + gyro_bias_walk_stdev_*normal_distribution_(random_generator_)));
 
   // Apply Constant Bias
-  SET_X(y_gyro , (GET_X(y_gyro) + gyro_bias_.X()));
-  SET_Y(y_gyro , (GET_Y(y_gyro) + gyro_bias_.Y()));
-  SET_Z(y_gyro , (GET_Z(y_gyro) + gyro_bias_.Z()));
+  SET_X(y_gyro , (GET_X(y_gyro) + GET_X(gyro_bias_)));
+  SET_Y(y_gyro , (GET_Y(y_gyro) + GET_Y(gyro_bias_)));
+  SET_Z(y_gyro , (GET_Z(y_gyro) + GET_Z(gyro_bias_)));
 
   // Convert to NED for output
   gyro[0] = GET_X(y_gyro);
