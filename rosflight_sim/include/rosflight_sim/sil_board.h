@@ -53,11 +53,7 @@ namespace rosflight_sim
 class SIL_Board : public rosflight_firmware::UDPBoard
 {
 private:
-#if GAZEBO_MAJOR_VERSION >=8
-  ignition::math::Vector3d inertial_magnetic_field_;
-#else
-  gazebo::math::Vector3 inertial_magnetic_field_;
-#endif
+  GazeboVector inertial_magnetic_field_;
 
   double imu_update_rate_;
 
@@ -85,15 +81,9 @@ private:
   double sonar_max_range_;
   double sonar_min_range_;
 
-#if GAZEBO_MAJOR_VERSION >= 8
-  ignition::math::Vector3d gyro_bias_;
-  ignition::math::Vector3d acc_bias_;
-  ignition::math::Vector3d mag_bias_;
-#else
-  gazebo::math::Vector3 gyro_bias_;
-  gazebo::math::Vector3 acc_bias_;
-  gazebo::math::Vector3 mag_bias_;
-#endif
+  GazeboVector gyro_bias_;
+  GazeboVector acc_bias_;
+  GazeboVector mag_bias_;
   double baro_bias_;
   double airspeed_bias_;
 
@@ -101,11 +91,7 @@ private:
   std::normal_distribution<double> normal_distribution_;
   std::uniform_real_distribution<double> uniform_distribution_;
 
-#if GAZEBO_MAJOR_VERSION >=8
-  ignition::math::Vector3d gravity_;
-#else
-  gazebo::math::Vector3 gravity_;
-#endif
+  GazeboVector gravity_;
   double ground_altitude_;
 
   gazebo::physics::WorldPtr world_;
@@ -128,15 +114,9 @@ private:
   void RCCallback(const rosflight_msgs::RCRaw& msg);
   bool motors_spinning();
 
-#if GAZEBO_MAJOR_VERSION >= 8
-  ignition::math::Vector3d prev_vel_1_;
-  ignition::math::Vector3d prev_vel_2_;
-  ignition::math::Vector3d prev_vel_3_;
-#else
-  gazebo::math::Vector3 prev_vel_1_;
-  gazebo::math::Vector3 prev_vel_2_;
-  gazebo::math::Vector3 prev_vel_3_;
-#endif
+  GazeboVector prev_vel_1_;
+  GazeboVector prev_vel_2_;
+  GazeboVector prev_vel_3_;
   gazebo::common::Time last_time_;
 
 public:
