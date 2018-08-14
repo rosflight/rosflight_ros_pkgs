@@ -106,11 +106,7 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   normal_distribution_ = std::normal_distribution<double>(0.0, 1.0);
   uniform_distribution_ = std::uniform_real_distribution<double>(-1.0, 1.0);
 
-#if GAZEBO_MAJOR_VERSION >= 8
-  gravity_ = world_->Gravity();
-#else
-  gravity_ = world_->GetPhysicsEngine()->GetGravity();
-#endif
+  gravity_ = GET_GRAVITY(world_);
 
   // Initialize the Sensor Biases
   SET_X(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
