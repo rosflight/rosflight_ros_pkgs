@@ -47,7 +47,7 @@
 
 #include <rosflight_firmware/udp_board.h>
 
-#include <rosflight_sim/gazebo_compat.h>
+#include <rosflight_sim/gz_compat.h>
 
 namespace rosflight_sim
 {

@@ -48,7 +48,7 @@
 #include <rosflight_sim/multirotor_forces_and_moments.h>
 #include <rosflight_sim/fixedwing_forces_and_moments.h>
 
-#include <rosflight_sim/gazebo_compat.h>
+#include <rosflight_sim/gz_compat.h>
 
 namespace rosflight_sim
 {
