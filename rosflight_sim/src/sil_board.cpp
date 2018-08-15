@@ -43,7 +43,7 @@ SIL_Board::SIL_Board() :
 
 void SIL_Board::init_board(void)
 {
-  boot_time_ = GET_SIM_TIME(world_).Double();
+  boot_time_ = GZ_COMPAT_GET_SIM_TIME(world_).Double();
 }
 
 void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
@@ -94,9 +94,9 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   // Calculate Magnetic Field Vector (for mag simulation)
   double inclination = nh_->param<double>("inclination", 1.14316156541);
   double declination = nh_->param<double>("declination", 0.198584539676);
-  SET_Z(inertial_magnetic_field_ , sin(-inclination));
-  SET_X(inertial_magnetic_field_ , cos(-inclination)*cos(-declination));
-  SET_Y(inertial_magnetic_field_ , cos(-inclination)*sin(-declination));
+  GZ_COMPAT_SET_Z(inertial_magnetic_field_ , sin(-inclination));
+  GZ_COMPAT_SET_X(inertial_magnetic_field_ , cos(-inclination)*cos(-declination));
+  GZ_COMPAT_SET_Y(inertial_magnetic_field_ , cos(-inclination)*sin(-declination));
 
   // Get the desired altitude at the ground (for baro simulation)
   ground_altitude_ = nh->param<double>("ground_altitude", 1387.0);
@@ -106,25 +106,25 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   normal_distribution_ = std::normal_distribution<double>(0.0, 1.0);
   uniform_distribution_ = std::uniform_real_distribution<double>(-1.0, 1.0);
 
-  gravity_ = GET_GRAVITY(world_);
+  gravity_ = GZ_COMPAT_GET_GRAVITY(world_);
 
   // Initialize the Sensor Biases
-  SET_X(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
-  SET_Y(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
-  SET_Z(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
-  SET_X(acc_bias_ , (acc_bias_range_*uniform_distribution_(random_generator_)));
-  SET_Y(acc_bias_ , (acc_bias_range_*uniform_distribution_(random_generator_)));
-  SET_Z(acc_bias_ , (acc_bias_range_*uniform_distribution_(random_generator_)));
-  SET_X(mag_bias_ , (mag_bias_range_*uniform_distribution_(random_generator_)));
-  SET_Y(mag_bias_ , (mag_bias_range_*uniform_distribution_(random_generator_)));
-  SET_Z(mag_bias_ , (mag_bias_range_*uniform_distribution_(random_generator_)));
+  GZ_COMPAT_SET_X(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
+  GZ_COMPAT_SET_Y(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
+  GZ_COMPAT_SET_Z(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
+  GZ_COMPAT_SET_X(acc_bias_ , (acc_bias_range_*uniform_distribution_(random_generator_)));
+  GZ_COMPAT_SET_Y(acc_bias_ , (acc_bias_range_*uniform_distribution_(random_generator_)));
+  GZ_COMPAT_SET_Z(acc_bias_ , (acc_bias_range_*uniform_distribution_(random_generator_)));
+  GZ_COMPAT_SET_X(mag_bias_ , (mag_bias_range_*uniform_distribution_(random_generator_)));
+  GZ_COMPAT_SET_Y(mag_bias_ , (mag_bias_range_*uniform_distribution_(random_generator_)));
+  GZ_COMPAT_SET_Z(mag_bias_ , (mag_bias_range_*uniform_distribution_(random_generator_)));
   baro_bias_ = baro_bias_range_*uniform_distribution_(random_generator_);
   airspeed_bias_ = airspeed_bias_range_*uniform_distribution_(random_generator_);
 
-  prev_vel_1_ = GET_RELATIVE_LINEAR_VEL(link_);
-  prev_vel_2_ = GET_RELATIVE_LINEAR_VEL(link_);
-  prev_vel_3_ = GET_RELATIVE_LINEAR_VEL(link_);
-  last_time_ = GET_SIM_TIME(world_);
+  prev_vel_1_ = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);
+  prev_vel_2_ = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);
+  prev_vel_3_ = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);
+  last_time_ = GZ_COMPAT_GET_SIM_TIME(world_);
   next_imu_update_time_us_ = 0;
 }
 
@@ -136,12 +136,12 @@ void SIL_Board::board_reset(bool bootloader)
 
 uint32_t SIL_Board::clock_millis()
 {
-  return (uint32_t)((GET_SIM_TIME(world_).Double() - boot_time_)*1e3);
+  return (uint32_t)((GZ_COMPAT_GET_SIM_TIME(world_).Double() - boot_time_)*1e3);
 }
 
 uint64_t SIL_Board::clock_micros()
 {
-  return (uint64_t)((GET_SIM_TIME(world_).Double() - boot_time_)*1e6);
+  return (uint64_t)((GZ_COMPAT_GET_SIM_TIME(world_).Double() - boot_time_)*1e6);
 }
 
 void SIL_Board::clock_delay(uint32_t milliseconds)
@@ -154,19 +154,19 @@ void SIL_Board::clock_delay(uint32_t milliseconds)
 void SIL_Board::sensors_init()
 {
   // Initialize the Biases
-  SET_X(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
-  SET_Y(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
-  SET_Z(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
-  SET_X(acc_bias_ , (acc_bias_range_*uniform_distribution_(random_generator_)));
-  SET_Y(acc_bias_ , (acc_bias_range_*uniform_distribution_(random_generator_)));
-  SET_Z(acc_bias_ , (acc_bias_range_*uniform_distribution_(random_generator_)));
+  GZ_COMPAT_SET_X(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
+  GZ_COMPAT_SET_Y(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
+  GZ_COMPAT_SET_Z(gyro_bias_ , (gyro_bias_range_*uniform_distribution_(random_generator_)));
+  GZ_COMPAT_SET_X(acc_bias_ , (acc_bias_range_*uniform_distribution_(random_generator_)));
+  GZ_COMPAT_SET_Y(acc_bias_ , (acc_bias_range_*uniform_distribution_(random_generator_)));
+  GZ_COMPAT_SET_Z(acc_bias_ , (acc_bias_range_*uniform_distribution_(random_generator_)));
 
   // Gazebo coordinates is NWU and Earth's magnetic field is defined in NED, hence the negative signs
   double inclination_ = 1.14316156541;
   double declination_ = 0.198584539676;
-  SET_Z(inertial_magnetic_field_ , (sin(-inclination_)));
-  SET_X(inertial_magnetic_field_ , (cos(-inclination_)*cos(-declination_)));
-  SET_Y(inertial_magnetic_field_ , (cos(-inclination_)*sin(-declination_)));
+  GZ_COMPAT_SET_Z(inertial_magnetic_field_ , (sin(-inclination_)));
+  GZ_COMPAT_SET_X(inertial_magnetic_field_ , (cos(-inclination_)*cos(-declination_)));
+  GZ_COMPAT_SET_Y(inertial_magnetic_field_ , (cos(-inclination_)*sin(-declination_)));
 }
 
 uint16_t SIL_Board::num_sensor_errors(void)
@@ -190,63 +190,63 @@ bool SIL_Board::new_imu_data()
 
 bool SIL_Board::imu_read(float accel[3], float* temperature, float gyro[3], uint64_t* time_us)
 {
-  GazeboQuaternion q_I_NWU = GET_ROT(GET_WORLD_POSE(link_));
-  GazeboVector current_vel = GET_RELATIVE_LINEAR_VEL(link_);
+  GazeboQuaternion q_I_NWU = GZ_COMPAT_GET_ROT(GZ_COMPAT_GZ_COMPAT_GET_WORLD_POSE(link_));
+  GazeboVector current_vel = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);
   GazeboVector y_acc;
 
   // this is James' egregious hack to overcome wild imu while sitting on the ground
-  if (GET_LENGTH(current_vel) < 0.05)
+  if (GZ_COMPAT_GET_LENGTH(current_vel) < 0.05)
     y_acc = q_I_NWU.RotateVectorReverse(-gravity_);
   else
-    y_acc = q_I_NWU.RotateVectorReverse(GET_WORLD_LINEAR_ACCEL(link_) - gravity_);
+    y_acc = q_I_NWU.RotateVectorReverse(GZ_COMPAT_GZ_COMPAT_GET_WORLD_LINEAR_ACCEL(link_) - gravity_);
 
   // Apply normal noise (only if armed, because most of the noise comes from motors
   if (motors_spinning())
   {
-    SET_X(y_acc , (GET_X(y_acc) + acc_stdev_*normal_distribution_(random_generator_)));
-    SET_Y(y_acc , (GET_Y(y_acc) + acc_stdev_*normal_distribution_(random_generator_)));
-    SET_Z(y_acc , (GET_Z(y_acc) + acc_stdev_*normal_distribution_(random_generator_)));
+    GZ_COMPAT_SET_X(y_acc , (GZ_COMPAT_GET_X(y_acc) + acc_stdev_*normal_distribution_(random_generator_)));
+    GZ_COMPAT_SET_Y(y_acc , (GZ_COMPAT_GET_Y(y_acc) + acc_stdev_*normal_distribution_(random_generator_)));
+    GZ_COMPAT_SET_Z(y_acc , (GZ_COMPAT_GET_Z(y_acc) + acc_stdev_*normal_distribution_(random_generator_)));
   }
 
   // Perform Random Walk for biases
-  SET_X(acc_bias_ , (GET_X(acc_bias_) + acc_bias_walk_stdev_*normal_distribution_(random_generator_)));
-  SET_Y(acc_bias_ , (GET_Y(acc_bias_) + acc_bias_walk_stdev_*normal_distribution_(random_generator_)));
-  SET_Z(acc_bias_ , (GET_Z(acc_bias_) + acc_bias_walk_stdev_*normal_distribution_(random_generator_)));
+  GZ_COMPAT_SET_X(acc_bias_ , (GZ_COMPAT_GET_X(acc_bias_) + acc_bias_walk_stdev_*normal_distribution_(random_generator_)));
+  GZ_COMPAT_SET_Y(acc_bias_ , (GZ_COMPAT_GET_Y(acc_bias_) + acc_bias_walk_stdev_*normal_distribution_(random_generator_)));
+  GZ_COMPAT_SET_Z(acc_bias_ , (GZ_COMPAT_GET_Z(acc_bias_) + acc_bias_walk_stdev_*normal_distribution_(random_generator_)));
 
   // Add constant Bias to measurement
-  SET_X(y_acc , (GET_X(y_acc) + GET_X(acc_bias_)));
-  SET_Y(y_acc , (GET_Y(y_acc) + GET_Y(acc_bias_)));
-  SET_Z(y_acc , (GET_Z(y_acc) + GET_Z(acc_bias_)));
+  GZ_COMPAT_SET_X(y_acc , (GZ_COMPAT_GET_X(y_acc) + GZ_COMPAT_GET_X(acc_bias_)));
+  GZ_COMPAT_SET_Y(y_acc , (GZ_COMPAT_GET_Y(y_acc) + GZ_COMPAT_GET_Y(acc_bias_)));
+  GZ_COMPAT_SET_Z(y_acc , (GZ_COMPAT_GET_Z(y_acc) + GZ_COMPAT_GET_Z(acc_bias_)));
 
   // Convert to NED for output
-  accel[0] = GET_X(y_acc);
-  accel[1] = -GET_Y(y_acc);
-  accel[2] = -GET_Z(y_acc);
+  accel[0] = GZ_COMPAT_GET_X(y_acc);
+  accel[1] = -GZ_COMPAT_GET_Y(y_acc);
+  accel[2] = -GZ_COMPAT_GET_Z(y_acc);
 
-  GazeboVector y_gyro = GET_RELATIVE_ANGULAR_VEL(link_);
+  GazeboVector y_gyro = GZ_COMPAT_GET_RELATIVE_ANGULAR_VEL(link_);
 
   // Normal Noise from motors
   if (motors_spinning())
   {
-    SET_X(y_gyro , (GET_X(y_gyro) + gyro_stdev_*normal_distribution_(random_generator_)));
-    SET_Y(y_gyro , (GET_Y(y_gyro) + gyro_stdev_*normal_distribution_(random_generator_)));
-    SET_Z(y_gyro , (GET_Z(y_gyro) + gyro_stdev_*normal_distribution_(random_generator_)));
+    GZ_COMPAT_SET_X(y_gyro , (GZ_COMPAT_GET_X(y_gyro) + gyro_stdev_*normal_distribution_(random_generator_)));
+    GZ_COMPAT_SET_Y(y_gyro , (GZ_COMPAT_GET_Y(y_gyro) + gyro_stdev_*normal_distribution_(random_generator_)));
+    GZ_COMPAT_SET_Z(y_gyro , (GZ_COMPAT_GET_Z(y_gyro) + gyro_stdev_*normal_distribution_(random_generator_)));
   }
 
   // Random Walk for bias
-  SET_X(gyro_bias_ , (GET_X(gyro_bias_) + gyro_bias_walk_stdev_*normal_distribution_(random_generator_)));
-  SET_Y(gyro_bias_ , (GET_Y(gyro_bias_) + gyro_bias_walk_stdev_*normal_distribution_(random_generator_)));
-  SET_Z(gyro_bias_ , (GET_Z(gyro_bias_) + gyro_bias_walk_stdev_*normal_distribution_(random_generator_)));
+  GZ_COMPAT_SET_X(gyro_bias_ , (GZ_COMPAT_GET_X(gyro_bias_) + gyro_bias_walk_stdev_*normal_distribution_(random_generator_)));
+  GZ_COMPAT_SET_Y(gyro_bias_ , (GZ_COMPAT_GET_Y(gyro_bias_) + gyro_bias_walk_stdev_*normal_distribution_(random_generator_)));
+  GZ_COMPAT_SET_Z(gyro_bias_ , (GZ_COMPAT_GET_Z(gyro_bias_) + gyro_bias_walk_stdev_*normal_distribution_(random_generator_)));
 
   // Apply Constant Bias
-  SET_X(y_gyro , (GET_X(y_gyro) + GET_X(gyro_bias_)));
-  SET_Y(y_gyro , (GET_Y(y_gyro) + GET_Y(gyro_bias_)));
-  SET_Z(y_gyro , (GET_Z(y_gyro) + GET_Z(gyro_bias_)));
+  GZ_COMPAT_SET_X(y_gyro , (GZ_COMPAT_GET_X(y_gyro) + GZ_COMPAT_GET_X(gyro_bias_)));
+  GZ_COMPAT_SET_Y(y_gyro , (GZ_COMPAT_GET_Y(y_gyro) + GZ_COMPAT_GET_Y(gyro_bias_)));
+  GZ_COMPAT_SET_Z(y_gyro , (GZ_COMPAT_GET_Z(y_gyro) + GZ_COMPAT_GET_Z(gyro_bias_)));
 
   // Convert to NED for output
-  gyro[0] = GET_X(y_gyro);
-  gyro[1] = -GET_Y(y_gyro);
-  gyro[2] = -GET_Z(y_gyro);
+  gyro[0] = GZ_COMPAT_GET_X(y_gyro);
+  gyro[1] = -GZ_COMPAT_GET_Y(y_gyro);
+  gyro[2] = -GZ_COMPAT_GET_Z(y_gyro);
 
   (*temperature) = 27.0;
   (*time_us) = clock_micros();
@@ -260,24 +260,24 @@ void SIL_Board::imu_not_responding_error(void)
 
 void SIL_Board::mag_read(float mag[3])
 {
-  GazeboPose I_to_B = GET_WORLD_POSE(link_);
+  GazeboPose I_to_B = GZ_COMPAT_GZ_COMPAT_GET_WORLD_POSE(link_);
   GazeboVector noise;
-  SET_X(noise , (mag_stdev_*normal_distribution_(random_generator_)));
-  SET_Y(noise , (mag_stdev_*normal_distribution_(random_generator_)));
-  SET_Z(noise , (mag_stdev_*normal_distribution_(random_generator_)));
+  GZ_COMPAT_SET_X(noise , (mag_stdev_*normal_distribution_(random_generator_)));
+  GZ_COMPAT_SET_Y(noise , (mag_stdev_*normal_distribution_(random_generator_)));
+  GZ_COMPAT_SET_Z(noise , (mag_stdev_*normal_distribution_(random_generator_)));
 
   // Random Walk for bias
-  SET_X(mag_bias_ , (GET_X(mag_bias_) + mag_bias_walk_stdev_*normal_distribution_(random_generator_)));
-  SET_Y(mag_bias_ , (GET_Y(mag_bias_) + mag_bias_walk_stdev_*normal_distribution_(random_generator_)));
-  SET_Z(mag_bias_ , (GET_Z(mag_bias_) + mag_bias_walk_stdev_*normal_distribution_(random_generator_)));
+  GZ_COMPAT_SET_X(mag_bias_ , (GZ_COMPAT_GET_X(mag_bias_) + mag_bias_walk_stdev_*normal_distribution_(random_generator_)));
+  GZ_COMPAT_SET_Y(mag_bias_ , (GZ_COMPAT_GET_Y(mag_bias_) + mag_bias_walk_stdev_*normal_distribution_(random_generator_)));
+  GZ_COMPAT_SET_Z(mag_bias_ , (GZ_COMPAT_GET_Z(mag_bias_) + mag_bias_walk_stdev_*normal_distribution_(random_generator_)));
 
   // combine parts to create a measurement
-  GazeboVector y_mag = GET_ROT(I_to_B).RotateVectorReverse(inertial_magnetic_field_) + mag_bias_ + noise;
+  GazeboVector y_mag = GZ_COMPAT_GET_ROT(I_to_B).RotateVectorReverse(inertial_magnetic_field_) + mag_bias_ + noise;
 
   // Convert measurement to NED
-  mag[0] = GET_X(y_mag);
-  mag[1] = -GET_Y(y_mag);
-  mag[2] = -GET_Z(y_mag);
+  mag[0] = GZ_COMPAT_GET_X(y_mag);
+  mag[1] = -GZ_COMPAT_GET_Y(y_mag);
+  mag[2] = -GZ_COMPAT_GET_Z(y_mag);
 }
 
 bool SIL_Board::mag_check(void)
@@ -293,10 +293,10 @@ bool SIL_Board::baro_check()
 void SIL_Board::baro_read(float *pressure, float *temperature)
 {
   // pull z measurement out of Gazebo
-  GazeboPose current_state_NWU = GET_WORLD_POSE(link_);
+  GazeboPose current_state_NWU = GZ_COMPAT_GZ_COMPAT_GET_WORLD_POSE(link_);
 
   // Invert measurement model for pressure and temperature
-  double alt = GET_Z(GET_POS(current_state_NWU)) + ground_altitude_;
+  double alt = GZ_COMPAT_GET_Z(GZ_COMPAT_GET_POS(current_state_NWU)) + ground_altitude_;
 
   // Convert to the true pressure reading
   double y_baro = 101325.0f*(float)pow((1-2.25694e-5 * alt), 5.2553);
@@ -326,9 +326,9 @@ void SIL_Board::diff_pressure_read(float *diff_pressure, float *temperature)
 {
   static double rho_ = 1.225;
   // Calculate Airspeed
-  GazeboVector vel = GET_RELATIVE_LINEAR_VEL(link_);
+  GazeboVector vel = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);
 
-  double Va = GET_LENGTH(vel);
+  double Va = GZ_COMPAT_GET_LENGTH(vel);
 
   // Invert Airpseed to get sensor measurement
   double y_as = rho_*Va*Va/2.0; // Page 130 in the UAV Book
@@ -349,8 +349,8 @@ bool SIL_Board::sonar_check(void)
 
 float SIL_Board::sonar_read(void)
 {
-  GazeboPose current_state_NWU = GET_WORLD_POSE(link_);
-  double alt = GET_Z(GET_POS(current_state_NWU));
+  GazeboPose current_state_NWU = GZ_COMPAT_GZ_COMPAT_GET_WORLD_POSE(link_);
+  double alt = GZ_COMPAT_GET_Z(GZ_COMPAT_GET_POS(current_state_NWU));
 
   if (alt < sonar_min_range_)
   {
