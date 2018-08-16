@@ -116,7 +116,7 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   // Connect the update function to the simulation
   updateConnection_ = gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&ROSflightSIL::OnUpdate, this, _1));
 
-  initial_pose_ = GZ_COMPAT_GZ_COMPAT_GET_WORLD_COG_POSE(link_);
+  initial_pose_ = GZ_COMPAT_GET_WORLD_COG_POSE(link_);
 
   truth_NED_pub_ = nh_->advertise<nav_msgs::Odometry>("truth/NED", 1);
   truth_NWU_pub_ = nh_->advertise<nav_msgs::Odometry>("truth/NWU", 1);
@@ -133,7 +133,7 @@ void ROSflightSIL::OnUpdate(const gazebo::common::UpdateInfo& _info)
   NWU_to_NED << 1, 0, 0, 0, -1, 0, 0, 0, -1;
 
   MAVForcesAndMoments::Current_State state;
-  GazeboPose pose = GZ_COMPAT_GZ_COMPAT_GET_WORLD_COG_POSE(link_);
+  GazeboPose pose = GZ_COMPAT_GET_WORLD_COG_POSE(link_);
   GazeboVector vel = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);
   GazeboVector omega = GZ_COMPAT_GET_RELATIVE_ANGULAR_VEL(link_);
 
@@ -173,7 +173,7 @@ void ROSflightSIL::windCallback(const geometry_msgs::Vector3 &msg)
 
 void ROSflightSIL::publishTruth()
 {
-  GazeboPose pose = GZ_COMPAT_GZ_COMPAT_GET_WORLD_COG_POSE(link_);
+  GazeboPose pose = GZ_COMPAT_GET_WORLD_COG_POSE(link_);
   GazeboVector vel = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);
   GazeboVector omega = GZ_COMPAT_GET_RELATIVE_ANGULAR_VEL(link_);
 
