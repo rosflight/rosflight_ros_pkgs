@@ -69,6 +69,9 @@ INIT = 0
 GOOD = 1
 STALLED = 2
 OUTLIER = 3
+ERROR = 4
+
+MAX_OUTLIER_DURATION = 5.0 # if a sensor consistently produces outlier values for longer than this time, an error will be produced
 
 # dataset size for the standard deviation
 STD_SAMPLE_SIZE = 500
@@ -95,6 +98,7 @@ class Stats():
         self.upper_bound = [0.0 for i in range(size)] # upper bound for acceptible values
         self.lower_bound = [0.0 for i in range(size)] # lower bound for acceptible values
         self.check_for_outliers = check_outliers
+        self.outlier_start_time = 0
 
         self.m = [0 for i in range(size)]
         self.s = [0 for i in range(size)]
@@ -102,47 +106,17 @@ class Stats():
         self.var = [0 for i in range(size)]
 
     # returns true if the last data point recorded is an outlier, false otherwise
-    def outlier_check(self):
-        retval = NO_OUTLIERS
+    def is_outlier(self, val):
+        retval = False
+        # for (v, upper, lower) in zip(val, self.upper_bound, self.lower_bound):
+        #     retval = True if v > upper or v < lower else retval
         for i in range(len(self.last_val)):
             # retval = OUTLIER_DETECTED if abs(self.mean[i] - self.last_val[i]) > self.std[i] * Z else retval
-            retval = OUTLIER_DETECTED if self.last_val[i] > self.upper_bound[i] or self.last_val[i] < self.lower_bound[i] else retval
+            retval = True if self.last_val[i] > self.upper_bound[i] or self.last_val[i] < self.lower_bound[i] else retval
         return retval
 
     def update(self, val, t, fields=None):
-
-        # update standard deviation and mean before the new values are added
-        # this way, if the new value is an outlier, it will be easier to detect because it has not skewed our statistics
-        if self.check_for_outliers and len(self.data['val']) > 5:
-            # index for standard deviation starts at 0 if total dataset size is less than sample size
-            # otherwise find the standard deviation of the last STD_SAMPLE_SIZE points
-            start_index = 0 if (len(self.data['val']) < STD_SAMPLE_SIZE) else -STD_SAMPLE_SIZE
-            arr = numpy.array(self.data['val'][start_index:])
-            self.std = numpy.std(arr, axis=0)
-            self.mean = numpy.mean(arr, axis=0)
-            self.lower_bound = self.mean - Z * self.std
-            self.upper_bound = self.mean + Z * self.std
-
-        if fields is not None:
-            val = [getattr(val, field) for field in fields]
-        elif not isinstance(val, list):
-            val = [val]
-        elif isinstance(val,list):
-            val = val[:8]
-        self.max = [max(internal, new) for internal, new in zip(self.max, val)]
-        self.min = [min(internal, new) for internal, new in zip(self.max, val)]
-        self.data['t'].append(t)
-        self.data['val'].append(val)
-
-        if val != self.last_val:
-            self.last_val = val
-            self.last_t = t
-        self.t_diff = t - self.last_t
-
-        if len(self.data['val']) > 10240:
-            self.data['val'].pop(0)
-            self.data['t'].pop(0)
-
+        # update state
         if self.state == INIT:
             print(Message(self.name + " found", MSG_INFO))
             self.state = GOOD
@@ -151,17 +125,56 @@ class Stats():
             print(Message(self.name + " stalled out after running for " + time.strftime("%H:%M:%S", time.gmtime(elapsedTime)), MSG_ERROR))
             self.state = STALLED
         # do outlier checking, if it is enabled
-        elif self.state == GOOD and self.check_for_outliers == True and len(self.data['val']) > STD_SAMPLE_SIZE and self.outlier_check() == OUTLIER_DETECTED:
-            elapsedTime = time.time() - self.start
-            print("\n" + RST + CLEAR, end='\n')
-            print(Message(self.name + " detected an outlier after running for " + time.strftime("%H:%M:%S", time.gmtime(elapsedTime)), MSG_ERROR))
+        elif self.state == GOOD and self.check_for_outliers == True and len(self.data['val']) > STD_SAMPLE_SIZE and self.is_outlier(val):
             self.state = OUTLIER
-        elif self.state == OUTLIER and self.outlier_check() == NO_OUTLIERS:
+            self.outlier_start_time = t
+        elif self.state == OUTLIER and not self.is_outlier(val) and (t - self.outlier_start_time()) < 1.0:
             print(Message(self.name + " recovered", MSG_INFO))
             self.state = GOOD
+        # go to ERROR state if OUTLIER state lasts more than MAX_OUTLIER_DURATION
+        elif self.state == OUTLIER and (t - self.outlier_start_time) > MAX_OUTLIER_DURATION:
+            self.state = ERROR
+            elapsedTime = time.time() - self.start
+            timeString = time.strftime("%H:%M:%S", time.gmtime(elapsedTime))
+            durationString = time.strftime("%S", time.gmtime(t - self.outlier_start_time))
+            print(Message(self.name + " detected an outlier after running for " + timeString + ". Outlier period lasted for " + durationString + " seconds", MSG_ERROR))
         elif self.state == STALLED and self.t_diff < 1.0:
             print(Message(self.name + " recovered", MSG_INFO))
             self.state = GOOD
+
+        # perform state actions
+        if self.state != OUTLIER:
+            # update standard deviation and mean before the new values are added
+            # this way, if the new value is an outlier, it will be easier to detect because it has not skewed our statistics
+            if self.check_for_outliers and len(self.data['val']) > 5:
+                # index for standard deviation starts at 0 if total dataset size is less than sample size
+                # otherwise find the standard deviation of the last STD_SAMPLE_SIZE points
+                start_index = 0 if (len(self.data['val']) < STD_SAMPLE_SIZE) else -STD_SAMPLE_SIZE
+                arr = numpy.array(self.data['val'][start_index:])
+                self.std = numpy.std(arr, axis=0)
+                self.mean = numpy.mean(arr, axis=0)
+                self.lower_bound = self.mean - Z * self.std
+                self.upper_bound = self.mean + Z * self.std
+
+            if fields is not None:
+                val = [getattr(val, field) for field in fields]
+            elif not isinstance(val, list):
+                val = [val]
+            elif isinstance(val,list):
+                val = val[:8]
+            self.max = [max(internal, new) for internal, new in zip(self.max, val)]
+            self.min = [min(internal, new) for internal, new in zip(self.max, val)]
+            self.data['t'].append(t)
+            self.data['val'].append(val)
+
+            if val != self.last_val:
+                self.last_val = val
+                self.last_t = t
+            self.t_diff = t - self.last_t
+
+            if len(self.data['val']) > 10240:
+                self.data['val'].pop(0)
+                self.data['t'].pop(0)
 
 
 MAX_LOOP_TIME_US = 1000
@@ -249,7 +262,7 @@ class Tester():
     def print_status(self, type):
         if self.got_msg(type):
             print(RST+CLEAR, end='')
-            string = type + "\r" + GO_FORWARD(8) + " -- | dt = {:10.4f} \t| ["
+            string = type + "\r" + GO_FORWARD(8) + " -- | dt = {:10.6f} \t| ["
             values = [getattr(self,type).t_diff]
             for i, val in enumerate(getattr(self, type).data['val'][-1]):
                 string += "{:10.4f}"
@@ -291,6 +304,8 @@ class Tester():
                     range += ", "
             range += " ]"
             string += range
+
+            string += " | State: %d" % getattr(self, type).state
 
             print(string.format(*values), end='\n')
             return 1
