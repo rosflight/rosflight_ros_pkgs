@@ -116,6 +116,11 @@ class Stats():
         return retval
 
     def update(self, val, t, fields=None):
+        if val != self.last_val:
+            self.last_val = val
+            self.last_t = t
+        self.t_diff = t - self.last_t
+
         # update state
         if self.state == INIT:
             print(Message(self.name + " found", MSG_INFO))
@@ -166,11 +171,6 @@ class Stats():
             self.min = [min(internal, new) for internal, new in zip(self.max, val)]
             self.data['t'].append(t)
             self.data['val'].append(val)
-
-            if val != self.last_val:
-                self.last_val = val
-                self.last_t = t
-            self.t_diff = t - self.last_t
 
             if len(self.data['val']) > 10240:
                 self.data['val'].pop(0)
@@ -293,7 +293,7 @@ class Tester():
             # string += " ]"
 
             range = " | Bounds check: [ "
-            for i, (val, upper, lower) in enumerate(zip(getattr(self, type).last_val,getattr(self, type).upper_bound,getattr(self, type).lower_bound)):
+            for i, (val, upper, lower) in enumerate(zip(getattr(self, type).last_val, getattr(self, type).upper_bound, getattr(self, type).lower_bound)):
                 if val > upper:
                     range += "over range"
                 elif val < upper and val > lower:
