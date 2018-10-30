@@ -6,7 +6,6 @@ import time
 import rospy
 from rosflight_msgs.msg import RCRaw
 import pygame
-import re
 
 rospy.init_node('rc_joy')
 rc_pub = rospy.Publisher('RC', RCRaw, queue_size=10)
@@ -60,7 +59,22 @@ while not rospy.is_shutdown():
     time.sleep(0.02)
 
     # 50 Hz update
-    if time.time() > next_update_time:
+    if 'Taranis' in joy.get_name():
+        msg = RCRaw()
+        msg.header.stamp = rospy.Time.now()
+
+        msg.values[0] = joy.get_axis(0) * 500 + 1500
+        msg.values[1] = joy.get_axis(1) * 500 + 1500
+        msg.values[2] = joy.get_axis(2) * 500 + 1500
+        msg.values[3] = joy.get_axis(3) * 500 + 1500
+        msg.values[4] = joy.get_axis(4) * 500 + 1500
+        msg.values[5] = joy.get_axis(5) * 500 + 1500
+        msg.values[6] = joy.get_axis(6) * 500 + 1500
+        msg.values[7] = joy.get_axis(7) * 500 + 1500
+
+        rc_pub.publish(msg)
+
+    elif time.time() > next_update_time:
 
         msg = RCRaw()
         msg.header.stamp = rospy.Time.now()
