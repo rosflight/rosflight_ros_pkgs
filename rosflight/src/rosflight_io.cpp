@@ -273,6 +273,7 @@ void rosflightIO::handle_status_msg(const mavlink_message_t &msg)
     check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_UNHEALTHY_ESTIMATOR, "Unhealthy estimator");
     check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_TIME_GOING_BACKWARDS, "Time going backwards");
     check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_UNCALIBRATED_IMU, "Uncalibrated IMU");
+    check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_BUFFER_OVERRUN, "Buffer Overrun");
 
     ROS_DEBUG("Autopilot ERROR 0x%02x", status_msg.error_code);
   }
