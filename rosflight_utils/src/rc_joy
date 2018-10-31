@@ -18,48 +18,24 @@ joy.init()
 
 print "joystick:", joy.get_name()
 
-mapping = dict()
-
 if 'Taranis' in joy.get_name():
     print "found Taranis"
-    mapping['x'] = 0
-    mapping['y'] = 1
-    mapping['z'] = 3
-    mapping['F'] = 2
-    mapping['xsign'] = 1
-    mapping['ysign'] = 1
-    mapping['zsign'] = 1
-    mapping['Fsign'] = 1
+    controller = 'Taranis'
 elif 'Xbox' in joy.get_name() or 'X-Box' in joy.get_name():
     print "found xbox"
-    mapping['x'] = 3
-    mapping['y'] = 4
-    mapping['z'] = 0
-    mapping['F'] = 1
-    mapping['xsign'] = 1
-    mapping['ysign'] = 1
-    mapping['zsign'] = 1
-    mapping['Fsign'] = -1
+    controller = 'xbox'
 else:
-    print "using realflght mapping"
-    mapping['x'] = 1
-    mapping['y'] = 2
-    mapping['z'] = 4
-    mapping['F'] = 0
-    mapping['xsign'] = 1
-    mapping['ysign'] = 1
-    mapping['zsign'] = 1
-    mapping['Fsign'] = 1
+    print "using realflight mapping"
+    controller = 'RealFlight'
 
 # Main event loop
-next_update_time = time.time()
 while not rospy.is_shutdown():
     pygame.event.pump()
 
-    time.sleep(0.02)
+    update_rate = 50 # Hz
+    time.sleep(1./update_rate)
 
-    # 50 Hz update
-    if 'Taranis' in joy.get_name():
+    if controller == 'Taranis':
         msg = RCRaw()
         msg.header.stamp = rospy.Time.now()
 
@@ -74,7 +50,7 @@ while not rospy.is_shutdown():
 
         rc_pub.publish(msg)
 
-    elif time.time() > next_update_time:
+    elif controller == 'xbox':
 
         msg = RCRaw()
         msg.header.stamp = rospy.Time.now()
@@ -90,7 +66,7 @@ while not rospy.is_shutdown():
 
         rc_pub.publish(msg)
 
-    # realflght mapping
+    # RealFlight
     else:
         msg.values[0] = joy.get_axis(0) * 500 + 1500
         msg.values[1] = joy.get_axis(1) * 500 + 1500
