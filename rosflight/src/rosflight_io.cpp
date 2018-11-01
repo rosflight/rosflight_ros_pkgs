@@ -50,6 +50,7 @@ namespace rosflight_io
 rosflightIO::rosflightIO()
 {
   command_sub_ = nh_.subscribe("command", 1, &rosflightIO::commandCallback, this);
+  attitude_sub_ = nh_.subscribe("attitude_measurement", 1, &rosflightIO::commandCallback, this);
 
   unsaved_params_pub_ = nh_.advertise<std_msgs::Bool>("unsaved_params", 1, true);
 
@@ -713,6 +714,13 @@ void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
 
   mavlink_message_t mavlink_msg;
   mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg, mode, ignore, x, y, z, F);
+  mavrosflight_->comm.send_message(mavlink_msg);
+}
+
+void rosflightIO::attitudeCorrectionCallback(geometry_msgs::Quaternion::ConstPtr msg)
+{
+  mavlink_message_t mavlink_msg;
+  mavlink_msg_rosflight_quaternion_pack(1, 50, &mavlink_msg, msg->w, msg->x, msg->y, msg->z);
   mavrosflight_->comm.send_message(mavlink_msg);
 }
 
