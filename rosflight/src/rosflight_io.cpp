@@ -50,7 +50,7 @@ namespace rosflight_io
 rosflightIO::rosflightIO()
 {
   command_sub_ = nh_.subscribe("command", 1, &rosflightIO::commandCallback, this);
-  attitude_sub_ = nh_.subscribe("attitude_measurement", 1, &rosflightIO::commandCallback, this);
+  attitude_sub_ = nh_.subscribe("attitude_measurement", 1, &rosflightIO::attitudeCorrectionCallback, this);
 
   unsaved_params_pub_ = nh_.advertise<std_msgs::Bool>("unsaved_params", 1, true);
 
