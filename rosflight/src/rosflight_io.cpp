@@ -182,6 +182,9 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_ROSFLIGHT_VERSION:
       handle_version_msg(msg);
       break;
+    case MAVLINK_MSG_ID_ROSFLIGHT_GPS:
+      handle_rosflight_gps_msg(msg);
+      break;
     case MAVLINK_MSG_ID_PARAM_VALUE:
     case MAVLINK_MSG_ID_TIMESYNC:
       // silently ignore (handled elsewhere)
@@ -625,6 +628,35 @@ void rosflightIO::handle_small_mag_msg(const mavlink_message_t &msg)
     mag_pub_ = nh_.advertise<sensor_msgs::MagneticField>("magnetometer", 1);
   }
   mag_pub_.publish(mag_msg);
+}
+
+void rosflightIO::handle_rosflight_gps_msg(const mavlink_message_t &msg)
+{
+  mavlink_rosflight_gps_t gps;
+  mavlink_msg_rosflight_gps_decode(&msg, &gps);
+
+  rosflight_msgs::GPS gps_msg;
+  gps_msg.header.stamp = ros::Time::now(); /// TODO:: actually convert GPS time to UTC
+  gps_msg.tow_ms = gps.tow_ms;
+  gps_msg.fix = gps.fix_type;
+  gps_msg.latitude = gps.latitude;
+  gps_msg.longitude = gps.longitude;
+  gps_msg.altitude = gps.altitude;
+  gps_msg.vel.x = gps.velN;
+  gps_msg.vel.y = gps.velE;
+  gps_msg.vel.z = gps.velD;
+  gps_msg.pos_covariance[0] = gps.hacc*gps.hacc;
+  gps_msg.pos_covariance[1] = gps.hacc*gps.hacc;
+  gps_msg.pos_covariance[2] = gps.vacc*gps.vacc;
+  gps_msg.vel_covariance[0] = gps.sacc*gps.sacc;
+  gps_msg.vel_covariance[1] = gps.sacc*gps.sacc;
+  gps_msg.vel_covariance[2] = gps.sacc*gps.sacc;
+
+  if (gps_pub_.getTopic().empty())
+  {
+    gps_pub_ = nh_.advertise<rosflight_msgs::GPS>("gps", 1);
+  }
+  gps_pub_.publish(gps_msg);
 }
 
 void rosflightIO::handle_small_range_msg(const mavlink_message_t &msg)
