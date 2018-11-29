@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   rosgraph_msgs
   sensor_msgs
   std_srvs
+  visualization_msgs
 )
 catkin_package(
   INCLUDE_DIRS include
