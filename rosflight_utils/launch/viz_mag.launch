@@ -1,6 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This spawns an MAV and runs all nodes associated with the MAV -->
+
 <launch>
+
+  <node name="fixed_frame" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 1 map fixed_frame 10"/>
   <node name="rosflight_io" pkg="rosflight" type="rosflight_io" output="screen"/>
-  <node name="viz" pkg="rosflight_utils" type="viz" output="screen"/>
-  <node name="rviz" pkg="rviz" type="rviz" output="screen" args="-d $(find rosflight_utils)/rviz/viz_mag.rviz"/>
+  <node name="viz_mag" pkg="rosflight" type="viz_mag" output="screen"/>
+  <node name="rviz" pkg="rviz" type="rviz" output="screen" args="-d $(find rosflight)/rviz/viz_mag.rviz"/>
+
 </launch>
+

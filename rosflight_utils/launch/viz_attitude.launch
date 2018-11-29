@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<launch>
-  <node name="rosflight_io" pkg="rosflight" type="rosflight_io" output="screen"/>
-  <node name="viz" pkg="rosflight_utils" type="viz" output="screen"/>
-  <node name="rviz" pkg="rviz" type="rviz" output="screen" args="-d $(find rosflight_utils)/rviz/viz_att.rviz"/>
-</launch>
