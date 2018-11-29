@@ -20,4 +20,4 @@ This package contains the `rosflight_io` node, which provides the core functiona
 
 ## rosflight_utils
 
-This package contains additional supporting scripts and libraries that are not part of the core ROSflight package functionality. This package also helps support the [ros_plane](https://github.com/byu-magicc/ros_plane) and [ros_copter](https://github.com/byu-magicc/ros_copter) projects.
+This package contains additional supporting scripts and libraries that are not part of the core ROSflight package functionality, including visualization tools for the attitude estimate and magnetometer. This package also helps support the [ROSplane](https://github.com/byu-magicc/rosplane) and [ROScopter](https://github.com/byu-magicc/roscopter) projects.
