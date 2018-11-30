@@ -1,9 +1,9 @@
-#include <rosflight_utils/viz_mag.h>
+#include <rosflight_utils/viz.h>
 
 namespace rosflight_utils
 {
 
-VizMag::VizMag() :
+Viz::Viz() :
   nh_private_("~")
 {
   // retrieve params
@@ -14,14 +14,17 @@ VizMag::VizMag() :
   mag_count_ = 0;
   mag_throttle_ = 0;
 
-  // Set up Publishers and Subscribers
-  mag_sub_ = nh_.subscribe("/magnetometer", 1, &VizMag::magCallback, this);
-  
-  mag_pub_ = nh_.advertise<geometry_msgs::PoseStamped>( "viz/magnetometer", 1 );
-  pts_pub_ = nh_.advertise<visualization_msgs::Marker>( "viz/cloud", 1);
+  // Magnetometer visualization
+  mag_sub_ = nh_.subscribe("/magnetometer", 1, &Viz::magCallback, this);
+  mag_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("viz/magnetometer", 1);
+  pts_pub_ = nh_.advertise<visualization_msgs::Marker>("viz/cloud", 1);
+
+  // Attitude visualization
+  att_sub_ = nh_.subscribe("/attitude", 1, &Viz::attCallback, this);
+  pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("viz/attitude", 1);
 }
 
-void VizMag::magCallback(const sensor_msgs::MagneticFieldConstPtr &msg)
+void Viz::magCallback(const sensor_msgs::MagneticFieldConstPtr &msg)
 {  
   if (mag_throttle_ > mag_skip_)
   {
@@ -40,7 +43,7 @@ void VizMag::magCallback(const sensor_msgs::MagneticFieldConstPtr &msg)
     // pack data into pose message
     geometry_msgs::PoseStamped pose_msg;
     pose_msg.header = msg->header;
-    pose_msg.header.frame_id = "fixed_frame";
+    pose_msg.header.frame_id = fixed_frame_;
     pose_msg.pose.position.x = 0;
     pose_msg.pose.position.y = 0;
     pose_msg.pose.position.z = 0;
@@ -61,7 +64,7 @@ void VizMag::magCallback(const sensor_msgs::MagneticFieldConstPtr &msg)
 
     // begin packing marker message
     visualization_msgs::Marker pts_msg;
-    pts_msg.header.frame_id = "fixed_frame";
+    pts_msg.header.frame_id = fixed_frame_;
     pts_msg.header.stamp = msg->header.stamp;
     pts_msg.type = visualization_msgs::Marker::POINTS;
     pts_msg.action = visualization_msgs::Marker::ADD;
@@ -86,13 +89,23 @@ void VizMag::magCallback(const sensor_msgs::MagneticFieldConstPtr &msg)
   mag_throttle_++;
 }
 
+void Viz::attCallback(const rosflight_msgs::AttitudeConstPtr &msg)
+{
 
-} // namespace rosflight
+  geometry_msgs::PoseStamped pose;
+  pose.header = msg->header;
+  pose.header.frame_id = fixed_frame_;
+  pose.pose.orientation = msg->attitude;
+
+  pose_pub_.publish(pose);
+}
+
+} // namespace rosflight_utils
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "viz_mag_node");
-  rosflight::VizMag thing;
+  ros::init(argc, argv, "viz_node");
+  rosflight_utils::Viz viz;
   ros::spin();
   return 0;
 }
