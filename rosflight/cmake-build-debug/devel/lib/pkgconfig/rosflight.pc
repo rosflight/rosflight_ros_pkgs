@@ -1,0 +1,8 @@
+prefix=/home/trey/catkin/src/rosflight/rosflight/cmake-build-debug/devel
+
+Name: rosflight
+Description: Description of rosflight
+Version: 1.0.0
+Cflags: -I/home/trey/catkin/src/rosflight/rosflight/include -I/usr/include -I/usr/include/eigen3
+Libs: -L/home/trey/catkin/src/rosflight/rosflight/cmake-build-debug/devel/lib -lmavrosflight /usr/lib/x86_64-linux-gnu/libboost_system.so /usr/lib/x86_64-linux-gnu/libboost_thread.so -l-lpthread /usr/lib/x86_64-linux-gnu/libboost_chrono.so /usr/lib/x86_64-linux-gnu/libboost_date_time.so /usr/lib/x86_64-linux-gnu/libboost_atomic.so -lyaml-cpp
+Requires: roscpp geometry_msgs rosflight_msgs sensor_msgs std_msgs tf tf

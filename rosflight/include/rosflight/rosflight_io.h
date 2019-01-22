@@ -91,6 +91,8 @@ public:
   virtual void on_param_value_updated(std::string name, double value);
   virtual void on_params_saved_change(bool unsaved_changes);
 
+  static constexpr float HEARTBEAT_PERIOD = 1; //Time between heartbeat messages
+
 private:
 
   // handle mavlink messages
@@ -131,9 +133,11 @@ private:
   // timer callbacks
   void paramTimerCallback(const ros::TimerEvent &e);
   void versionTimerCallback(const ros::TimerEvent &e);
+  void heartbeatTimerCallback(const ros::TimerEvent &e);
 
   // helpers
   void request_version();
+  void send_heartbeat();
   void check_error_code(uint8_t current, uint8_t previous, ROSFLIGHT_ERROR_CODE code, std::string name);
 
   template<class T> inline T saturate(T value, T min, T max)
@@ -180,6 +184,7 @@ private:
 
   ros::Timer param_timer_;
   ros::Timer version_timer_;
+  ros::Timer heartbeat_timer_;
 
   geometry_msgs::Quaternion attitude_quat_;
   mavlink_rosflight_status_t prev_status_;

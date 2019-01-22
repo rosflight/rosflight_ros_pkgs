@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/trey/catkin/src/rosflight/rosflight/cmake-build-debug/devel/setup.sh
