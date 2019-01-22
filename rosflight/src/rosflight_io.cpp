@@ -186,6 +186,9 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_TIMESYNC:
       // silently ignore (handled elsewhere)
       break;
+    case MAVLINK_MSG_ID_ROSFLIGHT_HARD_ERROR:
+      handle_hard_error_msg(msg);
+      break;
     default:
       ROS_DEBUG("rosflight_io: Got unhandled mavlink message ID %d", msg.msgid);
       break;
@@ -681,6 +684,30 @@ void rosflightIO::handle_version_msg(const mavlink_message_t &msg)
   version_pub_.publish(version_msg);
 
   ROS_INFO("Firmware version: %s", version.version);
+}
+
+void rosflightIO::handle_hard_error_msg(const mavlink_message_t &msg)
+{
+  mavlink_rosflight_hard_error_t error;
+  mavlink_msg_rosflight_hard_error_decode(&msg,&error);
+  ROS_ERROR("Hard fault detected. Attempting reboot");
+  ROS_ERROR("Hard fault debug info:\n"
+		  "\tr0:  0x%x\n"
+		  "\tr1:  0x%x\n"
+		  "\tr2:  0x%x\n"
+		  "\tr3:  0x%x\n"
+		  "\tr12: 0x%x\n"
+		  "\tlr:  0x%x\n"
+		  "\tpc:  0x%x\n"
+		  "\tpsr: 0x%x\n",
+		  error.r0,
+		  error.r1,
+		  error.r2,
+		  error.r3,
+		  error.r12,
+		  error.lr,
+		  error.pc,
+		  error.psr);
 }
 
 void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)

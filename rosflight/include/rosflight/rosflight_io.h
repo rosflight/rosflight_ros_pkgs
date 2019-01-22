@@ -110,6 +110,7 @@ private:
   void handle_named_command_struct_msg(const mavlink_message_t &msg);
   void handle_small_range_msg(const mavlink_message_t &msg);
   void handle_version_msg(const mavlink_message_t &msg);
+  void handle_hard_error_msg(const mavlink_message_t &msg);
 
   // ROS message callbacks
   void commandCallback(rosflight_msgs::Command::ConstPtr msg);
