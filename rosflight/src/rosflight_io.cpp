@@ -693,12 +693,13 @@ void rosflightIO::handle_hard_error_msg(const mavlink_message_t &msg)
 {
   mavlink_rosflight_hard_error_t error;
   mavlink_msg_rosflight_hard_error_decode(&msg,&error);
-  ROS_ERROR("Hard fault detected. The flight controller has rebooted.");
+  ROS_ERROR("Hard fault detected, with error code %u. The flight controller has rebooted.",error.error_code);
   ROS_ERROR("Hard fault was at: 0x%x",error.pc);
   if(error.doRearm)
   {
     ROS_ERROR("The firmware has rearmed itself.");
   }
+  ROS_ERROR("The flight controller has rebooted %u time%s.", error.reset_count, error.reset_count>1?"s":"");
 }
 
 void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
