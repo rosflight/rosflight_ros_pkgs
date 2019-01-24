@@ -46,6 +46,7 @@
 #include <std_msgs/Float32.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/String.h>
+#include <geometry_msgs/Quaternion.h>
 
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/FluidPressure.h>
@@ -116,6 +117,7 @@ private:
 
   // ROS message callbacks
   void commandCallback(rosflight_msgs::Command::ConstPtr msg);
+  void attitudeCorrectionCallback(geometry_msgs::Quaternion::ConstPtr msg);
 
   // ROS service callbacks
   bool paramGetSrvCallback(rosflight_msgs::ParamGet::Request &req, rosflight_msgs::ParamGet::Response &res);
@@ -149,6 +151,7 @@ private:
   ros::NodeHandle nh_;
 
   ros::Subscriber command_sub_;
+  ros::Subscriber attitude_sub_;
 
   ros::Publisher unsaved_params_pub_;
   ros::Publisher imu_pub_;

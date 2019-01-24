@@ -50,6 +50,7 @@ namespace rosflight_io
 rosflightIO::rosflightIO()
 {
   command_sub_ = nh_.subscribe("command", 1, &rosflightIO::commandCallback, this);
+  attitude_sub_ = nh_.subscribe("attitude_correction", 1, &rosflightIO::attitudeCorrectionCallback, this);
 
   unsaved_params_pub_ = nh_.advertise<std_msgs::Bool>("unsaved_params", 1, true);
 
@@ -279,6 +280,7 @@ void rosflightIO::handle_status_msg(const mavlink_message_t &msg)
     check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_UNHEALTHY_ESTIMATOR, "Unhealthy estimator");
     check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_TIME_GOING_BACKWARDS, "Time going backwards");
     check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_UNCALIBRATED_IMU, "Uncalibrated IMU");
+    check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_BUFFER_OVERRUN, "Buffer Overrun");
 
     ROS_DEBUG("Autopilot ERROR 0x%02x", status_msg.error_code);
   }
@@ -731,6 +733,13 @@ void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
 
   mavlink_message_t mavlink_msg;
   mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg, mode, ignore, x, y, z, F);
+  mavrosflight_->comm.send_message(mavlink_msg);
+}
+
+void rosflightIO::attitudeCorrectionCallback(geometry_msgs::Quaternion::ConstPtr msg)
+{
+  mavlink_message_t mavlink_msg;
+  mavlink_msg_attitude_correction_pack(1, 50, &mavlink_msg, msg->w, msg->x, msg->y, msg->z);
   mavrosflight_->comm.send_message(mavlink_msg);
 }
 

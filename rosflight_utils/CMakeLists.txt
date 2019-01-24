@@ -8,14 +8,14 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   geometry_msgs
   rosflight_msgs
-  rosgraph_msgs
   sensor_msgs
   std_srvs
+  visualization_msgs
 )
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES rosflight_utils
-  CATKIN_DEPENDS roscpp rospy rosflight_msgs sensor_msgs
+  CATKIN_DEPENDS roscpp rospy rosflight_msgs sensor_msgs std_srvs visualization_msgs
 )
 
 add_definitions(-std=c++11)
@@ -33,3 +33,7 @@ target_link_libraries(rosflight_utils ${catkin_LIBRARIES})
 #add_executable(joy src/joy.cpp)
 #add_dependencies(joy ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 #target_link_libraries(joy ${catkin_LIBRARIES})
+
+add_executable(viz src/viz.cpp)
+add_dependencies(viz ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(viz ${catkin_LIBRARIES})
