@@ -53,6 +53,7 @@ rosflightIO::rosflightIO()
   attitude_sub_ = nh_.subscribe("attitude_correction", 1, &rosflightIO::attitudeCorrectionCallback, this);
 
   unsaved_params_pub_ = nh_.advertise<std_msgs::Bool>("unsaved_params", 1, true);
+  error_pub_ = nh_.advertise<rosflight_msgs::Error>("rosflight_errors",5,true); // A relatively large queue so all messages get through
 
   param_get_srv_ = nh_.advertiseService("param_get", &rosflightIO::paramGetSrvCallback, this);
   param_set_srv_ = nh_.advertiseService("param_set", &rosflightIO::paramSetSrvCallback, this);
@@ -702,6 +703,13 @@ void rosflightIO::handle_hard_error_msg(const mavlink_message_t &msg)
     ROS_ERROR("The firmware has rearmed itself.");
   }
   ROS_ERROR("The flight controller has rebooted %u time%s.", error.reset_count, error.reset_count>1?"s":"");
+  rosflight_msgs::Error error_msg;
+  error_msg.error_message = "A firmware error has caused the flight controller to reboot.";
+  error_msg.error_code = error.error_code;
+  error_msg.reset_count = error.reset_count;
+  error_msg.rearm = error.doRearm;
+  error_msg.pc = error.pc;
+  error_pub_.publish(error_msg);
 }
 
 void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)

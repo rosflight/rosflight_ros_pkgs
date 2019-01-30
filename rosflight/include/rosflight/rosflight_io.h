@@ -63,6 +63,7 @@
 #include <rosflight_msgs/OutputRaw.h>
 #include <rosflight_msgs/RCRaw.h>
 #include <rosflight_msgs/Status.h>
+#include <rosflight_msgs/Error.h>
 
 #include <rosflight_msgs/ParamFile.h>
 #include <rosflight_msgs/ParamGet.h>
@@ -168,6 +169,7 @@ private:
   ros::Publisher status_pub_;
   ros::Publisher version_pub_;
   ros::Publisher lidar_pub_;
+  ros::Publisher error_pub_;
   std::map<std::string, ros::Publisher> named_value_int_pubs_;
   std::map<std::string, ros::Publisher> named_value_float_pubs_;
   std::map<std::string, ros::Publisher> named_command_struct_pubs_;
