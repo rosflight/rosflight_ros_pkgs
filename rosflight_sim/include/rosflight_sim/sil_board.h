@@ -141,24 +141,33 @@ public:
   bool imu_read(float accel[3], float* temperature, float gyro[3], uint64_t* time_us);
   void imu_not_responding_error();
 
-  bool mag_check(void);
+  bool mag_present(void) override { return true; }
+  void mag_update(void) override {}
   void mag_read(float mag[3]);
 
-  bool baro_check(void);
+  bool baro_present() override { return true; }
+  void baro_update() override {}
   void baro_read(float *pressure, float *temperature);
 
-  bool diff_pressure_check(void);
+  bool diff_pressure_present(void) override;
+  void diff_pressure_update() override {}
   void diff_pressure_read(float *diff_pressure, float *temperature);
 
-  bool sonar_check(void);
+  bool sonar_present() override { return true; }
+  void sonar_update() override {}
   float sonar_read(void);
 
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)
-  void pwm_init(bool cppm, uint32_t refresh_rate, uint16_t idle_pwm);
-  bool pwm_lost();
-  uint16_t pwm_read(uint8_t channel);
-  void pwm_write(uint8_t channel, uint16_t value);
+
+
+  void rc_init(rc_type_t rc_type) override;
+  bool rc_lost() override;
+  float rc_read(uint8_t channel) override;
+
+  void pwm_init(uint32_t refresh_rate, uint16_t  idle_pwm) override;
+  void pwm_disable() override;
+  void pwm_write(uint8_t channel, float value) override;
 
   // non-volatile memory
   void memory_init(void);
@@ -177,6 +186,9 @@ public:
   // Gazebo stuff
   void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world, gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type);
   inline const int* get_outputs() const { return pwm_outputs_; }
+
+  bool has_backup_data() override { return false; }
+  rosflight_firmware::BackupData get_backup_data() override;
 
 };
 

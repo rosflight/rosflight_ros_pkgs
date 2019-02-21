@@ -16,6 +16,22 @@ if(NOT EXISTS "${FIRMWARE_SUBMODULE_DIR}/.git")
   )
 endif()
 
+# Git information
+execute_process(COMMAND git log -1 --format=%h
+    OUTPUT_VARIABLE GIT_VERSION_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/firmware)
+set(${GIT_VERSION_HASH} "0x${GIT_VERSION_HASH}")
+execute_process(COMMAND git describe --tags --abbrev=8 --always --dirty --long
+    OUTPUT_VARIABLE GIT_VERSION_STRING
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/firmware)
+add_definitions(-DGIT_VERSION_HASH=0x${GIT_VERSION_HASH})
+add_definitions(-DGIT_VERSION_STRING=\"${GIT_VERSION_STRING}\")
+
+message(GIT_VERSION_HASH 0x${GIT_VERSION_HASH})
+message(GIT_VERSION_STRING ${GIT_VERSION_STRING})
+
 set(FIRMWARE_INCLUDE_DIRS
   firmware/include/
   firmware/lib/
@@ -23,8 +39,8 @@ set(FIRMWARE_INCLUDE_DIRS
 )
 
 catkin_package(
-  INCLUDE_DIRS include ${FIRMWARE_INCLUDE_DIRS}
-  LIBRARIES rosflight_firmware rosflight_udp_board
+  INCLUDE_DIRS include ${FIRMWARE_INCLUDE_DIRS} firmware/test
+  LIBRARIES rosflight_firmware rosflight_udp_board rosflight_test
   CATKIN_DEPENDS roscpp
   CFG_EXTRAS rosflight_firmware-extras.cmake
 )
@@ -59,9 +75,15 @@ target_link_libraries(rosflight_udp_board
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
 )
+add_library(rosflight_test
+    firmware/test/test_board.cpp
+)
+target_link_libraries(rosflight_test
+  rosflight_firmware
+)
 
 install(
-  TARGETS rosflight_firmware rosflight_udp_board
+  TARGETS rosflight_firmware rosflight_udp_board rosflight_test
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )

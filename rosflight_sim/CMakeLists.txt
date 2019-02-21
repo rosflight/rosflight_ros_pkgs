@@ -13,6 +13,8 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 # To enable assertions when compiled in release mode.
 add_definitions(-DROS_ASSERT_ENABLED)
+add_definitions(-DGIT_VERSION_HASH=0x101010)
+add_definitions(-DGIT_VERSION_STRING="ROSFLIGHT_SIL")
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp

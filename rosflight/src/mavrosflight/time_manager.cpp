@@ -65,7 +65,7 @@ void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
     {
       int64_t offset_ns = (tsync.ts1 + now_ns - 2*tsync.tc1) / 2;
 
-      if (!initialized_ || std::abs(offset_ns_ - offset_ns) > 1e7) // if difference > 10ms, use it directly
+      if (!initialized_) // if difference > 10ms, use it directly
       {
         offset_ns_ = offset_ns;
         ROS_INFO("Detected time offset of %0.3f s.", offset_ns/1e9);
