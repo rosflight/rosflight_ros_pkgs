@@ -5,17 +5,17 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   geometry_msgs
   rosflight_msgs
-  rosgraph_msgs
   sensor_msgs
   std_srvs
   rosflight
   rosflight_firmware
   rosbag
+  visualization_msgs
 )
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES rosflight_utils
-  CATKIN_DEPENDS roscpp rospy rosflight_msgs sensor_msgs
+  CATKIN_DEPENDS roscpp rospy rosflight_msgs sensor_msgs std_srvs visualization_msgs
 )
 
 add_definitions(-std=c++11)
