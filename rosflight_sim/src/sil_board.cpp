@@ -388,6 +388,12 @@ void SIL_Board::pwm_write(uint8_t channel, float value)
   pwm_outputs_[channel] = (value*1000)+1000;
 }
 
+void SIL_Board::pwm_disable()
+{
+  for (size_t i = 0; i < 14; i++)
+    pwm_outputs_[i] = 1000;
+}
+
 bool SIL_Board::rc_lost()
 {
   return !rc_received_;
