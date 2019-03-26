@@ -34,6 +34,8 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
+#include <math.h>
+
 #include <rosflight/mavrosflight/mavlink_serial.h>
 #include <rosflight/mavrosflight/mavlink_udp.h>
 #include <rosflight/mavrosflight/serial_exception.h>
@@ -183,8 +185,17 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_ROSFLIGHT_VERSION:
       handle_version_msg(msg);
       break;
-    case MAVLINK_MSG_ID_ROSFLIGHT_GPS:
-      handle_rosflight_gps_msg(msg);
+    case MAVLINK_MSG_ID_ROSFLIGHT_GNSS:
+      handle_rosflight_gnss_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_ROSFLIGHT_GNSS_POS_ECEF:
+      handle_rosflight_gnss_pos_ecef_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_ROSFLIGHT_GNSS_VEL_ECEF:
+      handle_rosflight_gnss_vel_ecef_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_ROSFLIGHT_GNSS_RAW:
+      handle_rosflight_gnss_raw_msg(msg);
       break;
     case MAVLINK_MSG_ID_PARAM_VALUE:
     case MAVLINK_MSG_ID_TIMESYNC:
@@ -631,33 +642,77 @@ void rosflightIO::handle_small_mag_msg(const mavlink_message_t &msg)
   mag_pub_.publish(mag_msg);
 }
 
-void rosflightIO::handle_rosflight_gps_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
 {
-  mavlink_rosflight_gps_t gps;
-  mavlink_msg_rosflight_gps_decode(&msg, &gps);
+  mavlink_rosflight_gnss_t gps;
+  mavlink_msg_rosflight_gnss_decode(&msg, &gps);
 
   rosflight_msgs::GPS gps_msg;
-  gps_msg.header.stamp = ros::Time::now(); /// TODO:: actually convert GPS time to UTC
-  gps_msg.tow_ms = gps.tow_ms;
-  gps_msg.fix = gps.fix_type;
-  gps_msg.latitude = gps.latitude;
-  gps_msg.longitude = gps.longitude;
-  gps_msg.altitude = gps.altitude;
-  gps_msg.vel.x = gps.velN;
-  gps_msg.vel.y = gps.velE;
-  gps_msg.vel.z = gps.velD;
-  gps_msg.pos_covariance[0] = gps.hacc*gps.hacc;
-  gps_msg.pos_covariance[1] = gps.hacc*gps.hacc;
-  gps_msg.pos_covariance[2] = gps.vacc*gps.vacc;
-  gps_msg.vel_covariance[0] = gps.sacc*gps.sacc;
-  gps_msg.vel_covariance[1] = gps.sacc*gps.sacc;
-  gps_msg.vel_covariance[2] = gps.sacc*gps.sacc;
-
+  gps_msg.header.stamp = ros::Time(gps.time,gps.nanos);
+  ROS_DEBUG("FIX_TYPE: %i",gps.fix_type);
+  gps_msg.fix = (gps.fix_type == 3 || gps.fix_type == 4);//UBX 3D Fix or fix w/ dead reckoning, respsectively
+  gps_msg.NumSat = gps_msg.fix?7:0;
+  gps_msg.latitude = gps.lat*1e-7;
+  gps_msg.longitude = gps.lon*1e-7;
+  gps_msg.altitude = gps.height*1e-3;
+  gps_msg.speed = sqrt(gps.vel_n*gps.vel_n+gps.vel_e*gps.vel_e);
+  gps_msg.ground_course = std::atan2(gps.vel_n,gps.vel_e);
+  gps_msg.covariance = gps.h_acc > gps.v_acc ? gps.h_acc : gps.v_acc;
   if (gps_pub_.getTopic().empty())
   {
     gps_pub_ = nh_.advertise<rosflight_msgs::GPS>("gps", 1);
   }
   gps_pub_.publish(gps_msg);
+}
+
+void rosflightIO::handle_rosflight_gnss_pos_ecef_msg(const mavlink_message_t &msg)
+{
+	//TODO
+}
+
+void rosflightIO::handle_rosflight_gnss_vel_ecef_msg(const mavlink_message_t &msg)
+{
+	//TODO
+}
+
+void rosflightIO::handle_rosflight_gnss_raw_msg(const mavlink_message_t &msg)
+{
+	mavlink_rosflight_gnss_raw_t raw;
+	mavlink_msg_rosflight_gnss_raw_decode(&msg, &raw);
+
+	rosflight_msgs::GPSRaw msg_out;
+	msg_out.header.stamp = ros::Time::now();
+	msg_out.time_of_week = raw.time_of_week;
+	msg_out.year = raw.year;
+	msg_out.month = raw.month;
+	msg_out.day = raw.day;
+	msg_out.hour = raw.hour;
+	msg_out.min = raw.min;
+	msg_out.sec = raw.sec;
+	msg_out.valid = raw.valid;
+	msg_out.t_acc = raw.t_acc; 
+	msg_out.nano = raw.nano; 
+	msg_out.fix_type = raw.fix_type;
+	msg_out.num_sat = raw.num_sat;
+	msg_out.lon = raw.lon; 
+	msg_out.lat = raw.lat; 
+	msg_out.height = raw.height; 
+	msg_out.height_msl = raw.height_msl; 
+	msg_out.h_acc = raw.h_acc; 
+	msg_out.v_acc = raw.v_acc; 
+	msg_out.vel_n = raw.vel_n; 
+	msg_out.vel_e = raw.vel_e; 
+	msg_out.vel_d = raw.vel_d; 
+	msg_out.g_speed = raw.g_speed; 
+	msg_out.head_mot = raw.head_mot; 
+	msg_out.s_acc = raw.s_acc; 
+	msg_out.head_acc = raw.head_acc; 
+	msg_out.p_dop = raw.p_dop; 
+
+	if (gnss_raw_pub_.getTopic().empty())
+		gnss_raw_pub_ = nh_.advertise<rosflight_msgs::GPSRaw>("gps_raw",1);
+	gnss_raw_pub_.publish(msg_out);
+
 }
 
 void rosflightIO::handle_small_range_msg(const mavlink_message_t &msg)
