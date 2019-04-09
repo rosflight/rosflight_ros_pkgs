@@ -47,12 +47,15 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/String.h>
 #include <geometry_msgs/Quaternion.h>
+#include <geometry_msgs/TwistStamped.h>
 
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/FluidPressure.h>
 #include <sensor_msgs/MagneticField.h>
 #include <sensor_msgs/Temperature.h>
 #include <sensor_msgs/Range.h>
+#include <sensor_msgs/NavSatFix.h>
+#include <sensor_msgs/TimeReference.h>
 
 #include <std_srvs/Trigger.h>
 
@@ -63,8 +66,8 @@
 #include <rosflight_msgs/OutputRaw.h>
 #include <rosflight_msgs/RCRaw.h>
 #include <rosflight_msgs/Status.h>
-#include <rosflight_msgs/GPS.h>
-#include <rosflight_msgs/GPSRaw.h>
+#include <rosflight_msgs/GNSS.h>
+#include <rosflight_msgs/GNSSRaw.h>
 
 #include <rosflight_msgs/ParamFile.h>
 #include <rosflight_msgs/ParamGet.h>
@@ -109,8 +112,6 @@ private:
   void handle_small_baro_msg(const mavlink_message_t &msg);
   void handle_small_mag_msg(const mavlink_message_t &msg);
   void handle_rosflight_gnss_msg(const mavlink_message_t &msg);
-  void handle_rosflight_gnss_pos_ecef_msg(const mavlink_message_t &msg);
-  void handle_rosflight_gnss_vel_ecef_msg(const mavlink_message_t &msg);
   void handle_rosflight_gnss_raw_msg(const mavlink_message_t &msg);
   void handle_named_value_int_msg(const mavlink_message_t &msg);
   void handle_named_value_float_msg(const mavlink_message_t &msg);
@@ -163,10 +164,11 @@ private:
   ros::Publisher temperature_pub_;
   ros::Publisher baro_pub_;
   ros::Publisher sonar_pub_;
-  ros::Publisher gps_pub_;
-  ros::Publisher gnss_pos_ecef_pub_;
-  ros::Publisher gnss_vel_ecef_pub_;
+  ros::Publisher gnss_pub_;
   ros::Publisher gnss_raw_pub_;
+  ros::Publisher nav_sat_fix_pub_;
+  ros::Publisher twist_stamped_pub_;
+  ros::Publisher time_reference_pub_;
   ros::Publisher mag_pub_;
   ros::Publisher attitude_pub_;
   ros::Publisher euler_pub_;
