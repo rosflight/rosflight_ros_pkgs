@@ -656,7 +656,11 @@ namespace rosflight_io {
     time_ref.time_ref = ros::Time(gnss.time, gnss.nanos);
 
     if(time_reference_pub_.getTopic().empty())
-      time_reference_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("navsat_compat/time_reference",1);
+      time_reference_pub_ = nh_.advertise<sensor_msgs::TimeReference>("navsat_compat/time_reference",1);
+    if(!time_reference_pub_)
+      ROS_ERROR("Missing time ref pub");
+    //ROS_DEBUG("Publishing time ref");
+    time_reference_pub_.publish(time_ref);
 
   }
 
