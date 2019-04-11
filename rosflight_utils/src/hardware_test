@@ -13,6 +13,9 @@ import rospy
 import smtplib
 import numpy
 import subprocess
+import csv
+import atexit
+from enum import Enum
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 import sys
@@ -39,37 +42,46 @@ def GO_UP(x): return "\x1b[" + str(x) + "A"
 
 def GO_FORWARD(x): return "\033[" + str(x) + "C"
 
-MSG_INFO = 1
-MSG_WARN = 1
-MSG_ERROR = 2
-MSG_FATAL = 3
+class MessageLevel(Enum):
+    INFO = 1
+    WARN = 2
+    ERROR = 3
+    FATAL = 4
+    DEBUG = 5
+
+# This constant tells the Message class to print a full date and time with each message
+# You should not need to modify this value
+USE_DATETIME = -1
 
 class Message():
-    def __init__(self, message, level):
+    def __init__(self, message, level, t=USE_DATETIME):
         self.msg = message
         self.lvl = level
+        self.timeString = time.strftime("%Y:%m:%d %H:%M:%S") if t == USE_DATETIME else '{:.3f}'.format(t)
 
-    def __str__(self):
-        date_string = time.strftime("%Y:%m:%d %H:%M:%S")
-        string = RST + "[ " + date_string + " ] - "
-        if self.lvl == MSG_INFO:
+    def __str__(self):        
+        string = RST + "[ " + self.timeString + " ] - "
+        if self.lvl == MessageLevel.INFO:
             string += self.msg
-        elif self.lvl == MSG_WARN:
+        elif self.lvl == MessageLevel.WARN:
             string += KYEL + self.msg + RST
-        elif self.lvl == MSG_ERROR:
+        elif self.lvl == MessageLevel.ERROR:
             string += KRED + self.msg + RST
-        elif self.lvl == MSG_FATAL:
+        elif self.lvl == MessageLevel.FATAL:
             string += BOLD + KRED + self.msg + RST
+        elif self.lvl == MessageLevel.DEBUG:
+            string += KBLU + self.msg + RST
         return string
 
     def __repr__(self):
         return self.__str__()
 
-INIT = 0
-GOOD = 1
-STALLED = 2
-OUTLIER = 3
-ERROR = 4
+class State(Enum):
+    INIT = 0
+    GOOD = 1
+    STALLED = 2
+    OUTLIER = 3
+    ERROR = 4
 
 MAX_OUTLIER_DURATION = 5.0 # if a sensor consistently produces outlier values for longer than this time, an error will be produced
 
@@ -82,7 +94,7 @@ NO_OUTLIERS = 0
 OUTLIER_DETECTED = 1
 
 class Stats():
-    def __init__(self, size, name, check_outliers=True):
+    def __init__(self, size, name, check_outliers=True, csvfile=False, software_sim=False):
         self.max = [0.0 for i in range(size)]
         self.min = [1e9 for i in range(size)]
         self.t_diff = 0.0
@@ -90,23 +102,44 @@ class Stats():
         self.last_val = [0.0 for i in range(size)]
         self.data = {'t': [], 'val': []}
         self.name = name
-        self.start = time.time()
-        self.state = INIT
+        self.currentState = State.INIT
+        self.lastState = State.INIT
         self.std_dataset = []
-        self.std = [0.0 for i in range(size)] # standard deviation
+        self.std = [] # standard deviation
         self.mean = [0.0 for i in range(size)] # mean value
-        self.upper_bound = [0.0 for i in range(size)] # upper bound for acceptible values
-        self.lower_bound = [0.0 for i in range(size)] # lower bound for acceptible values
+        self.upper_bound = [] # upper bound for acceptible values
+        self.lower_bound = [] # lower bound for acceptible values
         self.check_for_outliers = check_outliers
         self.outlier_start_time = 0
+
+        self.software_sim = software_sim
+        self.start = time.time() if not software_sim else 0.0
+        self.printDebug = True if self.software_sim else False
 
         self.m = [0 for i in range(size)]
         self.s = [0 for i in range(size)]
         self.k = [0 for i in range(size)]
         self.var = [0 for i in range(size)]
 
+    def write_csv(self, fields=None):
+        file = open('%s.csv' % self.name, 'wb')
+        spreadsheet = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        # write column headers
+        spreadsheet.writerow(['Data'] + [''] * len(fields) + ['Lower bound'] + [''] * (len(fields) - 1) + ['Upper bound'])
+        spreadsheet.writerow(['Time'] + fields * 3)
+
+        # write data
+    
+    # wrapper function for sending messages
+    # Allows printing elapsed time or full date and time without having a conditional in every call to Message()
+    def messageWrapper(self, message, level):
+        if self.software_sim:
+            return Message(message, level, t=self.last_t)
+        else:
+            return Message(message, level)
+
     # returns true if the last data point recorded is an outlier, false otherwise
-    def is_outlier(self, val, fields=None):
+    def is_outlier(self, val):
         # return false if there is not enough data to reasonably identify outliers
         if not len(self.data['val']) > STD_SAMPLE_SIZE:
             return False
@@ -115,152 +148,105 @@ class Stats():
         if self.check_for_outliers == False:
             return False
 
-        # extract data from the rosmsg
+        retval = False
+        for (v, upper, lower) in zip(val, self.upper_bound[-1], self.lower_bound[-1]):
+            retval = True if v > upper or v < lower else retval
+        return retval
+
+    def update(self, val, t, fields=None):
         if fields is not None:
             val = [getattr(val, field) for field in fields]
+            # print("getting vals from fields")
         elif not isinstance(val, list):
             val = [val]
         elif isinstance(val,list):
             val = val[:8]
-
-        retval = False
-        for (v, upper, lower) in zip(val, self.upper_bound, self.lower_bound):
-            retval = True if v > upper or v < lower else retval
-        return retval
-
-    # def update(self, val, t, fields=None):
-    #     if val != self.last_val:
-    #         self.last_val = val
-    #         self.last_t = t
-    #     self.t_diff = t - self.last_t
-
-    #     # update state
-    #     if self.state == INIT:
-    #         print(Message(self.name + " found", MSG_INFO))
-    #         self.state = GOOD
-    #     elif self.state == GOOD and self.t_diff > 1.0:
-    #         elapsedTime = time.time() - self.start
-    #         print(Message(self.name + " stalled out after running for " + time.strftime("%H:%M:%S", time.gmtime(elapsedTime)), MSG_ERROR))
-    #         self.state = STALLED
-    #     # do outlier checking
-    #     elif self.state == GOOD and self.is_outlier(val, fields):
-    #         self.state = OUTLIER
-    #         self.outlier_start_time = t
-    #     elif self.state == OUTLIER and not self.is_outlier(val, fields) and (t - self.outlier_start_time()) < 1.0:
-    #         print(Message(self.name + " recovered", MSG_INFO))
-    #         self.state = GOOD
-    #     # go to ERROR state if OUTLIER state lasts more than MAX_OUTLIER_DURATION
-    #     elif self.state == OUTLIER and (t - self.outlier_start_time) > MAX_OUTLIER_DURATION:
-    #         self.state = ERROR
-    #         elapsedTime = time.time() - self.start
-    #         timeString = time.strftime("%H:%M:%S", time.gmtime(elapsedTime))
-    #         durationString = time.strftime("%S", time.gmtime(t - self.outlier_start_time))
-    #         print(Message(self.name + " detected an outlier after running for " + timeString + ". Outlier period lasted for " + durationString + " seconds", MSG_ERROR))
-    #     elif self.state == STALLED and self.t_diff < 1.0:
-    #         print(Message(self.name + " recovered", MSG_INFO))
-    #         self.state = GOOD
-
-    #     # perform state actions
-    #     if self.state != OUTLIER:
-    #         # update standard deviation and mean before the new values are added
-    #         # this way, if the new value is an outlier, it will be easier to detect because it has not skewed our statistics
-    #         if self.check_for_outliers and len(self.data['val']) > 5:
-    #             # index for standard deviation starts at 0 if total dataset size is less than sample size
-    #             # otherwise find the standard deviation of the last STD_SAMPLE_SIZE points
-    #             start_index = 0 if (len(self.data['val']) < STD_SAMPLE_SIZE) else -STD_SAMPLE_SIZE
-    #             arr = numpy.array(self.data['val'][start_index:])
-    #             self.std = numpy.std(arr, axis=0)
-    #             self.mean = numpy.mean(arr, axis=0)
-    #             self.lower_bound = self.mean - Z * self.std
-    #             self.upper_bound = self.mean + Z * self.std
-
-    #         if fields is not None:
-    #             val = [getattr(val, field) for field in fields]
-    #         elif not isinstance(val, list):
-    #             val = [val]
-    #         elif isinstance(val,list):
-    #             val = val[:8]
-    #         self.max = [max(internal, new) for internal, new in zip(self.max, val)]
-    #         self.min = [min(internal, new) for internal, new in zip(self.max, val)]
-    #         self.data['t'].append(t)
-    #         self.data['val'].append(val)
-
-    #         if len(self.data['val']) > 10240:
-    #             self.data['val'].pop(0)
-    #             self.data['t'].pop(0)
-
-    def update(self, val, t, fields=None):
-        if val != self.last_val:
-            self.last_val = val
-            self.last_t = t
+        
+        # update last_val and last_t no matter what
+        self.last_val = val
+        self.last_t = t
         self.t_diff = t - self.last_t
 
+        # variables used by all states
+        currentTime = t if self.software_sim else time.time()
+        elapsedTime = currentTime - self.start
+
         # update state
-        if self.state == INIT:
-            print(Message(self.name + " found", MSG_INFO))
-            self.state = GOOD
-        elif self.state == GOOD:
+        if self.currentState == State.INIT:
+            print(self.messageWrapper(self.name + " found", MessageLevel.INFO))
+            self.currentState = State.GOOD
+
+        elif self.currentState == State.GOOD:
             if self.t_diff > 1.0:
-                elapsedTime = time.time() - self.start
-                print(Message(self.name + " stalled out after running for " + time.strftime("%H:%M:%S", time.gmtime(elapsedTime)), MSG_ERROR))
-                self.state = STALLED
+                timeString = '{:.3f}'.format(elapsedTime) if self.software_sim else time.strftime("%H:%M:%S", time.gmtime(elapsedTime))
+                print(self.messageWrapper(self.name + " stalled out after running for " + timeString, MessageLevel.ERROR))
+                self.currentState = State.STALLED
             # do outlier checking
-            elif self.is_outlier(val, fields):
-                self.state = OUTLIER
+            elif self.is_outlier(val):
+                self.currentState = State.OUTLIER
                 self.outlier_start_time = t
-        elif self.state == STALLED:
-            if self.t_diff < 1.0 and not self.is_outlier(val, fields):
-                self.state = GOOD
-                print(Message(self.name + " recovered", MSG_INFO))
-            elif self.t_diff < 1.0 and self.is_outlier(val, fields):
-                self.state = OUTLIER
+
+        elif self.currentState == State.STALLED:
+            if self.t_diff < 1.0 and not self.is_outlier(val):
+                self.currentState = State.GOOD
+                print(self.messageWrapper(self.name + " recovered", MessageLevel.INFO))
+            elif self.t_diff < 1.0 and self.is_outlier(val):
+                self.currentState = State.OUTLIER
                 self.outlier_start_time = t
-        elif self.state == OUTLIER:
-            if not self.is_outlier(val, fields) and (t - self.outlier_start_time) < 1.0:
-                print(Message(self.name + " recovered", MSG_INFO))
-                self.state = GOOD
+
+        elif self.currentState == State.OUTLIER:
+            if not self.is_outlier(val) and (t - self.outlier_start_time) < 1.0:
+                print(self.messageWrapper(self.name + " recovered from outlier", MessageLevel.INFO))
+                self.currentState = State.GOOD
             elif self.t_diff > 1.0:
-                elapsedTime = time.time() - self.start
-                print(Message(self.name + " stalled out after running for " + time.strftime("%H:%M:%S", time.gmtime(elapsedTime)), MSG_ERROR))
-                self.state = STALLED
+                timeString = '{:.3f}'.format(elapsedTime) if self.software_sim else time.strftime("%H:%M:%S", time.gmtime(elapsedTime))
+                print(self.messageWrapper(self.name + " stalled out after running for " + timeString, MessageLevel.ERROR))
+                self.currentState = State.STALLED
             elif (t - self.outlier_start_time) > MAX_OUTLIER_DURATION:
-                self.state = ERROR
-                elapsedTime = time.time() - self.start
-                timeString = time.strftime("%H:%M:%S", time.gmtime(elapsedTime))
-                durationString = time.strftime("%S", time.gmtime(t - self.outlier_start_time))
-                print(Message(self.name + " detected an outlier after running for " + timeString + ". Outlier period lasted for " + durationString + " seconds", MSG_ERROR))
+                self.currentState = State.ERROR
+                timeString = '{:.3f}'.format(elapsedTime) if self.software_sim else time.strftime("%H:%M:%S", time.gmtime(elapsedTime))
+                duration = currentTime - self.outlier_start_time
+                durationString = '{:.3f}'.format(duration) if self.software_sim else time.strftime("%S", time.gmtime(duration))
+                startString = '{:.3f}'.format(self.outlier_start_time) if self.software_sim else time.strftime("%H:%M:%S", time.gmtime(self.outlier_start_time))
+                endString =  '{:.3f}'.format(currentTime) if self.software_sim else time.strftime("%H:%M:%S", time.gmtime(currentTime))
+                print(self.messageWrapper(self.name + " detected outliers after running for {runtime}. Outlier period started at {start} and ended at {end} ({duration})".format(
+                    runtime=timeString, start=startString, end=endString, duration=durationString), MessageLevel.ERROR))
 
         # perform state actions
         # don't add new values to the dataset while in the outlier state
-        if self.state != OUTLIER:
-            # update standard deviation and mean before the new values are added
-            # this way, if the new value is an outlier, it will be easier to detect because it has not skewed our statistics
-            if self.check_for_outliers and len(self.data['val']) > 5:
+        if self.currentState != State.OUTLIER:
+            if self.check_for_outliers and len(self.data['val']) > 0:
                 # index for standard deviation starts at 0 if total dataset size is less than sample size
                 # otherwise find the standard deviation of the last STD_SAMPLE_SIZE points
                 start_index = 0 if (len(self.data['val']) < STD_SAMPLE_SIZE) else -STD_SAMPLE_SIZE
                 arr = numpy.array(self.data['val'][start_index:])
                 self.std = numpy.std(arr, axis=0)
                 self.mean = numpy.mean(arr, axis=0)
-                self.lower_bound = self.mean - Z * self.std
-                self.upper_bound = self.mean + Z * self.std
-
-            if fields is not None:
-                val = [getattr(val, field) for field in fields]
-            elif not isinstance(val, list):
-                val = [val]
-            elif isinstance(val,list):
-                val = val[:8]
+                lb = self.mean - Z * self.std
+                ub = self.mean + Z * self.std
+                self.lower_bound.append(lb.tolist())
+                self.upper_bound.append(ub.tolist())
+            
             self.max = [max(internal, new) for internal, new in zip(self.max, val)]
             self.min = [min(internal, new) for internal, new in zip(self.max, val)]
             self.data['t'].append(t)
-            self.data['val'].append(val)
+            self.data['val'].append(val) # newest value is at end of array, oldest at beginning
+
 
             if len(self.data['val']) > 10240:
+                # pop oldest value
                 self.data['val'].pop(0)
                 self.data['t'].pop(0)
-        
+                self.lower_bound.pop(0)
+                self.upper_bound.pop(0)
 
+            if self.printDebug:
+                self.stateDebug()
+        
+    def stateDebug(self):
+        if self.currentState != self.lastState:
+            print(self.messageWrapper("State transition: {old} -> {new}".format(old=self.lastState, new=self.currentState), MessageLevel.DEBUG))
+            self.lastState = self.currentState
 
 
 MAX_LOOP_TIME_US = 1000
@@ -271,16 +257,16 @@ gitBranchCmd = "git branch"
 
 class Tester():
     def __init__(self):
-        self.acc = Stats(3, 'acc')
-        self.gyro = Stats(3, 'gyro')
-        self.mag = Stats(3, 'mag')
-        self.att = Stats(4, 'att')
-        self.omega = Stats(3, 'omega')
+        # self.acc = Stats(3, 'acc')
+        # self.gyro = Stats(3, 'gyro')
+        # self.mag = Stats(3, 'mag')
+        self.att = Stats(4, 'att', csvfile=True)
+        # self.omega = Stats(3, 'omega')
         # self.airspeed = Stats(1, 'airspeed')
         # self.baro = Stats(1, 'baro')
         # self.output = Stats(8, 'output')
         # self.rc = Stats(8, 'rc')
-        self.status = Stats(2, 'status', check_outliers=False)
+        # self.status = Stats(2, 'status', check_outliers=False)
 
         self.stats_list = [key for key in self.__dict__.keys() if "__" not in key]
 
@@ -290,14 +276,14 @@ class Tester():
         self.last_time = time.time()
         print(CLEAR_SCREEN, end='')
         print("===========  ROSFLIGHT HARDWARE CONTINUOUS INTEGRATION TEST ===========\n\n")
-        print(Message("Start Test", MSG_INFO))
+        print(Message("Start Test", MessageLevel.INFO))
 
         self.run()
 
 
     def imu_callback(self, msg):
         t = msg.header.stamp.to_sec()
-        self.acc.update(msg.linear_acceleration, t, fields=['x', 'y', 'z'])
+        if hasattr(self, 'acc'): self.acc.update(msg.linear_acceleration, t, fields=['x', 'y', 'z'])
         if hasattr(self, 'acc'): self.gyro.update(msg.angular_velocity, t, fields=['x', 'y', 'z'])
 
     def mag_callback(self, msg):
@@ -348,50 +334,51 @@ class Tester():
     def print_status(self, type):
         if self.got_msg(type):
             print(RST+CLEAR, end='')
-            string = type + "\r" + GO_FORWARD(8) + " -- | dt = {:10.6f} \t| ["
-            values = [getattr(self,type).t_diff]
-            for i, val in enumerate(getattr(self, type).data['val'][-1]):
+
+            # lower bound
+            string = type + "\r" + GO_FORWARD(8) + " -- | lower bound   \t| ["
+            values = []
+            for i, val in enumerate(getattr(self, type).lower_bound[-1]):
                 string += "{:10.4f}"
                 values.append(val)
-                if i != len(getattr(self, type).data['val'][-1]) -1:
+                if i != len(getattr(self, type).last_val) - 1:
                     string += ", "
             string += "]"
-            # string += " | std:" + str(getattr(self,type).std)
 
-            # # print boundary values
-            # string += " | bounds: [ "
-
-            # # lower bound
-            # for i, val in enumerate(getattr(self, type).lower_bound):
-            #     string += "{:5.4f}"
-            #     values.append(val)
-            #     if i != len(getattr(self, type).data['val'][-1]) -1:
-            #         string += ", "
-            # string += " ]"
+            # last_val
+            string += "\n" + type + "\r" + GO_FORWARD(8) + " -- | dt = {:10.6f} \t| ["
+            values.append(getattr(self,type).t_diff)
+            for i, val in enumerate(getattr(self, type).last_val):
+                string += "{:10.4f}"
+                values.append(val)
+                if i != len(getattr(self, type).last_val) - 1:
+                    string += ", "
+            string += "]"
             
-            # # upper bound
-            # string += "   [ "
-            # for i, val in enumerate(getattr(self, type).lower_bound):
-            #     string += "{:5.4f}"
-            #     values.append(val)
-            #     if i != len(getattr(self, type).data['val'][-1]) -1:
-            #         string += ", "
-            # string += " ]"
+            # display if each field is within range, over range, or under range
+            range = " | [ "
+            for i, (val, upper, lower) in enumerate(zip(getattr(self, type).last_val, getattr(self, type).upper_bound[-1], getattr(self, type).lower_bound[-1])):
+                if val > upper:
+                    range += "over range"
+                elif val < upper and val > lower:
+                    range += "in range"
+                else:
+                    range += "under range"
+                if i != len(getattr(self, type).last_val) - 1:
+                    range += ", "
+            range += " ]"
+            string += range
+            
+            # upper bound
+            string += "\n" + type + "\r" + GO_FORWARD(8) + " -- | upper bound   \t| ["
+            for i, val in enumerate(getattr(self, type).upper_bound[-1]):
+                string += "{:10.4f}"
+                values.append(val)
+                if i != len(getattr(self, type).last_val) -1:
+                    string += ", "
+            string += "]"
 
-            # range = " | Bounds check: [ "
-            # for i, (val, upper, lower) in enumerate(zip(getattr(self, type).last_val, getattr(self, type).upper_bound, getattr(self, type).lower_bound)):
-            #     if val > upper:
-            #         range += "over range"
-            #     elif val < upper and val > lower:
-            #         range += "in range"
-            #     else:
-            #         range += "under range"
-            #     if i != len(getattr(self, type).last_val) - 1:
-            #         range += ", "
-            # range += " ]"
-            # string += range
-
-            string += " | State: %d" % getattr(self, type).state
+            # string += " | State: %d" % getattr(self, type).state
 
             print(string.format(*values), end='\n')
             return 1
@@ -507,12 +494,12 @@ class Tester():
         # loop through the stats objects and check the state of each one
         for stat in self.stats_list:
             # check for stalled stats
-            if getattr(self,stat).state == STALLED:
+            if getattr(self,stat).state == State.STALLED:
                 # send an email notification that a stall occurred
                 # self.send_email(stat, "stalled")
                 self.handle_error(stat, "stalled")
             # check for outliers
-            elif getattr(self,stat).state == OUTLIER:
+            elif getattr(self,stat).state == State.OUTLIER:
                 # send an email notification that an outlier was found
                 # self.send_email(stat, "detected outlier")
                 self.handle_error(stat, "detected outlier")
@@ -556,6 +543,10 @@ class Tester():
         while not rospy.is_shutdown() and self.error_count < MAX_ERROR_COUNT:
             # self.check_for_error()
             self.render()
+
+        for stat in self.stats_list:
+            if stat.file:
+                stat.file.close()
 
         # print(CLEAR_SCREEN, end='')
         # print("Test terminated after %d errors" % MAX_ERROR_COUNT)
