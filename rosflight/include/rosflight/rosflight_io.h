@@ -63,6 +63,7 @@
 #include <rosflight_msgs/OutputRaw.h>
 #include <rosflight_msgs/RCRaw.h>
 #include <rosflight_msgs/Status.h>
+#include <rosflight_msgs/Error.h>
 
 #include <rosflight_msgs/ParamFile.h>
 #include <rosflight_msgs/ParamGet.h>
@@ -92,6 +93,8 @@ public:
   virtual void on_param_value_updated(std::string name, double value);
   virtual void on_params_saved_change(bool unsaved_changes);
 
+  static constexpr float HEARTBEAT_PERIOD = 1; //Time between heartbeat messages
+
 private:
 
   // handle mavlink messages
@@ -111,6 +114,7 @@ private:
   void handle_named_command_struct_msg(const mavlink_message_t &msg);
   void handle_small_range_msg(const mavlink_message_t &msg);
   void handle_version_msg(const mavlink_message_t &msg);
+  void handle_hard_error_msg(const mavlink_message_t &msg);
 
   // ROS message callbacks
   void commandCallback(rosflight_msgs::Command::ConstPtr msg);
@@ -132,9 +136,11 @@ private:
   // timer callbacks
   void paramTimerCallback(const ros::TimerEvent &e);
   void versionTimerCallback(const ros::TimerEvent &e);
+  void heartbeatTimerCallback(const ros::TimerEvent &e);
 
   // helpers
   void request_version();
+  void send_heartbeat();
   void check_error_code(uint8_t current, uint8_t previous, ROSFLIGHT_ERROR_CODE code, std::string name);
 
   template<class T> inline T saturate(T value, T min, T max)
@@ -163,6 +169,7 @@ private:
   ros::Publisher status_pub_;
   ros::Publisher version_pub_;
   ros::Publisher lidar_pub_;
+  ros::Publisher error_pub_;
   std::map<std::string, ros::Publisher> named_value_int_pubs_;
   std::map<std::string, ros::Publisher> named_value_float_pubs_;
   std::map<std::string, ros::Publisher> named_command_struct_pubs_;
@@ -182,6 +189,7 @@ private:
 
   ros::Timer param_timer_;
   ros::Timer version_timer_;
+  ros::Timer heartbeat_timer_;
 
   geometry_msgs::Quaternion attitude_quat_;
   mavlink_rosflight_status_t prev_status_;
