@@ -53,6 +53,7 @@ rosflightIO::rosflightIO()
   attitude_sub_ = nh_.subscribe("attitude_correction", 1, &rosflightIO::attitudeCorrectionCallback, this);
 
   unsaved_params_pub_ = nh_.advertise<std_msgs::Bool>("unsaved_params", 1, true);
+  error_pub_ = nh_.advertise<rosflight_msgs::Error>("rosflight_errors",5,true); // A relatively large queue so all messages get through
 
   param_get_srv_ = nh_.advertiseService("param_get", &rosflightIO::paramGetSrvCallback, this);
   param_set_srv_ = nh_.advertiseService("param_set", &rosflightIO::paramSetSrvCallback, this);
@@ -123,6 +124,9 @@ rosflightIO::rosflightIO()
   prev_status_.offboard = false;
   prev_status_.control_mode = OFFBOARD_CONTROL_MODE_ENUM_END;
   prev_status_.error_code = ROSFLIGHT_ERROR_NONE;
+
+  //Start the heartbeat
+  heartbeat_timer_ = nh_.createTimer(ros::Duration(HEARTBEAT_PERIOD), &rosflightIO::heartbeatTimerCallback, this);
 }
 
 rosflightIO::~rosflightIO()
@@ -186,6 +190,9 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_PARAM_VALUE:
     case MAVLINK_MSG_ID_TIMESYNC:
       // silently ignore (handled elsewhere)
+      break;
+    case MAVLINK_MSG_ID_ROSFLIGHT_HARD_ERROR:
+      handle_hard_error_msg(msg);
       break;
     default:
       ROS_DEBUG("rosflight_io: Got unhandled mavlink message ID %d", msg.msgid);
@@ -685,6 +692,26 @@ void rosflightIO::handle_version_msg(const mavlink_message_t &msg)
   ROS_INFO("Firmware version: %s", version.version);
 }
 
+void rosflightIO::handle_hard_error_msg(const mavlink_message_t &msg)
+{
+  mavlink_rosflight_hard_error_t error;
+  mavlink_msg_rosflight_hard_error_decode(&msg,&error);
+  ROS_ERROR("Hard fault detected, with error code %u. The flight controller has rebooted.",error.error_code);
+  ROS_ERROR("Hard fault was at: 0x%x",error.pc);
+  if(error.doRearm)
+  {
+    ROS_ERROR("The firmware has rearmed itself.");
+  }
+  ROS_ERROR("The flight controller has rebooted %u time%s.", error.reset_count, error.reset_count>1?"s":"");
+  rosflight_msgs::Error error_msg;
+  error_msg.error_message = "A firmware error has caused the flight controller to reboot.";
+  error_msg.error_code = error.error_code;
+  error_msg.reset_count = error.reset_count;
+  error_msg.rearm = error.doRearm;
+  error_msg.pc = error.pc;
+  error_pub_.publish(error_msg);
+}
+
 void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
 {
   //! \todo these are hard-coded to match right now; may want to replace with something more robust
@@ -798,10 +825,21 @@ void rosflightIO::versionTimerCallback(const ros::TimerEvent &e)
   request_version();
 }
 
+void rosflightIO::heartbeatTimerCallback(const ros::TimerEvent &e)
+{
+  send_heartbeat();
+}
+
 void rosflightIO::request_version()
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_SEND_VERSION);
+  mavrosflight_->comm.send_message(msg);
+}
+void rosflightIO::send_heartbeat()
+{
+  mavlink_message_t msg;
+  mavlink_msg_heartbeat_pack(1, 50, &msg, 0,0,0,0,0);
   mavrosflight_->comm.send_message(msg);
 }
 

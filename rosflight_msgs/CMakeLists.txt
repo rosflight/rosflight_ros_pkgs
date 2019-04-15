@@ -18,6 +18,7 @@ add_message_files(
   Airspeed.msg
   Attitude.msg
   Status.msg
+  Error.msg
 )
 
 add_service_files(

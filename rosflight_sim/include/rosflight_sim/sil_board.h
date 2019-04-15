@@ -141,24 +141,33 @@ public:
   bool imu_read(float accel[3], float* temperature, float gyro[3], uint64_t* time_us);
   void imu_not_responding_error();
 
-  bool mag_check(void);
+  bool mag_present(void);
   void mag_read(float mag[3]);
+  void mag_update(void);
 
-  bool baro_check(void);
+  bool baro_present(void);
   void baro_read(float *pressure, float *temperature);
+  void baro_update(void);
 
-  bool diff_pressure_check(void);
+  bool diff_pressure_present(void);
   void diff_pressure_read(float *diff_pressure, float *temperature);
+  void diff_pressure_update(void);
 
-  bool sonar_check(void);
+  bool sonar_present(void);
   float sonar_read(void);
+  void sonar_update(void);
 
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)
-  void pwm_init(bool cppm, uint32_t refresh_rate, uint16_t idle_pwm);
-  bool pwm_lost();
-  uint16_t pwm_read(uint8_t channel);
-  void pwm_write(uint8_t channel, uint16_t value);
+  void pwm_init(uint32_t refresh_rate, uint16_t idle_pwm);
+  void pwm_write(uint8_t channel, float value);
+  void pwm_disable(void);
+
+  //RC
+  float rc_read(uint8_t channel);
+  void rc_init(rc_type_t rc_type);
+  bool rc_lost(void);
+
 
   // non-volatile memory
   void memory_init(void);
@@ -173,6 +182,10 @@ public:
   void led1_on(void);
   void led1_off(void);
   void led1_toggle(void);
+
+  //Backup Memory
+  bool has_backup_data(void);
+  rosflight_firmware::BackupData get_backup_data(void);
 
   // Gazebo stuff
   void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world, gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type);

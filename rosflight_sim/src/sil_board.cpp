@@ -280,15 +280,17 @@ void SIL_Board::mag_read(float mag[3])
   mag[2] = -GZ_COMPAT_GET_Z(y_mag);
 }
 
-bool SIL_Board::mag_check(void)
+bool SIL_Board::mag_present(void)
 {
   return true;
 }
+void mag_update(void) {}
 
-bool SIL_Board::baro_check()
+bool SIL_Board::baro_present()
 {
   return true;
 }
+void SIL_Board::baro_update() {}
 
 void SIL_Board::baro_read(float *pressure, float *temperature)
 {
@@ -314,13 +316,14 @@ void SIL_Board::baro_read(float *pressure, float *temperature)
   (*temperature) = 27.0f;
 }
 
-bool SIL_Board::diff_pressure_check(void)
+bool SIL_Board::diff_pressure_present(void)
 {
   if(mav_type_ == "fixedwing")
     return true;
   else
     return false;
 }
+void SIL_Board::diff_pressure_update(void) {}
 
 void SIL_Board::diff_pressure_read(float *diff_pressure, float *temperature)
 {
@@ -342,10 +345,11 @@ void SIL_Board::diff_pressure_read(float *diff_pressure, float *temperature)
   *temperature = 27.0;
 }
 
-bool SIL_Board::sonar_check(void)
+bool SIL_Board::sonar_present(void)
 {
   return true;
 }
+void SIL_Board::sonar_update(void) {}
 
 float SIL_Board::sonar_read(void)
 {
@@ -365,7 +369,7 @@ float SIL_Board::sonar_read(void)
 }
 
 // PWM
-void SIL_Board::pwm_init(bool cppm, uint32_t refresh_rate, uint16_t idle_pwm)
+void SIL_Board::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
 {
   rc_received_ = false;
   latestRC_.values[0] = 1500; // x
@@ -381,29 +385,36 @@ void SIL_Board::pwm_init(bool cppm, uint32_t refresh_rate, uint16_t idle_pwm)
   rc_sub_ = nh_->subscribe("RC", 1, &SIL_Board::RCCallback, this);
 }
 
-uint16_t SIL_Board::pwm_read(uint8_t channel)
+float SIL_Board::rc_read(uint8_t channel)
 {
   if(rc_sub_.getNumPublishers() > 0)
   {
-    return latestRC_.values[channel];
+    return static_cast<float>(latestRC_.values[channel]-1000)/1000.0;
   }
 
   //no publishers, set throttle low and center everything else
   if(channel == 2)
-    return 1000;
+    return 0.0;
 
-  return 1500;
+  return 0.5;
 }
 
-void SIL_Board::pwm_write(uint8_t channel, uint16_t value)
+void SIL_Board::pwm_write(uint8_t channel, float value)
 {
-  pwm_outputs_[channel] = value;
+  pwm_outputs_[channel] = 1000+(uint16_t)(1000*value);
+}
+void SIL_Board::pwm_disable()
+{
+  for(int i=0;i<14;i++)
+	  pwm_write(i,0);
 }
 
-bool SIL_Board::pwm_lost()
+bool SIL_Board::rc_lost(void)
 {
   return !rc_received_;
 }
+
+void SIL_Board::rc_init(rc_type_t rc_type) {}
 
 // non-volatile memory
 void SIL_Board::memory_init(void) {}
@@ -461,6 +472,17 @@ void SIL_Board::led0_toggle(void) { }
 void SIL_Board::led1_on(void) { }
 void SIL_Board::led1_off(void) { }
 void SIL_Board::led1_toggle(void) { }
+
+bool SIL_Board::has_backup_data(void)
+{
+	return false;
+}
+
+rosflight_firmware::BackupData SIL_Board::get_backup_data(void)
+{
+	rosflight_firmware::BackupData blank_data = {0};
+	return blank_data;
+}
 
 void SIL_Board::RCCallback(const rosflight_msgs::RCRaw& msg)
 {
