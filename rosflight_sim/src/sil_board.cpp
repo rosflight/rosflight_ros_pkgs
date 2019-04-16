@@ -284,13 +284,11 @@ bool SIL_Board::mag_present(void)
 {
   return true;
 }
-void mag_update(void) {}
 
 bool SIL_Board::baro_present()
 {
   return true;
 }
-void SIL_Board::baro_update() {}
 
 void SIL_Board::baro_read(float *pressure, float *temperature)
 {
@@ -323,7 +321,6 @@ bool SIL_Board::diff_pressure_present(void)
   else
     return false;
 }
-void SIL_Board::diff_pressure_update(void) {}
 
 void SIL_Board::diff_pressure_read(float *diff_pressure, float *temperature)
 {
@@ -349,7 +346,6 @@ bool SIL_Board::sonar_present(void)
 {
   return true;
 }
-void SIL_Board::sonar_update(void) {}
 
 float SIL_Board::sonar_read(void)
 {
