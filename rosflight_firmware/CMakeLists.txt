@@ -16,6 +16,24 @@ if(NOT EXISTS "${FIRMWARE_SUBMODULE_DIR}/.git")
   )
 endif()
 
+# git version hash
+execute_process(
+  COMMAND git rev-parse --short=8 HEAD
+  WORKING_DIRECTORY ${FIRMWARE_SUBMODULE_DIR}
+  OUTPUT_VARIABLE GIT_VERSION_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# git version string
+execute_process(
+  COMMAND git describe --tags --abbrev=8 --always --dirty --long
+  WORKING_DIRECTORY ${FIRMWARE_SUBMODULE_DIR}
+  OUTPUT_VARIABLE GIT_VERSION_STRING
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+add_definitions( -DGIT_VERSION_HASH=0x${GIT_VERSION_HASH} -DGIT_VERSION_STRING="${GIT_VERSION_STRING}")
+
 set(FIRMWARE_INCLUDE_DIRS
   firmware/include/
   firmware/lib/
