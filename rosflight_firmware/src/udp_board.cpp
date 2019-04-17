@@ -49,7 +49,6 @@ UDPBoard::UDPBoard(std::string bind_host, uint16_t bind_port, std::string remote
   remote_port_(remote_port),
   io_service_(),
   socket_(io_service_),
-  current_write_buffer_(new Buffer),
   write_in_progress_(false)
 {
 }
@@ -133,7 +132,6 @@ uint8_t UDPBoard::serial_read()
   }
   return byte;
 }
-void serial_flush() {}
 
 void UDPBoard::async_read()
 {
