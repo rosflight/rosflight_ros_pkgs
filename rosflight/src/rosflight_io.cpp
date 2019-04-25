@@ -631,7 +631,7 @@ namespace rosflight_io {
     navsat_fix.status = navsat_status;
 
     if (nav_sat_fix_pub_.getTopic().empty()) {
-      nav_sat_fix_pub_ = nh_.advertise<sensor_msgs::NavSatFix>("navsat_compat/fix",1);
+      nav_sat_fix_pub_ = nh_.advertise<sensor_msgs::NavSatFix>("navsat_compat/fix", 1);
     }
     nav_sat_fix_pub_.publish(navsat_fix);
 
@@ -647,7 +647,7 @@ namespace rosflight_io {
     twist_stamped.twist.linear.z = .001 * gnss.vel_d;
 
     if (twist_stamped_pub_.getTopic().empty())
-      twist_stamped_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("navsat_compat/vel",1);
+      twist_stamped_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("navsat_compat/vel", 1);
     twist_stamped_pub_.publish(twist_stamped);
 
     sensor_msgs::TimeReference time_ref;
@@ -655,9 +655,9 @@ namespace rosflight_io {
     time_ref.source = "GNSS";
     time_ref.time_ref = ros::Time(gnss.time, gnss.nanos);
 
-    if(time_reference_pub_.getTopic().empty())
-      time_reference_pub_ = nh_.advertise<sensor_msgs::TimeReference>("navsat_compat/time_reference",1);
-    if(!time_reference_pub_)
+    if (time_reference_pub_.getTopic().empty())
+      time_reference_pub_ = nh_.advertise<sensor_msgs::TimeReference>("navsat_compat/time_reference", 1);
+    if (!time_reference_pub_)
       ROS_ERROR("Missing time ref pub");
     //ROS_DEBUG("Publishing time ref");
     time_reference_pub_.publish(time_ref);
