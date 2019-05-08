@@ -84,6 +84,7 @@ class State(Enum):
     ERROR = 4
 
 MAX_OUTLIER_DURATION = 5.0 # if a sensor consistently produces outlier values for longer than this time, an error will be produced
+STALL_TIME = 1.0 # if the time elapsed between two messages is more than STALL_TIME, state machine goes to STALL state
 
 # dataset size for the standard deviation
 STD_SAMPLE_SIZE = 500
@@ -111,6 +112,7 @@ class Stats():
         self.lower_bound = [] # lower bound for acceptible values
         self.check_for_outliers = check_outliers
         self.outlier_start_time = 0
+        self.outlier_duration = 0
 
         self.software_sim = software_sim
         self.start = time.time() if not software_sim else 0.0
@@ -148,10 +150,9 @@ class Stats():
         if self.check_for_outliers == False:
             return False
 
-        retval = False
         for (v, upper, lower) in zip(val, self.upper_bound[-1], self.lower_bound[-1]):
-            retval = True if v > upper or v < lower else retval
-        return retval
+            if v > upper or v < lower: return True
+        return False
 
     def update(self, val, t, fields=None):
         if fields is not None:
@@ -164,12 +165,13 @@ class Stats():
         
         # update last_val and last_t no matter what
         self.last_val = val
-        self.last_t = t
         self.t_diff = t - self.last_t
+        self.last_t = t
 
         # variables used by all states
         currentTime = t if self.software_sim else time.time()
         elapsedTime = currentTime - self.start
+        timeString = '{:.3f}'.format(elapsedTime) if self.software_sim else time.strftime("%H:%M:%S", time.gmtime(elapsedTime))
 
         # update state
         if self.currentState == State.INIT:
@@ -177,40 +179,51 @@ class Stats():
             self.currentState = State.GOOD
 
         elif self.currentState == State.GOOD:
-            if self.t_diff > 1.0:
-                timeString = '{:.3f}'.format(elapsedTime) if self.software_sim else time.strftime("%H:%M:%S", time.gmtime(elapsedTime))
-                print(self.messageWrapper(self.name + " stalled out after running for " + timeString, MessageLevel.ERROR))
+            if not (self.t_diff < STALL_TIME) and not self.is_outlier(val): # check for stall condition
+                print(self.messageWrapper(self.name + " stalled out after running for " + timeString, MessageLevel.WARN))
                 self.currentState = State.STALLED
-            # do outlier checking
-            elif self.is_outlier(val):
+            elif self.is_outlier(val): # check for outlier condition
                 self.currentState = State.OUTLIER
                 self.outlier_start_time = t
 
         elif self.currentState == State.STALLED:
-            if self.t_diff < 1.0 and not self.is_outlier(val):
-                self.currentState = State.GOOD
-                print(self.messageWrapper(self.name + " recovered", MessageLevel.INFO))
-            elif self.t_diff < 1.0 and self.is_outlier(val):
-                self.currentState = State.OUTLIER
-                self.outlier_start_time = t
+            if self.t_diff < STALL_TIME: # t_diff < STALL_TIME means we got new data
+                if not self.is_outlier(val): # check outlier before going back to good
+                    self.currentState = State.GOOD
+                    print(self.messageWrapper(self.name + " recovered", MessageLevel.INFO))
+                else:
+                    self.currentState = State.OUTLIER
+                    self.outlier_start_time = t
 
         elif self.currentState == State.OUTLIER:
-            if not self.is_outlier(val) and (t - self.outlier_start_time) < 1.0:
-                print(self.messageWrapper(self.name + " recovered from outlier", MessageLevel.INFO))
-                self.currentState = State.GOOD
-            elif self.t_diff > 1.0:
-                timeString = '{:.3f}'.format(elapsedTime) if self.software_sim else time.strftime("%H:%M:%S", time.gmtime(elapsedTime))
-                print(self.messageWrapper(self.name + " stalled out after running for " + timeString, MessageLevel.ERROR))
-                self.currentState = State.STALLED
-            elif (t - self.outlier_start_time) > MAX_OUTLIER_DURATION:
-                self.currentState = State.ERROR
-                timeString = '{:.3f}'.format(elapsedTime) if self.software_sim else time.strftime("%H:%M:%S", time.gmtime(elapsedTime))
-                duration = currentTime - self.outlier_start_time
-                durationString = '{:.3f}'.format(duration) if self.software_sim else time.strftime("%S", time.gmtime(duration))
-                startString = '{:.3f}'.format(self.outlier_start_time) if self.software_sim else time.strftime("%H:%M:%S", time.gmtime(self.outlier_start_time))
-                endString =  '{:.3f}'.format(currentTime) if self.software_sim else time.strftime("%H:%M:%S", time.gmtime(currentTime))
-                print(self.messageWrapper(self.name + " detected outliers after running for {runtime}. Outlier period started at {start} and ended at {end} ({duration})".format(
-                    runtime=timeString, start=startString, end=endString, duration=durationString), MessageLevel.ERROR))
+            if self.is_outlier(val): # new val is outlier
+                self.outlier_duration = t - self.outlier_start_time # figure out how long we have been in outlier state
+                if not (self.outlier_duration < MAX_OUTLIER_DURATION): # stuck in outlier state. something is probably wrong
+                    self.currentState = State.ERROR
+                    
+                    # strings for the output message
+                    if self.software_sim:
+                        startString = '{:.3f}'.format(self.outlier_start_time)
+                        endString =  '{:.3f}'.format(currentTime)
+                    else:
+                        startString = time.strftime("%H:%M:%S", time.gmtime(self.outlier_start_time))
+                        endString = time.strftime("%H:%M:%S", time.gmtime(currentTime))
+                    
+                    err_msg = " errored out due to outliers after running for {runtime}. Outlier period started at {start} and ended at {end} ({:.3f})".format(
+                        self.outlier_duration, runtime=timeString, start=startString, end=endString)
+
+                    # report the problem
+                    print(self.messageWrapper(self.name + err_msg, MessageLevel.ERROR))
+
+    
+            else: # new val is not outlier
+                print(self.messageWrapper(self.name + " recovered from outlier after {:.3f} seconds".format(self.outlier_duration), MessageLevel.INFO))
+                if self.t_diff < STALL_TIME:
+                    self.currentState = State.GOOD
+                else: # stall
+                    self.currentState = State.STALLED
+                    print(self.messageWrapper(self.name + " stalled out after running for " + timeString, MessageLevel.WARN))
+                
 
         # perform state actions
         # don't add new values to the dataset while in the outlier state
@@ -240,8 +253,8 @@ class Stats():
                 self.lower_bound.pop(0)
                 self.upper_bound.pop(0)
 
-            if self.printDebug:
-                self.stateDebug()
+        if self.printDebug:
+            self.stateDebug()
         
     def stateDebug(self):
         if self.currentState != self.lastState:
