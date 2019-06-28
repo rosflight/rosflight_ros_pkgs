@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rosflight_pkgs</name>
-  <version>0.1.3</version>
+  <version>1.0.0</version>
   <description>ROS interface for the ROSflight autpilot stack</description>
 
   <maintainer email="daniel.p.koch@gmail.com">Daniel Koch</maintainer>
@@ -18,10 +18,13 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <exec_depend>rosflight</exec_depend>
+  <exec_depend>rosflight_firmware</exec_depend>
   <exec_depend>rosflight_msgs</exec_depend>
+  <exec_depend>rosflight_sim</exec_depend>
   <exec_depend>rosflight_utils</exec_depend>
 
   <export>
     <metapackage/>
+    <architecture_independent/>
   </export>
 </package>

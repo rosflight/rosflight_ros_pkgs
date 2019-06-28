@@ -9,13 +9,13 @@ set(CMAKE_CXX_FLAGS "-std=c++0x")
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  eigen_stl_containers
   geometry_msgs
   rosflight_msgs
   sensor_msgs
   std_msgs
   std_srvs
   tf
-  eigen_stl_containers
 )
 find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(Eigen3 REQUIRED)

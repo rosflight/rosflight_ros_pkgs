@@ -47,13 +47,15 @@
 
 #include <rosflight_firmware/udp_board.h>
 
+#include <rosflight_sim/gz_compat.h>
+
 namespace rosflight_sim
 {
 
 class SIL_Board : public rosflight_firmware::UDPBoard
 {
 private:
-  gazebo::math::Vector3 inertial_magnetic_field_;
+  GazeboVector inertial_magnetic_field_;
 
   double imu_update_rate_;
 
@@ -81,9 +83,9 @@ private:
   double sonar_max_range_;
   double sonar_min_range_;
 
-  gazebo::math::Vector3 gyro_bias_;
-  gazebo::math::Vector3 acc_bias_;
-  gazebo::math::Vector3 mag_bias_;
+  GazeboVector gyro_bias_;
+  GazeboVector acc_bias_;
+  GazeboVector mag_bias_;
   double baro_bias_;
   double airspeed_bias_;
 
@@ -91,7 +93,7 @@ private:
   std::normal_distribution<double> normal_distribution_;
   std::uniform_real_distribution<double> uniform_distribution_;
 
-  gazebo::math::Vector3 gravity_;
+  GazeboVector gravity_;
   double ground_altitude_;
 
   gazebo::physics::WorldPtr world_;
@@ -114,63 +116,76 @@ private:
   void RCCallback(const rosflight_msgs::RCRaw& msg);
   bool motors_spinning();
 
-  gazebo::math::Vector3 prev_vel_1_;
-  gazebo::math::Vector3 prev_vel_2_;
-  gazebo::math::Vector3 prev_vel_3_;
+  GazeboVector prev_vel_1_;
+  GazeboVector prev_vel_2_;
+  GazeboVector prev_vel_3_;
   gazebo::common::Time last_time_;
 
 public:
   SIL_Board();
 
   // setup
-  void init_board(void);
-  void board_reset(bool bootloader);
+  void init_board(void) override;
+  void board_reset(bool bootloader) override;
 
   // clock
-  uint32_t clock_millis();
-  uint64_t clock_micros();
-  void clock_delay(uint32_t milliseconds);
+  uint32_t clock_millis() override;
+  uint64_t clock_micros() override;
+  void clock_delay(uint32_t milliseconds) override;
 
   // sensors
-  void sensors_init();
-  uint16_t num_sensor_errors(void);
+  void sensors_init() override;
+  uint16_t num_sensor_errors(void) override;
 
-  bool new_imu_data();
-  bool imu_read(float accel[3], float* temperature, float gyro[3], uint64_t* time_us);
-  void imu_not_responding_error();
+  bool new_imu_data() override;
+  bool imu_read(float accel[3], float* temperature, float gyro[3], uint64_t* time_us) override;
+  void imu_not_responding_error() override;
 
-  bool mag_check(void);
-  void mag_read(float mag[3]);
+  bool mag_present(void) override;
+  void mag_read(float mag[3]) override;
+  void mag_update(void) override {};
 
-  bool baro_check(void);
-  void baro_read(float *pressure, float *temperature);
+  bool baro_present(void) override;
+  void baro_read(float *pressure, float *temperature) override;
+  void baro_update(void) override {};
 
-  bool diff_pressure_check(void);
-  void diff_pressure_read(float *diff_pressure, float *temperature);
+  bool diff_pressure_present(void) override;
+  void diff_pressure_read(float *diff_pressure, float *temperature) override;
+  void diff_pressure_update(void) override {};
 
-  bool sonar_check(void);
-  float sonar_read(void);
+  bool sonar_present(void) override;
+  float sonar_read(void) override;
+  void sonar_update(void) override {};
 
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)
-  void pwm_init(bool cppm, uint32_t refresh_rate, uint16_t idle_pwm);
-  bool pwm_lost();
-  uint16_t pwm_read(uint8_t channel);
-  void pwm_write(uint8_t channel, uint16_t value);
+  void pwm_init(uint32_t refresh_rate, uint16_t idle_pwm) override;
+  void pwm_write(uint8_t channel, float value) override;
+  void pwm_disable(void) override;
+
+  //RC
+  float rc_read(uint8_t channel) override;
+  void rc_init(rc_type_t rc_type) override;
+  bool rc_lost(void) override;
+
 
   // non-volatile memory
-  void memory_init(void);
-  bool memory_read(void * dest, size_t len);
-  bool memory_write(const void * src, size_t len);
+  void memory_init(void) override;
+  bool memory_read(void * dest, size_t len) override;
+  bool memory_write(const void * src, size_t len) override;
 
   // LEDs
-  void led0_on(void);
-  void led0_off(void);
-  void led0_toggle(void);
+  void led0_on(void) override;
+  void led0_off(void) override;
+  void led0_toggle(void) override;
 
-  void led1_on(void);
-  void led1_off(void);
-  void led1_toggle(void);
+  void led1_on(void) override;
+  void led1_off(void) override;
+  void led1_toggle(void) override;
+
+  //Backup Memory
+  bool has_backup_data(void) override;
+  rosflight_firmware::BackupData get_backup_data(void) override;
 
   // Gazebo stuff
   void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world, gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type);

@@ -42,10 +42,13 @@
 
 #include <rosflight.h>
 #include <rosflight_sim/sil_board.h>
+#include <mavlink/mavlink.h>
 
 #include <rosflight_sim/mav_forces_and_moments.h>
 #include <rosflight_sim/multirotor_forces_and_moments.h>
 #include <rosflight_sim/fixedwing_forces_and_moments.h>
+
+#include <rosflight_sim/gz_compat.h>
 
 namespace rosflight_sim
 {
@@ -66,6 +69,7 @@ private:
   void publishTruth();
 
   SIL_Board board_;
+  rosflight_firmware::Mavlink comm_;
   rosflight_firmware::ROSflight firmware_;
 
   std::string mav_type_;
@@ -94,12 +98,12 @@ private:
   ros::NodeHandle* nh_;
 
   // For reset handlin
-  gazebo::math::Pose initial_pose_;
+  GazeboPose initial_pose_;
 
   // helper functions for converting to and from eigen
-  Eigen::Vector3d vec3_to_eigen_from_gazebo(gazebo::math::Vector3 vec);
-  gazebo::math::Vector3 vec3_to_gazebo_from_eigen(Eigen::Vector3d vec);
-  Eigen::Matrix3d rotation_to_eigen_from_gazebo(gazebo::math::Quaternion vec);
+  Eigen::Vector3d vec3_to_eigen_from_gazebo(GazeboVector vec);
+  GazeboVector vec3_to_gazebo_from_eigen(Eigen::Vector3d vec);
+  Eigen::Matrix3d rotation_to_eigen_from_gazebo(GazeboQuaternion vec);
 
 };
 

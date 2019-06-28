@@ -2,6 +2,15 @@
 Changelog for package rosflight_utils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.0 (2018-03-13)
+------------------
+* parse GLONASS nmea sentences
+* headless joy node
+* added xbox to command mappings
+* added Taranis mappings
+* Fixed gps reporting of the number of satellites to report the actual number of satellites instead of a fixed number of 0 when not connected or 4 when connected.
+* Contributors: Daniel Koch, Devon, Gary Ellingson, James Jackson, Jesse Wynn, pmarke, superjax08@gmail.com
+
 0.1.3 (2017-06-02)
 ------------------
 * Updated package.xml files

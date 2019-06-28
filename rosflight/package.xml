@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rosflight</name>
-  <version>0.1.3</version>
+  <version>1.0.0</version>
   <description>Package for interfacing to the ROSflight autopilot firmware over MAVLink</description>
 
   <maintainer email="daniel.p.koch@gmail.com">Daniel Koch</maintainer>
@@ -17,14 +17,17 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <!-- ROS packages -->
   <depend>roscpp</depend>
   <depend>rosflight_msgs</depend>
+  <depend>eigen_stl_containers</depend>
   <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>tf</depend>
 
+  <!-- system libraries -->
   <depend>boost</depend>
   <depend>eigen</depend>
   <depend>yaml-cpp</depend>

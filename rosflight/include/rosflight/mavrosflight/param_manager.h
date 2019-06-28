@@ -43,9 +43,12 @@
 #include <rosflight/mavrosflight/param.h>
 #include <rosflight/mavrosflight/param_listener_interface.h>
 
+#include <deque>
 #include <map>
 #include <string>
 #include <vector>
+
+#include <ros/ros.h>
 
 namespace mavrosflight
 {
@@ -99,6 +102,12 @@ private:
   size_t received_count_;
   bool *received_;
   bool got_all_params_;
+
+  ros::NodeHandle nh_;
+  std::deque<mavlink_message_t> param_set_queue_;
+  ros::Timer param_set_timer_;
+  bool param_set_in_progress_;
+  void param_set_timer_callback(const ros::TimerEvent &event);
 };
 
 } // namespace mavrosflight

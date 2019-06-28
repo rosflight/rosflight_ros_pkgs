@@ -44,7 +44,7 @@
 #include <boost/thread.hpp>
 
 #include "board.h"
-#include "mavlink.h"
+#include "mavlink/mavlink.h"
 
 namespace rosflight_firmware
 {
@@ -58,8 +58,9 @@ public:
            uint16_t remote_port = 14520);
   ~UDPBoard();
 
-  void serial_init(uint32_t baud_rate) override;
+  void serial_init(uint32_t baud_rate, uint32_t dev) override;
   void serial_write(const uint8_t *src, size_t len) override;
+  void serial_flush() override {};
   uint16_t serial_bytes_available(void) override;
   uint8_t serial_read(void) override;
 
@@ -115,7 +116,6 @@ private:
   uint8_t read_buffer_[MAVLINK_MAX_PACKET_LEN];
   std::list<Buffer*> read_queue_;
 
-  Buffer * current_write_buffer_;
   std::list<Buffer*> write_queue_;
   bool write_in_progress_;
 };
