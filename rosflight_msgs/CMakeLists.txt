@@ -10,7 +10,6 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   DIRECTORY msg
   FILES
-  GPS.msg
   OutputRaw.msg
   RCRaw.msg
   Command.msg
@@ -19,6 +18,8 @@ add_message_files(
   Attitude.msg
   Status.msg
   Error.msg
+  GNSS.msg
+  GNSSRaw.msg
 )
 
 add_service_files(
