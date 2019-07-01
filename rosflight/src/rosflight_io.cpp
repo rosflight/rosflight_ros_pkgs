@@ -453,7 +453,7 @@ void rosflightIO::handle_rosflight_output_raw_msg(const mavlink_message_t &msg)
 
   rosflight_msgs::OutputRaw out_msg;
   out_msg.header.stamp = mavrosflight_->time.get_ros_time_us(servo.stamp);
-  for (int i = 0; i < 8; i++)
+  for (int i = 0; i < 14; i++)
   {
     out_msg.values[i] = servo.values[i];
   }
