@@ -154,11 +154,8 @@ private:
   ros::NodeHandle nh_;
 
   ros::Subscriber command_sub_;
-<<<<<<< HEAD
   ros::Subscriber aux_command_sub_;
-=======
   ros::Subscriber attitude_sub_;
->>>>>>> master
 
   ros::Publisher unsaved_params_pub_;
   ros::Publisher imu_pub_;

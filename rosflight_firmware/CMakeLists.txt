@@ -66,11 +66,7 @@ add_library(rosflight_firmware
 
   firmware/comms/mavlink/mavlink.cpp
 
-<<<<<<< HEAD
-  firmware/lib/turbotrig/turbotrig.cpp
-=======
   firmware/lib/turbomath/turbomath.cpp
->>>>>>> master
 )
 
 add_library(rosflight_udp_board

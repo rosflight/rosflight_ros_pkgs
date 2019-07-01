@@ -43,6 +43,8 @@
 #include <eigen3/Eigen/Dense>
 #include <tf/tf.h>
 
+#include <ros/console.h>
+
 #include <rosflight/rosflight_io.h>
 
 namespace rosflight_io
@@ -745,7 +747,6 @@ void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
   mavrosflight_->comm.send_message(mavlink_msg);
 }
 
-<<<<<<< HEAD
 void rosflightIO::auxCommandCallback(rosflight_msgs::AuxCommand::ConstPtr msg)
 {
   uint8_t types[8];
@@ -757,12 +758,12 @@ void rosflightIO::auxCommandCallback(rosflight_msgs::AuxCommand::ConstPtr msg)
   }
   mavlink_message_t mavlink_msg;
   mavlink_msg_rosflight_aux_cmd_pack(1, 50, &mavlink_msg, types, values);
-=======
+}
+
 void rosflightIO::attitudeCorrectionCallback(geometry_msgs::Quaternion::ConstPtr msg)
 {
   mavlink_message_t mavlink_msg;
   mavlink_msg_attitude_correction_pack(1, 50, &mavlink_msg, msg->w, msg->x, msg->y, msg->z);
->>>>>>> master
   mavrosflight_->comm.send_message(mavlink_msg);
 }
 
