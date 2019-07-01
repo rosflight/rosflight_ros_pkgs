@@ -749,15 +749,16 @@ void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
 
 void rosflightIO::auxCommandCallback(rosflight_msgs::AuxCommand::ConstPtr msg)
 {
-  uint8_t types[8];
-  float values[8];
-  for (int i = 0; i < 8; i++)
+  uint8_t types[14];
+  float values[14];
+  for (int i = 0; i < 14; i++)
   {
     types[i] = msg->type_array[i];
     values[i] = msg->values[i];
   }
   mavlink_message_t mavlink_msg;
   mavlink_msg_rosflight_aux_cmd_pack(1, 50, &mavlink_msg, types, values);
+  mavrosflight_->comm.send_message(mavlink_msg);
 }
 
 void rosflightIO::attitudeCorrectionCallback(geometry_msgs::Quaternion::ConstPtr msg)
