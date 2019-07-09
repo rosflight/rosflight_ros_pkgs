@@ -187,6 +187,13 @@ public:
   bool has_backup_data(void) override;
   rosflight_firmware::BackupData get_backup_data(void) override;
 
+  bool gnss_present() override;
+  void gnss_update() override;
+
+  rosflight_firmware::GNSSData gnss_read() override;
+  bool gnss_has_new_data() override;
+  rosflight_firmware::GNSSRaw gnss_raw_read() override;
+
   // Gazebo stuff
   void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world, gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type);
   inline const int* get_outputs() const { return pwm_outputs_; }
