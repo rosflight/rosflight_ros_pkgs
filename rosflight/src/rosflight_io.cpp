@@ -43,8 +43,6 @@
 #include <eigen3/Eigen/Dense>
 #include <tf/tf.h>
 
-#include <ros/console.h>
-
 #include <rosflight/rosflight_io.h>
 
 namespace rosflight_io
