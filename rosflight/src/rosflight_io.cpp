@@ -105,11 +105,11 @@ rosflightIO::rosflightIO()
 
   // request the param list
   mavrosflight_->param.request_params();
-  param_timer_ = nh_.createTimer(ros::Duration(1.0), &rosflightIO::paramTimerCallback, this);
+  param_timer_ = nh_.createTimer(ros::Duration(PARAMETER_PERIOD), &rosflightIO::paramTimerCallback, this);
 
   // request version information
   request_version();
-  version_timer_ = nh_.createTimer(ros::Duration(1.0), &rosflightIO::versionTimerCallback, this);
+  version_timer_ = nh_.createTimer(ros::Duration(VERSION_PERIOD), &rosflightIO::versionTimerCallback, this);
 
   // initialize latched "unsaved parameters" message value
   std_msgs::Bool unsaved_msg;
