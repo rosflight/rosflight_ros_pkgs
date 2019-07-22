@@ -156,7 +156,7 @@ Eigen::Matrix<double, 6, 1> Multirotor::updateForcesAndTorques(Current_State x, 
   Eigen::Matrix<double, 6,1> forces;
   // Apply other forces (drag) <- follows "Quadrotors and Accelerometers - State Estimation With an Improved Dynamic Model"
   // By Rob Leishman et al.
-  forces.block<3,1>(3,0) = -linear_mu_ * Va;
+  forces.block<3,1>(0,0) = -linear_mu_ * Va;
   forces.block<3,1>(3,0) = -angular_mu_ * x.omega + output_forces_and_torques.block<3,1>(0,0);
 
   // Apply ground effect and thrust
