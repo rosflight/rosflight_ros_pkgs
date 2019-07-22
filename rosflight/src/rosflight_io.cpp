@@ -50,6 +50,7 @@ namespace rosflight_io
 rosflightIO::rosflightIO()
 {
   command_sub_ = nh_.subscribe("command", 1, &rosflightIO::commandCallback, this);
+  aux_command_sub_ = nh_.subscribe("aux_command", 1, &rosflightIO::auxCommandCallback, this);
   attitude_sub_ = nh_.subscribe("attitude_correction", 1, &rosflightIO::attitudeCorrectionCallback, this);
 
   unsaved_params_pub_ = nh_.advertise<std_msgs::Bool>("unsaved_params", 1, true);
@@ -456,7 +457,7 @@ void rosflightIO::handle_rosflight_output_raw_msg(const mavlink_message_t &msg)
 
   rosflight_msgs::OutputRaw out_msg;
   out_msg.header.stamp = mavrosflight_->time.get_ros_time_us(servo.stamp);
-  for (int i = 0; i < 8; i++)
+  for (int i = 0; i < 14; i++)
   {
     out_msg.values[i] = servo.values[i];
   }
@@ -858,6 +859,20 @@ void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
 
   mavlink_message_t mavlink_msg;
   mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg, mode, ignore, x, y, z, F);
+  mavrosflight_->comm.send_message(mavlink_msg);
+}
+
+void rosflightIO::auxCommandCallback(rosflight_msgs::AuxCommand::ConstPtr msg)
+{
+  uint8_t types[14];
+  float values[14];
+  for (int i = 0; i < 14; i++)
+  {
+    types[i] = msg->type_array[i];
+    values[i] = msg->values[i];
+  }
+  mavlink_message_t mavlink_msg;
+  mavlink_msg_rosflight_aux_cmd_pack(1, 50, &mavlink_msg, types, values);
   mavrosflight_->comm.send_message(mavlink_msg);
 }
 

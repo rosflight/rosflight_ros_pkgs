@@ -18,7 +18,7 @@
 
 
   <!-- send the robot XML to param server -->
-  <param name="robot_description" command="
+  <param name="$(arg mav_name)/robot_description" command="
     xacro --inorder '$(arg model)'
     mav_name:=$(arg mav_name)
     color:=$(arg color)
@@ -29,7 +29,7 @@
 
   <!-- push robot_description to factory and spawn robot in gazebo -->
   <node name="spawn_$(arg mav_name)" pkg="gazebo_ros" type="spawn_model"
-   args="-param robot_description
+    args="-param $(arg mav_name)/robot_description
          -urdf
          -x $(arg x)
          -y $(arg y)
