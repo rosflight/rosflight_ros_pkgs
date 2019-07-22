@@ -1,10 +1,10 @@
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 #include <vector>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <string>
-#include <ostream>
+#include <fstream>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
@@ -105,7 +105,7 @@ int main(int argc, char * argv[])
   }
   catch(rosbag::BagIOException e)
   {
-    ROS_ERROR("unable to load rosbag %s, %s", bag_filename.c_str(), e.what());
+    fprintf(stderr, "unable to load rosbag %s, %s", bag_filename.c_str(), e.what());
     return -1;
   }
   rosbag::View view(bag);
