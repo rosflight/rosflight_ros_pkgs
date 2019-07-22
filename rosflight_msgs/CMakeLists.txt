@@ -17,6 +17,7 @@ add_message_files(
   Airspeed.msg
   Attitude.msg
   Status.msg
+  AuxCommand.msg
   Error.msg
   GNSS.msg
   GNSSRaw.msg

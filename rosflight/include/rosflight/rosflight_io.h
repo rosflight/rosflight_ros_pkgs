@@ -63,6 +63,7 @@
 #include <rosflight_msgs/Barometer.h>
 #include <rosflight_msgs/Airspeed.h>
 #include <rosflight_msgs/Command.h>
+#include <rosflight_msgs/AuxCommand.h>
 #include <rosflight_msgs/OutputRaw.h>
 #include <rosflight_msgs/RCRaw.h>
 #include <rosflight_msgs/Status.h>
@@ -126,6 +127,7 @@ private:
 
   // ROS message callbacks
   void commandCallback(rosflight_msgs::Command::ConstPtr msg);
+  void auxCommandCallback(rosflight_msgs::AuxCommand::ConstPtr msg);
   void attitudeCorrectionCallback(geometry_msgs::Quaternion::ConstPtr msg);
 
   // ROS service callbacks
@@ -160,6 +162,7 @@ private:
   ros::NodeHandle nh_;
 
   ros::Subscriber command_sub_;
+  ros::Subscriber aux_command_sub_;
   ros::Subscriber attitude_sub_;
 
   ros::Publisher unsaved_params_pub_;
