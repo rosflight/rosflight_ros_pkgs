@@ -22,17 +22,11 @@ execute_process(COMMAND git log -1 --format=%h
     OUTPUT_STRIP_TRAILING_WHITESPACE
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/firmware)
 set(${GIT_VERSION_HASH} "0x${GIT_VERSION_HASH}")
+
 execute_process(COMMAND git describe --tags --abbrev=8 --always --dirty --long
     OUTPUT_VARIABLE GIT_VERSION_STRING
     OUTPUT_STRIP_TRAILING_WHITESPACE
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/firmware)
-#add_definitions(-DGIT_VERSION_HASH=${GIT_VERSION_HASH})
-#add_definitions(-DGIT_VERSION_STRING=\"${GIT_VERSION_STRING}\")
-#add_compile_options(-DGIT_VERSION_HASH=0x1234)
-#add_compile_options(-DGIT_VERSION_STRING=\"empty\")
-
-message("GIT_VERSION_HASH = 0x${GIT_VERSION_HASH}")
-message("GIT_VERSION_STRING = ${GIT_VERSION_STRING}")
 
 set(FIRMWARE_INCLUDE_DIRS
   firmware/include/
