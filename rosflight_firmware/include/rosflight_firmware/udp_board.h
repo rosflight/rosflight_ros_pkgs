@@ -60,7 +60,6 @@ public:
 
   void serial_init(uint32_t baud_rate, uint32_t dev) override;
   void serial_write(const uint8_t *src, size_t len) override;
-  void serial_flush() override {};
   uint16_t serial_bytes_available(void) override;
   uint8_t serial_read(void) override;
   void serial_flush() override;

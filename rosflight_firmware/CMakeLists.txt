@@ -16,23 +16,23 @@ if(NOT EXISTS "${FIRMWARE_SUBMODULE_DIR}/.git")
   )
 endif()
 
-# git version hash
-execute_process(
-  COMMAND git rev-parse --short=8 HEAD
-  WORKING_DIRECTORY ${FIRMWARE_SUBMODULE_DIR}
-  OUTPUT_VARIABLE GIT_VERSION_HASH
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
+# Git information
+execute_process(COMMAND git log -1 --format=%h
+    OUTPUT_VARIABLE GIT_VERSION_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/firmware)
+set(${GIT_VERSION_HASH} "0x${GIT_VERSION_HASH}")
+execute_process(COMMAND git describe --tags --abbrev=8 --always --dirty --long
+    OUTPUT_VARIABLE GIT_VERSION_STRING
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/firmware)
+#add_definitions(-DGIT_VERSION_HASH=${GIT_VERSION_HASH})
+#add_definitions(-DGIT_VERSION_STRING=\"${GIT_VERSION_STRING}\")
+#add_compile_options(-DGIT_VERSION_HASH=0x1234)
+#add_compile_options(-DGIT_VERSION_STRING=\"empty\")
 
-# git version string
-execute_process(
-  COMMAND git describe --tags --abbrev=8 --always --dirty --long
-  WORKING_DIRECTORY ${FIRMWARE_SUBMODULE_DIR}
-  OUTPUT_VARIABLE GIT_VERSION_STRING
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-add_definitions( -DGIT_VERSION_HASH=0x${GIT_VERSION_HASH} -DGIT_VERSION_STRING="${GIT_VERSION_STRING}")
+message("GIT_VERSION_HASH = 0x${GIT_VERSION_HASH}")
+message("GIT_VERSION_STRING = ${GIT_VERSION_STRING}")
 
 set(FIRMWARE_INCLUDE_DIRS
   firmware/include/
@@ -68,6 +68,9 @@ add_library(rosflight_firmware
 
   firmware/lib/turbomath/turbomath.cpp
 )
+target_compile_definitions(rosflight_firmware PUBLIC
+    GIT_VERSION_HASH=0x${GIT_VERSION_HASH}
+    GIT_VERSION_STRING=\"${GIT_VERSION_STRING}\")
 
 add_library(rosflight_udp_board
   src/udp_board.cpp
