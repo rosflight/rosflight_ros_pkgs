@@ -1,0 +1,25 @@
+# Based on https://github.com/ros-infrastructure/ros_buildfarm/blob/master/doc/jobs/devel_jobs.rst
+dist: bionic
+language: python
+python: "3.6"
+services:
+  - docker
+env:
+  global:
+    - JOB_PATH=/tmp/devel_job
+    - REPOSITORY_NAME=rosflight
+    - CONFIG_URL=https://raw.githubusercontent.com/ros-infrastructure/ros_buildfarm_config/production/index.yaml
+    - ABORT_ON_TEST_FAILURE=1
+  matrix:
+    - ROS_DISTRO_NAME=kinetic OS_NAME=ubuntu OS_CODE_NAME=xenial ARCH=amd64
+    # - ROS_DISTRO_NAME=melodic OS_NAME=ubuntu OS_CODE_NAME=bionic ARCH=amd64
+install:
+  - pip install ros_buildfarm
+  - git clone https://github.com/ros/catkin /tmp/catkin
+before_script:
+  - mkdir -p $JOB_PATH/ws/src
+  - cp -R $TRAVIS_BUILD_DIR $JOB_PATH/ws/src
+  - generate_devel_script.py $CONFIG_URL $ROS_DISTRO_NAME default $REPOSITORY_NAME $OS_NAME $OS_CODE_NAME $ARCH > $JOB_PATH/devel_job.sh
+  - cd $JOB_PATH
+script:
+  - sh devel_job.sh -y
