@@ -17,7 +17,7 @@ if(NOT EXISTS "${FIRMWARE_SUBMODULE_DIR}/.git")
 endif()
 
 # Git information
-execute_process(COMMAND git log -1 --format=%h
+execute_process(COMMANDgit rev-parse --short=8 HEAD
     OUTPUT_VARIABLE GIT_VERSION_HASH
     OUTPUT_STRIP_TRAILING_WHITESPACE
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/firmware)
