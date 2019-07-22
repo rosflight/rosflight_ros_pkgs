@@ -19,6 +19,11 @@
   <depend>gazebo_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>rosflight_msgs</depend>
+  <depend>rosflight_sim</depend>
+  <depend>rosflight_firmware</depend>
+  <depend>rosflight</depend>
+  <depend>rosbag</depend>
+  <depend>rosgraph_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>std_srvs</depend>
   <depend>visualization_msgs</depend>

@@ -16,33 +16,28 @@ if(NOT EXISTS "${FIRMWARE_SUBMODULE_DIR}/.git")
   )
 endif()
 
-# git version hash
-execute_process(
-  COMMAND git rev-parse --short=8 HEAD
-  WORKING_DIRECTORY ${FIRMWARE_SUBMODULE_DIR}
-  OUTPUT_VARIABLE GIT_VERSION_HASH
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
+# Git information
+execute_process(COMMAND git rev-parse --short=8 HEAD
+    OUTPUT_VARIABLE GIT_VERSION_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/firmware)
+set(${GIT_VERSION_HASH} "0x${GIT_VERSION_HASH}")
 
-# git version string
-execute_process(
-  COMMAND git describe --tags --abbrev=8 --always --dirty --long
-  WORKING_DIRECTORY ${FIRMWARE_SUBMODULE_DIR}
-  OUTPUT_VARIABLE GIT_VERSION_STRING
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-add_definitions( -DGIT_VERSION_HASH=0x${GIT_VERSION_HASH} -DGIT_VERSION_STRING="${GIT_VERSION_STRING}")
+execute_process(COMMAND git describe --tags --abbrev=8 --always --dirty --long
+    OUTPUT_VARIABLE GIT_VERSION_STRING
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/firmware)
 
 set(FIRMWARE_INCLUDE_DIRS
   firmware/include/
   firmware/lib/
   firmware/comms/
+  firmware/test/
 )
 
 catkin_package(
   INCLUDE_DIRS include ${FIRMWARE_INCLUDE_DIRS}
-  LIBRARIES rosflight_firmware rosflight_udp_board
+  LIBRARIES rosflight_firmware rosflight_udp_board rosflight_test
   CATKIN_DEPENDS roscpp
   CFG_EXTRAS rosflight_firmware-extras.cmake
 )
@@ -68,6 +63,9 @@ add_library(rosflight_firmware
 
   firmware/lib/turbomath/turbomath.cpp
 )
+target_compile_definitions(rosflight_firmware PUBLIC
+    GIT_VERSION_HASH=0x${GIT_VERSION_HASH}
+    GIT_VERSION_STRING=\"${GIT_VERSION_STRING}\")
 
 add_library(rosflight_udp_board
   src/udp_board.cpp
@@ -77,9 +75,15 @@ target_link_libraries(rosflight_udp_board
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
 )
+add_library(rosflight_test
+    firmware/test/test_board.cpp
+)
+target_link_libraries(rosflight_test
+  rosflight_firmware
+)
 
 install(
-  TARGETS rosflight_firmware rosflight_udp_board
+  TARGETS rosflight_firmware rosflight_udp_board rosflight_test
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )

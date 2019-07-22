@@ -97,6 +97,9 @@ void UDPBoard::serial_init(uint32_t baud_rate, uint32_t dev)
   io_thread_ = boost::thread(boost::bind(&boost::asio::io_service::run, &io_service_));
 }
 
+void UDPBoard::serial_flush()
+{}
+
 void UDPBoard::serial_write(const uint8_t *src, size_t len)
 {
   Buffer *buffer = new Buffer(src, len);
