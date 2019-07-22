@@ -53,6 +53,7 @@ rosflightIO::rosflightIO()
   attitude_sub_ = nh_.subscribe("attitude_correction", 1, &rosflightIO::attitudeCorrectionCallback, this);
 
   unsaved_params_pub_ = nh_.advertise<std_msgs::Bool>("unsaved_params", 1, true);
+  error_pub_ = nh_.advertise<rosflight_msgs::Error>("rosflight_errors",5,true); // A relatively large queue so all messages get through
 
   param_get_srv_ = nh_.advertiseService("param_get", &rosflightIO::paramGetSrvCallback, this);
   param_set_srv_ = nh_.advertiseService("param_set", &rosflightIO::paramSetSrvCallback, this);
@@ -123,6 +124,9 @@ rosflightIO::rosflightIO()
   prev_status_.offboard = false;
   prev_status_.control_mode = OFFBOARD_CONTROL_MODE_ENUM_END;
   prev_status_.error_code = ROSFLIGHT_ERROR_NONE;
+
+  //Start the heartbeat
+  heartbeat_timer_ = nh_.createTimer(ros::Duration(HEARTBEAT_PERIOD), &rosflightIO::heartbeatTimerCallback, this);
 }
 
 rosflightIO::~rosflightIO()
@@ -180,12 +184,21 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_SMALL_RANGE:
       handle_small_range_msg(msg);
       break;
+    case MAVLINK_MSG_ID_ROSFLIGHT_GNSS:
+      handle_rosflight_gnss_msg(msg);
+      break;
+    case MAVLINK_MSG_ID_ROSFLIGHT_GNSS_RAW:
+      handle_rosflight_gnss_raw_msg(msg);
+      break;
     case MAVLINK_MSG_ID_ROSFLIGHT_VERSION:
       handle_version_msg(msg);
       break;
     case MAVLINK_MSG_ID_PARAM_VALUE:
     case MAVLINK_MSG_ID_TIMESYNC:
       // silently ignore (handled elsewhere)
+      break;
+    case MAVLINK_MSG_ID_ROSFLIGHT_HARD_ERROR:
+      handle_hard_error_msg(msg);
       break;
     default:
       ROS_DEBUG("rosflight_io: Got unhandled mavlink message ID %d", msg.msgid);
@@ -685,6 +698,137 @@ void rosflightIO::handle_version_msg(const mavlink_message_t &msg)
   ROS_INFO("Firmware version: %s", version.version);
 }
 
+void rosflightIO::handle_hard_error_msg(const mavlink_message_t &msg)
+{
+  mavlink_rosflight_hard_error_t error;
+  mavlink_msg_rosflight_hard_error_decode(&msg,&error);
+  ROS_ERROR("Hard fault detected, with error code %u. The flight controller has rebooted.",error.error_code);
+  ROS_ERROR("Hard fault was at: 0x%x",error.pc);
+  if(error.doRearm)
+  {
+    ROS_ERROR("The firmware has rearmed itself.");
+  }
+  ROS_ERROR("The flight controller has rebooted %u time%s.", error.reset_count, error.reset_count>1?"s":"");
+  rosflight_msgs::Error error_msg;
+  error_msg.error_message = "A firmware error has caused the flight controller to reboot.";
+  error_msg.error_code = error.error_code;
+  error_msg.reset_count = error.reset_count;
+  error_msg.rearm = error.doRearm;
+  error_msg.pc = error.pc;
+  error_pub_.publish(error_msg);
+}
+
+void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg) {
+  mavlink_rosflight_gnss_t gnss;
+  mavlink_msg_rosflight_gnss_decode(&msg, &gnss);
+
+  ros::Time stamp = mavrosflight_->time.get_ros_time_us(gnss.rosflight_timestamp);
+
+  rosflight_msgs::GNSS gnss_msg;
+  gnss_msg.header.stamp = stamp;
+  gnss_msg.header.frame_id = "ECEF";
+  gnss_msg.fix = gnss.fix_type;
+  gnss_msg.time = ros::Time(gnss.time, gnss.nanos);
+  gnss_msg.position[0] = .01 * gnss.ecef_x; //.01 for conversion from cm to m
+  gnss_msg.position[1] = .01 * gnss.ecef_y;
+  gnss_msg.position[2] = .01 * gnss.ecef_z;
+  gnss_msg.horizontal_accuracy = gnss.h_acc;
+  gnss_msg.vertical_accuracy = gnss.v_acc;
+  gnss_msg.velocity[0] = .01 * gnss.ecef_v_x; //.01 for conversion from cm/s to m/s
+  gnss_msg.velocity[1] = .01 * gnss.ecef_v_y;
+  gnss_msg.velocity[2] = .01 * gnss.ecef_v_z;
+  gnss_msg.speed_accuracy = gnss.s_acc;
+  if (gnss_pub_.getTopic().empty()) {
+    gnss_pub_ = nh_.advertise<rosflight_msgs::GNSS>("gnss", 1);
+  }
+  gnss_pub_.publish(gnss_msg);
+
+  sensor_msgs::NavSatFix navsat_fix;
+  navsat_fix.header.stamp = stamp;
+  navsat_fix.header.frame_id = "LLA";
+  navsat_fix.latitude = 1e-7 * gnss.lat; //1e-7 to convert from 100's of nanodegrees
+  navsat_fix.longitude = 1e-7 * gnss.lon; //1e-7 to convert from 100's of nanodegrees
+  navsat_fix.altitude = .001 * gnss.height; //.001 to convert from mm to m
+  navsat_fix.position_covariance[0] = gnss.h_acc * gnss.h_acc;
+  navsat_fix.position_covariance[4] = gnss.h_acc * gnss.h_acc;
+  navsat_fix.position_covariance[8] = gnss.v_acc * gnss.v_acc;
+  navsat_fix.position_covariance_type = sensor_msgs::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
+  sensor_msgs::NavSatStatus navsat_status;
+  //3 or 4 from UBX corresponds to a fix. 0 means a fix to ROS, else -1 for no fix.
+  navsat_status.status = (gnss.fix_type == 3 || gnss.fix_type == 4) ? 0 : -1;
+  //The UBX is not configured to report which system is used, even though it supports them all
+  navsat_status.service = 1; //Report that only GPS was used, even though others may have been
+  navsat_fix.status = navsat_status;
+
+  if (nav_sat_fix_pub_.getTopic().empty()) {
+    nav_sat_fix_pub_ = nh_.advertise<sensor_msgs::NavSatFix>("navsat_compat/fix",1);
+  }
+  nav_sat_fix_pub_.publish(navsat_fix);
+
+  geometry_msgs::TwistStamped twist_stamped;
+  twist_stamped.header.stamp = stamp;
+  //GNSS does not provide angular data
+  twist_stamped.twist.angular.x = 0;
+  twist_stamped.twist.angular.y = 0;
+  twist_stamped.twist.angular.z = 0;
+
+  twist_stamped.twist.linear.x = .001 * gnss.vel_n; //Convert from mm/s to m/s
+  twist_stamped.twist.linear.y = .001 * gnss.vel_e;
+  twist_stamped.twist.linear.z = .001 * gnss.vel_d;
+
+  if (twist_stamped_pub_.getTopic().empty())
+    twist_stamped_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("navsat_compat/vel",1);
+  twist_stamped_pub_.publish(twist_stamped);
+
+  sensor_msgs::TimeReference time_ref;
+  time_ref.header.stamp = stamp;
+  time_ref.source = "GNSS";
+  time_ref.time_ref = ros::Time(gnss.time, gnss.nanos);
+
+  if(time_reference_pub_.getTopic().empty())
+    time_reference_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("navsat_compat/time_reference",1);
+
+}
+
+
+void rosflightIO::handle_rosflight_gnss_raw_msg(const mavlink_message_t &msg) {
+  mavlink_rosflight_gnss_raw_t raw;
+  mavlink_msg_rosflight_gnss_raw_decode(&msg, &raw);
+
+  rosflight_msgs::GNSSRaw msg_out;
+  msg_out.header.stamp = ros::Time::now();
+  msg_out.time_of_week = raw.time_of_week;
+  msg_out.year = raw.year;
+  msg_out.month = raw.month;
+  msg_out.day = raw.day;
+  msg_out.hour = raw.hour;
+  msg_out.min = raw.min;
+  msg_out.sec = raw.sec;
+  msg_out.valid = raw.valid;
+  msg_out.t_acc = raw.t_acc;
+  msg_out.nano = raw.nano;
+  msg_out.fix_type = raw.fix_type;
+  msg_out.num_sat = raw.num_sat;
+  msg_out.lon = raw.lon;
+  msg_out.lat = raw.lat;
+  msg_out.height = raw.height;
+  msg_out.height_msl = raw.height_msl;
+  msg_out.h_acc = raw.h_acc;
+  msg_out.v_acc = raw.v_acc;
+  msg_out.vel_n = raw.vel_n;
+  msg_out.vel_e = raw.vel_e;
+  msg_out.vel_d = raw.vel_d;
+  msg_out.g_speed = raw.g_speed;
+  msg_out.head_mot = raw.head_mot;
+  msg_out.s_acc = raw.s_acc;
+  msg_out.head_acc = raw.head_acc;
+  msg_out.p_dop = raw.p_dop;
+
+  if (gnss_raw_pub_.getTopic().empty())
+    gnss_raw_pub_ = nh_.advertise<rosflight_msgs::GNSSRaw>("gps_raw", 1);
+  gnss_raw_pub_.publish(msg_out);
+}
+
 void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
 {
   //! \todo these are hard-coded to match right now; may want to replace with something more robust
@@ -789,7 +933,7 @@ void rosflightIO::paramTimerCallback(const ros::TimerEvent &e)
   {
     mavrosflight_->param.request_params();
     ROS_ERROR("Received %d of %d parameters. Requesting missing parameters...",
-             mavrosflight_->param.get_params_received(), mavrosflight_->param.get_num_params());
+              mavrosflight_->param.get_params_received(), mavrosflight_->param.get_num_params());
   }
 }
 
@@ -798,10 +942,21 @@ void rosflightIO::versionTimerCallback(const ros::TimerEvent &e)
   request_version();
 }
 
+void rosflightIO::heartbeatTimerCallback(const ros::TimerEvent &e)
+{
+  send_heartbeat();
+}
+
 void rosflightIO::request_version()
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_SEND_VERSION);
+  mavrosflight_->comm.send_message(msg);
+}
+void rosflightIO::send_heartbeat()
+{
+  mavlink_message_t msg;
+  mavlink_msg_heartbeat_pack(1, 50, &msg, 0,0,0,0,0);
   mavrosflight_->comm.send_message(msg);
 }
 

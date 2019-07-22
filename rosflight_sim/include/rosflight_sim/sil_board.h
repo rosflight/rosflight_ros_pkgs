@@ -125,70 +125,78 @@ public:
   SIL_Board();
 
   // setup
-  void init_board(void);
-  void board_reset(bool bootloader);
+  void init_board(void) override;
+  void board_reset(bool bootloader) override;
 
   // clock
-  uint32_t clock_millis();
-  uint64_t clock_micros();
-  void clock_delay(uint32_t milliseconds);
+  uint32_t clock_millis() override;
+  uint64_t clock_micros() override;
+  void clock_delay(uint32_t milliseconds) override;
 
   // sensors
-  void sensors_init();
-  uint16_t num_sensor_errors(void);
+  void sensors_init() override;
+  uint16_t num_sensor_errors(void) override;
 
-  bool new_imu_data();
-  bool imu_read(float accel[3], float* temperature, float gyro[3], uint64_t* time_us);
-  void imu_not_responding_error();
+  bool new_imu_data() override;
+  bool imu_read(float accel[3], float* temperature, float gyro[3], uint64_t* time_us) override;
+  void imu_not_responding_error() override;
 
-  bool mag_present(void) override { return true; }
-  void mag_update(void) override {}
-  void mag_read(float mag[3]);
+  bool mag_present(void) override;
+  void mag_read(float mag[3]) override;
+  void mag_update(void) override {};
 
-  bool baro_present() override { return true; }
-  void baro_update() override {}
-  void baro_read(float *pressure, float *temperature);
+  bool baro_present(void) override;
+  void baro_read(float *pressure, float *temperature) override;
+  void baro_update(void) override {};
 
   bool diff_pressure_present(void) override;
-  void diff_pressure_update() override {}
-  void diff_pressure_read(float *diff_pressure, float *temperature);
+  void diff_pressure_read(float *diff_pressure, float *temperature) override;
+  void diff_pressure_update(void) override {};
 
-  bool sonar_present() override { return true; }
-  void sonar_update() override {}
-  float sonar_read(void);
+  bool sonar_present(void) override;
+  float sonar_read(void) override;
+  void sonar_update(void) override {};
 
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)
-
-
-  void rc_init(rc_type_t rc_type) override;
-  bool rc_lost() override;
-  float rc_read(uint8_t channel) override;
-
-  void pwm_init(uint32_t refresh_rate, uint16_t  idle_pwm) override;
-  void pwm_disable() override;
+  void pwm_init(uint32_t refresh_rate, uint16_t idle_pwm) override;
   void pwm_write(uint8_t channel, float value) override;
+  void pwm_disable(void) override;
+
+  //RC
+  float rc_read(uint8_t channel) override;
+  void rc_init(rc_type_t rc_type) override;
+  bool rc_lost(void) override;
+
 
   // non-volatile memory
-  void memory_init(void);
-  bool memory_read(void * dest, size_t len);
-  bool memory_write(const void * src, size_t len);
+  void memory_init(void) override;
+  bool memory_read(void * dest, size_t len) override;
+  bool memory_write(const void * src, size_t len) override;
 
   // LEDs
-  void led0_on(void);
-  void led0_off(void);
-  void led0_toggle(void);
+  void led0_on(void) override;
+  void led0_off(void) override;
+  void led0_toggle(void) override;
 
-  void led1_on(void);
-  void led1_off(void);
-  void led1_toggle(void);
+  void led1_on(void) override;
+  void led1_off(void) override;
+  void led1_toggle(void) override;
+
+  //Backup Memory
+  bool has_backup_data(void) override;
+  rosflight_firmware::BackupData get_backup_data(void) override;
+
+  bool gnss_present() override;
+  void gnss_update() override;
+
+  rosflight_firmware::GNSSData gnss_read() override;
+  bool gnss_has_new_data() override;
+  rosflight_firmware::GNSSRaw gnss_raw_read() override;
 
   // Gazebo stuff
   void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world, gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type);
   inline const int* get_outputs() const { return pwm_outputs_; }
-
-  bool has_backup_data() override { return false; }
-  rosflight_firmware::BackupData get_backup_data() override;
 
 };
 

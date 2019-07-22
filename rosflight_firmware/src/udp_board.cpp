@@ -49,7 +49,6 @@ UDPBoard::UDPBoard(std::string bind_host, uint16_t bind_port, std::string remote
   remote_port_(remote_port),
   io_service_(),
   socket_(io_service_),
-  current_write_buffer_(new Buffer),
   write_in_progress_(false)
 {
 }
@@ -77,6 +76,7 @@ void UDPBoard::set_ports(std::string bind_host, uint16_t bind_port, std::string 
 void UDPBoard::serial_init(uint32_t baud_rate, uint32_t dev)
 {
   // can throw an uncaught boost::system::system_error exception
+  (void) dev;
 
   udp::resolver resolver(io_service_);
 
