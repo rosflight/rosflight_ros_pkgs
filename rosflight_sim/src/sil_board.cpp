@@ -486,4 +486,24 @@ void SIL_Board::RCCallback(const rosflight_msgs::RCRaw& msg)
   latestRC_ = msg;
 }
 
+
+bool SIL_Board::gnss_present() { return false; }
+void SIL_Board::gnss_update() {}
+
+rosflight_firmware::GNSSData SIL_Board::gnss_read()
+{
+    rosflight_firmware::GNSSData out;
+    return out;
+}
+
+bool SIL_Board::gnss_has_new_data()
+{
+    return false;
+}
+rosflight_firmware::GNSSRaw SIL_Board::gnss_raw_read()
+{
+    rosflight_firmware::GNSSRaw out;
+    return out;
+}
+
 } // namespace rosflight_sim

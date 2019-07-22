@@ -2,6 +2,7 @@
 *.swp
 *.bak
 *.user
+.vscode/
 .DS_Store
 .cproject
 .project
