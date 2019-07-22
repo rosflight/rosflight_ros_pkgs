@@ -109,7 +109,7 @@ private:
   int pwm_outputs_[14];  //assumes maximum of 14 channels
 
   // Time variables
-  double boot_time_;
+  gazebo::common::Time boot_time_;
   uint64_t next_imu_update_time_us_;
   uint64_t imu_update_period_us_;
 

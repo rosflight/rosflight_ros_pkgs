@@ -43,7 +43,7 @@ SIL_Board::SIL_Board() :
 
 void SIL_Board::init_board(void)
 {
-  boot_time_ = GZ_COMPAT_GET_SIM_TIME(world_).Double();
+  boot_time_ = GZ_COMPAT_GET_SIM_TIME(world_);
 }
 
 void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
@@ -62,6 +62,7 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   int remote_port = nh->param<int>("ROS_port", 14520);
 
   set_ports(bind_host, bind_port, remote_host, remote_port);
+  gzmsg << "ROSflight SIL Conneced to " << remote_host << ":" << remote_port << " from " << bind_host << ":" << bind_port << "\n";
 
   // Get Sensor Parameters
   gyro_stdev_ = nh->param<double>("gyro_stdev", 0.13);
@@ -136,12 +137,14 @@ void SIL_Board::board_reset(bool bootloader)
 
 uint32_t SIL_Board::clock_millis()
 {
-  return (uint32_t)((GZ_COMPAT_GET_SIM_TIME(world_).Double() - boot_time_)*1e3);
+  uint32_t millis =  (uint32_t)((GZ_COMPAT_GET_SIM_TIME(world_) - boot_time_).Double()*1e3);
+  return millis;
 }
 
 uint64_t SIL_Board::clock_micros()
 {
-  return (uint64_t)((GZ_COMPAT_GET_SIM_TIME(world_).Double() - boot_time_)*1e6);
+  uint64_t micros = (uint64_t)((GZ_COMPAT_GET_SIM_TIME(world_) - boot_time_).Double()*1e6);
+  return micros;
 }
 
 void SIL_Board::clock_delay(uint32_t milliseconds)
