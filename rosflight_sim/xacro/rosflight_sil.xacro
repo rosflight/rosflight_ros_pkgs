@@ -15,7 +15,7 @@
       namespace="${namespace}"
       parent_link="${namespace}/base_link"
       mav_type="fixedwing"
-      parent_frame_id="${namespace}/base_link"/>
+      parent_frame_id="${parent_link}"/>
   </xacro:macro>
 
   <!-- Macro to add a rosflight_sil plugin. -->

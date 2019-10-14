@@ -60,5 +60,9 @@ Author: Gary Ellingson
   <!-- ROSflight SIL -->
   <xacro:include filename="$(find rosflight_sim)/xacro/rosflight_sil.xacro"/>
   <xacro:generic_fixedwing namespace="${namespace}" parent_link="${namespace}/base_link"/>
+  <!-- Include GPS plugin -->
+  <xacro:include filename="$(find rosflight_plugins)/xacro/GPS.xacro"/>
+  <!-- Attach GPS plugin-->
+  <xacro:gps_plugin_macro namespace="${namespace}" parent_link="${namespace}/base_link"/>
 
 </robot>
