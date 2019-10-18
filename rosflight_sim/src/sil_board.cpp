@@ -55,13 +55,8 @@ constexpr double deg2Rad(double x)
   return 180.0/M_PI * x;
 }
 
-
-
-    void
-    SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link,
-                            gazebo::physics::WorldPtr world,
-                            gazebo::physics::ModelPtr model,
-                            ros::NodeHandle *nh, std::string mav_type) {
+void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
+                            gazebo::physics::ModelPtr model, ros::NodeHandle *nh, std::string mav_type) {
   link_ = link;
   world_ = world;
   model_ = model;
