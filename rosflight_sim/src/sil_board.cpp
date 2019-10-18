@@ -46,9 +46,22 @@ void SIL_Board::init_board(void)
   boot_time_ = GZ_COMPAT_GET_SIM_TIME(world_);
 }
 
-void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
-                             gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type)
+constexpr double rad2Deg(double x)
 {
+  return M_PI/180.0 * x;
+}
+constexpr double deg2Rad(double x)
+{
+  return 180.0/M_PI * x;
+}
+
+
+
+    void
+    SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link,
+                            gazebo::physics::WorldPtr world,
+                            gazebo::physics::ModelPtr model,
+                            ros::NodeHandle *nh, std::string mav_type) {
   link_ = link;
   world_ = world;
   model_ = model;
@@ -99,8 +112,15 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   GZ_COMPAT_SET_X(inertial_magnetic_field_, cos(-inclination)*cos(-declination));
   GZ_COMPAT_SET_Y(inertial_magnetic_field_, cos(-inclination)*sin(-declination));
 
-  // Get the desired altitude at the ground (for baro simulation)
-  ground_altitude_ = nh->param<double>("ground_altitude", 1387.0);
+  // Get the desired altitude at the ground (for baro and LLA)
+
+  origin_altitude_ = nh->param<double>("origin_altitude", 1387.0);
+  origin_latitude_ = nh->param<double>("origin_latitude", 40.2463724);
+  origin_longitude_ = nh->param<double>("origin_longitude", -111.6474138);
+
+  horizontal_gps_stdev_ = nh->param<double>("horizontal_gps_stdev", 1.0);
+  vertical_gps_stdev_ = nh->param<double>("vertical_gps_stdev", 3.0);
+  gps_velocity_stdev_ = nh->param<double>("gps_velocity_stdev", 0.1);
 
   // Configure Noise
   random_generator_= std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
@@ -299,7 +319,7 @@ void SIL_Board::baro_read(float *pressure, float *temperature)
   GazeboPose current_state_NWU = GZ_COMPAT_GET_WORLD_POSE(link_);
 
   // Invert measurement model for pressure and temperature
-  double alt = GZ_COMPAT_GET_Z(GZ_COMPAT_GET_POS(current_state_NWU)) + ground_altitude_;
+  double alt = GZ_COMPAT_GET_Z(GZ_COMPAT_GET_POS(current_state_NWU)) + origin_altitude_;
 
   // Convert to the true pressure reading
   double y_baro = 101325.0f*(float)pow((1-2.25694e-5 * alt), 5.2553);
@@ -490,23 +510,155 @@ void SIL_Board::RCCallback(const rosflight_msgs::RCRaw& msg)
 }
 
 
-bool SIL_Board::gnss_present() { return false; }
+bool SIL_Board::gnss_present() { return true; }
 void SIL_Board::gnss_update() {}
+
+static void lla2ecef(double lat, double lon, double alt, double ecef[3]) {
+  static constexpr double A = 6378137.0; // WGS-84 Earth semimajor axis (m)
+  static constexpr double B = 6356752.314245; // Derived Earth semiminor axis (m)
+  static constexpr double F = (A - B) / A; // Ellipsoid Flatness
+
+  double sinp = std::sin(lat);
+  double cosp = std::cos(lat);
+  double sinl = std::sin(lon);
+  double cosl = std::cos(lon);
+  double e2 = F * (2.0 - F);
+  double v = A / std::sqrt(1.0 - e2 * sinp * sinp);
+
+  ecef[0] = (v + alt) * cosp * cosl;
+  ecef[1] = (v + alt) * cosp * sinl;
+  ecef[2] = (v * (1.0 - e2) + alt) * sinp;
+}
 
 rosflight_firmware::GNSSData SIL_Board::gnss_read()
 {
-    rosflight_firmware::GNSSData out;
-    return out;
+  // We are going to pretend the earth is perfectly round
+  static constexpr double R = 6378145.0f;
+
+  rosflight_firmware::GNSSData out;
+  out.fix_type = rosflight_firmware::GNSSFixType::GNSS_FIX_TYPE_FIX;
+  out.time_of_week = GZ_COMPAT_GET_SIM_TIME(world_).Double()*1000;
+  out.time = GZ_COMPAT_GET_SIM_TIME(world_).Double();
+  out.nanos = (GZ_COMPAT_GET_SIM_TIME(world_).Double() - out.time)*1e9;
+
+  GazeboPose current_state_NWU = GZ_COMPAT_GET_WORLD_POSE(link_);
+  double pn = GZ_COMPAT_GET_X(GZ_COMPAT_GET_POS(current_state_NWU));
+  double pe = -GZ_COMPAT_GET_Y(GZ_COMPAT_GET_POS(current_state_NWU));
+  double pd = -GZ_COMPAT_GET_Z(GZ_COMPAT_GET_POS(current_state_NWU));
+
+  pn += horizontal_gps_stdev_ * normal_distribution_(random_generator_);
+  pe += horizontal_gps_stdev_ * normal_distribution_(random_generator_);
+  pe += vertical_gps_stdev_ * normal_distribution_(random_generator_);
+
+  GazeboVector current_vel_NWU = GZ_COMPAT_GET_WORLD_LINEAR_VEL(link_);
+  double vn = GZ_COMPAT_GET_X(current_vel_NWU);
+  double ve = GZ_COMPAT_GET_Y(current_vel_NWU);
+  double vd = GZ_COMPAT_GET_Z(current_vel_NWU);
+
+  vn += gps_velocity_stdev_ * normal_distribution_(random_generator_);
+  ve += gps_velocity_stdev_ * normal_distribution_(random_generator_);
+  ve += gps_velocity_stdev_ * normal_distribution_(random_generator_);
+
+  // Small angle approximation
+  double lat = origin_latitude_ + rad2Deg(pn/R);
+  double lon = origin_longitude_ + rad2Deg(pe/(R*std::cos(deg2Rad(origin_latitude_))));
+  double alt = origin_altitude_ - pd;
+  
+  out.lat = std::round(lat * 1e7);
+  out.lon = std::round(lon * 1e7);
+  out.height = std::round(alt * 1e3);
+  out.vel_n = std::round(vn * 1e3);
+  out.vel_e = std::round(ve * 1e3);
+  out.vel_d = std::round(vd * 1e3);
+
+  out.h_acc = std::round(horizontal_gps_stdev_ * 1000.0);
+  out.v_acc = std::round(vertical_gps_stdev_ * 1000.0);
+  
+  double ecef[3];
+  lla2ecef(lat, lon, alt, ecef);
+  out.ecef.x = std::round(ecef[0] * 100);
+  out.ecef.y = std::round(ecef[1] * 100);
+  out.ecef.z = std::round(ecef[2] * 100);
+
+  GazeboQuaternion qe2n(0, -M_PI/2.0- deg2Rad(lon), deg2Rad(lat));
+  GazeboVector current_vel_ECEF = qe2n.RotateVector(current_vel_NWU);
+  out.ecef.vx = std::round(GZ_COMPAT_GET_X(current_vel_ECEF) * 100);
+  out.ecef.vy = std::round(GZ_COMPAT_GET_Y(current_vel_ECEF) * 100);
+  out.ecef.vz = std::round(GZ_COMPAT_GET_Z(current_vel_ECEF) * 100);
+
+  out.ecef.s_acc = std::round(gps_velocity_stdev_ * 1000.0);
+  out.ecef.p_acc = horizontal_gps_stdev_;
+
+  return out;
 }
 
 bool SIL_Board::gnss_has_new_data()
 {
-    return false;
+  return true;
 }
 rosflight_firmware::GNSSRaw SIL_Board::gnss_raw_read()
 {
-    rosflight_firmware::GNSSRaw out;
-    return out;
+  static constexpr double R = 6378145.0f;
+  rosflight_firmware::GNSSRaw out;
+
+  out.time_of_week = GZ_COMPAT_GET_SIM_TIME(world_).Double() * 1000;
+  // TODO
+  out.year = 0;
+  out.month = 0;
+  out.day = 0;
+  out.hour = 0;
+  out.min = 0;
+  out.sec = 0;
+  out.valid = 0;
+  out.t_acc = 0;
+  out.nano = 0;
+
+  out.fix_type = rosflight_firmware::GNSSFixType::GNSS_FIX_TYPE_FIX;
+  out.num_sat = 15;
+
+  GazeboPose current_state_NWU = GZ_COMPAT_GET_WORLD_POSE(link_);
+  double pn = GZ_COMPAT_GET_X(GZ_COMPAT_GET_POS(current_state_NWU));
+  double pe = -GZ_COMPAT_GET_Y(GZ_COMPAT_GET_POS(current_state_NWU));
+  double pd = -GZ_COMPAT_GET_Z(GZ_COMPAT_GET_POS(current_state_NWU));
+
+  pn += horizontal_gps_stdev_ * normal_distribution_(random_generator_);
+  pe += horizontal_gps_stdev_ * normal_distribution_(random_generator_);
+  pe += vertical_gps_stdev_ * normal_distribution_(random_generator_);
+
+  GazeboVector current_vel_NWU = GZ_COMPAT_GET_WORLD_LINEAR_VEL(link_);
+  double vn = GZ_COMPAT_GET_X(current_vel_NWU);
+  double ve = GZ_COMPAT_GET_Y(current_vel_NWU);
+  double vd = GZ_COMPAT_GET_Z(current_vel_NWU);
+
+  vn += gps_velocity_stdev_ * normal_distribution_(random_generator_);
+  ve += gps_velocity_stdev_ * normal_distribution_(random_generator_);
+  ve += gps_velocity_stdev_ * normal_distribution_(random_generator_);
+
+  // Small angle approximation
+  double lat = origin_latitude_ + rad2Deg(pn / R);
+  double lon = origin_longitude_ + rad2Deg(pe / (R * std::cos(deg2Rad(origin_latitude_))));
+  double alt = origin_altitude_ - pd;
+
+  out.lat = std::round(lat * 1e7);
+  out.lon = std::round(lon * 1e7);
+  out.height = std::round(alt * 1e3);
+  out.height_msl = std::round(alt * 1e3);
+  out.vel_n = std::round(vn * 1e3);
+  out.vel_e = std::round(ve * 1e3);
+  out.vel_d = std::round(vd * 1e3);
+
+  out.h_acc = std::round(horizontal_gps_stdev_ * 1000.0);
+  out.v_acc = std::round(vertical_gps_stdev_ * 1000.0);
+
+  double ground_speed = std::sqrt(vn*vn + ve*ve);
+  out.g_speed = std::round(ground_speed * 1000);
+
+  double head_mot = std::atan2(ve, vn);
+  out.head_mot = std::round(deg2Rad(head_mot)*1e5);
+  out.p_dop = 0.0;  // TODO
+  out.rosflight_timestamp = clock_micros();
+
+  return out;
 }
 
 } // namespace rosflight_sim

@@ -83,6 +83,10 @@ private:
   double sonar_max_range_;
   double sonar_min_range_;
 
+  double horizontal_gps_stdev_;
+  double vertical_gps_stdev_;
+  double gps_velocity_stdev_;
+
   GazeboVector gyro_bias_;
   GazeboVector acc_bias_;
   GazeboVector mag_bias_;
@@ -94,7 +98,9 @@ private:
   std::uniform_real_distribution<double> uniform_distribution_;
 
   GazeboVector gravity_;
-  double ground_altitude_;
+  double origin_latitude_;
+  double origin_longitude_;
+  double origin_altitude_;
 
   gazebo::physics::WorldPtr world_;
   gazebo::physics::ModelPtr model_;
