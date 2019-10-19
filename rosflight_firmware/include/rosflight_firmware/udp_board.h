@@ -43,8 +43,8 @@
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 
-#include "board.h"
 #include "mavlink/mavlink.h"
+#include "board.h"
 
 namespace rosflight_firmware
 {

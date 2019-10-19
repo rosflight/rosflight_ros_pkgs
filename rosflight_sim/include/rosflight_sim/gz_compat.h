@@ -36,6 +36,8 @@
 
 #if GAZEBO_MAJOR_VERSION >= 8
 
+#include "gazebo/common/CommonTypes.hh"
+
 using GazeboVector = ignition::math::Vector3d;
 using GazeboPose = ignition::math::Pose3d;
 using GazeboQuaternion = ignition::math::Quaterniond;
@@ -64,6 +66,8 @@ using GazeboQuaternion = ignition::math::Quaterniond;
 #define GZ_COMPAT_DISCONNECT_WORLD_UPDATE_BEGIN(CONNECTION) (CONNECTION).reset()
 #define GZ_COMPAT_GET_GRAVITY(WORLD_PTR) (WORLD_PTR)->Gravity()
 #define GZ_COMPAT_GET_MASS(INERTIAL_PTR) (INERTIAL_PTR)->Mass()
+
+
 
 #else //I.E. GAZEBO_MAJOR_VERSION < 8
 

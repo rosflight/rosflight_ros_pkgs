@@ -203,8 +203,11 @@ public:
   // Gazebo stuff
   void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world, gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type);
   inline const int* get_outputs() const { return pwm_outputs_; }
+#if GAZEBO_MAJOR_VERSION >= 9
+  gazebo::common::SphericalCoordinates sph_coord_;
+#endif
 
-};
+  };
 
 } // namespace rosflight_sim
 

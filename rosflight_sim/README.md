@@ -1,4 +1,4 @@
-# ROSFlight Sim Package
+# ROSflight Sim Package
 
 This package runs the ROSflight firmware as a gazebo plugin.  It simulates all the connected sensors
 and communicates the same way that the hardware does in real life.
