@@ -51,7 +51,7 @@ rosflightIO::rosflightIO()
 {
   command_sub_ = nh_.subscribe("command", 1, &rosflightIO::commandCallback, this);
   aux_command_sub_ = nh_.subscribe("aux_command", 1, &rosflightIO::auxCommandCallback, this);
-  attitude_sub_ = nh_.subscribe("attitude_correction", 1, &rosflightIO::attitudeCorrectionCallback, this);
+  extatt_sub_ = nh_.subscribe("external_attitude", 1, &rosflightIO::externalAttitudeCallback, this);
 
   unsaved_params_pub_ = nh_.advertise<std_msgs::Bool>("unsaved_params", 1, true);
   error_pub_ = nh_.advertise<rosflight_msgs::Error>("rosflight_errors",5,true); // A relatively large queue so all messages get through
@@ -876,10 +876,10 @@ void rosflightIO::auxCommandCallback(rosflight_msgs::AuxCommand::ConstPtr msg)
   mavrosflight_->comm.send_message(mavlink_msg);
 }
 
-void rosflightIO::attitudeCorrectionCallback(geometry_msgs::Quaternion::ConstPtr msg)
+void rosflightIO::externalAttitudeCallback(geometry_msgs::Quaternion::ConstPtr msg)
 {
   mavlink_message_t mavlink_msg;
-  mavlink_msg_attitude_correction_pack(1, 50, &mavlink_msg, msg->w, msg->x, msg->y, msg->z);
+  mavlink_msg_external_attitude_pack(1, 50, &mavlink_msg, msg->w, msg->x, msg->y, msg->z);
   mavrosflight_->comm.send_message(mavlink_msg);
 }
 
