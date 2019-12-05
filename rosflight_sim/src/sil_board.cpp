@@ -366,6 +366,31 @@ float SIL_Board::sonar_read(void)
   else
     return alt + sonar_stdev_*normal_distribution_(random_generator_);
 }
+bool SIL_Board::battery_voltage_present()
+{
+  return true;
+}
+float SIL_Board::battery_voltage_read()
+{
+  return 15 * battery_voltage_multiplier;
+}
+void SIL_Board::battery_voltage_set_multiplier(double multiplier)
+{
+  battery_voltage_multiplier = multiplier;
+}
+
+bool SIL_Board::battery_current_present()
+{
+  return true;
+}
+float SIL_Board::battery_current_read()
+{
+  return 1 * battery_current_multiplier;
+}
+void SIL_Board::battery_current_set_multiplier(double multiplier)
+{
+  battery_current_multiplier = multiplier;
+}
 
 // PWM
 void SIL_Board::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)

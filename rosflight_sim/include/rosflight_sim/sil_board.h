@@ -121,6 +121,9 @@ private:
   GazeboVector prev_vel_3_;
   gazebo::common::Time last_time_;
 
+  float battery_voltage_multiplier{1.0};
+  float battery_current_multiplier{1.0};
+
 public:
   SIL_Board();
 
@@ -193,6 +196,22 @@ public:
   rosflight_firmware::GNSSData gnss_read() override;
   bool gnss_has_new_data() override;
   rosflight_firmware::GNSSRaw gnss_raw_read() override;
+
+  bool diff_pressure_present() override;
+  void diff_pressure_update() override;
+  void diff_pressure_read(float *diff_pressure, float *temperature) override;
+
+  bool sonar_present() override;
+  void sonar_update() override;
+  float sonar_read() override;
+
+  bool diff_pressure_present() override;
+  void diff_pressure_update() override;
+  void diff_pressure_read(float *diff_pressure, float *temperature) override;
+
+  bool sonar_present() override;
+  void sonar_update() override;
+  float sonar_read() override;
 
   // Gazebo stuff
   void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world, gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type);
