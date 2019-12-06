@@ -29,6 +29,8 @@ add_service_files(
   ParamFile.srv
   ParamGet.srv
   ParamSet.srv
+  ConfigSet.srv
+  ConfigGet.srv
 )
 
 generate_messages(

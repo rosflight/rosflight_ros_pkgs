@@ -1,0 +1,6 @@
+# Request a configuration setting
+
+uint8 device # The device for which to get the configuration
+---
+bool successful # If false, the request timed out
+uint8 configuration # the current configuration for the device

@@ -1,0 +1,7 @@
+# Set a configuration setting
+
+uint8 device # The device whose configuration is being set
+uint8 configuration # The new configuration option for the device
+---
+bool successful
+string error_message # for future use
