@@ -1,5 +1,6 @@
 #include <rosflight/mavrosflight/config_manager.h>
 
+constexpr std::chrono::milliseconds mavrosflight::ConfigManager::timeout; //Why, C++?
 mavrosflight::ConfigManager::ConfigManager(mavrosflight::MavlinkComm *const comm) : comm_{comm}
 {
 
