@@ -8,7 +8,8 @@ mavrosflight::ConfigManager::ConfigManager(mavrosflight::MavlinkComm *const comm
 
 mavrosflight::ConfigManager::~ConfigManager()
 {
-
+  for (config_promise_t *promise:promises_)
+    delete promise;
 }
 
 void mavrosflight::ConfigManager::handle_mavlink_message(const mavlink_message_t &msg)
