@@ -47,6 +47,7 @@ MavROSflight::MavROSflight(MavlinkComm &mavlink_comm, uint8_t sysid /* = 1 */, u
   comm(mavlink_comm),
   param(&comm),
   time(&comm),
+  config_manager(&comm),
   sysid_(sysid),
   compid_(compid)
 {

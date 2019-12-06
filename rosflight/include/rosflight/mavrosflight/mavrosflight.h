@@ -41,6 +41,7 @@
 #include <rosflight/mavrosflight/mavlink_comm.h>
 #include <rosflight/mavrosflight/param_manager.h>
 #include <rosflight/mavrosflight/time_manager.h>
+#include <rosflight/mavrosflight/config_manager.h>
 
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
 #include <rosflight/mavrosflight/param_listener_interface.h>
@@ -73,6 +74,7 @@ public:
   MavlinkComm& comm;
   ParamManager param;
   TimeManager time;
+  ConfigManager config_manager;
 
 private:
 
