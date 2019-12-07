@@ -15,7 +15,7 @@ namespace mavrosflight
     ~ConfigManager();
     void handle_mavlink_message(const mavlink_message_t &msg) override;
     bool get_configuration(uint8_t device, uint8_t &config);
-    void set_configuration(uint8_t device, uint8_t config);
+    bool set_configuration(uint8_t device, uint8_t config);
 
     static constexpr std::chrono::milliseconds timeout{500};
   private:

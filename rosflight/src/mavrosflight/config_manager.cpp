@@ -3,7 +3,7 @@
 constexpr std::chrono::milliseconds mavrosflight::ConfigManager::timeout; //Why, C++?
 mavrosflight::ConfigManager::ConfigManager(mavrosflight::MavlinkComm *const comm) : comm_{comm}
 {
-
+  comm_->register_mavlink_listener(this);
 }
 
 mavrosflight::ConfigManager::~ConfigManager()
@@ -60,9 +60,11 @@ void mavrosflight::ConfigManager::send_config_request(uint8_t device)
   comm_->send_message(config_request_message);
 }
 
-void mavrosflight::ConfigManager::set_configuration(uint8_t device, uint8_t config)
+bool mavrosflight::ConfigManager::set_configuration(uint8_t device, uint8_t config)
 {
-  send_config(device, config); // In the future, there may be a response, which would be handled here
+  send_config(device, config);
+  // In the future, there may be a response, which would be handled here
+  return true;
 }
 
 void mavrosflight::ConfigManager::send_config(uint8_t device, uint8_t config)

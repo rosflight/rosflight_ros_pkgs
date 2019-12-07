@@ -65,7 +65,9 @@ rosflightIO::rosflightIO()
   calibrate_rc_srv_ = nh_.advertiseService("calibrate_rc_trim", &rosflightIO::calibrateRCTrimSrvCallback, this);
   reboot_srv_ = nh_.advertiseService("reboot", &rosflightIO::rebootSrvCallback, this);
   reboot_bootloader_srv_ = nh_.advertiseService("reboot_to_bootloader", &rosflightIO::rebootToBootloaderSrvCallback, this);
-  
+  config_set_srv_ = nh_.advertiseService("config_set", &rosflightIO::configSetSrvCallback, this);
+  config_get_srv_ = nh_.advertiseService("config_get", &rosflightIO::configGetSrvCallback, this);
+
   ros::NodeHandle nh_private("~");
 
   if (nh_private.param<bool>("udp", false))
@@ -667,7 +669,7 @@ void rosflightIO::handle_small_range_msg(const mavlink_message_t &msg)
     case ROSFLIGHT_RANGE_LIDAR:
       alt_msg.radiation_type  = sensor_msgs::Range::INFRARED;
       alt_msg.field_of_view   = .0349066; //approx 2 deg
-      
+
       if (lidar_pub_.getTopic().empty())
       {
         lidar_pub_ = nh_.advertise<sensor_msgs::Range>("lidar", 1);
@@ -1021,5 +1023,27 @@ bool rosflightIO::rebootToBootloaderSrvCallback(std_srvs::Trigger::Request &req,
   res.success = true;
   return true;
 }
+
+  bool
+  rosflightIO::configGetSrvCallback(rosflight_msgs::ConfigGet::Request &req, rosflight_msgs::ConfigGet::Response &res)
+  {
+    uint8_t device = req.device;
+    uint8_t config;
+    bool success = mavrosflight_->config_manager.get_configuration(device, config);
+    res.successful = success;
+    res.configuration = config;
+    return true;
+  }
+
+  bool
+  rosflightIO::configSetSrvCallback(rosflight_msgs::ConfigSet::Request &req, rosflight_msgs::ConfigSet::Response &res)
+  {
+    uint8_t device = req.device;
+    uint8_t config = req.configuration;
+    bool success = mavrosflight_->config_manager.set_configuration(device, config);
+    res.successful = success;
+    res.error_message = "";
+    return true;
+  }
 
 } // namespace rosflight_io
