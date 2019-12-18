@@ -16,6 +16,7 @@ namespace mavrosflight
     void handle_mavlink_message(const mavlink_message_t &msg) override;
     bool get_configuration(uint8_t device, uint8_t &config);
     bool set_configuration(uint8_t device, uint8_t config);
+    void request_config_info();
 
     static constexpr std::chrono::milliseconds timeout{500};
   private:
@@ -27,7 +28,17 @@ namespace mavrosflight
     MavlinkComm *const comm_;
     std::vector<config_promise_t *> promises_;
 
+    typedef struct
+    {
+      std::string name;
+      uint8_t max_value;
+      std::vector<std::string> config_names;
+    }device_info_t;
+    std::vector<device_info_t> device_names_;
+
     void handle_config_message(const mavlink_message_t &msg);
+    void handle_device_info_message(const mavlink_message_t &msg);
+    void handle_config_info_message(const mavlink_message_t &msg);
     void send_config_request(uint8_t device);
     void send_config(uint8_t device, uint8_t config);
 

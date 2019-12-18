@@ -42,6 +42,7 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
 #include <tf/tf.h>
+#include <iostream>
 
 #include <rosflight/rosflight_io.h>
 
@@ -1029,6 +1030,7 @@ bool rosflightIO::rebootToBootloaderSrvCallback(std_srvs::Trigger::Request &req,
   {
     uint8_t device = req.device;
     uint8_t config;
+    std::cout<<"Config get: "<<static_cast<int>(device)<<std::endl;
     bool success = mavrosflight_->config_manager.get_configuration(device, config);
     res.successful = success;
     res.configuration = config;
