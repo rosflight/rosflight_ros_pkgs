@@ -1,5 +1,7 @@
 #include <rosflight/mavrosflight/config_manager.h>
+#include <boost/algorithm/string.hpp>
 #include <iostream> //testing
+
 
 constexpr std::chrono::milliseconds mavrosflight::ConfigManager::timeout; //Why, C++?
 mavrosflight::ConfigManager::ConfigManager(mavrosflight::MavlinkComm *const comm) : comm_{comm}
@@ -27,8 +29,8 @@ void mavrosflight::ConfigManager::handle_mavlink_message(const mavlink_message_t
       handle_config_info_message(msg);
       break;
     default:
-      if(msg.msgid >= 200)
-        std::cout<<static_cast<int>(msg.msgid)<<std::endl;
+      if (msg.msgid >= 200)
+        std::cout << static_cast<int>(msg.msgid) << std::endl;
   }
 }
 
@@ -47,8 +49,12 @@ void mavrosflight::ConfigManager::handle_config_message(const mavlink_message_t 
     }
 }
 
-bool mavrosflight::ConfigManager::get_configuration(uint8_t device, uint8_t &config)
+bool mavrosflight::ConfigManager::get_configuration(std::string device_name, std::string &config_name)
 {
+  std::tuple<bool, uint8_t> device_index_search = get_device_from_str(device_name);
+  if (!std::get<0>(device_index_search))
+    return false;
+  uint8_t device{std::get<1>(device_index_search)};
   config_promise_t *promise = new config_promise_t;
   promise->device = device;
   promises_.push_back(promise);
@@ -59,7 +65,10 @@ bool mavrosflight::ConfigManager::get_configuration(uint8_t device, uint8_t &con
   bool success;
   if (result == std::future_status::ready)
   {
-    config = future.get();
+    uint8_t config = future.get();
+    std::cout<<"device: "<<static_cast<int>(device)<<std::endl;
+    std::cout<<"config: "<<static_cast<int>(config)<<std::endl;
+    config_name = device_info_[device].config_names[config];
     success = true;
   } else
     success = false;
@@ -74,11 +83,60 @@ void mavrosflight::ConfigManager::send_config_request(uint8_t device)
   comm_->send_message(config_request_message);
 }
 
-bool mavrosflight::ConfigManager::set_configuration(uint8_t device, uint8_t config)
+bool mavrosflight::ConfigManager::set_configuration(std::string device_name, std::string config_name)
 {
+  std::tuple<bool, uint8_t> device_index_search = get_device_from_str(device_name);
+  if (!std::get<0>(device_index_search))
+    return false;
+  uint8_t device{std::get<1>(device_index_search)};
+  std::tuple<bool, uint8_t> config_index_search = get_config_from_str(device, config_name);
+  if (!std::get<0>(config_index_search))
+    return false;
+  uint8_t config{std::get<1>(config_index_search)};
   send_config(device, config);
-  // In the future, there may be a response, which would be handled here
   return true;
+}
+
+std::tuple<bool, uint8_t> mavrosflight::ConfigManager::get_device_from_str(const std::string &name)
+{
+  std::string internal_name = make_internal_name(name);
+  for (uint8_t i{0}; i < device_info_.size(); i++)
+    if (internal_name == device_info_[i].internal_name)
+      return std::make_tuple(true, i);
+  std::cout << "Device not found: " << name << std::endl;
+  return std::make_tuple(false, 0);
+}
+
+std::tuple<bool, uint8_t> mavrosflight::ConfigManager::get_config_from_str(uint8_t device, const std::string &name)
+{
+  std::vector<std::string> &configs = device_info_[device].config_names;
+  std::string internal_name = make_internal_name(name);
+  std::vector<std::string> words = get_words(internal_name);
+  uint8_t word_match{0};
+  unsigned int word_match_count{0};
+  for (uint8_t i{0}; i < configs.size(); i++)
+  {
+    std::string config_internal_name = make_internal_name(configs[i]);
+    if (internal_name == config_internal_name)
+      return std::make_tuple(true, i);
+    std::vector<std::string> config_words = get_words(config_internal_name);
+    for (std::string word:words)
+      for (std::string config_word: config_words)
+        if (config_word == word)
+        {
+          word_match = i;
+          word_match_count++;
+          goto end_of_word_matching; // breaking out of nested loops is one of the last accepted uses of goto
+        }
+    end_of_word_matching:;
+  }
+  if (word_match_count == 1)
+  {
+    std::cout<<"Config found through word matching"<<std::endl;
+    return std::make_tuple(true, word_match);
+  }
+  std::cout<<"Config not found: "<<std::endl;
+  return std::make_tuple(false, 0);
 }
 
 void mavrosflight::ConfigManager::request_config_info()
@@ -98,11 +156,13 @@ void mavrosflight::ConfigManager::handle_device_info_message(const mavlink_messa
   mavlink_rosflight_device_info_t device_info;
   mavlink_msg_rosflight_device_info_decode(&msg, &device_info);
   uint8_t device = device_info.device;
-  if(device >= device_names_.size())
-    device_names_.resize(device+1);
-  device_names_[device].name = std::string{reinterpret_cast<char*>(device_info.name)};
-  device_names_[device].max_value = device_info.max_value;
-  std::cout<<"Device info recieved: "<<static_cast<int>(device)<<','<< device_names_[device].name<<std::endl;
+  if (device >= device_info_.size())
+    device_info_.resize(device + 1);
+  device_info_[device].name = std::string{reinterpret_cast<char *>(device_info.name)};
+  device_info_[device].internal_name = make_internal_name(device_info_[device].name);
+  device_info_[device].max_value = device_info.max_value;
+  std::cout << "Device info recieved: " << static_cast<int>(device) << ',' << device_info_[device].name << std::endl;
+  std::cout<<device_info_[device].internal_name<<std::endl;
 }
 
 void mavrosflight::ConfigManager::handle_config_info_message(const mavlink_message_t &msg)
@@ -111,10 +171,40 @@ void mavrosflight::ConfigManager::handle_config_info_message(const mavlink_messa
   mavlink_msg_rosflight_config_info_decode(&msg, &config_info);
   uint8_t device = config_info.device;
   uint8_t config = config_info.config;
-  if(device >= device_names_.size())
-    device_names_.resize(device+1);
-  if(config >= device_names_[device].config_names.size())
-    device_names_[device].config_names.resize(config+1);
-  device_names_[device].config_names[config] = std::string{reinterpret_cast<char*>(config_info.name)};
-  std::cout<<"Config info recieved: "<<static_cast<int>(device)<<','<<static_cast<int>(config)<<','<<device_names_[device].config_names[config]<<std::endl;
+  if (device >= device_info_.size())
+    device_info_.resize(device + 1);
+  if (config >= device_info_[device].config_names.size())
+    device_info_[device].config_names.resize(config + 1);
+  device_info_[device].config_names[config] = std::string{reinterpret_cast<char *>(config_info.name)};
+  std::cout << "Config info recieved: " << static_cast<int>(device) << ',' << static_cast<int>(config) << ','
+            << device_info_[device].config_names[config] << std::endl;
+}
+
+std::string mavrosflight::ConfigManager::make_internal_name(const std::string &name)
+{
+  std::string internal_name = boost::algorithm::to_lower_copy(name);
+  for (size_t i{0}; i < internal_name.length(); i++)
+    if (internal_name[i] == ' ')
+      internal_name[i] = '_';
+  return internal_name;
+}
+
+std::vector<std::string> mavrosflight::ConfigManager::get_words(const std::string &internal_name)
+{
+  std::vector<std::string> words;
+  size_t start_index{0};
+  constexpr int min_word_size{3};
+  while (start_index < internal_name.length())
+  {
+    size_t next_index = internal_name.find('_', start_index);
+    if (next_index == std::string::npos)
+      next_index = internal_name.length();
+    if (next_index - start_index >= min_word_size)
+    {
+      std::string word = internal_name.substr(start_index, next_index - start_index);
+      words.push_back(word);
+    }
+    start_index = next_index+1;
+  }
+  return words;
 }

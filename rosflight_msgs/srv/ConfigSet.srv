@@ -1,7 +1,7 @@
 # Set a configuration setting
 
-uint8 device # The device whose configuration is being set
-uint8 configuration # The new configuration option for the device
+string device # The device whose configuration is being set, either a name or a number
+string configuration # The new configuration option for the device, either a name or a number
 ---
 bool successful
-string error_message # for future use
+string message # Either an error message or more specific response. May be from rosflight_io or from the firmware

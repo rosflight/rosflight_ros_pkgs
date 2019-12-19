@@ -108,6 +108,7 @@ rosflightIO::rosflightIO()
 
   // request the param list
   mavrosflight_->param.request_params();
+  mavrosflight_->config_manager.request_config_info();
   param_timer_ = nh_.createTimer(ros::Duration(PARAMETER_PERIOD), &rosflightIO::paramTimerCallback, this);
 
   // request version information
@@ -1028,9 +1029,9 @@ bool rosflightIO::rebootToBootloaderSrvCallback(std_srvs::Trigger::Request &req,
   bool
   rosflightIO::configGetSrvCallback(rosflight_msgs::ConfigGet::Request &req, rosflight_msgs::ConfigGet::Response &res)
   {
-    uint8_t device = req.device;
-    uint8_t config;
-    std::cout<<"Config get: "<<static_cast<int>(device)<<std::endl;
+    std::string device = req.device;
+    std::string config;
+    std::cout<<"Config get: "<<device<<std::endl;
     bool success = mavrosflight_->config_manager.get_configuration(device, config);
     res.successful = success;
     res.configuration = config;
@@ -1040,11 +1041,11 @@ bool rosflightIO::rebootToBootloaderSrvCallback(std_srvs::Trigger::Request &req,
   bool
   rosflightIO::configSetSrvCallback(rosflight_msgs::ConfigSet::Request &req, rosflight_msgs::ConfigSet::Response &res)
   {
-    uint8_t device = req.device;
-    uint8_t config = req.configuration;
+    std::string device = req.device;
+    std::string config = req.configuration;
     bool success = mavrosflight_->config_manager.set_configuration(device, config);
     res.successful = success;
-    res.error_message = "";
+    res.message = "";
     return true;
   }
 
