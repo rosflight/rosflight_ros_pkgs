@@ -123,6 +123,8 @@ mavrosflight::ConfigManager::get_config_from_str(uint8_t device, const std::stri
 {
   const std::vector<std::string> &configs = device_info_[device].config_names;
   std::string internal_name = make_internal_name(name);
+  if(internal_name == "default")
+    return 0;
   uint8_t word_match{0};
   unsigned int word_match_count{0};
   for (uint8_t i{0}; i < configs.size(); i++)
