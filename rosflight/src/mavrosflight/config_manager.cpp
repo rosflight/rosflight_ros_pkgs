@@ -49,12 +49,8 @@ void mavrosflight::ConfigManager::handle_config_message(const mavlink_message_t 
     }
 }
 
-bool mavrosflight::ConfigManager::get_configuration(std::string device_name, std::string &config_name)
+std::tuple<bool, uint8_t> mavrosflight::ConfigManager::get_configuration(uint8_t device)
 {
-  std::tuple<bool, uint8_t> device_index_search = get_device_from_str(device_name);
-  if (!std::get<0>(device_index_search))
-    return false;
-  uint8_t device{std::get<1>(device_index_search)};
   config_promise_t *promise = new config_promise_t;
   promise->device = device;
   promises_.push_back(promise);
@@ -63,17 +59,15 @@ bool mavrosflight::ConfigManager::get_configuration(std::string device_name, std
   send_config_request(device);
   std::future_status result = future.wait_for(timeout);
   bool success;
+  uint8_t config{0};
   if (result == std::future_status::ready)
   {
-    uint8_t config = future.get();
-    std::cout << "device: " << static_cast<int>(device) << std::endl;
-    std::cout << "config: " << static_cast<int>(config) << std::endl;
-    config_name = device_info_[device].config_names[config];
+    config = future.get();
     success = true;
   } else
     success = false;
   delete promise;
-  return success;
+  return std::make_tuple(success, config);
 }
 
 void mavrosflight::ConfigManager::send_config_request(uint8_t device)
@@ -83,16 +77,8 @@ void mavrosflight::ConfigManager::send_config_request(uint8_t device)
   comm_->send_message(config_request_message);
 }
 
-bool mavrosflight::ConfigManager::set_configuration(std::string device_name, std::string config_name)
+bool mavrosflight::ConfigManager::set_configuration(uint8_t device, uint8_t config)
 {
-  std::tuple<bool, uint8_t> device_index_search = get_device_from_str(device_name);
-  if (!std::get<0>(device_index_search))
-    return false;
-  uint8_t device{std::get<1>(device_index_search)};
-  std::tuple<bool, uint8_t> config_index_search = get_config_from_str(device, config_name);
-  if (!std::get<0>(config_index_search))
-    return false;
-  uint8_t config{std::get<1>(config_index_search)};
   send_config(device, config);
   return true;
 }
@@ -226,4 +212,12 @@ std::vector<std::string> mavrosflight::ConfigManager::get_words(const std::strin
     start_index = next_index + 1;
   }
   return words;
+}
+
+bool mavrosflight::ConfigManager::is_uint8(const std::string &str)
+{
+  if(str.find_first_not_of("0123456789") != std::string::npos)
+    return false;
+  unsigned int value = std::stoul(str);
+  return value <= UINT8_MAX;
 }

@@ -16,8 +16,8 @@ namespace mavrosflight
     ConfigManager(MavlinkComm *const comm);
     ~ConfigManager();
     void handle_mavlink_message(const mavlink_message_t &msg) override;
-    bool get_configuration(std::string device_name, std::string &config_name);
-    bool set_configuration(std::string device_name, std::string config_name);
+    std::tuple<bool, uint8_t> get_configuration(uint8_t device);
+    bool set_configuration(uint8_t device, uint8_t config);
     void request_config_info();
 
     std::tuple<bool, uint8_t> get_device_from_str(const std::string &name) const;
@@ -54,6 +54,7 @@ namespace mavrosflight
 
     static std::string make_internal_name(const std::string &name);
     static std::vector<std::string> get_words(const std::string &internal_name);
+    static bool is_uint8(const std::string &str);
 
   }; // class ConfigManager
 } // namespace mavrosflight

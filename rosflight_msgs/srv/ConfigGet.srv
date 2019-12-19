@@ -4,3 +4,4 @@ string device # The device for the configuration. Either a name or a number (as 
 ---
 bool successful # If false, the request timed out
 string configuration # the current configuration for the device
+string message # An optional message, such as an error message
