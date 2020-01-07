@@ -13,11 +13,17 @@ namespace mavrosflight
   class ConfigManager : public MavlinkListenerInterface
   {
   public:
+    typedef struct
+    {
+      bool successful;
+      bool reboot_required;
+      std::string error_message;
+    } config_response_t;
     ConfigManager(MavlinkComm *const comm);
     ~ConfigManager();
     void handle_mavlink_message(const mavlink_message_t &msg) override;
     std::tuple<bool, uint8_t> get_configuration(uint8_t device);
-    bool set_configuration(uint8_t device, uint8_t config);
+    config_response_t set_configuration(uint8_t device, uint8_t config);
     void request_config_info();
 
     std::tuple<bool, uint8_t> get_device_from_str(const std::string &name) const;
@@ -37,6 +43,15 @@ namespace mavrosflight
     MavlinkComm *const comm_;
     std::vector<config_promise_t *> promises_;
 
+
+    typedef struct
+    {
+      std::promise<config_response_t> promise;
+      uint8_t device;
+      uint8_t config;
+    } config_response_promise_t;
+    std::vector<config_response_promise_t *> config_response_promises_;
+
     typedef struct
     {
       std::string name;
@@ -49,8 +64,9 @@ namespace mavrosflight
     void handle_config_message(const mavlink_message_t &msg);
     void handle_device_info_message(const mavlink_message_t &msg);
     void handle_config_info_message(const mavlink_message_t &msg);
-    void send_config_request(uint8_t device);
-    void send_config(uint8_t device, uint8_t config);
+    void handle_config_response_message(const mavlink_message_t &msg);
+    void send_config_get_request(uint8_t device);
+    void send_config_set_request(uint8_t device, uint8_t config);
 
     static std::string make_internal_name(const std::string &name);
     static std::vector<std::string> get_words(const std::string &internal_name);

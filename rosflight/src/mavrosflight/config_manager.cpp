@@ -28,9 +28,11 @@ void mavrosflight::ConfigManager::handle_mavlink_message(const mavlink_message_t
     case MAVLINK_MSG_ID_ROSFLIGHT_CONFIG_INFO:
       handle_config_info_message(msg);
       break;
+    case MAVLINK_MSG_ID_ROSFLIGHT_CONFIG_STATUS:
+      handle_config_response_message(msg);
+      break;
     default:
-      if (msg.msgid >= 200)
-        std::cout << static_cast<int>(msg.msgid) << std::endl;
+      break;
   }
 }
 
@@ -56,7 +58,7 @@ std::tuple<bool, uint8_t> mavrosflight::ConfigManager::get_configuration(uint8_t
   promises_.push_back(promise);
 
   std::future<uint8_t> future = promise->promise.get_future();
-  send_config_request(device);
+  send_config_get_request(device);
   std::future_status result = future.wait_for(timeout);
   bool success;
   uint8_t config{0};
@@ -65,22 +67,94 @@ std::tuple<bool, uint8_t> mavrosflight::ConfigManager::get_configuration(uint8_t
     config = future.get();
     success = true;
   } else
+  {
     success = false;
+    for(size_t promise_index{0}; promise_index < promises_.size(); promise_index++)
+      if(promises_[promise_index]==promise)
+      {
+        promises_.erase(promises_.begin() + promise_index);
+        break;
+      }
+  }
   delete promise;
   return std::make_tuple(success, config);
 }
 
-void mavrosflight::ConfigManager::send_config_request(uint8_t device)
+void mavrosflight::ConfigManager::send_config_get_request(uint8_t device)
 {
   mavlink_message_t config_request_message;
   mavlink_msg_rosflight_config_request_pack(1, 0, &config_request_message, device);
   comm_->send_message(config_request_message);
 }
 
-bool mavrosflight::ConfigManager::set_configuration(uint8_t device, uint8_t config)
+mavrosflight::ConfigManager::config_response_t
+mavrosflight::ConfigManager::set_configuration(uint8_t device, uint8_t config)
 {
-  send_config(device, config);
-  return true;
+  std::cout << "Starting set_configuration(" << +device << ", " << +config << std::endl;
+  config_response_promise_t *promise = new config_response_promise_t;
+  promise->device = device;
+  promise->config = config;
+  std::future<config_response_t> future = promise->promise.get_future();
+  config_response_promises_.push_back(promise);
+  std::cout << "Promise made. Sending request" << std::endl;
+  send_config_set_request(device, config);
+  std::cout << "Request sent. Waiting for response" << std::endl;
+  std::future_status result = future.wait_for(timeout);
+
+  config_response_t response;
+
+  if (result == std::future_status::ready) // A response was received
+  {
+    std::cout << "Response recieved" << std::endl;
+    std::cout << "Future is" << (future.valid() ? " " : " not ") << "valid" << std::endl;
+    response = future.get();
+    std::cout << "Response read" << std::endl;
+    std::cout << response.successful << std::endl;
+    std::cout << response.error_message << std::endl;
+  } else // no response was received
+  {
+    std::cout << "Timeout" << std::endl;
+    response.successful = false;
+    response.reboot_required = false;
+    response.error_message = "No response received. The configuration may or may not be set";
+    for (size_t promise_index{0}; promise_index < config_response_promises_.size(); promise_index++)
+      if (config_response_promises_[promise_index] == promise)
+      {
+        config_response_promises_.erase(config_response_promises_.begin() + promise_index);
+        break;
+      }
+  }
+  std::cout << promise << std::endl;
+  delete promise;
+  std::cout << "promise deleted" << std::endl;
+
+  return response;
+}
+
+void mavrosflight::ConfigManager::handle_config_response_message(const mavlink_message_t &msg)
+{
+  std::cout << "Config Response Received" << std::endl;
+  mavlink_rosflight_config_status_t response_msg;
+  mavlink_msg_rosflight_config_status_decode(&msg, &response_msg);
+  std::cout << "Decoded" << std::endl;
+  uint8_t device = response_msg.device;
+
+  config_response_t response;
+  response.successful = response_msg.success;
+  response.error_message = std::string(reinterpret_cast<char *>(response_msg.error_message));
+  response.reboot_required = response_msg.reboot_required;
+  std::cout << "Looking for promise" << std::endl;
+
+  for (size_t promise_index{0}; promise_index < config_response_promises_.size(); promise_index++)
+    if (config_response_promises_[promise_index]->device == device)
+    {
+      std::cout << "Promise found: " << promise_index << std::endl;
+      config_response_promises_[promise_index]->promise.set_value(response);
+      config_response_promises_.erase(config_response_promises_.begin() + promise_index);
+      std::cout << "Promise handled" << std::endl;
+      break;
+    }
+  std::cout << "Config Response handled" << std::endl;
 }
 
 bool mavrosflight::ConfigManager::is_valid_device(uint8_t device) const
@@ -123,8 +197,8 @@ mavrosflight::ConfigManager::get_config_from_str(uint8_t device, const std::stri
 {
   const std::vector<std::string> &configs = device_info_[device].config_names;
   std::string internal_name = make_internal_name(name);
-  if(internal_name == "default")
-    return 0;
+  if (internal_name == "default")
+    return std::make_tuple(true, 0);
   uint8_t word_match{0};
   unsigned int word_match_count{0};
   for (uint8_t i{0}; i < configs.size(); i++)
@@ -148,10 +222,10 @@ mavrosflight::ConfigManager::get_config_from_str(uint8_t device, const std::stri
 
 void mavrosflight::ConfigManager::request_config_info()
 {
-  send_config_request(0xff);
+  send_config_get_request(0xff);
 }
 
-void mavrosflight::ConfigManager::send_config(uint8_t device, uint8_t config)
+void mavrosflight::ConfigManager::send_config_set_request(uint8_t device, uint8_t config)
 {
   mavlink_message_t config_message;
   mavlink_msg_rosflight_config_pack(1, 0, &config_message, device, config);
@@ -218,7 +292,7 @@ std::vector<std::string> mavrosflight::ConfigManager::get_words(const std::strin
 
 bool mavrosflight::ConfigManager::is_uint8(const std::string &str)
 {
-  if(str.find_first_not_of("0123456789") != std::string::npos)
+  if (str.find_first_not_of("0123456789") != std::string::npos)
     return false;
   unsigned int value = std::stoul(str);
   return value <= UINT8_MAX;

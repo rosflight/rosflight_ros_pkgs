@@ -1078,6 +1078,8 @@ namespace rosflight_io
     std::string config_name = req.configuration;
     mavrosflight::ConfigManager &config_manager = mavrosflight_->config_manager;
 
+    res.reboot_required = false;
+
     std::tuple<bool, uint8_t> device_name_response = config_manager.get_device_from_str(device_name);
     if (!std::get<0>(device_name_response))
     {
@@ -1096,9 +1098,10 @@ namespace rosflight_io
     }
     uint8_t config = std::get<1>(config_name_response);
 
-    bool success = config_manager.set_configuration(device, config);
-    res.successful = success;
-    res.message = "";
+    auto response = config_manager.set_configuration(device, config);
+    res.successful = response.successful;
+    res.reboot_required = response.reboot_required;
+    res.message = response.error_message;
     return true;
   }
 

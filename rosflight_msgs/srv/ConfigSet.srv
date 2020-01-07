@@ -4,4 +4,5 @@ string device # The device whose configuration is being set, either a name or a 
 string configuration # The new configuration option for the device, either a name or a number
 ---
 bool successful
+bool reboot_required
 string message # Either an error message or more specific response. May be from rosflight_io or from the firmware
