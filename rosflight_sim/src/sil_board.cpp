@@ -46,9 +46,17 @@ void SIL_Board::init_board(void)
   boot_time_ = GZ_COMPAT_GET_SIM_TIME(world_);
 }
 
-void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
-                             gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type)
+constexpr double rad2Deg(double x)
 {
+  return 180.0/M_PI * x;
+}
+constexpr double deg2Rad(double x)
+{
+  return M_PI/180.0 * x;
+}
+
+void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
+                            gazebo::physics::ModelPtr model, ros::NodeHandle *nh, std::string mav_type) {
   link_ = link;
   world_ = world;
   model_ = model;
@@ -99,8 +107,15 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   GZ_COMPAT_SET_X(inertial_magnetic_field_, cos(-inclination)*cos(-declination));
   GZ_COMPAT_SET_Y(inertial_magnetic_field_, cos(-inclination)*sin(-declination));
 
-  // Get the desired altitude at the ground (for baro simulation)
-  ground_altitude_ = nh->param<double>("ground_altitude", 1387.0);
+  // Get the desired altitude at the ground (for baro and LLA)
+
+  origin_altitude_ = nh->param<double>("origin_altitude", 1387.0);
+  origin_latitude_ = nh->param<double>("origin_latitude", 40.2463724);
+  origin_longitude_ = nh->param<double>("origin_longitude", -111.6474138);
+
+  horizontal_gps_stdev_ = nh->param<double>("horizontal_gps_stdev", 1.0);
+  vertical_gps_stdev_ = nh->param<double>("vertical_gps_stdev", 3.0);
+  gps_velocity_stdev_ = nh->param<double>("gps_velocity_stdev", 0.1);
 
   // Configure Noise
   random_generator_= std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
@@ -170,6 +185,17 @@ void SIL_Board::sensors_init()
   GZ_COMPAT_SET_Z(inertial_magnetic_field_, sin(-inclination_));
   GZ_COMPAT_SET_X(inertial_magnetic_field_, cos(-inclination_)*cos(-declination_));
   GZ_COMPAT_SET_Y(inertial_magnetic_field_, cos(-inclination_)*sin(-declination_));
+
+#if GAZEBO_MAJOR_VERSION >= 9
+  using SC = gazebo::common::SphericalCoordinates;
+  using Ang = ignition::math::Angle;
+  sph_coord_.SetSurfaceType(SC::SurfaceType::EARTH_WGS84); 
+  sph_coord_.SetLatitudeReference(Ang(deg2Rad(origin_latitude_)));
+  sph_coord_.SetLongitudeReference(Ang(deg2Rad(origin_longitude_)));
+  sph_coord_.SetElevationReference(origin_altitude_);
+  // Force x-axis to be north-aligned. I promise, I will change everything to ENU in the next commit
+  sph_coord_.SetHeadingOffset(Ang(-M_PI/2.0)); 
+#endif
 }
 
 uint16_t SIL_Board::num_sensor_errors(void)
@@ -299,7 +325,7 @@ void SIL_Board::baro_read(float *pressure, float *temperature)
   GazeboPose current_state_NWU = GZ_COMPAT_GET_WORLD_POSE(link_);
 
   // Invert measurement model for pressure and temperature
-  double alt = GZ_COMPAT_GET_Z(GZ_COMPAT_GET_POS(current_state_NWU)) + ground_altitude_;
+  double alt = GZ_COMPAT_GET_Z(GZ_COMPAT_GET_POS(current_state_NWU)) + origin_altitude_;
 
   // Convert to the true pressure reading
   double y_baro = 101325.0f*(float)pow((1-2.25694e-5 * alt), 5.2553);
@@ -489,24 +515,133 @@ void SIL_Board::RCCallback(const rosflight_msgs::RCRaw& msg)
   latestRC_ = msg;
 }
 
-
-bool SIL_Board::gnss_present() { return false; }
+bool SIL_Board::gnss_present() { return GAZEBO_MAJOR_VERSION >= 9; }
 void SIL_Board::gnss_update() {}
 
 rosflight_firmware::GNSSData SIL_Board::gnss_read()
 {
-    rosflight_firmware::GNSSData out;
-    return out;
+  rosflight_firmware::GNSSData out;
+#if GAZEBO_MAJOR_VERSION >= 9
+  using Vec3 = ignition::math::Vector3d;
+  using Coord = gazebo::common::SphericalCoordinates::CoordinateType;
+
+  GazeboPose local_pose = GZ_COMPAT_GET_WORLD_POSE(link_);
+  Vec3 pos_noise(horizontal_gps_stdev_ * normal_distribution_(random_generator_),
+                 horizontal_gps_stdev_ * normal_distribution_(random_generator_),
+                 vertical_gps_stdev_ * normal_distribution_(random_generator_));
+  Vec3 local_pos = GZ_COMPAT_GET_POS(local_pose) + pos_noise;
+
+  Vec3 local_vel = GZ_COMPAT_GET_WORLD_LINEAR_VEL(link_);
+  Vec3 vel_noise(gps_velocity_stdev_ * normal_distribution_(random_generator_),
+                 gps_velocity_stdev_ * normal_distribution_(random_generator_),
+                 gps_velocity_stdev_ * normal_distribution_(random_generator_));
+  local_vel += vel_noise;
+
+  Vec3 ecef_pos = sph_coord_.PositionTransform(local_pos, Coord::LOCAL, Coord::ECEF);
+  Vec3 ecef_vel = sph_coord_.VelocityTransform(local_vel, Coord::LOCAL, Coord::ECEF);
+  Vec3 lla = sph_coord_.PositionTransform(local_pos, Coord::LOCAL, Coord::SPHERICAL);
+
+  out.lat = std::round(rad2Deg(lla.X()) * 1e7);
+  out.lon = std::round(rad2Deg(lla.Y()) * 1e7);
+  out.height = std::round(rad2Deg(lla.Z()) * 1e3);
+
+  // For now, we have defined the Gazebo Local Frame as NWU.  This should be fixed in a future
+  // commit
+  out.vel_n = std::round(local_vel.X() * 1e3);
+  out.vel_e = std::round(-local_vel.Y() * 1e3);
+  out.vel_d = std::round(-local_vel.Z() * 1e3);
+
+  out.fix_type = rosflight_firmware::GNSSFixType::GNSS_FIX_TYPE_FIX;
+  out.time_of_week = GZ_COMPAT_GET_SIM_TIME(world_).Double() * 1000;
+  out.time = GZ_COMPAT_GET_SIM_TIME(world_).Double();
+  out.nanos = (GZ_COMPAT_GET_SIM_TIME(world_).Double() - out.time) * 1e9;
+
+  out.h_acc = std::round(horizontal_gps_stdev_ * 1000.0);
+  out.v_acc = std::round(vertical_gps_stdev_ * 1000.0);
+
+  out.ecef.x = std::round(ecef_pos.X() * 100);
+  out.ecef.y = std::round(ecef_pos.Y() * 100);
+  out.ecef.z = std::round(ecef_pos.Z() * 100);
+  out.ecef.p_acc = std::round(out.h_acc/10.0);
+  out.ecef.vx = std::round(ecef_vel.X() * 100);
+  out.ecef.vy = std::round(ecef_vel.Y() * 100);
+  out.ecef.vz = std::round(ecef_vel.Z() * 100);
+  out.ecef.s_acc = std::round(gps_velocity_stdev_ * 100);
+
+  out.rosflight_timestamp = clock_micros();
+
+#endif
+      return out;
 }
 
-bool SIL_Board::gnss_has_new_data()
-{
-    return false;
-}
+bool SIL_Board::gnss_has_new_data() { return GAZEBO_MAJOR_VERSION >= 9; }
 rosflight_firmware::GNSSRaw SIL_Board::gnss_raw_read()
 {
-    rosflight_firmware::GNSSRaw out;
-    return out;
+  rosflight_firmware::GNSSRaw out;
+#if GAZEBO_MAJOR_VERSION >= 9
+  using Vec3 = ignition::math::Vector3d;
+  using Vec3 = ignition::math::Vector3d;
+  using Coord = gazebo::common::SphericalCoordinates::CoordinateType;
+
+  GazeboPose local_pose = GZ_COMPAT_GET_WORLD_POSE(link_);
+  Vec3 pos_noise(horizontal_gps_stdev_ * normal_distribution_(random_generator_),
+                 horizontal_gps_stdev_ * normal_distribution_(random_generator_),
+                 vertical_gps_stdev_ * normal_distribution_(random_generator_));
+  Vec3 local_pos = GZ_COMPAT_GET_POS(local_pose) + pos_noise;
+
+  Vec3 local_vel = GZ_COMPAT_GET_WORLD_LINEAR_VEL(link_);
+  Vec3 vel_noise(gps_velocity_stdev_ * normal_distribution_(random_generator_),
+                 gps_velocity_stdev_ * normal_distribution_(random_generator_),
+                 gps_velocity_stdev_ * normal_distribution_(random_generator_));
+  local_vel += vel_noise;
+
+  // TODO: Do a better job of simulating the wander of GPS
+
+  Vec3 ecef_pos = sph_coord_.PositionTransform(local_pos, Coord::LOCAL, Coord::ECEF);
+  Vec3 ecef_vel = sph_coord_.VelocityTransform(local_vel, Coord::LOCAL, Coord::ECEF);
+  Vec3 lla = sph_coord_.PositionTransform(local_pos, Coord::LOCAL, Coord::SPHERICAL);
+
+  out.lat = std::round(rad2Deg(lla.X()) * 1e7);
+  out.lon = std::round(rad2Deg(lla.Y()) * 1e7);
+  out.height = std::round(rad2Deg(lla.Z()) * 1e3);
+  out.height_msl = out.height; // TODO
+
+  // For now, we have defined the Gazebo Local Frame as NWU.  This should be
+  // fixed in a future commit
+  out.vel_n = std::round(local_vel.X() * 1e3);
+  out.vel_e = std::round(-local_vel.Y() * 1e3);
+  out.vel_d = std::round(-local_vel.Z() * 1e3);
+
+  out.fix_type = rosflight_firmware::GNSSFixType::GNSS_FIX_TYPE_FIX;
+  out.time_of_week = GZ_COMPAT_GET_SIM_TIME(world_).Double() * 1000;
+  out.num_sat = 15;
+  // TODO
+  out.year = 0;
+  out.month = 0;
+  out.day = 0;
+  out.hour = 0;
+  out.min = 0;
+  out.sec = 0;
+  out.valid = 0;
+  out.t_acc = 0;
+  out.nano = 0;
+
+  out.h_acc = std::round(horizontal_gps_stdev_ * 1000.0);
+  out.v_acc = std::round(vertical_gps_stdev_ * 1000.0);
+
+  // Again, TODO switch to using ENU convention per REP
+  double vn = local_vel.X();
+  double ve = -local_vel.Y();
+  double ground_speed = std::sqrt(vn*vn + ve*ve);
+  out.g_speed = std::round(ground_speed * 1000);
+
+  double head_mot = std::atan2(ve, vn);
+  out.head_mot = std::round(rad2Deg(head_mot)*1e5);
+  out.p_dop = 0.0; // TODO
+  out.rosflight_timestamp = clock_micros(); 
+
+#endif
+  return out;
 }
 
 } // namespace rosflight_sim
