@@ -1,6 +1,7 @@
 #include <rosflight/mavrosflight/config_manager.h>
+
 #include <boost/algorithm/string.hpp>
-#include <iostream> //testing
+#include <ros/ros.h>
 
 
 constexpr std::chrono::milliseconds mavrosflight::ConfigManager::timeout; //Why, C++?
@@ -13,6 +14,8 @@ mavrosflight::ConfigManager::~ConfigManager()
 {
   for (config_promise_t *promise:promises_)
     delete promise;
+  for(config_response_promise_t *response_promise: config_response_promises_)
+    delete response_promise;
 }
 
 void mavrosflight::ConfigManager::handle_mavlink_message(const mavlink_message_t &msg)
@@ -90,30 +93,21 @@ void mavrosflight::ConfigManager::send_config_get_request(uint8_t device)
 mavrosflight::ConfigManager::config_response_t
 mavrosflight::ConfigManager::set_configuration(uint8_t device, uint8_t config)
 {
-  std::cout << "Starting set_configuration(" << +device << ", " << +config << std::endl;
   config_response_promise_t *promise = new config_response_promise_t;
   promise->device = device;
   promise->config = config;
   std::future<config_response_t> future = promise->promise.get_future();
   config_response_promises_.push_back(promise);
-  std::cout << "Promise made. Sending request" << std::endl;
   send_config_set_request(device, config);
-  std::cout << "Request sent. Waiting for response" << std::endl;
   std::future_status result = future.wait_for(timeout);
 
   config_response_t response;
 
   if (result == std::future_status::ready) // A response was received
   {
-    std::cout << "Response recieved" << std::endl;
-    std::cout << "Future is" << (future.valid() ? " " : " not ") << "valid" << std::endl;
     response = future.get();
-    std::cout << "Response read" << std::endl;
-    std::cout << response.successful << std::endl;
-    std::cout << response.error_message << std::endl;
   } else // no response was received
   {
-    std::cout << "Timeout" << std::endl;
     response.successful = false;
     response.reboot_required = false;
     response.error_message = "No response received. The configuration may or may not be set";
@@ -124,37 +118,29 @@ mavrosflight::ConfigManager::set_configuration(uint8_t device, uint8_t config)
         break;
       }
   }
-  std::cout << promise << std::endl;
   delete promise;
-  std::cout << "promise deleted" << std::endl;
 
   return response;
 }
 
 void mavrosflight::ConfigManager::handle_config_response_message(const mavlink_message_t &msg)
 {
-  std::cout << "Config Response Received" << std::endl;
   mavlink_rosflight_config_status_t response_msg;
   mavlink_msg_rosflight_config_status_decode(&msg, &response_msg);
-  std::cout << "Decoded" << std::endl;
   uint8_t device = response_msg.device;
 
   config_response_t response;
   response.successful = response_msg.success;
   response.error_message = std::string(reinterpret_cast<char *>(response_msg.error_message));
   response.reboot_required = response_msg.reboot_required;
-  std::cout << "Looking for promise" << std::endl;
 
   for (size_t promise_index{0}; promise_index < config_response_promises_.size(); promise_index++)
     if (config_response_promises_[promise_index]->device == device)
     {
-      std::cout << "Promise found: " << promise_index << std::endl;
       config_response_promises_[promise_index]->promise.set_value(response);
       config_response_promises_.erase(config_response_promises_.begin() + promise_index);
-      std::cout << "Promise handled" << std::endl;
       break;
     }
-  std::cout << "Config Response handled" << std::endl;
 }
 
 bool mavrosflight::ConfigManager::is_valid_device(uint8_t device) const
@@ -180,7 +166,8 @@ std::string mavrosflight::ConfigManager::get_config_name(uint8_t device, uint8_t
   if (is_valid_config(device, config))
     return device_info_[device].config_names[config];
   else
-    return "";
+    return "Invalid configuration #" + std::to_string(static_cast<int>(config));
+  //return "Invalid configuration #" + static_cast<int>(config); // This code does weird things
 }
 
 std::tuple<bool, uint8_t> mavrosflight::ConfigManager::get_device_from_str(const std::string &name) const
@@ -195,6 +182,8 @@ std::tuple<bool, uint8_t> mavrosflight::ConfigManager::get_device_from_str(const
 std::tuple<bool, uint8_t>
 mavrosflight::ConfigManager::get_config_from_str(uint8_t device, const std::string &name) const
 {
+  if(is_uint8(name))
+    return std::make_tuple(true, static_cast<uint8_t>(std::stoul(name)));
   const std::vector<std::string> &configs = device_info_[device].config_names;
   std::string internal_name = make_internal_name(name);
   if (internal_name == "default")
@@ -222,7 +211,10 @@ mavrosflight::ConfigManager::get_config_from_str(uint8_t device, const std::stri
 
 void mavrosflight::ConfigManager::request_config_info()
 {
-  send_config_get_request(0xff);
+  ROS_INFO("Requesting all configurations");
+  mavlink_message_t msg;
+  mavlink_msg_rosflight_cmd_pack(1, 0, &msg, ROSFLIGHT_CMD_SEND_ALL_CONFIG_INFOS);
+  comm_->send_message(msg);
 }
 
 void mavrosflight::ConfigManager::send_config_set_request(uint8_t device, uint8_t config)
@@ -237,13 +229,12 @@ void mavrosflight::ConfigManager::handle_device_info_message(const mavlink_messa
   mavlink_rosflight_device_info_t device_info;
   mavlink_msg_rosflight_device_info_decode(&msg, &device_info);
   uint8_t device = device_info.device;
+  ROS_DEBUG("Device info recieved: \"%s\" #%d", device_info.name, device);
   if (device >= device_info_.size())
     device_info_.resize(device + 1);
   device_info_[device].name = std::string{reinterpret_cast<char *>(device_info.name)};
   device_info_[device].internal_name = make_internal_name(device_info_[device].name);
   device_info_[device].max_value = device_info.max_value;
-  std::cout << "Device info recieved: " << static_cast<int>(device) << ',' << device_info_[device].name << std::endl;
-  std::cout << device_info_[device].internal_name << std::endl;
 }
 
 void mavrosflight::ConfigManager::handle_config_info_message(const mavlink_message_t &msg)
@@ -252,13 +243,12 @@ void mavrosflight::ConfigManager::handle_config_info_message(const mavlink_messa
   mavlink_msg_rosflight_config_info_decode(&msg, &config_info);
   uint8_t device = config_info.device;
   uint8_t config = config_info.config;
+  ROS_DEBUG("Config info recieved: \"%s\" #%d for device #%d", config_info.name, config, device);
   if (device >= device_info_.size())
     device_info_.resize(device + 1);
   if (config >= device_info_[device].config_names.size())
     device_info_[device].config_names.resize(config + 1);
   device_info_[device].config_names[config] = std::string{reinterpret_cast<char *>(config_info.name)};
-  std::cout << "Config info recieved: " << static_cast<int>(device) << ',' << static_cast<int>(config) << ','
-            << device_info_[device].config_names[config] << std::endl;
 }
 
 std::string mavrosflight::ConfigManager::make_internal_name(const std::string &name)
