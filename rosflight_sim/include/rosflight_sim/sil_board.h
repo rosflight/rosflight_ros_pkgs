@@ -197,21 +197,13 @@ public:
   bool gnss_has_new_data() override;
   rosflight_firmware::GNSSRaw gnss_raw_read() override;
 
-  bool diff_pressure_present() override;
-  void diff_pressure_update() override;
-  void diff_pressure_read(float *diff_pressure, float *temperature) override;
+  bool battery_voltage_present() const override;
+  float battery_voltage_read() const override;
+  void battery_voltage_set_multiplier(double multiplier) override;
 
-  bool sonar_present() override;
-  void sonar_update() override;
-  float sonar_read() override;
-
-  bool diff_pressure_present() override;
-  void diff_pressure_update() override;
-  void diff_pressure_read(float *diff_pressure, float *temperature) override;
-
-  bool sonar_present() override;
-  void sonar_update() override;
-  float sonar_read() override;
+  bool battery_current_present() const override;
+  float battery_current_read() const override;
+  void battery_current_set_multiplier(double multiplier) override;
 
   // Gazebo stuff
   void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world, gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type);
