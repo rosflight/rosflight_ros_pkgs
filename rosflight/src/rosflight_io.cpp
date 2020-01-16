@@ -60,7 +60,7 @@ namespace rosflight_io
 
     param_get_srv_ = nh_.advertiseService("param_get", &rosflightIO::paramGetSrvCallback, this);
     param_set_srv_ = nh_.advertiseService("param_set", &rosflightIO::paramSetSrvCallback, this);
-    param_write_srv_ = nh_.advertiseService("settings_write", &rosflightIO::paramWriteSrvCallback, this);
+    param_write_srv_ = nh_.advertiseService("memory_write", &rosflightIO::paramWriteSrvCallback, this);
     param_save_to_file_srv_ = nh_.advertiseService("param_save_to_file", &rosflightIO::paramSaveToFileCallback, this);
     param_load_from_file_srv_ = nh_.advertiseService("param_load_from_file", &rosflightIO::paramLoadFromFileCallback,
                                                      this);
