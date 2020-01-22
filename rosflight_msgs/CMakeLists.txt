@@ -16,6 +16,7 @@ add_message_files(
   Barometer.msg
   Airspeed.msg
   Attitude.msg
+  RCOverride.msg
   Status.msg
   AuxCommand.msg
   Error.msg
