@@ -36,6 +36,8 @@
 
 #if GAZEBO_MAJOR_VERSION >= 8
 
+#include "gazebo/common/CommonTypes.hh"
+
 using GazeboVector = ignition::math::Vector3d;
 using GazeboPose = ignition::math::Pose3d;
 using GazeboQuaternion = ignition::math::Quaterniond;
@@ -53,6 +55,7 @@ using GazeboQuaternion = ignition::math::Quaterniond;
 #define GZ_COMPAT_GET_EULER(QUAT) (QUAT).Euler()
 #define GZ_COMPAT_GET_SIM_TIME(WORLD_PTR) (WORLD_PTR)->SimTime()
 #define GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(LINK_PTR) (LINK_PTR)->RelativeLinearVel()
+#define GZ_COMPAT_GET_WORLD_LINEAR_VEL(LINK_PTR) (LINK_PTR)->WorldLinearVel()
 #define GZ_COMPAT_GET_RELATIVE_ANGULAR_VEL(LINK_PTR) (LINK_PTR)->RelativeAngularVel()
 #define GZ_COMPAT_GET_WORLD_COG_POSE(LINK_PTR) (LINK_PTR)->WorldCoGPose()
 #define GZ_COMPAT_GET_WORLD_POSE(LINK_PTR) (LINK_PTR)->WorldPose()
@@ -63,6 +66,8 @@ using GazeboQuaternion = ignition::math::Quaterniond;
 #define GZ_COMPAT_DISCONNECT_WORLD_UPDATE_BEGIN(CONNECTION) (CONNECTION).reset()
 #define GZ_COMPAT_GET_GRAVITY(WORLD_PTR) (WORLD_PTR)->Gravity()
 #define GZ_COMPAT_GET_MASS(INERTIAL_PTR) (INERTIAL_PTR)->Mass()
+
+
 
 #else //I.E. GAZEBO_MAJOR_VERSION < 8
 
@@ -83,6 +88,7 @@ using GazeboQuaternion = gazebo::math::Quaternion;
 #define GZ_COMPAT_GET_EULER(QUAT) (QUAT).GetAsEuler()
 #define GZ_COMPAT_GET_SIM_TIME(WORLD_PTR) (WORLD_PTR)->GetSimTime()
 #define GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(LINK_PTR) (LINK_PTR)->GetRelativeLinearVel()
+#define GZ_COMPAT_GET_WORLD_LINEAR_VEL(LINK_PTR) (LINK_PTR)->GetWorldLinearVel()
 #define GZ_COMPAT_GET_RELATIVE_ANGULAR_VEL(LINK_PTR) (LINK_PTR)->GetRelativeAngularVel()
 #define GZ_COMPAT_GET_WORLD_COG_POSE(LINK_PTR) (LINK_PTR)->GetWorldCoGPose()
 #define GZ_COMPAT_GET_WORLD_POSE(LINK_PTR) (LINK_PTR)->GetWorldPose()
