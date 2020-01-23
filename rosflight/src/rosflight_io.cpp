@@ -208,6 +208,8 @@ namespace rosflight_io
       case MAVLINK_MSG_ID_ROSFLIGHT_HARD_ERROR:
         handle_hard_error_msg(msg);
         break;
+    case MAVLINK_MSG_ID_ROSFLIGHT_BATTERY_STATUS:
+      handle_battery_status_msg(msg);
       default:
         ROS_DEBUG("rosflight_io: Got unhandled mavlink message ID %d", msg.msgid);
         break;
@@ -730,6 +732,21 @@ namespace rosflight_io
     error_msg.pc = error.pc;
     error_pub_.publish(error_msg);
   }
+void rosflightIO::handle_battery_status_msg(const mavlink_message_t &msg)
+{
+  mavlink_rosflight_battery_status_t battery_status;
+  mavlink_msg_rosflight_battery_status_decode(&msg, &battery_status);
+  if( battery_status_pub_.getTopic().empty())
+  {
+    battery_status_pub_ = nh_.advertise<rosflight_msgs::BatteryStatus>("battery", 1);
+  }
+  rosflight_msgs::BatteryStatus battery_status_message;
+  battery_status_message.voltage = battery_status.battery_voltage;
+  battery_status_message.current = battery_status.battery_current;
+  battery_status_message.header.stamp = ros::Time::now();
+
+  battery_status_pub_.publish(battery_status_message);
+}
 
   void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
   {
