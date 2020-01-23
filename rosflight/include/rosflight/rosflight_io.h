@@ -158,6 +158,7 @@ private:
   void request_version();
   void send_heartbeat();
   void check_error_code(uint8_t current, uint8_t previous, ROSFLIGHT_ERROR_CODE code, std::string name);
+  void fill_rc_override_msg(uint16_t rc_override, rosflight_msgs::RCOverride &msg);
 
   template<class T> inline T saturate(T value, T min, T max)
   {

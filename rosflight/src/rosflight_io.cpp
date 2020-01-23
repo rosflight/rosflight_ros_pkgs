@@ -271,7 +271,7 @@ namespace rosflight_io
     if (prev_status_.rc_override != status_msg.rc_override)
     {
       if (status_msg.rc_override)
-        ROS_WARN("RC override active");
+        ROS_WARN("RC override status changed");
       else
         ROS_WARN("Returned to computer control");
     }
@@ -329,10 +329,11 @@ namespace rosflight_io
 
     // Build the status message and send it
     rosflight_msgs::Status out_status;
+    fill_rc_override_msg(status_msg.rc_override, out_status.override_details);
     out_status.header.stamp = ros::Time::now();
     out_status.armed = status_msg.armed;
     out_status.failsafe = status_msg.failsafe;
-    out_status.rc_override = status_msg.rc_override;
+    out_status.rc_override = (status_msg.rc_override != 0);
     out_status.offboard = status_msg.offboard;
     out_status.control_mode = status_msg.control_mode;
     out_status.error_code = status_msg.error_code;
@@ -343,6 +344,21 @@ namespace rosflight_io
       status_pub_ = nh_.advertise<rosflight_msgs::Status>("status", 1);
     }
     status_pub_.publish(out_status);
+  }
+
+  void rosflightIO::fill_rc_override_msg(uint16_t rc_override, rosflight_msgs::RCOverride &msg)
+  {
+    msg.override_value = rc_override;
+    msg.attitude_override_switch = rc_override & 0b1;
+    msg.throttle_override_switch = rc_override & 0b10;
+    msg.x_stick_deflected = rc_override & 0b100;
+    msg.y_stick_deflected = rc_override & 0b1000;
+    msg.z_stick_deflected = rc_override & 0b10000;
+    msg.f_stick_limit = rc_override & 0b100000;
+    msg.x_command_stale = rc_override & 0b1000000;
+    msg.y_command_stale = rc_override & 0b10000000;
+    msg.z_command_stale = rc_override & 0b100000000;
+    msg.f_command_stale = rc_override & 0b1000000000;
   }
 
   void rosflightIO::handle_command_ack_msg(const mavlink_message_t &msg)

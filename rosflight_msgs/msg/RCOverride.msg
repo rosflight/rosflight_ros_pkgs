@@ -1,6 +1,7 @@
 # Details on why RC override is or isn't enabled
 # True indicates that RC is overriding for that reason
 
+uint16 override_value
 bool attitude_override_switch
 bool throttle_override_switch
 bool x_stick_deflected
