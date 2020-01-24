@@ -87,7 +87,7 @@ namespace rosflight_io
       mavlink_comm_ = new mavrosflight::MavlinkUDP(bind_host, bind_port, remote_host, remote_port);
     } else
     {
-      std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
+    std::string port = nh_private.param<std::string>("port", "/dev/ttyACM0");
       int baud_rate = nh_private.param<int>("baud_rate", 921600);
 
       ROS_INFO("Connecting to serial port \"%s\", at %d baud", port.c_str(), baud_rate);
