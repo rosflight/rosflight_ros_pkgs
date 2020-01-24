@@ -172,6 +172,8 @@ std::string mavrosflight::ConfigManager::get_config_name(uint8_t device, uint8_t
 
 std::tuple<bool, uint8_t> mavrosflight::ConfigManager::get_device_from_str(const std::string &name) const
 {
+  if(is_uint8(name))
+    return std::make_tuple(true, static_cast<uint8_t>(std::stoul(name)));
   std::string internal_name = make_internal_name(name);
   for (uint8_t i{0}; i < device_info_.size(); i++)
     if (internal_name == device_info_[i].internal_name)
