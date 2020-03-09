@@ -530,15 +530,31 @@ void SIL_Board::led1_on(void) { }
 void SIL_Board::led1_off(void) { }
 void SIL_Board::led1_toggle(void) { }
 
-bool SIL_Board::has_backup_data(void)
+void SIL_Board::backup_memory_init()
 {
-	return false;
 }
 
-rosflight_firmware::BackupData SIL_Board::get_backup_data(void)
+bool SIL_Board::backup_memory_read(void *dest, size_t len)
 {
-	rosflight_firmware::BackupData blank_data = {0};
-	return blank_data;
+  if(len <= BACKUP_SRAM_SIZE)
+  {
+    memcpy(dest, backup_memory_, len);
+    return true;
+  }
+  else
+    return false;
+}
+
+void SIL_Board::backup_memory_write(const void *src, size_t len)
+{
+  if (len < BACKUP_SRAM_SIZE)
+    memcpy(backup_memory_, src, len);
+}
+
+void SIL_Board::backup_memory_clear(size_t len)
+{
+  if(len< BACKUP_SRAM_SIZE)
+    memset(backup_memory_, 0, len);
 }
 
 void SIL_Board::RCCallback(const rosflight_msgs::RCRaw& msg)
@@ -675,5 +691,7 @@ rosflight_firmware::GNSSRaw SIL_Board::gnss_raw_read()
 #endif
   return out;
 }
+
+
 
 } // namespace rosflight_sim
