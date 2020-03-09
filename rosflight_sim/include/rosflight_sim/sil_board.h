@@ -127,6 +127,9 @@ private:
   GazeboVector prev_vel_3_;
   gazebo::common::Time last_time_;
 
+  static constexpr size_t BACKUP_SRAM_SIZE{1024};
+  uint8_t backup_memory_[BACKUP_SRAM_SIZE];
+
 public:
   SIL_Board();
 
@@ -190,8 +193,10 @@ public:
   void led1_toggle(void) override;
 
   //Backup Memory
-  bool has_backup_data(void) override;
-  rosflight_firmware::BackupData get_backup_data(void) override;
+  void backup_memory_init() override;
+  bool backup_memory_read(void *dest, size_t len) override;
+  void backup_memory_write(const void *src, size_t len) override;
+  void backup_memory_clear(size_t len) override;
 
   bool gnss_present() override;
   void gnss_update() override;
