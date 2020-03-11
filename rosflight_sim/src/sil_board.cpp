@@ -35,11 +35,12 @@
 
 #include <iostream>
 
-namespace rosflight_sim {
+namespace rosflight_sim
+{
 
 SIL_Board::SIL_Board() :
-  rosflight_firmware::UDPBoard()
-{ }
+    rosflight_firmware::UDPBoard()
+{}
 
 void SIL_Board::init_board(void)
 {
@@ -56,7 +57,8 @@ constexpr double deg2Rad(double x)
 }
 
 void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
-                            gazebo::physics::ModelPtr model, ros::NodeHandle *nh, std::string mav_type) {
+                             gazebo::physics::ModelPtr model, ros::NodeHandle *nh, std::string mav_type)
+{
   link_ = link;
   world_ = world;
   model_ = model;
@@ -391,6 +393,36 @@ float SIL_Board::sonar_read(void)
   }
   else
     return alt + sonar_stdev_*normal_distribution_(random_generator_);
+}
+
+bool SIL_Board::battery_voltage_present() const
+{
+  return true;
+}
+
+float SIL_Board::battery_voltage_read() const
+{
+  return 15 * battery_voltage_multiplier;
+}
+
+void SIL_Board::battery_voltage_set_multiplier(double multiplier)
+{
+  battery_voltage_multiplier = multiplier;
+}
+
+bool SIL_Board::battery_current_present() const
+{
+  return true;
+}
+
+float SIL_Board::battery_current_read() const
+{
+  return 1 * battery_current_multiplier;
+}
+
+void SIL_Board::battery_current_set_multiplier(double multiplier)
+{
+  battery_current_multiplier = multiplier;
 }
 
 // PWM

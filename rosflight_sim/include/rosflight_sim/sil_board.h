@@ -127,6 +127,8 @@ private:
   GazeboVector prev_vel_3_;
   gazebo::common::Time last_time_;
 
+  float battery_voltage_multiplier{1.0};
+  float battery_current_multiplier{1.0};
   static constexpr size_t BACKUP_SRAM_SIZE{1024};
   uint8_t backup_memory_[BACKUP_SRAM_SIZE];
 
@@ -204,6 +206,14 @@ public:
   rosflight_firmware::GNSSData gnss_read() override;
   bool gnss_has_new_data() override;
   rosflight_firmware::GNSSRaw gnss_raw_read() override;
+
+  bool battery_voltage_present() const override;
+  float battery_voltage_read() const override;
+  void battery_voltage_set_multiplier(double multiplier) override;
+
+  bool battery_current_present() const override;
+  float battery_current_read() const override;
+  void battery_current_set_multiplier(double multiplier) override;
 
   // Gazebo stuff
   void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world, gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type);
