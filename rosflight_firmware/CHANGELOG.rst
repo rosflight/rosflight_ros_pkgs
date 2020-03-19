@@ -2,8 +2,8 @@
 Changelog for package rosflight_firmware
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.0 (2020-03-19)
+------------------
 * Update firmware to v1.3.0
 * Contributors: BillThePlatypus, Cameron McQuinn, Daniel Koch, Jacob Olson, Jacob Willis, James Jackson, Parker Lusk, Trey Henrichsen
 

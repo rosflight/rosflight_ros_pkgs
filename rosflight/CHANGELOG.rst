@@ -2,8 +2,8 @@
 Changelog for package rosflight
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.0 (2020-03-19)
+------------------
 * Update firmware submodule to v1.3.0
 * Battery monitor support
 * Changed default port to /dev/ttyACM0 to match Revo

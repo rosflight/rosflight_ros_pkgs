@@ -2,8 +2,8 @@
 Changelog for package rosflight_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.0 (2020-03-19)
+------------------
 * Added BatteryStatus message
 * Added AuxCommand message
 * Added Error message
