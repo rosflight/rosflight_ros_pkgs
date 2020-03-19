@@ -171,6 +171,11 @@ private:
    */
   void async_write_end(const boost::system::error_code& error, size_t bytes_transferred);
 
+  /**
+   * \brief Notifies all listeners that the connection has been broken
+   */
+  void notify_disconnect();
+
   //===========================================================================
   // member variables
   //===========================================================================

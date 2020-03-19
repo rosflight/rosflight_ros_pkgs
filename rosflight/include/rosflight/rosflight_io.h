@@ -96,6 +96,7 @@ public:
   ~rosflightIO();
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
+  virtual void on_mavlink_disconnect() override;
 
   virtual void on_new_param_received(std::string name, double value);
   virtual void on_param_value_updated(std::string name, double value);

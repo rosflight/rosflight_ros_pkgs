@@ -68,6 +68,7 @@ void MavlinkComm::close()
   io_service_.stop();
   do_close();
 
+  notify_disconnect();
 }
 
 void MavlinkComm::register_mavlink_listener(MavlinkListenerInterface * const listener)
@@ -139,6 +140,11 @@ void MavlinkComm::async_read_end(const boost::system::error_code &error, size_t 
   }
 
   async_read();
+}
+void MavlinkComm::notify_disconnect()
+{
+  for(MavlinkListenerInterface *listener: listeners_)
+    listener->on_mavlink_disconnect();
 }
 
 void MavlinkComm::send_message(const mavlink_message_t &msg)

@@ -228,6 +228,12 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
   }
 }
 
+void rosflightIO::on_mavlink_disconnect()
+{
+  ROS_FATAL("Connection to firmware lost. Shutting down.");
+  ros::shutdown();
+}
+
 void rosflightIO::on_new_param_received(std::string name, double value)
 {
   ROS_DEBUG("Got parameter %s with value %g", name.c_str(), value);
