@@ -68,10 +68,6 @@ void MavlinkComm::close()
   io_service_.stop();
   do_close();
 
-  if (io_thread_.joinable())
-  {
-    io_thread_.join();
-  }
 }
 
 void MavlinkComm::register_mavlink_listener(MavlinkListenerInterface * const listener)

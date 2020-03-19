@@ -162,6 +162,11 @@ private:
     return value < min ? min : (value > max ? max : value);
   }
 
+  // parameters
+  bool wait_for_serial_{false};
+  float serial_check_period_s_{1.0};
+
+
 
   ros::NodeHandle nh_;
 

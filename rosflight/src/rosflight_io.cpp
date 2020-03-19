@@ -65,6 +65,7 @@ rosflightIO::rosflightIO()
   calibrate_rc_srv_ = nh_.advertiseService("calibrate_rc_trim", &rosflightIO::calibrateRCTrimSrvCallback, this);
   reboot_srv_ = nh_.advertiseService("reboot", &rosflightIO::rebootSrvCallback, this);
   reboot_bootloader_srv_ = nh_.advertiseService("reboot_to_bootloader", &rosflightIO::rebootToBootloaderSrvCallback, this);
+
   
   ros::NodeHandle nh_private("~");
 
@@ -84,20 +85,38 @@ rosflightIO::rosflightIO()
     std::string port = nh_private.param<std::string>("port", "/dev/ttyACM0");
     int baud_rate = nh_private.param<int>("baud_rate", 921600);
 
+    wait_for_serial_ = nh_private.param<bool>("wait_for_serial", false);
+    serial_check_period_s_ = nh_private.param<float>("serial_check_period", 1.0);
     ROS_INFO("Connecting to serial port \"%s\", at %d baud", port.c_str(), baud_rate);
 
     mavlink_comm_ = new mavrosflight::MavlinkSerial(port, baud_rate);
   }
 
-  try
+  bool connected = false;
+  while(!connected)
   {
-    mavlink_comm_->open(); //! \todo move this into the MavROSflight constructor
-    mavrosflight_ = new mavrosflight::MavROSflight(*mavlink_comm_);
-  }
-  catch (mavrosflight::SerialException e)
-  {
-    ROS_FATAL("%s", e.what());
-    ros::shutdown();
+    try
+    {
+      mavlink_comm_->open(); //! \todo move this into the MavROSflight constructor
+      mavrosflight_ = new mavrosflight::MavROSflight(*mavlink_comm_);
+      connected = true;
+    }
+    catch (mavrosflight::SerialException e)
+    {
+      connected = false;
+      if(wait_for_serial_)
+      {
+        ROS_WARN("%s", e.what());
+        ROS_WARN("Retrying connection in %f s", serial_check_period_s_);
+        ros::Duration(serial_check_period_s_).sleep();
+      }
+      else
+      {
+        ROS_FATAL("%s", e.what());
+        ros::shutdown();
+        return;
+      }
+    }
   }
 
   mavrosflight_->comm.register_mavlink_listener(this);
