@@ -92,6 +92,30 @@ rosflightIO::rosflightIO()
     mavlink_comm_ = new mavrosflight::MavlinkSerial(port, baud_rate);
   }
 
+  if(!attempt_connect())
+  {
+    ros::shutdown();
+    return;
+  }
+
+  mavrosflight_->comm.register_mavlink_listener(this);
+  mavrosflight_->param.register_param_listener(this);
+
+  // Set up a few other random things
+  frame_id_ = nh_private.param<std::string>("frame_id", "world");
+
+  prev_status_.armed = false;
+  prev_status_.failsafe = false;
+  prev_status_.rc_override = false;
+  prev_status_.offboard = false;
+  prev_status_.control_mode = OFFBOARD_CONTROL_MODE_ENUM_END;
+  prev_status_.error_code = ROSFLIGHT_ERROR_NONE;
+
+  finish_setup();
+}
+
+bool rosflightIO::attempt_connect()
+{
   bool connected = false;
   while(!connected)
   {
@@ -113,15 +137,15 @@ rosflightIO::rosflightIO()
       else
       {
         ROS_FATAL("%s", e.what());
-        ros::shutdown();
-        return;
+        return false;
       }
     }
   }
+  return true;
+}
 
-  mavrosflight_->comm.register_mavlink_listener(this);
-  mavrosflight_->param.register_param_listener(this);
-
+void rosflightIO::finish_setup()
+{
   // request the param list
   mavrosflight_->param.request_params();
   param_timer_ = nh_.createTimer(ros::Duration(PARAMETER_PERIOD), &rosflightIO::paramTimerCallback, this);
@@ -135,18 +159,22 @@ rosflightIO::rosflightIO()
   unsaved_msg.data = false;
   unsaved_params_pub_.publish(unsaved_msg);
 
-  // Set up a few other random things
-  frame_id_ = nh_private.param<std::string>("frame_id", "world");
-
-  prev_status_.armed = false;
-  prev_status_.failsafe = false;
-  prev_status_.rc_override = false;
-  prev_status_.offboard = false;
-  prev_status_.control_mode = OFFBOARD_CONTROL_MODE_ENUM_END;
-  prev_status_.error_code = ROSFLIGHT_ERROR_NONE;
-
   //Start the heartbeat
   heartbeat_timer_ = nh_.createTimer(ros::Duration(HEARTBEAT_PERIOD), &rosflightIO::heartbeatTimerCallback, this);
+
+}
+
+void rosflightIO::handle_disconnect()
+{
+  ROS_FATAL("Connection to firmware lost. Shutting down.");
+  ros::shutdown();
+}
+
+void rosflightIO::cleanup_connection()
+{
+  param_timer_.stop();
+  version_timer_.stop();
+  heartbeat_timer_.stop();
 }
 
 rosflightIO::~rosflightIO()
@@ -230,8 +258,7 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
 
 void rosflightIO::on_mavlink_disconnect()
 {
-  ROS_FATAL("Connection to firmware lost. Shutting down.");
-  ros::shutdown();
+  handle_disconnect();
 }
 
 void rosflightIO::on_new_param_received(std::string name, double value)

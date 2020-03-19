@@ -107,6 +107,11 @@ public:
   static constexpr float PARAMETER_PERIOD = 3; //Time between parameter requests
 
 private:
+  // Initialization and Re-initialization
+  bool attempt_connect();
+  void finish_setup();
+  void handle_disconnect();
+  void cleanup_connection();
 
   // handle mavlink messages
   void handle_heartbeat_msg(const mavlink_message_t &msg);
