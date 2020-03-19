@@ -117,7 +117,7 @@ rosflightIO::rosflightIO()
 bool rosflightIO::attempt_connect()
 {
   bool connected = false;
-  while(!connected)
+  while(!connected && ros::ok())
   {
     try
     {
@@ -141,7 +141,7 @@ bool rosflightIO::attempt_connect()
       }
     }
   }
-  return true;
+  return ros::ok();
 }
 
 void rosflightIO::finish_setup()
