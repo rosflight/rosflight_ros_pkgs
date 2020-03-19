@@ -66,8 +66,8 @@ rosflightIO::rosflightIO()
   reboot_srv_ = nh_.advertiseService("reboot", &rosflightIO::rebootSrvCallback, this);
   reboot_bootloader_srv_ = nh_.advertiseService("reboot_to_bootloader", &rosflightIO::rebootToBootloaderSrvCallback, this);
 
-  
   ros::NodeHandle nh_private("~");
+  do_reconnect_ = nh_private.param<bool>("do_reconnect", false);
 
   if (nh_private.param<bool>("udp", false))
   {
@@ -166,8 +166,21 @@ void rosflightIO::finish_setup()
 
 void rosflightIO::handle_disconnect()
 {
-  ROS_FATAL("Connection to firmware lost. Shutting down.");
-  ros::shutdown();
+  if(do_reconnect_)
+  {
+    ROS_ERROR("Connection to firmware lost. Attempting to reconnect");
+    cleanup_connection();
+    wait_for_serial_ = true;
+    attempt_connect();
+    wait_for_serial_ = false;
+    ROS_INFO("Connection regained");
+    finish_setup();
+ }
+  else
+  {
+    ROS_FATAL("Connection to firmware lost. Shutting down.");
+    ros::shutdown();
+  }
 }
 
 void rosflightIO::cleanup_connection()

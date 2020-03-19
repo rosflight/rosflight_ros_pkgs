@@ -171,7 +171,7 @@ private:
   // parameters
   bool wait_for_serial_{false};
   float serial_check_period_s_{1.0};
-
+  bool do_reconnect_{false};
 
 
   ros::NodeHandle nh_;
