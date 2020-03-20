@@ -96,6 +96,7 @@ public:
   ~rosflightIO();
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
+  virtual void on_mavlink_disconnect() override;
 
   virtual void on_new_param_received(std::string name, double value);
   virtual void on_param_value_updated(std::string name, double value);
@@ -106,6 +107,11 @@ public:
   static constexpr float PARAMETER_PERIOD = 3; //Time between parameter requests
 
 private:
+  // Initialization and Re-initialization
+  bool attempt_connect(bool do_retry, float retry_delay);
+  void finish_setup();
+  void handle_disconnect();
+  void cleanup_connection();
 
   // handle mavlink messages
   void handle_heartbeat_msg(const mavlink_message_t &msg);
@@ -161,6 +167,11 @@ private:
   {
     return value < min ? min : (value > max ? max : value);
   }
+
+  // parameters
+  bool wait_for_serial_{false};
+  float serial_retry_delay_s_{1.0};
+  bool do_reconnect_{false};
 
 
   ros::NodeHandle nh_;

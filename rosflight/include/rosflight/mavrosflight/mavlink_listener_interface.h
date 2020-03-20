@@ -54,6 +54,7 @@ public:
    * \param msg The mavlink message to handle
    */
   virtual void handle_mavlink_message(const mavlink_message_t &msg) = 0;
+  virtual void on_mavlink_disconnect(){};
 };
 
 } // namespace mavrosflight

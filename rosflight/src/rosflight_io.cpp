@@ -65,8 +65,9 @@ rosflightIO::rosflightIO()
   calibrate_rc_srv_ = nh_.advertiseService("calibrate_rc_trim", &rosflightIO::calibrateRCTrimSrvCallback, this);
   reboot_srv_ = nh_.advertiseService("reboot", &rosflightIO::rebootSrvCallback, this);
   reboot_bootloader_srv_ = nh_.advertiseService("reboot_to_bootloader", &rosflightIO::rebootToBootloaderSrvCallback, this);
-  
+
   ros::NodeHandle nh_private("~");
+  do_reconnect_ = nh_private.param<bool>("do_reconnect", false);
 
   if (nh_private.param<bool>("udp", false))
   {
@@ -84,25 +85,67 @@ rosflightIO::rosflightIO()
     std::string port = nh_private.param<std::string>("port", "/dev/ttyACM0");
     int baud_rate = nh_private.param<int>("baud_rate", 921600);
 
+    wait_for_serial_ = nh_private.param<bool>("wait_for_serial", false);
+    serial_retry_delay_s_ = nh_private.param<float>("serial_check_period", 1.0);
     ROS_INFO("Connecting to serial port \"%s\", at %d baud", port.c_str(), baud_rate);
 
     mavlink_comm_ = new mavrosflight::MavlinkSerial(port, baud_rate);
   }
 
-  try
+  if(!attempt_connect(wait_for_serial_, serial_retry_delay_s_))
   {
-    mavlink_comm_->open(); //! \todo move this into the MavROSflight constructor
-    mavrosflight_ = new mavrosflight::MavROSflight(*mavlink_comm_);
-  }
-  catch (mavrosflight::SerialException e)
-  {
-    ROS_FATAL("%s", e.what());
     ros::shutdown();
+    return;
   }
 
   mavrosflight_->comm.register_mavlink_listener(this);
   mavrosflight_->param.register_param_listener(this);
 
+  // Set up a few other random things
+  frame_id_ = nh_private.param<std::string>("frame_id", "world");
+
+  prev_status_.armed = false;
+  prev_status_.failsafe = false;
+  prev_status_.rc_override = false;
+  prev_status_.offboard = false;
+  prev_status_.control_mode = OFFBOARD_CONTROL_MODE_ENUM_END;
+  prev_status_.error_code = ROSFLIGHT_ERROR_NONE;
+
+  finish_setup();
+}
+
+bool rosflightIO::attempt_connect(bool do_retry, float retry_delay)
+{
+  bool connected = false;
+  while(!connected && ros::ok())
+  {
+    try
+    {
+      mavlink_comm_->open(); //! \todo move this into the MavROSflight constructor
+      mavrosflight_ = new mavrosflight::MavROSflight(*mavlink_comm_);
+      connected = true;
+    }
+    catch (mavrosflight::SerialException e)
+    {
+      connected = false;
+      if(do_retry)
+      {
+        ROS_WARN("%s", e.what());
+        ROS_WARN("Retrying connection in %f s", retry_delay);
+        ros::Duration(retry_delay).sleep();
+      }
+      else
+      {
+        ROS_FATAL("%s", e.what());
+        return false;
+      }
+    }
+  }
+  return ros::ok();
+}
+
+void rosflightIO::finish_setup()
+{
   // request the param list
   mavrosflight_->param.request_params();
   param_timer_ = nh_.createTimer(ros::Duration(PARAMETER_PERIOD), &rosflightIO::paramTimerCallback, this);
@@ -116,18 +159,35 @@ rosflightIO::rosflightIO()
   unsaved_msg.data = false;
   unsaved_params_pub_.publish(unsaved_msg);
 
-  // Set up a few other random things
-  frame_id_ = nh_private.param<std::string>("frame_id", "world");
-
-  prev_status_.armed = false;
-  prev_status_.failsafe = false;
-  prev_status_.rc_override = false;
-  prev_status_.offboard = false;
-  prev_status_.control_mode = OFFBOARD_CONTROL_MODE_ENUM_END;
-  prev_status_.error_code = ROSFLIGHT_ERROR_NONE;
-
   //Start the heartbeat
   heartbeat_timer_ = nh_.createTimer(ros::Duration(HEARTBEAT_PERIOD), &rosflightIO::heartbeatTimerCallback, this);
+
+}
+
+void rosflightIO::handle_disconnect()
+{
+  if(do_reconnect_)
+  {
+    ROS_ERROR("Connection to firmware lost. Attempting to reconnect");
+    cleanup_connection();
+    wait_for_serial_ = true;
+    attempt_connect(do_reconnect_, serial_retry_delay_s_);
+    wait_for_serial_ = false;
+    ROS_INFO("Connection regained");
+    finish_setup();
+ }
+  else
+  {
+    ROS_FATAL("Connection to firmware lost. Shutting down.");
+    ros::shutdown();
+  }
+}
+
+void rosflightIO::cleanup_connection()
+{
+  param_timer_.stop();
+  version_timer_.stop();
+  heartbeat_timer_.stop();
 }
 
 rosflightIO::~rosflightIO()
@@ -208,6 +268,11 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
       ROS_DEBUG("rosflight_io: Got unhandled mavlink message ID %d", msg.msgid);
       break;
   }
+}
+
+void rosflightIO::on_mavlink_disconnect()
+{
+  handle_disconnect();
 }
 
 void rosflightIO::on_new_param_received(std::string name, double value)
