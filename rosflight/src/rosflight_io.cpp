@@ -86,13 +86,13 @@ rosflightIO::rosflightIO()
     int baud_rate = nh_private.param<int>("baud_rate", 921600);
 
     wait_for_serial_ = nh_private.param<bool>("wait_for_serial", false);
-    serial_check_period_s_ = nh_private.param<float>("serial_check_period", 1.0);
+    serial_retry_delay_s_ = nh_private.param<float>("serial_check_period", 1.0);
     ROS_INFO("Connecting to serial port \"%s\", at %d baud", port.c_str(), baud_rate);
 
     mavlink_comm_ = new mavrosflight::MavlinkSerial(port, baud_rate);
   }
 
-  if(!attempt_connect())
+  if(!attempt_connect(wait_for_serial_, serial_retry_delay_s_))
   {
     ros::shutdown();
     return;
@@ -114,7 +114,7 @@ rosflightIO::rosflightIO()
   finish_setup();
 }
 
-bool rosflightIO::attempt_connect()
+bool rosflightIO::attempt_connect(bool do_retry, float retry_delay)
 {
   bool connected = false;
   while(!connected && ros::ok())
@@ -128,11 +128,11 @@ bool rosflightIO::attempt_connect()
     catch (mavrosflight::SerialException e)
     {
       connected = false;
-      if(wait_for_serial_)
+      if(do_retry)
       {
         ROS_WARN("%s", e.what());
-        ROS_WARN("Retrying connection in %f s", serial_check_period_s_);
-        ros::Duration(serial_check_period_s_).sleep();
+        ROS_WARN("Retrying connection in %f s", retry_delay);
+        ros::Duration(retry_delay).sleep();
       }
       else
       {
@@ -171,7 +171,7 @@ void rosflightIO::handle_disconnect()
     ROS_ERROR("Connection to firmware lost. Attempting to reconnect");
     cleanup_connection();
     wait_for_serial_ = true;
-    attempt_connect();
+    attempt_connect(do_reconnect_, serial_retry_delay_s_);
     wait_for_serial_ = false;
     ROS_INFO("Connection regained");
     finish_setup();

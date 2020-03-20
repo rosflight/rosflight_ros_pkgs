@@ -108,7 +108,7 @@ public:
 
 private:
   // Initialization and Re-initialization
-  bool attempt_connect();
+  bool attempt_connect(bool do_retry, float retry_delay);
   void finish_setup();
   void handle_disconnect();
   void cleanup_connection();
@@ -170,7 +170,7 @@ private:
 
   // parameters
   bool wait_for_serial_{false};
-  float serial_check_period_s_{1.0};
+  float serial_retry_delay_s_{1.0};
   bool do_reconnect_{false};
 
 
