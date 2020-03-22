@@ -70,6 +70,7 @@
 #include <rosflight_msgs/Error.h>
 #include <rosflight_msgs/GNSSRaw.h>
 #include <rosflight_msgs/GNSS.h>
+#include <rosflight_msgs/NoroboCommand.h>
 #include <rosflight_msgs/BatteryStatus.h>
 
 
@@ -131,6 +132,7 @@ private:
 
   // ROS message callbacks
   void commandCallback(rosflight_msgs::Command::ConstPtr msg);
+  void noroboCommandCallback(rosflight_msgs::NoroboCommand::ConstPtr msg);
   void auxCommandCallback(rosflight_msgs::AuxCommand::ConstPtr msg);
   void externalAttitudeCallback(geometry_msgs::Quaternion::ConstPtr msg);
 
@@ -166,6 +168,7 @@ private:
   ros::NodeHandle nh_;
 
   ros::Subscriber command_sub_;
+  ros::Subscriber command_sub_custom_;
   ros::Subscriber aux_command_sub_;
   ros::Subscriber extatt_sub_;
 

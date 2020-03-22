@@ -50,6 +50,7 @@ namespace rosflight_io
 rosflightIO::rosflightIO()
 {
   command_sub_ = nh_.subscribe("command", 1, &rosflightIO::commandCallback, this);
+  command_sub_custom_ = nh_.subscribe("norobo_command", 1, &rosflightIO::noroboCommandCallback, this);
   aux_command_sub_ = nh_.subscribe("aux_command", 1, &rosflightIO::auxCommandCallback, this);
   extatt_sub_ = nh_.subscribe("external_attitude", 1, &rosflightIO::externalAttitudeCallback, this);
 
@@ -276,8 +277,9 @@ void rosflightIO::handle_status_msg(const mavlink_message_t &msg)
   // offboard control check
   if (prev_status_.offboard != status_msg.offboard)
   {
-    if (status_msg.offboard)
+    if (status_msg.offboard){
       ROS_WARN("Computer control active");
+    }
     else
       ROS_WARN("Computer control lost");
   }
@@ -847,7 +849,12 @@ void rosflightIO::handle_rosflight_gnss_raw_msg(const mavlink_message_t &msg) {
     gnss_raw_pub_ = nh_.advertise<rosflight_msgs::GNSSRaw>("gps_raw", 1);
   gnss_raw_pub_.publish(msg_out);
 }
+void rosflightIO::noroboCommandCallback(rosflight_msgs::NoroboCommand::ConstPtr msg){
+  mavlink_message_t mavlink_msg;
 
+  mavlink_msg_norobo_custom_command_pack(1, 50, &mavlink_msg, 1.0);
+  mavrosflight_->comm.send_message(mavlink_msg);
+}
 void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
 {
   //! \todo these are hard-coded to match right now; may want to replace with something more robust

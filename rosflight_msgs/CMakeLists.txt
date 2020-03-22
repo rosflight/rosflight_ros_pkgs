@@ -19,6 +19,7 @@ add_message_files(
   Status.msg
   AuxCommand.msg
   Error.msg
+  NoroboCommand.msg
   GNSS.msg
   GNSSRaw.msg
   BatteryStatus.msg
