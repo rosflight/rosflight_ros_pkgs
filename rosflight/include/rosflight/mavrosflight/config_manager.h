@@ -32,6 +32,8 @@ namespace mavrosflight
     bool is_valid_config(uint8_t device, uint8_t config) const;
     std::string get_device_name(uint8_t device) const;
     std::string get_config_name(uint8_t device, uint8_t config) const;
+    std::vector<std::string> get_device_names() const;
+    const std::vector<std::string> &get_config_names(uint8_t device) const;
 
     static constexpr std::chrono::milliseconds timeout{500};
   private:

@@ -170,6 +170,19 @@ std::string mavrosflight::ConfigManager::get_config_name(uint8_t device, uint8_t
   //return "Invalid configuration #" + static_cast<int>(config); // This code does weird things
 }
 
+std::vector<std::string> mavrosflight::ConfigManager::get_device_names() const
+{
+  std::vector<std::string> device_names;
+  for(device_info_t device: device_info_)
+    device_names.push_back(device.name);
+  return device_names;
+}
+
+const std::vector<std::string> &mavrosflight::ConfigManager::get_config_names(uint8_t device) const
+{
+  return device_info_[device].config_names;
+}
+
 std::tuple<bool, uint8_t> mavrosflight::ConfigManager::get_device_from_str(const std::string &name) const
 {
   if(is_uint8(name))

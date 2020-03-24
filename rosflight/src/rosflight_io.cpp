@@ -71,6 +71,7 @@ namespace rosflight_io
                                                   this);
     config_set_srv_ = nh_.advertiseService("config_set", &rosflightIO::configSetSrvCallback, this);
     config_get_srv_ = nh_.advertiseService("config_get", &rosflightIO::configGetSrvCallback, this);
+    config_list_srv_ = nh_.advertiseService("config_list", &rosflightIO::configListSrvCallback, this);
 
     ros::NodeHandle nh_private("~");
 
@@ -1085,6 +1086,19 @@ void rosflightIO::handle_battery_status_msg(const mavlink_message_t &msg)
     res.successful = true;
     res.configuration = config_name;
     res.message = "";
+    return true;
+  }
+
+  bool rosflightIO::configListSrvCallback(rosflight_msgs::ConfigList::Request &req, rosflight_msgs::ConfigList::Response &res)
+  {
+    std::vector<std::string> device_names = mavrosflight_->config_manager.get_device_names();
+    for(uint8_t device = 0; device < device_names.size(); device++)
+    {
+      rosflight_msgs::DeviceInfo device_info;
+      device_info.device_name = device_names[device];
+      device_info.configuration_names = mavrosflight_->config_manager.get_config_names(device);
+      res.devices.push_back(device_info);
+    }
     return true;
   }
 
