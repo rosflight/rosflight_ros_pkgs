@@ -90,6 +90,30 @@ void mavrosflight::ConfigManager::send_config_get_request(uint8_t device)
   comm_->send_message(config_request_message);
 }
 
+void mavrosflight::ConfigManager::restart_config_info_request()
+{
+  ROS_WARN("Error getting configuration info. Restarting.");
+  device_info_.clear();
+  request_config_info();
+}
+void mavrosflight::ConfigManager::restart_config_info_request(const ros::TimerEvent &event)
+{
+  restart_config_info_request();
+}
+void mavrosflight::ConfigManager::restart_config_receive_timer()
+{
+  if (config_receive_timer_.hasStarted())
+  {
+    config_receive_timer_.stop();
+    config_receive_timer_.start();
+  }
+}
+void mavrosflight::ConfigManager::finish_config_info_receive()
+{
+  config_receive_timer_.stop();
+  ROS_INFO("Received all configuration info.");
+}
+
 mavrosflight::ConfigManager::config_response_t
 mavrosflight::ConfigManager::set_configuration(uint8_t device, uint8_t config)
 {
@@ -230,6 +254,10 @@ void mavrosflight::ConfigManager::request_config_info()
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 0, &msg, ROSFLIGHT_CMD_SEND_ALL_CONFIG_INFOS);
   comm_->send_message(msg);
+  config_receive_timer_ = nh_.createTimer(ros::Duration(0.5),
+                                          &ConfigManager::restart_config_info_request,
+                                          this, true, true);
+  
 }
 
 void mavrosflight::ConfigManager::send_config_set_request(uint8_t device, uint8_t config)
@@ -245,11 +273,20 @@ void mavrosflight::ConfigManager::handle_device_info_message(const mavlink_messa
   mavlink_msg_rosflight_device_info_decode(&msg, &device_info);
   uint8_t device = device_info.device;
   ROS_DEBUG("Device info recieved: \"%s\" #%d", device_info.name, device);
-  if (device >= device_info_.size())
+  if (device == device_info_.size())
     device_info_.resize(device + 1);
+  else if (device > device_info_.size()) // This indicates that some earlier message has been missed
+  {
+    restart_config_info_request();
+    return;
+  }
   device_info_[device].name = std::string{reinterpret_cast<char *>(device_info.name)};
   device_info_[device].internal_name = make_internal_name(device_info_[device].name);
   device_info_[device].max_value = device_info.max_value;
+  num_devices_ = device_info.num_devices;
+  restart_config_receive_timer();
+  if (device == num_devices_ - 1 && device_info.max_value == 0)
+    finish_config_info_receive();
 }
 
 void mavrosflight::ConfigManager::handle_config_info_message(const mavlink_message_t &msg)
@@ -259,11 +296,22 @@ void mavrosflight::ConfigManager::handle_config_info_message(const mavlink_messa
   uint8_t device = config_info.device;
   uint8_t config = config_info.config;
   ROS_DEBUG("Config info recieved: \"%s\" #%d for device #%d", config_info.name, config, device);
-  if (device >= device_info_.size())
-    device_info_.resize(device + 1);
-  if (config >= device_info_[device].config_names.size())
+  if (device >= device_info_.size()) // Some previous device info message is missing
+  {
+    restart_config_info_request();
+    return;
+  }
+  if (config == device_info_[device].config_names.size())
     device_info_[device].config_names.resize(config + 1);
+  else if (config > device_info_[device].config_names.size()) // Some previous config info message is missing
+  {
+    restart_config_info_request();
+    return;
+  }
   device_info_[device].config_names[config] = std::string{reinterpret_cast<char *>(config_info.name)};
+  restart_config_receive_timer();
+  if (device == num_devices_ - 1 && config == device_info_[device].max_value)
+    finish_config_info_receive();
 }
 
 std::string mavrosflight::ConfigManager::make_internal_name(const std::string &name)

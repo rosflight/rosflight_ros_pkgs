@@ -4,6 +4,8 @@
 #include <string>
 #include <utility>
 
+#include <ros/ros.h>
+
 #include "mavlink_listener_interface.h"
 #include "mavlink_comm.h"
 
@@ -63,12 +65,21 @@ namespace mavrosflight
     } device_info_t;
     std::vector<device_info_t> device_info_;
 
+    ros::NodeHandle nh_;
+    ros::Timer config_receive_timer_;
+    uint8_t num_devices_{0};
+
     void handle_config_message(const mavlink_message_t &msg);
     void handle_device_info_message(const mavlink_message_t &msg);
     void handle_config_info_message(const mavlink_message_t &msg);
     void handle_config_response_message(const mavlink_message_t &msg);
     void send_config_get_request(uint8_t device);
     void send_config_set_request(uint8_t device, uint8_t config);
+    // In case of an error, shows a message and restarts getting configuration info
+    void restart_config_info_request();
+    void restart_config_info_request(const ros::TimerEvent &event); // for use in timers
+    void restart_config_receive_timer();
+    void finish_config_info_receive();
 
     static std::string make_internal_name(const std::string &name);
     static std::vector<std::string> get_words(const std::string &internal_name);
