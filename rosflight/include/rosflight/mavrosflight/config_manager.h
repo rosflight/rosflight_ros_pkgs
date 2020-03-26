@@ -60,7 +60,7 @@ namespace mavrosflight
     {
       std::string name;
       std::string internal_name;
-      uint8_t max_value;
+      uint8_t max_config;
       std::vector<std::string> config_names;
     };
     std::vector<DeviceInfo> device_info_;

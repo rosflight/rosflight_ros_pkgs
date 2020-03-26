@@ -4,7 +4,7 @@
 #include <ros/ros.h>
 
 
-constexpr std::chrono::milliseconds mavrosflight::ConfigManager::timeout; //Why, C++?
+constexpr std::chrono::milliseconds mavrosflight::ConfigManager::TIMEOUT; //Why, C++?
 mavrosflight::ConfigManager::ConfigManager(mavrosflight::MavlinkComm *const comm) : comm_{comm}
 {
   comm_->register_mavlink_listener(this);
@@ -62,7 +62,7 @@ std::tuple<bool, uint8_t> mavrosflight::ConfigManager::get_configuration(uint8_t
 
   std::future<uint8_t> future = promise->promise.get_future();
   send_config_get_request(device);
-  std::future_status result = future.wait_for(timeout);
+  std::future_status result = future.wait_for(TIMEOUT);
   bool success;
   uint8_t config{0};
   if (result == std::future_status::ready)
@@ -123,7 +123,7 @@ mavrosflight::ConfigManager::set_configuration(uint8_t device, uint8_t config)
   std::future<ConfigResponse> future = promise->promise.get_future();
   config_response_promises_.push_back(promise);
   send_config_set_request(device, config);
-  std::future_status result = future.wait_for(timeout);
+  std::future_status result = future.wait_for(TIMEOUT);
 
   ConfigResponse response;
 
@@ -282,10 +282,10 @@ void mavrosflight::ConfigManager::handle_device_info_message(const mavlink_messa
   }
   device_info_[device].name = std::string{reinterpret_cast<char *>(device_info.name)};
   device_info_[device].internal_name = make_internal_name(device_info_[device].name);
-  device_info_[device].max_value = device_info.max_value;
+  device_info_[device].max_config = device_info.max_config;
   num_devices_ = device_info.num_devices;
   restart_config_receive_timer();
-  if (device == num_devices_ - 1 && device_info.max_value == 0)
+  if (device == num_devices_ - 1 && device_info.max_config == 0)
     finish_config_info_receive();
 }
 
@@ -310,7 +310,7 @@ void mavrosflight::ConfigManager::handle_config_info_message(const mavlink_messa
   }
   device_info_[device].config_names[config] = std::string{reinterpret_cast<char *>(config_info.name)};
   restart_config_receive_timer();
-  if (device == num_devices_ - 1 && config == device_info_[device].max_value)
+  if (device == num_devices_ - 1 && config == device_info_[device].max_config)
     finish_config_info_receive();
 }
 

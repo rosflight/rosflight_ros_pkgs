@@ -55,20 +55,17 @@ rosflightIO::rosflightIO()
   extatt_sub_ = nh_.subscribe("external_attitude", 1, &rosflightIO::externalAttitudeCallback, this);
 
   unsaved_params_pub_ = nh_.advertise<std_msgs::Bool>("unsaved_params", 1, true);
-  error_pub_ = nh_.advertise<rosflight_msgs::Error>("rosflight_errors", 5,
-                                                    true); // A relatively large queue so all messages get through
+  error_pub_ = nh_.advertise<rosflight_msgs::Error>("rosflight_errors", 5, true); // A relatively large queue so all messages get through
 
   param_get_srv_ = nh_.advertiseService("param_get", &rosflightIO::paramGetSrvCallback, this);
   param_set_srv_ = nh_.advertiseService("param_set", &rosflightIO::paramSetSrvCallback, this);
   param_write_srv_ = nh_.advertiseService("memory_write", &rosflightIO::paramWriteSrvCallback, this);
   param_save_to_file_srv_ = nh_.advertiseService("param_save_to_file", &rosflightIO::paramSaveToFileCallback, this);
-  param_load_from_file_srv_ = nh_.advertiseService("param_load_from_file", &rosflightIO::paramLoadFromFileCallback,
-                                                   this);
+  param_load_from_file_srv_ = nh_.advertiseService("param_load_from_file", &rosflightIO::paramLoadFromFileCallback, this);
   imu_calibrate_bias_srv_ = nh_.advertiseService("calibrate_imu", &rosflightIO::calibrateImuBiasSrvCallback, this);
   calibrate_rc_srv_ = nh_.advertiseService("calibrate_rc_trim", &rosflightIO::calibrateRCTrimSrvCallback, this);
   reboot_srv_ = nh_.advertiseService("reboot", &rosflightIO::rebootSrvCallback, this);
-  reboot_bootloader_srv_ = nh_.advertiseService("reboot_to_bootloader", &rosflightIO::rebootToBootloaderSrvCallback,
-                                                this);
+  reboot_bootloader_srv_ = nh_.advertiseService("reboot_to_bootloader", &rosflightIO::rebootToBootloaderSrvCallback, this);
   config_set_srv_ = nh_.advertiseService("config_set", &rosflightIO::configSetSrvCallback, this);
   config_get_srv_ = nh_.advertiseService("config_get", &rosflightIO::configGetSrvCallback, this);
   config_list_srv_ = nh_.advertiseService("config_list", &rosflightIO::configListSrvCallback, this);
@@ -82,13 +79,13 @@ rosflightIO::rosflightIO()
     std::string remote_host = nh_private.param<std::string>("remote_host", bind_host);
     uint16_t remote_port = (uint16_t) nh_private.param<int>("remote_port", 14525);
 
-    ROS_INFO("Connecting over UDP to \"%s:%d\", from \"%s:%d\"", remote_host.c_str(), remote_port, bind_host.c_str(),
-             bind_port);
+    ROS_INFO("Connecting over UDP to \"%s:%d\", from \"%s:%d\"", remote_host.c_str(), remote_port, bind_host.c_str(), bind_port);
 
     mavlink_comm_ = new mavrosflight::MavlinkUDP(bind_host, bind_port, remote_host, remote_port);
-  } else
+  }
+  else
   {
-  std::string port = nh_private.param<std::string>("port", "/dev/ttyACM0");
+    std::string port = nh_private.param<std::string>("port", "/dev/ttyACM0");
     int baud_rate = nh_private.param<int>("baud_rate", 921600);
 
     ROS_INFO("Connecting to serial port \"%s\", at %d baud", port.c_str(), baud_rate);
@@ -209,8 +206,8 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_ROSFLIGHT_HARD_ERROR:
       handle_hard_error_msg(msg);
       break;
-  case MAVLINK_MSG_ID_ROSFLIGHT_BATTERY_STATUS:
-    handle_battery_status_msg(msg);
+    case MAVLINK_MSG_ID_ROSFLIGHT_BATTERY_STATUS:
+      handle_battery_status_msg(msg);
     default:
       ROS_DEBUG("rosflight_io: Got unhandled mavlink message ID %d", msg.msgid);
       break;
@@ -235,8 +232,9 @@ void rosflightIO::on_params_saved_change(bool unsaved_changes)
 
   if (unsaved_changes)
   {
-    ROS_WARN_THROTTLE(1, "There are unsaved changes to onboard parameters");
-  } else
+    ROS_WARN_THROTTLE(1,"There are unsaved changes to onboard parameters");
+  }
+  else
   {
     ROS_INFO("Onboard parameters have been saved");
   }
