@@ -92,7 +92,7 @@ void mavrosflight::ConfigManager::send_config_get_request(uint8_t device)
 
 void mavrosflight::ConfigManager::restart_config_info_request()
 {
-  ROS_WARN("Error getting configuration info. Restarting.");
+  ROS_WARN_THROTTLE(5,"Error getting configuration info. Restarting.");
   device_info_.clear();
   request_config_info();
 }
@@ -250,7 +250,7 @@ mavrosflight::ConfigManager::get_config_from_str(uint8_t device, const std::stri
 
 void mavrosflight::ConfigManager::request_config_info()
 {
-  ROS_INFO("Requesting all configurations");
+  ROS_INFO_ONCE("Requesting all configurations");
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 0, &msg, ROSFLIGHT_CMD_SEND_ALL_CONFIG_INFOS);
   comm_->send_message(msg);
