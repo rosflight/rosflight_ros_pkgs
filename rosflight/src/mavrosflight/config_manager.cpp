@@ -12,9 +12,9 @@ mavrosflight::ConfigManager::ConfigManager(mavrosflight::MavlinkComm *const comm
 
 mavrosflight::ConfigManager::~ConfigManager()
 {
-  for (config_promise_t *promise:promises_)
+  for (ConfigPromise *promise:promises_)
     delete promise;
-  for(config_response_promise_t *response_promise: config_response_promises_)
+  for(ConfigResponsePromise *response_promise: config_response_promises_)
     delete response_promise;
 }
 
@@ -56,7 +56,7 @@ void mavrosflight::ConfigManager::handle_config_message(const mavlink_message_t 
 
 std::tuple<bool, uint8_t> mavrosflight::ConfigManager::get_configuration(uint8_t device)
 {
-  config_promise_t *promise = new config_promise_t;
+  ConfigPromise *promise = new ConfigPromise;
   promise->device = device;
   promises_.push_back(promise);
 
@@ -114,18 +114,18 @@ void mavrosflight::ConfigManager::finish_config_info_receive()
   ROS_INFO("Received all configuration info.");
 }
 
-mavrosflight::ConfigManager::config_response_t
+mavrosflight::ConfigManager::ConfigResponse
 mavrosflight::ConfigManager::set_configuration(uint8_t device, uint8_t config)
 {
-  config_response_promise_t *promise = new config_response_promise_t;
+  ConfigResponsePromise *promise = new ConfigResponsePromise;
   promise->device = device;
   promise->config = config;
-  std::future<config_response_t> future = promise->promise.get_future();
+  std::future<ConfigResponse> future = promise->promise.get_future();
   config_response_promises_.push_back(promise);
   send_config_set_request(device, config);
   std::future_status result = future.wait_for(timeout);
 
-  config_response_t response;
+  ConfigResponse response;
 
   if (result == std::future_status::ready) // A response was received
   {
@@ -153,7 +153,7 @@ void mavrosflight::ConfigManager::handle_config_response_message(const mavlink_m
   mavlink_msg_rosflight_config_status_decode(&msg, &response_msg);
   uint8_t device = response_msg.device;
 
-  config_response_t response;
+  ConfigResponse response;
   response.successful = response_msg.success;
   response.error_message = std::string(reinterpret_cast<char *>(response_msg.error_message));
   response.reboot_required = response_msg.reboot_required;
@@ -197,7 +197,7 @@ std::string mavrosflight::ConfigManager::get_config_name(uint8_t device, uint8_t
 std::vector<std::string> mavrosflight::ConfigManager::get_device_names() const
 {
   std::vector<std::string> device_names;
-  for(device_info_t device: device_info_)
+  for(DeviceInfo device: device_info_)
     device_names.push_back(device.name);
   return device_names;
 }
