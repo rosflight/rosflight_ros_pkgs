@@ -1,12 +1,13 @@
-name: ROS Pre-Release Test
+name: ROS Development Test
 on: [push]
 
 env:
+  JOB_PATH: $GITHUB_WORKSPACE/devel_job
   CONFIG_URL: https://raw.githubusercontent.com/ros-infrastructure/ros_buildfarm_config/production/index.yaml
   REPO_NAME: rosflight
 
 jobs:
-  prerelease:
+  devel:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -26,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          path: ws/src/${{ github.repository }}
+          path: $JOB_PATH/ws/src/${{ github.repository }}
       - uses: actions/setup-python@v1
         with:
           python-version: '2.7'
@@ -41,9 +42,11 @@ jobs:
           path: catkin
       - name: Generate devel script
         run: |
-          generate_devel_script.py $CONFIG_URL ${{ matrix.rosdistro }} default $REPO_NAME ${{ matrix.os_name }} ${{ matrix.os_code_name }} ${{ matrix.arch }} > devel_job.sh
+          generate_devel_script.py $CONFIG_URL ${{ matrix.rosdistro }} default $REPO_NAME ${{ matrix.os_name }} ${{ matrix.os_code_name }} ${{ matrix.arch }} > $JOB_PATH/devel_job.sh
       - name: Run devel script
         env:
           ABORT_ON_TEST_FAILURE: 1
         run: |
+          mkdir ~/.ccache
+          cd $JOB_PATH
           sh devel_job.sh -y
