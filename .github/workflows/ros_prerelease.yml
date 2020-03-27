@@ -1,0 +1,35 @@
+name: ROS Pre-Release Test
+on: [push]
+
+env:
+  CONFIG_URL: https://raw.githubusercontent.com/ros-infrastructure/ros_buildfarm_config/production/index.yaml
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install ROS Buildfarm
+        run: pip install ros_buildfarm
+
+  prerelease:
+    runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      matrix:
+        rosdistro: [kinetic, melodic]
+        include:
+          - rosdistro: kinetic
+            codename: xenial
+          - rosdistro: melodic
+            codename: bionic
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: ws/src
+      - name: Generate devel script
+        run: |
+          generate_devel_script.py $CONFIG_URL ${{ matrix.rosdistro }} default rosflight ubuntu ${{ matrix.codename }} amd64 > devel_job.sh
+      - name: Run devel script
+        run: |
+          sh devel_job.sh -y
