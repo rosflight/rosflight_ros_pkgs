@@ -14,12 +14,14 @@ jobs:
         include:
           - rosdistro: kinetic
             os_name: ubuntu
-            os_codename: xenial
+            os_code_name: xenial
             arch: amd64
+            catkin_branch: kinetic-devel
           - rosdistro: melodic
             os_name: ubuntu
-            os_codename: bionic
+            os_code_name: bionic
             arch: amd64
+            catkin_branch: noetic-devel
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
@@ -35,10 +37,11 @@ jobs:
       - uses: actions/checkout@v2
         with:
           repository: ros/catkin
+          ref: ${{ matrix.catkin_branch }}
           path: catkin
       - name: Generate devel script
         run: |
-          generate_devel_script.py $CONFIG_URL ${{ matrix.rosdistro }} default $REPO_NAME ${{ matrix.os_name }} ${{ matrix.os_codename }} ${{ matrix.arch }} > devel_job.sh
+          generate_devel_script.py $CONFIG_URL ${{ matrix.rosdistro }} default $REPO_NAME ${{ matrix.os_name }} ${{ matrix.os_code_name }} ${{ matrix.arch }} > devel_job.sh
       - name: Run devel script
         env:
           ABORT_ON_TEST_FAILURE: 1
