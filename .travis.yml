@@ -12,7 +12,7 @@ env:
     - ABORT_ON_TEST_FAILURE=1
   matrix:
     - ROS_DISTRO_NAME=kinetic OS_NAME=ubuntu OS_CODE_NAME=xenial ARCH=amd64
-    # - ROS_DISTRO_NAME=melodic OS_NAME=ubuntu OS_CODE_NAME=bionic ARCH=amd64
+    - ROS_DISTRO_NAME=melodic OS_NAME=ubuntu OS_CODE_NAME=bionic ARCH=amd64
 install:
   - pip install ros_buildfarm
   - git clone https://github.com/ros/catkin /tmp/catkin
