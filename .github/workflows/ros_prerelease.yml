@@ -22,15 +22,25 @@ jobs:
             arch: amd64
       fail-fast: false
     steps:
-      - name: Install ROS Buildfarm
-        run: |
-          pip install ros_buildfarm
       - uses: actions/checkout@v2
         with:
           path: ws/src/${{ github.repository }}
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '2.7'
+      - name: Install ROS Buildfarm
+        run: |
+          python -m pip install --upgrade pip
+          pip install ros_buildfarm
+      - uses: actions/checkout@v2
+        with:
+          repository: ros/catkin
+          path: catkin
       - name: Generate devel script
         run: |
           generate_devel_script.py $CONFIG_URL ${{ matrix.rosdistro }} default $REPO_NAME ${{ matrix.os_name }} ${{ matrix.os_codename }} ${{ matrix.arch }} > devel_job.sh
       - name: Run devel script
+        env:
+          ABORT_ON_TEST_FAILURE: 1
         run: |
           sh devel_job.sh -y
