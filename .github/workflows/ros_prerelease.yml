@@ -3,33 +3,34 @@ on: [push]
 
 env:
   CONFIG_URL: https://raw.githubusercontent.com/ros-infrastructure/ros_buildfarm_config/production/index.yaml
+  REPO_NAME: rosflight
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install ROS Buildfarm
-        run: pip install ros_buildfarm
-
   prerelease:
     runs-on: ubuntu-latest
-    needs: setup
     strategy:
       matrix:
         rosdistro: [kinetic, melodic]
         include:
           - rosdistro: kinetic
-            codename: xenial
+            os_name: ubuntu
+            os_codename: xenial
+            arch: amd64
           - rosdistro: melodic
-            codename: bionic
+            os_name: ubuntu
+            os_codename: bionic
+            arch: amd64
       fail-fast: false
     steps:
+      - name: Install ROS Buildfarm
+        run: |
+          pip install ros_buildfarm
       - uses: actions/checkout@v2
         with:
-          path: ws/src
+          path: ws/src/${{ github.repository }}
       - name: Generate devel script
         run: |
-          generate_devel_script.py $CONFIG_URL ${{ matrix.rosdistro }} default rosflight ubuntu ${{ matrix.codename }} amd64 > devel_job.sh
+          generate_devel_script.py $CONFIG_URL ${{ matrix.rosdistro }} default $REPO_NAME ${{ matrix.os_name }} ${{ matrix.os_codename }} ${{ matrix.arch }} > devel_job.sh
       - name: Run devel script
         run: |
           sh devel_job.sh -y
