@@ -46,6 +46,7 @@
 #include <rosflight_msgs/RCRaw.h>
 
 #include <rosflight_firmware/udp_board.h>
+#include "sil_board_config_manager.h"
 
 #include <rosflight_sim/gz_compat.h>
 
@@ -55,6 +56,8 @@ namespace rosflight_sim
 class SIL_Board : public rosflight_firmware::UDPBoard
 {
 private:
+
+  SILBoardConfigManager board_config_manager_;
   GazeboVector inertial_magnetic_field_;
 
   double imu_update_rate_;
@@ -144,6 +147,10 @@ public:
   uint64_t clock_micros() override;
   void clock_delay(uint32_t milliseconds) override;
 
+  // devices
+  bool enable_device(rosflight_firmware::device_t device, rosflight_firmware::hardware_config_t configuration, const rosflight_firmware::Params &params);
+  const rosflight_firmware::BoardConfigManager &get_board_config_manager() const;
+
   // sensors
   void sensors_init() override;
   uint16_t num_sensor_errors(void) override;
@@ -176,7 +183,7 @@ public:
 
   //RC
   float rc_read(uint8_t channel) override;
-  void rc_init(rc_type_t rc_type) override;
+  void rc_init(rc_type_t rc_type);
   bool rc_lost(void) override;
 
 

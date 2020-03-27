@@ -45,6 +45,7 @@
 
 #include "mavlink/mavlink.h"
 #include "board.h"
+#include "configuration_enum.h"
 
 namespace rosflight_firmware
 {
@@ -58,7 +59,7 @@ public:
            uint16_t remote_port = 14520);
   ~UDPBoard();
 
-  void serial_init(uint32_t baud_rate, uint32_t dev) override;
+  void serial_init(uint32_t baud_rate, uint32_t dev);
   void serial_write(const uint8_t *src, size_t len) override;
   uint16_t serial_bytes_available(void) override;
   uint8_t serial_read(void) override;
