@@ -207,6 +207,7 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
       break;
     case MAVLINK_MSG_ID_ROSFLIGHT_BATTERY_STATUS:
       handle_battery_status_msg(msg);
+      break;
     default:
       ROS_DEBUG("rosflight_io: Got unhandled mavlink message ID %d", msg.msgid);
       break;

@@ -35,11 +35,12 @@
 
 #include <iostream>
 
-namespace rosflight_sim {
+namespace rosflight_sim
+{
 
 SIL_Board::SIL_Board() :
-  rosflight_firmware::UDPBoard()
-{ }
+    rosflight_firmware::UDPBoard()
+{}
 
 void SIL_Board::init_board(void)
 {
@@ -56,7 +57,8 @@ constexpr double deg2Rad(double x)
 }
 
 void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
-                            gazebo::physics::ModelPtr model, ros::NodeHandle *nh, std::string mav_type) {
+                             gazebo::physics::ModelPtr model, ros::NodeHandle *nh, std::string mav_type)
+{
   link_ = link;
   world_ = world;
   model_ = model;
@@ -189,12 +191,12 @@ void SIL_Board::sensors_init()
 #if GAZEBO_MAJOR_VERSION >= 9
   using SC = gazebo::common::SphericalCoordinates;
   using Ang = ignition::math::Angle;
-  sph_coord_.SetSurfaceType(SC::SurfaceType::EARTH_WGS84); 
+  sph_coord_.SetSurfaceType(SC::SurfaceType::EARTH_WGS84);
   sph_coord_.SetLatitudeReference(Ang(deg2Rad(origin_latitude_)));
   sph_coord_.SetLongitudeReference(Ang(deg2Rad(origin_longitude_)));
   sph_coord_.SetElevationReference(origin_altitude_);
   // Force x-axis to be north-aligned. I promise, I will change everything to ENU in the next commit
-  sph_coord_.SetHeadingOffset(Ang(-M_PI/2.0)); 
+  sph_coord_.SetHeadingOffset(Ang(-M_PI/2.0));
 #endif
 }
 
@@ -393,6 +395,36 @@ float SIL_Board::sonar_read(void)
     return alt + sonar_stdev_*normal_distribution_(random_generator_);
 }
 
+bool SIL_Board::battery_voltage_present() const
+{
+  return true;
+}
+
+float SIL_Board::battery_voltage_read() const
+{
+  return 15 * battery_voltage_multiplier;
+}
+
+void SIL_Board::battery_voltage_set_multiplier(double multiplier)
+{
+  battery_voltage_multiplier = multiplier;
+}
+
+bool SIL_Board::battery_current_present() const
+{
+  return true;
+}
+
+float SIL_Board::battery_current_read() const
+{
+  return 1 * battery_current_multiplier;
+}
+
+void SIL_Board::battery_current_set_multiplier(double multiplier)
+{
+  battery_current_multiplier = multiplier;
+}
+
 // PWM
 void SIL_Board::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
 {
@@ -498,15 +530,31 @@ void SIL_Board::led1_on(void) { }
 void SIL_Board::led1_off(void) { }
 void SIL_Board::led1_toggle(void) { }
 
-bool SIL_Board::has_backup_data(void)
+void SIL_Board::backup_memory_init()
 {
-	return false;
 }
 
-rosflight_firmware::BackupData SIL_Board::get_backup_data(void)
+bool SIL_Board::backup_memory_read(void *dest, size_t len)
 {
-	rosflight_firmware::BackupData blank_data = {0};
-	return blank_data;
+  if(len <= BACKUP_SRAM_SIZE)
+  {
+    memcpy(dest, backup_memory_, len);
+    return true;
+  }
+  else
+    return false;
+}
+
+void SIL_Board::backup_memory_write(const void *src, size_t len)
+{
+  if (len < BACKUP_SRAM_SIZE)
+    memcpy(backup_memory_, src, len);
+}
+
+void SIL_Board::backup_memory_clear(size_t len)
+{
+  if(len< BACKUP_SRAM_SIZE)
+    memset(backup_memory_, 0, len);
 }
 
 void SIL_Board::RCCallback(const rosflight_msgs::RCRaw& msg)
@@ -638,10 +686,12 @@ rosflight_firmware::GNSSRaw SIL_Board::gnss_raw_read()
   double head_mot = std::atan2(ve, vn);
   out.head_mot = std::round(rad2Deg(head_mot)*1e5);
   out.p_dop = 0.0; // TODO
-  out.rosflight_timestamp = clock_micros(); 
+  out.rosflight_timestamp = clock_micros();
 
 #endif
   return out;
 }
+
+
 
 } // namespace rosflight_sim

@@ -2,6 +2,10 @@
 Changelog for package rosflight_pkgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2020-03-19)
+------------------
+* Contributors: Cameron McQuinn, Jacob Willis
+
 1.0.0 (2018-03-13)
 ------------------
 * Small updates to package.xml's and readme

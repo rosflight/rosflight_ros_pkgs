@@ -2,6 +2,13 @@
 Changelog for package rosflight_sim
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2020-03-19)
+------------------
+* Fixes for multiple simulators running simultaneously
+* Battery monitor support
+* Hard fault handling support
+* Contributors: BillThePlatypus, Cameron McQuinn, Daniel Koch, Jacob Willis, James Jackson, Parker Lusk, Trey Henrichsen
+
 1.0.0 (2018-03-13)
 ------------------
 * Update firmware to v1.1.0

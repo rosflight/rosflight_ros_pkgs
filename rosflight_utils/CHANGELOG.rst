@@ -2,6 +2,13 @@
 Changelog for package rosflight_utils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2020-03-19)
+------------------
+* Cleaned up rc_joy node
+* Cleaned up mag visualization
+* Added attitude visualization
+* Contributors: BillThePlatypus, Cameron McQuinn, Daniel Koch, Jacob Willis, James Jackson, Parker Lusk
+
 1.0.0 (2018-03-13)
 ------------------
 * parse GLONASS nmea sentences
