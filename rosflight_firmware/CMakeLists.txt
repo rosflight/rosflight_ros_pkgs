@@ -21,12 +21,22 @@ execute_process(COMMAND git rev-parse --short=8 HEAD
     OUTPUT_VARIABLE GIT_VERSION_HASH
     OUTPUT_STRIP_TRAILING_WHITESPACE
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/firmware)
-set(${GIT_VERSION_HASH} "0x${GIT_VERSION_HASH}")
 
 execute_process(COMMAND git describe --tags --abbrev=8 --always --dirty --long
     OUTPUT_VARIABLE GIT_VERSION_STRING
     OUTPUT_STRIP_TRAILING_WHITESPACE
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/firmware)
+
+if("${GIT_VERSION_STRING}" STREQUAL "")
+  set(GIT_VERSION_STRING "undefined")
+endif()
+
+if("${GIT_VERSION_HASH}" STREQUAL "")
+  set(GIT_VERSION_HASH "0")
+endif()
+
+message(STATUS "Firmware version string: ${GIT_VERSION_STRING}")
+message(STATUS "Firmware version hash: ${GIT_VERSION_HASH}")
 
 set(FIRMWARE_INCLUDE_DIRS
   firmware/include/
