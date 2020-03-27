@@ -2,6 +2,9 @@
 Changelog for package rosflight_utils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.3.0 (2020-03-19)
 ------------------
 * Cleaned up rc_joy node
