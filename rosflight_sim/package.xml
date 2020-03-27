@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rosflight_sim</name>
-  <version>1.3.0</version>
+  <version>1.3.1</version>
   <description>Software-in-the-loop (SIL) simulator for the ROSflight firmware</description>
 
   <maintainer email="superjax08@gmail.com">James Jackson</maintainer>

@@ -2,8 +2,8 @@
 Changelog for package rosflight_firmware
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.1 (2020-03-27)
+------------------
 * Hotfix for buildfarm failure with git version commands
 * Contributors: Daniel Koch
 

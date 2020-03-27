@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rosflight_firmware</name>
-  <version>1.3.0</version>
+  <version>1.3.1</version>
   <description>Firmware library for software-in-the-loop of the ROSflight ROS stack</description>
 
   <maintainer email="daniel.p.koch@gmail.com">Daniel Koch</maintainer>
