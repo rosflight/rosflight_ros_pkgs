@@ -11,12 +11,21 @@ rosflight_firmware::hardware_config_t SILBoardConfigManager::get_max_config(rosf
 {
   return 0;
 }
-rosflight_firmware::ConfigManager::ConfigResponse SILBoardConfigManager::check_config_change(rosflight_firmware::device_t device, rosflight_firmware::hardware_config_t, const rosflight_firmware::ConfigManager &cm) const
+rosflight_firmware::ConfigManager::ConfigResponse SILBoardConfigManager::check_config_change(rosflight_firmware::device_t device, rosflight_firmware::hardware_config_t config, const rosflight_firmware::ConfigManager &cm) const
 {
   rosflight_firmware::ConfigManager::ConfigResponse response;
-  response.successful = false;
-  response.reboot_required = false;
-  strcpy(response.message, "Not supported in sim");
+  if(config == 0)
+  {
+    response.successful = true;
+    response.reboot_required = false;
+    strcpy(response.message, "No change");
+  }
+  else
+  {
+    response.successful = false;
+    response.reboot_required = false;
+    strcpy(response.message, "Invalid configuration");
+  }
   return response;
 }
 void SILBoardConfigManager::get_device_name(rosflight_firmware::device_t device, char (&name)[rosflight_firmware::BoardConfigManager::DEVICE_NAME_LENGTH]) const
