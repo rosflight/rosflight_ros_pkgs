@@ -22,20 +22,20 @@ void mavrosflight::ConfigManager::handle_mavlink_message(const mavlink_message_t
 {
   switch (msg.msgid)
   {
-    case MAVLINK_MSG_ID_ROSFLIGHT_CONFIG:
-      handle_config_message(msg);
-      break;
-    case MAVLINK_MSG_ID_ROSFLIGHT_DEVICE_INFO:
-      handle_device_info_message(msg);
-      break;
-    case MAVLINK_MSG_ID_ROSFLIGHT_CONFIG_INFO:
-      handle_config_info_message(msg);
-      break;
-    case MAVLINK_MSG_ID_ROSFLIGHT_CONFIG_STATUS:
-      handle_config_response_message(msg);
-      break;
-    default:
-      break;
+  case MAVLINK_MSG_ID_ROSFLIGHT_CONFIG:
+    handle_config_message(msg);
+    break;
+  case MAVLINK_MSG_ID_ROSFLIGHT_DEVICE_INFO:
+    handle_device_info_message(msg);
+    break;
+  case MAVLINK_MSG_ID_ROSFLIGHT_CONFIG_INFO:
+    handle_config_info_message(msg);
+    break;
+  case MAVLINK_MSG_ID_ROSFLIGHT_CONFIG_STATUS:
+    handle_config_response_message(msg);
+    break;
+  default:
+    break;
   }
 }
 
@@ -182,7 +182,7 @@ std::string mavrosflight::ConfigManager::get_device_name(uint8_t device) const
   if (is_valid_device(device))
     return device_info_[device].name;
   else
-    return "";
+    return "Invalid device #" + std::to_string(static_cast<int>(device));
 }
 
 std::string mavrosflight::ConfigManager::get_config_name(uint8_t device, uint8_t config) const
@@ -191,7 +191,6 @@ std::string mavrosflight::ConfigManager::get_config_name(uint8_t device, uint8_t
     return device_info_[device].config_names[config];
   else
     return "Invalid configuration #" + std::to_string(static_cast<int>(config));
-  //return "Invalid configuration #" + static_cast<int>(config); // This code does weird things
 }
 
 std::vector<std::string> mavrosflight::ConfigManager::get_device_names() const

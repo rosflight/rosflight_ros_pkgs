@@ -660,7 +660,7 @@ void rosflightIO::handle_small_range_msg(const mavlink_message_t &msg)
   alt_msg.min_range = range.min_range;
   alt_msg.range = range.range;
 
-  switch (range.type) {
+  switch(range.type) {
     case ROSFLIGHT_RANGE_SONAR:
       alt_msg.radiation_type  = sensor_msgs::Range::ULTRASOUND;
       alt_msg.field_of_view   = 1.0472;  // approx 60 deg
@@ -674,7 +674,7 @@ void rosflightIO::handle_small_range_msg(const mavlink_message_t &msg)
     case ROSFLIGHT_RANGE_LIDAR:
       alt_msg.radiation_type  = sensor_msgs::Range::INFRARED;
       alt_msg.field_of_view   = .0349066; //approx 2 deg
-
+      
       if (lidar_pub_.getTopic().empty())
       {
         lidar_pub_ = nh_.advertise<sensor_msgs::Range>("lidar", 1);
@@ -716,7 +716,7 @@ void rosflightIO::handle_hard_error_msg(const mavlink_message_t &msg)
   {
     ROS_ERROR("The firmware has rearmed itself.");
   }
-  ROS_ERROR("The flight controller has rebooted %u time%s.", error.reset_count, error.reset_count>1 ?"s":"");
+  ROS_ERROR("The flight controller has rebooted %u time%s.", error.reset_count, error.reset_count>1?"s":"");
   rosflight_msgs::Error error_msg;
   error_msg.error_message = "A firmware error has caused the flight controller to reboot.";
   error_msg.error_code = error.error_code;
@@ -762,7 +762,7 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg) {
   gnss_msg.velocity[2] = .01 * gnss.ecef_v_z;
   gnss_msg.speed_accuracy = gnss.s_acc;
   if (gnss_pub_.getTopic().empty()) {
-    gnss_pub_ = nh_.advertise<rosflight_msgs::GNSS>("gnss",1);
+    gnss_pub_ = nh_.advertise<rosflight_msgs::GNSS>("gnss", 1);
   }
   gnss_pub_.publish(gnss_msg);
 
@@ -783,8 +783,7 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg) {
   navsat_status.service = 1; //Report that only GPS was used, even though others may have been
   navsat_fix.status = navsat_status;
 
-  if (nav_sat_fix_pub_.getTopic().empty())
-  {
+  if (nav_sat_fix_pub_.getTopic().empty()){
     nav_sat_fix_pub_ = nh_.advertise<sensor_msgs::NavSatFix>("navsat_compat/fix",1);
   }
   nav_sat_fix_pub_.publish(navsat_fix);
@@ -809,7 +808,7 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg) {
   time_ref.source = "GNSS";
   time_ref.time_ref = ros::Time(gnss.time, gnss.nanos);
 
-  if (time_reference_pub_.getTopic().empty())
+  if(time_reference_pub_.getTopic().empty())
     time_reference_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("navsat_compat/time_reference",1);
 
 }
@@ -966,7 +965,8 @@ void rosflightIO::paramTimerCallback(const ros::TimerEvent &e)
   {
     param_timer_.stop();
     ROS_INFO("Received all parameters");
-  } else
+  }
+  else
   {
     mavrosflight_->param.request_params();
     ROS_ERROR("Received %d of %d parameters. Requesting missing parameters...",
@@ -990,7 +990,6 @@ void rosflightIO::request_version()
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_SEND_VERSION);
   mavrosflight_->comm.send_message(msg);
 }
-
 void rosflightIO::send_heartbeat()
 {
   mavlink_message_t msg;
@@ -1067,6 +1066,7 @@ rosflightIO::configGetSrvCallback(rosflight_msgs::ConfigGet::Request &req, rosfl
     res.successful = false;
     res.configuration = "";
     res.message = "Request timeout";
+    return true;
   }
   uint8_t config = std::get<1>(config_get_response);
   std::string config_name = config_manager.get_config_name(device, config);

@@ -229,7 +229,7 @@ public:
   gazebo::common::SphericalCoordinates sph_coord_;
 #endif
 
-};
+  };
 
 } // namespace rosflight_sim
 

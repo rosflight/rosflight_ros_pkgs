@@ -127,7 +127,6 @@ void MavlinkComm::async_read_end(const boost::system::error_code &error, size_t 
 
   if (error)
   {
-    std::cerr<<error.message()<<std::endl;
     close();
     return;
   }

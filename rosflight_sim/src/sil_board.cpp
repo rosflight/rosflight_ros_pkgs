@@ -33,6 +33,8 @@
 #include <fstream>
 #include <ros/ros.h>
 
+#include <iostream>
+
 namespace rosflight_sim
 {
 
