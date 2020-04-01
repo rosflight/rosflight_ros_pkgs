@@ -68,6 +68,8 @@ add_library(rosflight_firmware
   firmware/src/command_manager.cpp
   firmware/src/sensors.cpp
   firmware/src/comm_manager.cpp
+  firmware/src/config_manager.cpp
+  firmware/src/memory_manager.cpp
 
   firmware/comms/mavlink/mavlink.cpp
 
@@ -87,6 +89,7 @@ target_link_libraries(rosflight_udp_board
 )
 add_library(rosflight_test
     firmware/test/test_board.cpp
+    firmware/test/test_board_config_manager.cpp
 )
 target_link_libraries(rosflight_test
   rosflight_firmware

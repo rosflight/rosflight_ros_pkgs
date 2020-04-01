@@ -22,6 +22,7 @@ add_message_files(
   GNSS.msg
   GNSSRaw.msg
   BatteryStatus.msg
+  DeviceInfo.msg
 )
 
 add_service_files(
@@ -30,6 +31,9 @@ add_service_files(
   ParamFile.srv
   ParamGet.srv
   ParamSet.srv
+  ConfigSet.srv
+  ConfigGet.srv
+  ConfigList.srv
 )
 
 generate_messages(

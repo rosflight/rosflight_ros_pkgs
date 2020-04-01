@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(rosflight)
 
-set(CMAKE_BUILD_TYPE Release)
-
 message("CMAKE_C_FLAGS_RELEASE is ${CMAKE_C_FLAGS_RELEASE}")
 
 set(CMAKE_CXX_FLAGS "-std=c++0x")
@@ -64,6 +62,7 @@ add_library(mavrosflight
   src/mavrosflight/param_manager.cpp
   src/mavrosflight/param.cpp
   src/mavrosflight/time_manager.cpp
+  src/mavrosflight/config_manager.cpp
 )
 add_dependencies(mavrosflight ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(mavrosflight

@@ -58,14 +58,17 @@ rosflightIO::rosflightIO()
 
   param_get_srv_ = nh_.advertiseService("param_get", &rosflightIO::paramGetSrvCallback, this);
   param_set_srv_ = nh_.advertiseService("param_set", &rosflightIO::paramSetSrvCallback, this);
-  param_write_srv_ = nh_.advertiseService("param_write", &rosflightIO::paramWriteSrvCallback, this);
+  param_write_srv_ = nh_.advertiseService("memory_write", &rosflightIO::paramWriteSrvCallback, this);
   param_save_to_file_srv_ = nh_.advertiseService("param_save_to_file", &rosflightIO::paramSaveToFileCallback, this);
   param_load_from_file_srv_ = nh_.advertiseService("param_load_from_file", &rosflightIO::paramLoadFromFileCallback, this);
   imu_calibrate_bias_srv_ = nh_.advertiseService("calibrate_imu", &rosflightIO::calibrateImuBiasSrvCallback, this);
   calibrate_rc_srv_ = nh_.advertiseService("calibrate_rc_trim", &rosflightIO::calibrateRCTrimSrvCallback, this);
   reboot_srv_ = nh_.advertiseService("reboot", &rosflightIO::rebootSrvCallback, this);
   reboot_bootloader_srv_ = nh_.advertiseService("reboot_to_bootloader", &rosflightIO::rebootToBootloaderSrvCallback, this);
-  
+  config_set_srv_ = nh_.advertiseService("config_set", &rosflightIO::configSetSrvCallback, this);
+  config_get_srv_ = nh_.advertiseService("config_get", &rosflightIO::configGetSrvCallback, this);
+  config_list_srv_ = nh_.advertiseService("config_list", &rosflightIO::configListSrvCallback, this);
+
   ros::NodeHandle nh_private("~");
 
   if (nh_private.param<bool>("udp", false))
@@ -105,6 +108,7 @@ rosflightIO::rosflightIO()
 
   // request the param list
   mavrosflight_->param.request_params();
+  mavrosflight_->config_manager.request_config_info();
   param_timer_ = nh_.createTimer(ros::Duration(PARAMETER_PERIOD), &rosflightIO::paramTimerCallback, this);
 
   // request version information
@@ -779,7 +783,7 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg) {
   navsat_status.service = 1; //Report that only GPS was used, even though others may have been
   navsat_fix.status = navsat_status;
 
-  if (nav_sat_fix_pub_.getTopic().empty()) {
+  if (nav_sat_fix_pub_.getTopic().empty()){
     nav_sat_fix_pub_ = nh_.advertise<sensor_msgs::NavSatFix>("navsat_compat/fix",1);
   }
   nav_sat_fix_pub_.publish(navsat_fix);
@@ -1037,6 +1041,85 @@ bool rosflightIO::rebootToBootloaderSrvCallback(std_srvs::Trigger::Request &req,
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_REBOOT_TO_BOOTLOADER);
   mavrosflight_->comm.send_message(msg);
   res.success = true;
+  return true;
+}
+
+bool
+rosflightIO::configGetSrvCallback(rosflight_msgs::ConfigGet::Request &req, rosflight_msgs::ConfigGet::Response &res)
+{
+  std::string device_name = req.device;
+  mavrosflight::ConfigManager &config_manager = mavrosflight_->config_manager;
+
+  std::tuple<bool, uint8_t> device_name_response = config_manager.get_device_from_str(device_name);
+  if (!std::get<0>(device_name_response))
+  {
+    res.successful = false;
+    res.configuration = "";
+    res.message = "Device \"" + device_name + "\"not found";
+    return true;
+  }
+  uint8_t device = std::get<1>(device_name_response);
+
+  std::tuple<bool, uint8_t> config_get_response = mavrosflight_->config_manager.get_configuration(device);
+  if (!std::get<0>(config_get_response))
+  {
+    res.successful = false;
+    res.configuration = "";
+    res.message = "Request timeout";
+    return true;
+  }
+  uint8_t config = std::get<1>(config_get_response);
+  std::string config_name = config_manager.get_config_name(device, config);
+  res.successful = true;
+  res.configuration = config_name;
+  res.message = "";
+  return true;
+}
+
+bool rosflightIO::configListSrvCallback(rosflight_msgs::ConfigList::Request &req, rosflight_msgs::ConfigList::Response &res)
+{
+  std::vector<std::string> device_names = mavrosflight_->config_manager.get_device_names();
+  for(uint8_t device = 0; device < device_names.size(); device++)
+  {
+    rosflight_msgs::DeviceInfo device_info;
+    device_info.device_name = device_names[device];
+    device_info.configuration_names = mavrosflight_->config_manager.get_config_names(device);
+    res.devices.push_back(device_info);
+  }
+  return true;
+}
+
+bool
+rosflightIO::configSetSrvCallback(rosflight_msgs::ConfigSet::Request &req, rosflight_msgs::ConfigSet::Response &res)
+{
+  std::string device_name = req.device;
+  std::string config_name = req.configuration;
+  mavrosflight::ConfigManager &config_manager = mavrosflight_->config_manager;
+
+  res.reboot_required = false;
+
+  std::tuple<bool, uint8_t> device_name_response = config_manager.get_device_from_str(device_name);
+  if (!std::get<0>(device_name_response))
+  {
+    res.successful = false;
+    res.message = "Device name \"" + device_name + "\" not found";
+    return true;
+  }
+  uint8_t device = std::get<1>(device_name_response);
+
+  std::tuple<bool, uint8_t> config_name_response = config_manager.get_config_from_str(device, config_name);
+  if (!std::get<0>(config_name_response))
+  {
+    res.successful = false;
+    res.message = "Configuration name \"" + config_name + "\" not found";
+    return true;
+  }
+  uint8_t config = std::get<1>(config_name_response);
+
+  auto response = config_manager.set_configuration(device, config);
+  res.successful = response.successful;
+  res.reboot_required = response.reboot_required;
+  res.message = response.error_message;
   return true;
 }
 

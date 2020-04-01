@@ -168,6 +168,25 @@ void SIL_Board::clock_delay(uint32_t milliseconds)
 {
 }
 
+//devices
+bool SIL_Board::enable_device(rosflight_firmware::device_t device, rosflight_firmware::hardware_config_t configuration, const rosflight_firmware::Params &params)
+{
+  switch(device)
+  {
+  case rosflight_firmware::Configuration::SERIAL:
+    serial_init(params.get_param_int(rosflight_firmware::PARAM_BAUD_RATE), device);
+    break;
+  default:
+    break;
+  }
+  return true;
+}
+
+const rosflight_firmware::BoardConfigManager &SIL_Board::get_board_config_manager() const
+{
+  return board_config_manager_;
+}
+
 // sensors
 /// TODO these sensors have noise, no bias
 /// noise params are hard coded

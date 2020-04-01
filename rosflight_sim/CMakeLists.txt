@@ -42,6 +42,7 @@ link_directories(${GAZEBO_LIBRARY_DIRS})
 add_library(rosflight_sil_plugin SHARED
   src/rosflight_sil.cpp
   src/sil_board.cpp
+  src/sil_board_config_manager.cpp
   src/multirotor_forces_and_moments.cpp
   src/fixedwing_forces_and_moments.cpp
 )

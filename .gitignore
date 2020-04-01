@@ -13,3 +13,5 @@
 *CMakeFiles*
 *catkin_generated*
 *Makefile
+.idea/
+cmake-build-*/
