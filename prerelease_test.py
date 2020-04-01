@@ -162,7 +162,7 @@ if __name__ == '__main__':
     parser.add_argument('--distro',
                         nargs='*',
                         type=str,
-                        default=['kinetic', 'lunar', 'melodic'],
+                        default=['kinetic', 'melodic'],
                         help='A list of one or more ROS distros for which to run the prerelease tests')
     parser.add_argument('--os',
                         nargs='*',

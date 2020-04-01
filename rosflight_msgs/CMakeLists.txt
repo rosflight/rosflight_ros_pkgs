@@ -22,6 +22,7 @@ add_message_files(
   Error.msg
   GNSS.msg
   GNSSRaw.msg
+  BatteryStatus.msg
 )
 
 add_service_files(

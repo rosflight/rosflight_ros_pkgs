@@ -70,6 +70,7 @@
 #include <rosflight_msgs/Error.h>
 #include <rosflight_msgs/GNSSRaw.h>
 #include <rosflight_msgs/GNSS.h>
+#include <rosflight_msgs/BatteryStatus.h>
 
 
 #include <rosflight_msgs/ParamFile.h>
@@ -128,6 +129,7 @@ private:
   void handle_small_range_msg(const mavlink_message_t &msg);
   void handle_version_msg(const mavlink_message_t &msg);
   void handle_hard_error_msg(const mavlink_message_t &msg);
+  void handle_battery_status_msg(const mavlink_message_t &msg);
 
   // ROS message callbacks
   void commandCallback(rosflight_msgs::Command::ConstPtr msg);
@@ -193,6 +195,7 @@ private:
   ros::Publisher version_pub_;
   ros::Publisher lidar_pub_;
   ros::Publisher error_pub_;
+  ros::Publisher battery_status_pub_;
   std::map<std::string, ros::Publisher> named_value_int_pubs_;
   std::map<std::string, ros::Publisher> named_value_float_pubs_;
   std::map<std::string, ros::Publisher> named_command_struct_pubs_;

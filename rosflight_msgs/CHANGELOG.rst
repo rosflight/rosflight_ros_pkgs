@@ -2,6 +2,15 @@
 Changelog for package rosflight_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2020-03-19)
+------------------
+* Added BatteryStatus message
+* Added AuxCommand message
+* Added Error message
+* Changed length of values array to 14 in OutputRaw message
+* Removed GPS message
+* Contributors: BillThePlatypus, Cameron McQuinn, Daniel Koch, Jacob Willis, James Jackson, Trey Henrichsen
+
 1.0.0 (2018-03-13)
 ------------------
 * Small updates to package.xml's and readme

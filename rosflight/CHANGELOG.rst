@@ -2,6 +2,19 @@
 Changelog for package rosflight
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2020-03-19)
+------------------
+* Update firmware submodule to v1.3.0
+* Battery monitor support
+* Changed default port to /dev/ttyACM0 to match Revo
+* External attitude correction support
+* Throttle "received parameters" error
+* Fixes for multiple simulators running simultaneously
+* Auxiliary servo/motor command support
+* Fix missing dependency to eigen_stl_containers
+* Hard fault handling support
+* Contributors: BillThePlatypus, Cameron McQuinn, Daniel Koch, Jacob Willis, James Jackson, Parker Lusk, Trey Henrichsen
+
 1.0.0 (2018-03-13)
 ------------------
 * Fixed Eigen build errors for debian
