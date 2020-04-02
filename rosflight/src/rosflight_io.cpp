@@ -42,7 +42,6 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
 #include <tf/tf.h>
-#include <iostream>
 
 #include <rosflight/rosflight_io.h>
 
@@ -55,22 +54,20 @@ rosflightIO::rosflightIO()
   extatt_sub_ = nh_.subscribe("external_attitude", 1, &rosflightIO::externalAttitudeCallback, this);
 
   unsaved_params_pub_ = nh_.advertise<std_msgs::Bool>("unsaved_params", 1, true);
-  error_pub_ = nh_.advertise<rosflight_msgs::Error>("rosflight_errors", 5,
-                                                    true); // A relatively large queue so all messages get through
+  error_pub_ = nh_.advertise<rosflight_msgs::Error>("rosflight_errors",5,true); // A relatively large queue so all messages get through
 
   param_get_srv_ = nh_.advertiseService("param_get", &rosflightIO::paramGetSrvCallback, this);
   param_set_srv_ = nh_.advertiseService("param_set", &rosflightIO::paramSetSrvCallback, this);
   param_write_srv_ = nh_.advertiseService("memory_write", &rosflightIO::paramWriteSrvCallback, this);
   param_save_to_file_srv_ = nh_.advertiseService("param_save_to_file", &rosflightIO::paramSaveToFileCallback, this);
-  param_load_from_file_srv_ = nh_.advertiseService("param_load_from_file", &rosflightIO::paramLoadFromFileCallback,
-                                                   this);
+  param_load_from_file_srv_ = nh_.advertiseService("param_load_from_file", &rosflightIO::paramLoadFromFileCallback, this);
   imu_calibrate_bias_srv_ = nh_.advertiseService("calibrate_imu", &rosflightIO::calibrateImuBiasSrvCallback, this);
   calibrate_rc_srv_ = nh_.advertiseService("calibrate_rc_trim", &rosflightIO::calibrateRCTrimSrvCallback, this);
   reboot_srv_ = nh_.advertiseService("reboot", &rosflightIO::rebootSrvCallback, this);
-  reboot_bootloader_srv_ = nh_.advertiseService("reboot_to_bootloader", &rosflightIO::rebootToBootloaderSrvCallback,
-                                                this);
+  reboot_bootloader_srv_ = nh_.advertiseService("reboot_to_bootloader", &rosflightIO::rebootToBootloaderSrvCallback, this);
   config_set_srv_ = nh_.advertiseService("config_set", &rosflightIO::configSetSrvCallback, this);
   config_get_srv_ = nh_.advertiseService("config_get", &rosflightIO::configGetSrvCallback, this);
+  config_list_srv_ = nh_.advertiseService("config_list", &rosflightIO::configListSrvCallback, this);
 
   ros::NodeHandle nh_private("~");
 
@@ -81,13 +78,13 @@ rosflightIO::rosflightIO()
     std::string remote_host = nh_private.param<std::string>("remote_host", bind_host);
     uint16_t remote_port = (uint16_t) nh_private.param<int>("remote_port", 14525);
 
-    ROS_INFO("Connecting over UDP to \"%s:%d\", from \"%s:%d\"", remote_host.c_str(), remote_port, bind_host.c_str(),
-             bind_port);
+    ROS_INFO("Connecting over UDP to \"%s:%d\", from \"%s:%d\"", remote_host.c_str(), remote_port, bind_host.c_str(), bind_port);
 
     mavlink_comm_ = new mavrosflight::MavlinkUDP(bind_host, bind_port, remote_host, remote_port);
-  } else
+  }
+  else
   {
-    std::string port = nh_private.param<std::string>("port", "/dev/ttyUSB0");
+    std::string port = nh_private.param<std::string>("port", "/dev/ttyACM0");
     int baud_rate = nh_private.param<int>("baud_rate", 921600);
 
     ROS_INFO("Connecting to serial port \"%s\", at %d baud", port.c_str(), baud_rate);
@@ -235,8 +232,9 @@ void rosflightIO::on_params_saved_change(bool unsaved_changes)
 
   if (unsaved_changes)
   {
-    ROS_WARN_THROTTLE(1, "There are unsaved changes to onboard parameters");
-  } else
+    ROS_WARN_THROTTLE(1,"There are unsaved changes to onboard parameters");
+  }
+  else
   {
     ROS_INFO("Onboard parameters have been saved");
   }
@@ -292,17 +290,12 @@ void rosflightIO::handle_status_msg(const mavlink_message_t &msg)
   if (prev_status_.error_code != status_msg.error_code)
   {
     check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_INVALID_MIXER, "Invalid mixer");
-    check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_IMU_NOT_RESPONDING,
-                     "IMU not responding");
+    check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_IMU_NOT_RESPONDING, "IMU not responding");
     check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_RC_LOST, "RC lost");
-    check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_UNHEALTHY_ESTIMATOR,
-                     "Unhealthy estimator");
-    check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_TIME_GOING_BACKWARDS,
-                     "Time going backwards");
-    check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_UNCALIBRATED_IMU,
-                     "Uncalibrated IMU");
-    check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_BUFFER_OVERRUN,
-                     "Buffer Overrun");
+    check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_UNHEALTHY_ESTIMATOR, "Unhealthy estimator");
+    check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_TIME_GOING_BACKWARDS, "Time going backwards");
+    check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_UNCALIBRATED_IMU, "Uncalibrated IMU");
+    check_error_code(status_msg.error_code, prev_status_.error_code, ROSFLIGHT_ERROR_BUFFER_OVERRUN, "Buffer Overrun");
 
     ROS_DEBUG("Autopilot ERROR 0x%02x", status_msg.error_code);
   }
@@ -372,7 +365,8 @@ void rosflightIO::handle_command_ack_msg(const mavlink_message_t &msg)
   if (ack.success == ROSFLIGHT_CMD_SUCCESS)
   {
     ROS_DEBUG("MAVLink command %d Acknowledged", ack.command);
-  } else
+  }
+  else
   {
     ROS_ERROR("MAVLink command %d Failed", ack.command);
   }
@@ -533,10 +527,9 @@ void rosflightIO::handle_diff_pressure_msg(const mavlink_message_t &msg)
   airspeed_msg.differential_pressure = diff.diff_pressure;
   airspeed_msg.temperature = diff.temperature;
 
-  if (calibrate_airspeed_srv_.getService().empty())
+  if(calibrate_airspeed_srv_.getService().empty())
   {
-    calibrate_airspeed_srv_ = nh_.advertiseService("calibrate_airspeed", &rosflightIO::calibrateAirspeedSrvCallback,
-                                                   this);
+    calibrate_airspeed_srv_ = nh_.advertiseService("calibrate_airspeed", &rosflightIO::calibrateAirspeedSrvCallback, this);
   }
 
   if (diff_pressure_pub_.getTopic().empty())
@@ -639,7 +632,7 @@ void rosflightIO::handle_small_baro_msg(const mavlink_message_t &msg)
   baro_msg.temperature = baro.temperature;
 
   // If we are getting barometer messages, then we should publish the barometer calibration service
-  if (calibrate_baro_srv_.getService().empty())
+  if(calibrate_baro_srv_.getService().empty())
   {
     calibrate_baro_srv_ = nh_.advertiseService("calibrate_baro", &rosflightIO::calibrateBaroSrvCallback, this);
   }
@@ -683,11 +676,10 @@ void rosflightIO::handle_small_range_msg(const mavlink_message_t &msg)
   alt_msg.min_range = range.min_range;
   alt_msg.range = range.range;
 
-  switch (range.type)
-  {
+  switch(range.type) {
     case ROSFLIGHT_RANGE_SONAR:
-      alt_msg.radiation_type = sensor_msgs::Range::ULTRASOUND;
-      alt_msg.field_of_view = 1.0472;  // approx 60 deg
+      alt_msg.radiation_type  = sensor_msgs::Range::ULTRASOUND;
+      alt_msg.field_of_view   = 1.0472;  // approx 60 deg
 
       if (sonar_pub_.getTopic().empty())
       {
@@ -696,8 +688,8 @@ void rosflightIO::handle_small_range_msg(const mavlink_message_t &msg)
       sonar_pub_.publish(alt_msg);
       break;
     case ROSFLIGHT_RANGE_LIDAR:
-      alt_msg.radiation_type = sensor_msgs::Range::INFRARED;
-      alt_msg.field_of_view = .0349066; //approx 2 deg
+      alt_msg.radiation_type  = sensor_msgs::Range::INFRARED;
+      alt_msg.field_of_view   = .0349066; //approx 2 deg
 
       if (lidar_pub_.getTopic().empty())
       {
@@ -733,14 +725,14 @@ void rosflightIO::handle_version_msg(const mavlink_message_t &msg)
 void rosflightIO::handle_hard_error_msg(const mavlink_message_t &msg)
 {
   mavlink_rosflight_hard_error_t error;
-  mavlink_msg_rosflight_hard_error_decode(&msg, &error);
-  ROS_ERROR("Hard fault detected, with error code %u. The flight controller has rebooted.", error.error_code);
-  ROS_ERROR("Hard fault was at: 0x%x", error.pc);
-  if (error.doRearm)
+  mavlink_msg_rosflight_hard_error_decode(&msg,&error);
+  ROS_ERROR("Hard fault detected, with error code %u. The flight controller has rebooted.",error.error_code);
+  ROS_ERROR("Hard fault was at: 0x%x",error.pc);
+  if(error.doRearm)
   {
     ROS_ERROR("The firmware has rearmed itself.");
   }
-  ROS_ERROR("The flight controller has rebooted %u time%s.", error.reset_count, error.reset_count > 1 ? "s" : "");
+  ROS_ERROR("The flight controller has rebooted %u time%s.", error.reset_count, error.reset_count>1?"s":"");
   rosflight_msgs::Error error_msg;
   error_msg.error_message = "A firmware error has caused the flight controller to reboot.";
   error_msg.error_code = error.error_code;
@@ -754,7 +746,7 @@ void rosflightIO::handle_battery_status_msg(const mavlink_message_t &msg)
   mavlink_rosflight_battery_status_t battery_status;
   mavlink_msg_rosflight_battery_status_decode(&msg, &battery_status);
   if( battery_status_pub_.getTopic().empty())
-  {
+{
     battery_status_pub_ = nh_.advertise<rosflight_msgs::BatteryStatus>("battery", 1);
   }
   rosflight_msgs::BatteryStatus battery_status_message;
@@ -765,8 +757,7 @@ void rosflightIO::handle_battery_status_msg(const mavlink_message_t &msg)
   battery_status_pub_.publish(battery_status_message);
 }
 
-void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
-{
+void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg) {
   mavlink_rosflight_gnss_t gnss;
   mavlink_msg_rosflight_gnss_decode(&msg, &gnss);
 
@@ -786,8 +777,7 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
   gnss_msg.velocity[1] = .01 * gnss.ecef_v_y;
   gnss_msg.velocity[2] = .01 * gnss.ecef_v_z;
   gnss_msg.speed_accuracy = gnss.s_acc;
-  if (gnss_pub_.getTopic().empty())
-  {
+  if (gnss_pub_.getTopic().empty()) {
     gnss_pub_ = nh_.advertise<rosflight_msgs::GNSS>("gnss", 1);
   }
   gnss_pub_.publish(gnss_msg);
@@ -809,9 +799,8 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
   navsat_status.service = 1; //Report that only GPS was used, even though others may have been
   navsat_fix.status = navsat_status;
 
-  if (nav_sat_fix_pub_.getTopic().empty())
-  {
-    nav_sat_fix_pub_ = nh_.advertise<sensor_msgs::NavSatFix>("navsat_compat/fix", 1);
+  if (nav_sat_fix_pub_.getTopic().empty()){
+    nav_sat_fix_pub_ = nh_.advertise<sensor_msgs::NavSatFix>("navsat_compat/fix",1);
   }
   nav_sat_fix_pub_.publish(navsat_fix);
 
@@ -827,7 +816,7 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
   twist_stamped.twist.linear.z = .001 * gnss.vel_d;
 
   if (twist_stamped_pub_.getTopic().empty())
-    twist_stamped_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("navsat_compat/vel", 1);
+    twist_stamped_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("navsat_compat/vel",1);
   twist_stamped_pub_.publish(twist_stamped);
 
   sensor_msgs::TimeReference time_ref;
@@ -835,14 +824,13 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
   time_ref.source = "GNSS";
   time_ref.time_ref = ros::Time(gnss.time, gnss.nanos);
 
-  if (time_reference_pub_.getTopic().empty())
-    time_reference_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("navsat_compat/time_reference", 1);
+  if(time_reference_pub_.getTopic().empty())
+    time_reference_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("navsat_compat/time_reference",1);
 
 }
 
 
-void rosflightIO::handle_rosflight_gnss_raw_msg(const mavlink_message_t &msg)
-{
+void rosflightIO::handle_rosflight_gnss_raw_msg(const mavlink_message_t &msg) {
   mavlink_rosflight_gnss_raw_t raw;
   mavlink_msg_rosflight_gnss_raw_decode(&msg, &raw);
 
@@ -883,8 +871,8 @@ void rosflightIO::handle_rosflight_gnss_raw_msg(const mavlink_message_t &msg)
 void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
 {
   //! \todo these are hard-coded to match right now; may want to replace with something more robust
-  OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE) msg->mode;
-  OFFBOARD_CONTROL_IGNORE ignore = (OFFBOARD_CONTROL_IGNORE) msg->ignore;
+  OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE)msg->mode;
+  OFFBOARD_CONTROL_IGNORE ignore = (OFFBOARD_CONTROL_IGNORE)msg->ignore;
 
   float x = msg->x;
   float y = msg->y;
@@ -956,15 +944,13 @@ bool rosflightIO::paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srv
   return true;
 }
 
-bool rosflightIO::paramSaveToFileCallback(rosflight_msgs::ParamFile::Request &req,
-                                          rosflight_msgs::ParamFile::Response &res)
+bool rosflightIO::paramSaveToFileCallback(rosflight_msgs::ParamFile::Request &req, rosflight_msgs::ParamFile::Response &res)
 {
   res.success = mavrosflight_->param.save_to_file(req.filename);
   return true;
 }
 
-bool rosflightIO::paramLoadFromFileCallback(rosflight_msgs::ParamFile::Request &req,
-                                            rosflight_msgs::ParamFile::Response &res)
+bool rosflightIO::paramLoadFromFileCallback(rosflight_msgs::ParamFile::Request &req, rosflight_msgs::ParamFile::Response &res)
 {
   res.success = mavrosflight_->param.load_from_file(req.filename);
   return true;
@@ -995,7 +981,8 @@ void rosflightIO::paramTimerCallback(const ros::TimerEvent &e)
   {
     param_timer_.stop();
     ROS_INFO("Received all parameters");
-  } else
+  }
+  else
   {
     mavrosflight_->param.request_params();
     ROS_ERROR("Received %d of %d parameters. Requesting missing parameters...",
@@ -1019,11 +1006,10 @@ void rosflightIO::request_version()
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_SEND_VERSION);
   mavrosflight_->comm.send_message(msg);
 }
-
 void rosflightIO::send_heartbeat()
 {
   mavlink_message_t msg;
-  mavlink_msg_heartbeat_pack(1, 50, &msg, 0, 0, 0, 0, 0);
+  mavlink_msg_heartbeat_pack(1, 50, &msg, 0,0,0,0,0);
   mavrosflight_->comm.send_message(msg);
 }
 
@@ -1096,12 +1082,26 @@ rosflightIO::configGetSrvCallback(rosflight_msgs::ConfigGet::Request &req, rosfl
     res.successful = false;
     res.configuration = "";
     res.message = "Request timeout";
+    return true;
   }
   uint8_t config = std::get<1>(config_get_response);
   std::string config_name = config_manager.get_config_name(device, config);
   res.successful = true;
   res.configuration = config_name;
   res.message = "";
+  return true;
+}
+
+bool rosflightIO::configListSrvCallback(rosflight_msgs::ConfigList::Request &req, rosflight_msgs::ConfigList::Response &res)
+{
+  std::vector<std::string> device_names = mavrosflight_->config_manager.get_device_names();
+  for(uint8_t device = 0; device < device_names.size(); device++)
+  {
+    rosflight_msgs::DeviceInfo device_info;
+    device_info.device_name = device_names[device];
+    device_info.configuration_names = mavrosflight_->config_manager.get_config_names(device);
+    res.devices.push_back(device_info);
+  }
   return true;
 }
 

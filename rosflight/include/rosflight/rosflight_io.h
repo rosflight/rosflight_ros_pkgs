@@ -71,6 +71,7 @@
 #include <rosflight_msgs/GNSSRaw.h>
 #include <rosflight_msgs/GNSS.h>
 #include <rosflight_msgs/BatteryStatus.h>
+#include <rosflight_msgs/DeviceInfo.h>
 
 
 #include <rosflight_msgs/ParamFile.h>
@@ -78,6 +79,7 @@
 #include <rosflight_msgs/ParamSet.h>
 #include <rosflight_msgs/ConfigSet.h>
 #include <rosflight_msgs/ConfigGet.h>
+#include <rosflight_msgs/ConfigList.h>
 
 #include <rosflight/mavrosflight/mavrosflight.h>
 #include <rosflight/mavrosflight/mavlink_comm.h>
@@ -150,6 +152,7 @@ private:
   bool rebootToBootloaderSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool configGetSrvCallback(rosflight_msgs::ConfigGet::Request &req, rosflight_msgs::ConfigGet::Response &res);
   bool configSetSrvCallback(rosflight_msgs::ConfigSet::Request &req, rosflight_msgs::ConfigSet::Response &res);
+  bool configListSrvCallback(rosflight_msgs::ConfigList::Request &req, rosflight_msgs::ConfigList::Response &res);
 
   // timer callbacks
   void paramTimerCallback(const ros::TimerEvent &e);
@@ -214,6 +217,7 @@ private:
   ros::ServiceServer reboot_bootloader_srv_;
   ros::ServiceServer config_get_srv_;
   ros::ServiceServer config_set_srv_;
+  ros::ServiceServer config_list_srv_;
 
   ros::Timer param_timer_;
   ros::Timer version_timer_;
