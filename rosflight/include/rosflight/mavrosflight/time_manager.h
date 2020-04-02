@@ -60,12 +60,14 @@ public:
   ros::Time get_ros_time_us(uint64_t boot_us);
 
 private:
+  static constexpr size_t NUM_OFFSET_SAMPLES = 25;
+
   MavlinkComm *comm_;
 
   ros::Timer time_sync_timer_;
   void timer_callback(const ros::TimerEvent &event);
 
-  double offset_alpha_;
+  size_t offset_samples_ = 0;
   int64_t offset_ns_;
   ros::Duration offset_;
 

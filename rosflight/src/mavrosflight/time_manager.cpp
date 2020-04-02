@@ -41,7 +41,6 @@ namespace mavrosflight
 
 TimeManager::TimeManager(MavlinkComm *comm) :
   comm_(comm),
-  offset_alpha_(0.95),
   offset_ns_(0),
   offset_(0.0),
   initialized_(false)
@@ -49,7 +48,7 @@ TimeManager::TimeManager(MavlinkComm *comm) :
   comm_->register_mavlink_listener(this);
 
   ros::NodeHandle nh;
-  time_sync_timer_ = nh.createTimer(ros::Duration(ros::Rate(10)), &TimeManager::timer_callback, this);
+  time_sync_timer_ = nh.createTimer(ros::Duration(ros::Rate(5)), &TimeManager::timer_callback, this);
 }
 
 void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
@@ -64,17 +63,24 @@ void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
     if (tsync.tc1 > 0) // check that this is a response, not a request
     {
       int64_t offset_ns = (tsync.ts1 + now_ns - 2*tsync.tc1) / 2;
+      ROS_DEBUG("FCU time: %0.3f, System time: %0.3f", tsync.tc1 * 1e-9, tsync.ts1 * 1e-9);
 
-      if (!initialized_ || std::abs(offset_ns_ - offset_ns) > 1e7) // if difference > 10ms, use it directly
+      if (!initialized_)
       {
         offset_ns_ = offset_ns;
-        ROS_INFO("Detected time offset of %0.3f s.", offset_ns/1e9);
-        ROS_DEBUG("FCU time: %0.3f, System time: %0.3f", tsync.tc1*1e-9, tsync.ts1*1e-9);
+        offset_samples_ = 1;
         initialized_ = true;
       }
-      else // otherwise low-pass filter the offset
+      else
       {
-        offset_ns_ = offset_alpha_*offset_ns + (1.0 - offset_alpha_)*offset_ns_;
+        ++offset_samples_;
+        offset_ns_ = (offset_ns_ * (offset_samples_ - 1) + offset_ns) / (offset_samples_);
+
+        if (offset_samples_ >= NUM_OFFSET_SAMPLES)
+        {
+          time_sync_timer_.stop();
+          ROS_INFO("Detected time offset of %0.3f s.", offset_ns / 1e9);
+        }
       }
     }
   }
