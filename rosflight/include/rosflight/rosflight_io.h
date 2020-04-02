@@ -103,7 +103,7 @@ public:
 
   static constexpr float HEARTBEAT_PERIOD = 1; //Time between heartbeat messages
   static constexpr float VERSION_PERIOD = 10; //Time between version requests
-  static constexpr float PARAMETER_PERIOD = 3; //Time between parameter requests
+  static constexpr float PARAMETER_PERIOD = 10; //Time between parameter requests
 
 private:
 
