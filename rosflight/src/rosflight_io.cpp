@@ -805,8 +805,9 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg) {
   time_ref.time_ref = ros::Time(gnss.time, gnss.nanos);
 
   if(time_reference_pub_.getTopic().empty())
-    time_reference_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("navsat_compat/time_reference",1);
-
+    time_reference_pub_ = nh_.advertise<sensor_msgs::TimeReference>("navsat_compat/time_reference",1);
+  
+  time_reference_pub_.publish(time_ref);
 }
 
 
