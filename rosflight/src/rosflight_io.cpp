@@ -44,7 +44,6 @@
 #include <rosflight/mavrosflight/serial_exception.h>
 #include <rosflight/ros_logger.h>
 #include <rosflight/ros_time.h>
-#include <tf/tf.h>
 #include <cstdint>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
@@ -54,6 +53,51 @@
 
 namespace rosflight_io
 {
+
+rosflightIO::void normalize_quat(double &w, double &x, double &y, double &z)
+{
+  double mav_q_len = sqrt(w*w + x*x + y*y + z*z)
+  // if (fabs(mav_q_len - 1) > 0.0000001)
+  w /= mav_q_len;
+  x /= mav_q_len;
+  y /= mav_q_len;
+  z /= mav_q_len;
+}
+
+rosflightIO::void convert_quat_to_euler(double w, double x, double y, double z, double &roll, double &pitch, double &yaw)
+{
+  // takes elements of a quaternion, and fills euler angles message
+  // ensure, first, that the quaternion is properly normalized
+  rosflightIO::normalize_quat(w, x, y, z);
+
+  // roll
+  roll = atan2(2.0*(w*x + y*z), 1.0 - 2.0*(x*x + y*y));
+
+  // pitch
+  const T val = 2.0 * (w*y - x*z);
+
+  // hold at 90 degrees if invalid
+  if (fabs(val) > 1.0)
+    pitch = copysign(1.0, val) * M_PI / 2.0;
+  else
+    pitch = asin(val);
+
+  // yaw
+  yaw = atan2(2.0*(w*z + x*y), 1.0 - 2.0*(y*y + z*z));
+}
+
+rosflightIO::void fill_quat_message(double q1, double q2, double q3, double q4, geometry_msgs::msg::Quaternion &q)
+{
+  // takes elements from mavlink quaternion message, and fills the geometry_msgs attitude_quaternion_
+  // ensure, first, that the quaternion is properly normalized
+  rosflightIO::normalize_quat(q1, q2, q3, q4);
+
+  q.w = q1;
+  q.x = q2;
+  q.y = q3;
+  q.z = q4;
+}
+
 rosflightIO::rosflightIO()
 {
   command_sub_ = nh_.subscribe("command", 1, &rosflightIO::commandCallback, this);
@@ -421,11 +465,8 @@ void rosflightIO::handle_attitude_quaternion_msg(const mavlink_message_t &msg)
   geometry_msgs::Vector3Stamped euler_msg;
   euler_msg.header.stamp = attitude_msg.header.stamp;
 
-  tf::Quaternion quat(attitude.q2, attitude.q3, attitude.q4, attitude.q1);
-  tf::Matrix3x3(quat).getEulerYPR(euler_msg.vector.z, euler_msg.vector.y, euler_msg.vector.x);
-
-  // save off the quaternion for use with the IMU callback
-  tf::quaternionTFToMsg(quat, attitude_quat_);
+  rosflightIO::convert_quat_to_euler(attitude.q1, attitude.q2, attitude.q3, attitude.q4, euler_msg.vector.x, euler_msg.vector.y, euler_msg.vector.z);
+  rosflightIO::fill_quat_message(attitude.q1, attitude.q2, attitude.q3, attitude.q4, attitude_quat_);
 
   if (attitude_pub_.getTopic().empty())
   {

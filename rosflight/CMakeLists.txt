@@ -15,7 +15,6 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   std_srvs
-  tf
 )
 find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(Eigen3 REQUIRED)
@@ -48,8 +47,8 @@ endif()
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES mavrosflight
-  CATKIN_DEPENDS roscpp eigen_stl_containers geometry_msgs rosflight_msgs sensor_msgs std_msgs tf
-  DEPENDS Boost EIGEN3 YAML_CPP tf
+  CATKIN_DEPENDS roscpp eigen_stl_containers geometry_msgs rosflight_msgs sensor_msgs std_msgs
+  DEPENDS Boost EIGEN3 YAML_CPP
 )
 
 ###########
