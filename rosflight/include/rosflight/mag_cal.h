@@ -39,11 +39,11 @@
 #define ROSFLIGHT_SENSORS_CALBRATE_MAG_H
 
 #include <message_filters/subscriber.h>
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 
-#include <rosflight_msgs/ParamSet.h>
+#include <rosflight_msgs/srv/ParamSet.hpp>
 
-#include <sensor_msgs/MagneticField.h>
+#include <sensor_msgs/msg/MagneticField.hpp>
 
 #include <cmath>
 #include <eigen3/Eigen/Eigen>
@@ -104,13 +104,13 @@ public:
 private:
   bool set_param(std::string name, double value);
 
-  ros::NodeHandle nh_;
-  ros::NodeHandle nh_private_;
+  rclcpp::NodeHandle nh_;
+  rclcpp::NodeHandle nh_private_;
 
   message_filters::Subscriber<sensor_msgs::MagneticField> mag_subscriber_;
 
-  ros::ServiceServer mag_cal_srv_;
-  ros::ServiceClient param_set_client_;
+  rclcpp::ServiceServer mag_cal_srv_;
+  rclcpp::ServiceClient param_set_client_;
 
   Eigen::MatrixXd A_, b_;
 

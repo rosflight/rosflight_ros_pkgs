@@ -40,41 +40,41 @@
 #include <map>
 #include <string>
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 
-#include <geometry_msgs/Quaternion.h>
-#include <geometry_msgs/TwistStamped.h>
-#include <std_msgs/Bool.h>
-#include <std_msgs/Float32.h>
-#include <std_msgs/Int32.h>
-#include <std_msgs/String.h>
+#include <geometry_msgs/msg/Quaternion.hpp>
+#include <geometry_msgs/msg/TwistStamped.hpp>
+#include <std_msgs/msg/Bool.hpp>
+#include <std_msgs/msg/Float32.hpp>
+#include <std_msgs/msg/Int32.hpp>
+#include <std_msgs/msg/String.hpp>
 
-#include <sensor_msgs/FluidPressure.h>
-#include <sensor_msgs/Imu.h>
-#include <sensor_msgs/MagneticField.h>
-#include <sensor_msgs/NavSatFix.h>
-#include <sensor_msgs/Range.h>
-#include <sensor_msgs/Temperature.h>
-#include <sensor_msgs/TimeReference.h>
+#include <sensor_msgs/msg/FluidPressure.hpp>
+#include <sensor_msgs/msg/Imu.hpp>
+#include <sensor_msgs/msg/MagneticField.hpp>
+#include <sensor_msgs/msg/NavSatFix.hpp>
+#include <sensor_msgs/msg/Range.hpp>
+#include <sensor_msgs/msg/Temperature.hpp>
+#include <sensor_msgs/msg/TimeReference.hpp>
 
-#include <std_srvs/Trigger.h>
+#include <std_srvs/srv/Trigger.hpp>
 
-#include <rosflight_msgs/Airspeed.h>
-#include <rosflight_msgs/Attitude.h>
-#include <rosflight_msgs/AuxCommand.h>
-#include <rosflight_msgs/Barometer.h>
-#include <rosflight_msgs/BatteryStatus.h>
-#include <rosflight_msgs/Command.h>
-#include <rosflight_msgs/Error.h>
-#include <rosflight_msgs/GNSS.h>
-#include <rosflight_msgs/GNSSFull.h>
-#include <rosflight_msgs/OutputRaw.h>
-#include <rosflight_msgs/RCRaw.h>
-#include <rosflight_msgs/Status.h>
+#include <rosflight_msgs/msg/airspeed.hpp>
+#include <rosflight_msgs/msg/attitude.hpp>
+#include <rosflight_msgs/msg/aux_command.hpp>
+#include <rosflight_msgs/msg/barometer.hpp>
+#include <rosflight_msgs/msg/BatteryStatus.h>
+#include <rosflight_msgs/msg/command.hpp>
+#include <rosflight_msgs/msg/error.hpp>
+#include <rosflight_msgs/msg/GNSS.hpp>
+#include <rosflight_msgs/msg/GNSS_full.hpp>
+#include <rosflight_msgs/msg/output_raw.hpp>
+#include <rosflight_msgs/msg/RC_raw.hpp>
+#include <rosflight_msgs/msg/status.hpp>
 
-#include <rosflight_msgs/ParamFile.h>
-#include <rosflight_msgs/ParamGet.h>
-#include <rosflight_msgs/ParamSet.h>
+#include <rosflight_msgs/srv/param_file.hpp>
+#include <rosflight_msgs/srv/param_get.hpp>
+#include <rosflight_msgs/srv/param_set.hpp>
 
 #include <rosflight/mavrosflight/mavlink_comm.h>
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
@@ -98,9 +98,9 @@ public:
   virtual void on_param_value_updated(std::string name, double value);
   virtual void on_params_saved_change(bool unsaved_changes);
 
-  static constexpr float HEARTBEAT_PERIOD = 1; // Time between heartbeat messages
-  static constexpr float VERSION_PERIOD = 10;  // Time between version requests
-  static constexpr float PARAMETER_PERIOD = 3; // Time between parameter requests
+  static constexpr float HEARTBEAT_PERIOD = 1; // Time between heartbeat messages, in seconds
+  static constexpr float VERSION_PERIOD = 10;  // Time between version requests, in seconds
+  static constexpr float PARAMETER_PERIOD = 3; // Time between parameter requests, in seconds
 
 private:
 
@@ -133,27 +133,27 @@ private:
   void handle_battery_status_msg(const mavlink_message_t &msg);
 
   // ROS message callbacks
-  void commandCallback(rosflight_msgs::Command::ConstPtr msg);
-  void auxCommandCallback(rosflight_msgs::AuxCommand::ConstPtr msg);
-  void externalAttitudeCallback(geometry_msgs::Quaternion::ConstPtr msg);
+  void commandCallback(rosflight_msgs::msg::Command::ConstPtr msg);
+  void auxCommandCallback(rosflight_msgs::msg::AuxCommand::ConstPtr msg);
+  void externalAttitudeCallback(geometry_msgs::msg::Quaternion::ConstPtr msg);
 
   // ROS service callbacks
-  bool paramGetSrvCallback(rosflight_msgs::ParamGet::Request &req, rosflight_msgs::ParamGet::Response &res);
-  bool paramSetSrvCallback(rosflight_msgs::ParamSet::Request &req, rosflight_msgs::ParamSet::Response &res);
-  bool paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool paramSaveToFileCallback(rosflight_msgs::ParamFile::Request &req, rosflight_msgs::ParamFile::Response &res);
-  bool paramLoadFromFileCallback(rosflight_msgs::ParamFile::Request &req, rosflight_msgs::ParamFile::Response &res);
-  bool calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool calibrateBaroSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool calibrateAirspeedSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool rebootSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool rebootToBootloaderSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+  void paramGetSrvCallback(const std::shared_ptr<rosflight_msgs::srv::ParamGet::Request> req, std::shared_ptr<rosflight_msgs::srv::ParamGet::Response> res)
+  void paramSetSrvCallback(const std::shared_ptr<rosflight_msgs::srv::ParamSet::Request> req, std::shared_ptr<rosflight_msgs::srv::ParamSet::Response> res)
+  void paramSaveToFileCallback(const std::shared_ptr<rosflight_msgs::srv::ParamFile::Request> req, std::shared_ptr<rosflight_msgs::srv::ParamFile::Response> res)
+  void paramLoadFromFileCallback(const std::shared_ptr<rosflight_msgs::srv::ParamFile::Request> req, std::shared_ptr<rosflight_msgs::srv::ParamFile::Response> res)
+  void paramWriteSrvCallback(const std::shared_ptr<std_srvs::srv::Trigger::Request> req, std::shared_ptr<std_srvs::srv::Trigger::Response> res)
+  void calibrateImuBiasSrvCallback(const std::shared_ptr<std_srvs::srv::Trigger::Request> req, std::shared_ptr<std_srvs::srv::Trigger::Response> res)
+  void calibrateRCTrimSrvCallback(const std::shared_ptr<std_srvs::srv::Trigger::Request> req, std::shared_ptr<std_srvs::srv::Trigger::Response> res)
+  void calibrateBaroSrvCallback(const std::shared_ptr<std_srvs::srv::Trigger::Request> req, std::shared_ptr<std_srvs::srv::Trigger::Response> res)
+  void calibrateAirspeedSrvCallback(const std::shared_ptr<std_srvs::srv::Trigger::Request> req, std::shared_ptr<std_srvs::srv::Trigger::Response> res)
+  void rebootSrvCallback(const std::shared_ptr<std_srvs::srv::Trigger::Request> req, std::shared_ptr<std_srvs::srv::Trigger::Response> res)
+  void rebootToBootloaderSrvCallback(const std::shared_ptr<std_srvs::srv::Trigger::Request> req, std::shared_ptr<std_srvs::srv::Trigger::Response> res)
 
   // timer callbacks
-  void paramTimerCallback(const ros::TimerEvent &e);
-  void versionTimerCallback(const ros::TimerEvent &e);
-  void heartbeatTimerCallback(const ros::TimerEvent &e);
+  void paramTimerCallback();
+  void versionTimerCallback();
+  void heartbeatTimerCallback();
 
   // helpers
   void request_version();
@@ -167,7 +167,7 @@ private:
     return value < min ? min : (value > max ? max : value);
   }
 
-  ros::NodeHandle nh_;
+  std::shared_ptr<rclcpp::Node> nh_;
 
   ros::Subscriber command_sub_;
   ros::Subscriber aux_command_sub_;
@@ -216,7 +216,11 @@ private:
   ros::Timer version_timer_;
   ros::Timer heartbeat_timer_;
 
-  geometry_msgs::Quaternion attitude_quat_;
+  // TODO: This clock is not going to work for sim time
+  // It needs to come from a node handle
+  rclcpp::Clock _ros_clock;
+
+  geometry_msgs::msg::Quaternion attitude_quat_;
   mavlink_rosflight_status_t prev_status_;
 
   std::string frame_id_;

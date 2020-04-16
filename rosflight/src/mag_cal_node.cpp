@@ -34,16 +34,16 @@
  * \author Devon Morris <devonmorris1992@gmail.com>
  */
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <rosflight/mag_cal.h>
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "calibrate_accel_temp");
+  rclcpp::init(argc, argv, "calibrate_accel_temp");
 
   rosflight::CalibrateMag calibrate;
   calibrate.run();
 
-  ros::shutdown();
+  rclcpp::shutdown();
   return 0;
 }

@@ -36,12 +36,12 @@
  * Entry point for the mavrosflight_node executable
  */
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.h>
 #include <rosflight/rosflight_io.h>
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "rosflight_io");
+  rclcpp::init(argc, argv);
   rosflight_io::rosflightIO rosflight_io;
   ros::spin();
 }
