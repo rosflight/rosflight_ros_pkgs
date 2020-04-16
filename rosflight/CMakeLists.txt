@@ -1,21 +1,22 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(rosflight)
+
 
 set(CMAKE_BUILD_TYPE Release)
 
 message("CMAKE_C_FLAGS_RELEASE is ${CMAKE_C_FLAGS_RELEASE}")
 
-set(CMAKE_CXX_FLAGS "-std=c++0x")
+set(CMAKE_CXX_STANDARD 14)
 
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  eigen_stl_containers
-  geometry_msgs
-  rosflight_msgs
-  sensor_msgs
-  std_msgs
-  std_srvs
-)
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(eigen_stl_containers REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(rosflight_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
+
 find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(Eigen3 REQUIRED)
 
@@ -40,24 +41,15 @@ else()
 	message("Could not determine rosflight version through git")
 endif()
 
-###################################
-## catkin specific configuration ##
-###################################
-
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES mavrosflight
-  CATKIN_DEPENDS roscpp eigen_stl_containers geometry_msgs rosflight_msgs sensor_msgs std_msgs
-  DEPENDS Boost EIGEN3 YAML_CPP
-)
 
 ###########
 ## Build ##
 ###########
 
-include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
+# include_directories()
+include_directories(include
+  ${ament_INCLUDE_DIRS}
+  ${rclcpp_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
   ${YAML_CPP_INCLUDEDIR}
@@ -73,36 +65,56 @@ add_library(mavrosflight
   src/mavrosflight/param.cpp
   src/mavrosflight/time_manager.cpp
 )
-add_dependencies(mavrosflight ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_compile_definitions(mavrosflight PRIVATE USE_ROS)
 target_link_libraries(mavrosflight
-  ${catkin_LIBRARIES}
+  ${ament_LIBRARIES}
+  ${rclcpp_LIBRARIES}
   ${Boost_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
 )
+
 
 # rosflight_io_node
 add_executable(rosflight_io
   src/rosflight_io_node.cpp
   src/rosflight_io.cpp
 )
-add_dependencies(rosflight_io ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(rosflight_io ${${PROJECT_NAME}_EXPORTED_TARGETS} ${ament_EXPORTED_TARGETS})
 target_link_libraries(rosflight_io
   mavrosflight
-  ${catkin_LIBRARIES}
+  ${rclcpp_LIBRARIES}
+  ${ament_LIBRARIES}
   ${Boost_LIBRARES}
 )
 
-add_executable(calibrate_mag
-    src/mag_cal_node.cpp
-    src/mag_cal.cpp
-)
-add_dependencies(calibrate_mag ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# TODO: maybe need to fixe these dependencies
+# add_dependencies(rosflight_io mavrosflight)
 
-target_link_libraries(calibrate_mag
-  ${catkin_LIBRARIES}
-  ${Boost_LIBRARIES}
-)
+# add_executable(calibrate_mag
+#     src/mag_cal_node.cpp
+#     src/mag_cal.cpp
+# )
+# add_dependencies(calibrate_mag ${${PROJECT_NAME}_EXPORTED_TARGETS} ${ament_EXPORTED_TARGETS})
+#
+# target_link_libraries(calibrate_mag
+#   ${ament_LIBRARIES}
+#   ${Boost_LIBRARIES}
+# )
+
+
+###################################
+## ament specific configuration ##
+###################################
+
+# AFTER all targets have been registered
+
+ament_target_dependencies(mavrosflight rclcpp)
+ament_export_dependencies(rclcpp eigen_stl_containers geometry_msgs rosflight_msgs sensor_msgs std_msgs
+# DEPENDS Boost EIGEN3 YAML_CPP)
+Boost EIGEN3 YAML_CPP)
+ament_export_include_directories(include)
+ament_export_libraries(mavrosflight)
+
 
 #############
 ## Install ##
@@ -110,14 +122,21 @@ target_link_libraries(calibrate_mag
 
 # Mark executables and libraries for installation
 install(TARGETS mavrosflight rosflight_io
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 # Mark cpp header files for installation
 install(DIRECTORY include/rosflight/mavrosflight/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  DESTINATION include/${PROJECT_NAME}
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
+
+
+ament_package(
+  # CONFIG_EXTRAS
+)
+
+#

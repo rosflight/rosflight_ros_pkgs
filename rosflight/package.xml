@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package format="2">
+<package format="3">
   <name>rosflight</name>
   <version>1.3.1</version>
   <description>Package for interfacing to the ROSflight autopilot firmware over MAVLink</description>
@@ -15,10 +15,11 @@
   <url type="repository">https://github.com/rosflight/rosflight</url>
   <url type="bugtracker">https://github.com/rosflight/rosflight/issues</url>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <!-- <buildtool_depend condition="$ROS_VERSION == 2">ament_cmake</buildtool_depend> -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
   <!-- ROS packages -->
-  <depend>roscpp</depend>
+  <depend>rclcpp</depend>
   <depend>rosflight_msgs</depend>
   <depend>eigen_stl_containers</depend>
   <depend>geometry_msgs</depend>
@@ -36,5 +37,6 @@
   <build_depend>pkg-config</build_depend>
 
   <export>
+      <build_type>ament_cmake</build_type>
   </export>
 </package>
