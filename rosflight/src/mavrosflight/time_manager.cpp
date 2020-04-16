@@ -29,6 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// TODO: Verify that this file has been updated to ROS2, merge conflict was ambiguous
+
 /**
  * \file time_manager.cpp
  * \author Daniel Koch <daniel.koch@byu.edu>
@@ -55,6 +57,9 @@ TimeManager<DerivedLogger>::TimeManager(MavlinkComm *comm,
   time_interface_(time_interface),
   timer_provider_(timer_provider)
 {
+
+  _ros_clock(RCL_ROS_TIME)
+
   comm_->register_mavlink_listener(this);
   std::function<void()> bound_callback = std::bind(&TimeManager<DerivedLogger>::timer_callback, this);
   time_sync_timer_ = timer_provider_.create_timer(std::chrono::milliseconds(100), bound_callback);

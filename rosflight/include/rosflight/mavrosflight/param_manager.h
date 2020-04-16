@@ -110,6 +110,7 @@ private:
 
   LoggerInterface<DerivedLogger> &logger_;
   TimerProviderInterface &timer_provider_;
+  rclcpp::Clock ros_clock_;
 };
 
 } // namespace mavrosflight

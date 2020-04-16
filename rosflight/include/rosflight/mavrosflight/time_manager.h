@@ -65,6 +65,8 @@ public:
 private:
   MavlinkComm *comm_;
 
+  rclcpp::Clock _ros_clock;
+
   std::shared_ptr<TimerInterface> time_sync_timer_;
   void timer_callback();
 
