@@ -1,3 +1,5 @@
+# Define parameter file
+
 string filename
 ---
 bool success
