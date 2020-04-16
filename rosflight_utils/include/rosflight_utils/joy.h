@@ -41,11 +41,11 @@ struct Axes
 {
   int x;
   int y;
-  int F;
+  int F; // Is this actually throttle? And, why is it before z, it isn't this way anywhere else
   int z;
   int x_direction;
   int y_direction;
-  int F_direction;
+  int F_direction; // Is this (throttle) thrust direction?
   int z_direction;
 };
 

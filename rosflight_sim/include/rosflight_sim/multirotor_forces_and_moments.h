@@ -88,7 +88,7 @@ private:
     Actuator l;
     Actuator m;
     Actuator n;
-    Actuator F;
+    Actuator F; // Is this actually a force, or just a throttle?
   } actuators_;
 
   Eigen::MatrixXd rotor_position_;
