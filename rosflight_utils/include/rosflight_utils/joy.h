@@ -92,6 +92,8 @@ private:
   ros::Subscriber autopilot_command_sub_;
   ros::Subscriber joy_sub_;
 
+  rclcpp::Clock _ros_clock;
+
   std::string namespace_;
   std::string command_topic_;
   std::string autopilot_command_topic_;

@@ -244,7 +244,7 @@ int main(int argc, char *argv[])
     {
       const rosflight_msgs::CommandConstPtr cmd(m.instantiate<rosflight_msgs::Command>());
       double t = (cmd->header.stamp - bag_start).toSec();
-      double cmdarr[5] = {t, cmd->x, cmd->y, cmd->z, cmd->F};
+      double cmdarr[5] = {t, cmd->x, cmd->y, cmd->z, cmd->throttle};
       cmd_log.write((char *)cmdarr, sizeof(cmdarr));
     }
   }

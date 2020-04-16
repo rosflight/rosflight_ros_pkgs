@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(rosflight_sim)
 
 find_package(gazebo)
 IF(gazebo_FOUND)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 # Default to release build for speed
 if(NOT CMAKE_BUILD_TYPE)
@@ -64,9 +64,10 @@ install(
   FILES_MATCHING PATTERN "*.h"
 )
 
-install(
-  DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+# Install launch files.
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}/
 )
 
 install(
@@ -78,5 +79,7 @@ install(
   DIRECTORY params/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/params
 )
+
+ament_package()
 
 ENDIF()

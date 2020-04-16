@@ -38,6 +38,8 @@ Joy::Joy()
   ros::NodeHandle pnh("~");
   ros::NodeHandle namespace_nh(ros::this_node::getNamespace());
 
+  _ros_clock(RCL_ROS_TIME)
+
   pnh.param<std::string>("command_topic", command_topic_, "command");
   pnh.param<std::string>("autopilot_command_topic", autopilot_command_topic_, "autopilot_command");
 
@@ -162,7 +164,7 @@ void Joy::ResumeSimulation()
   ros::ServiceClient client = n.serviceClient<std_srvs::Empty>("/gazebo/unpause_physics");
   std_srvs::Empty resumeSim;
   client.call(resumeSim);
-  last_time_ = ros::Time::now().toSec();
+  last_time_ = _ros_clock.now().seconds();
 }
 
 void Joy::APCommandCallback(const rosflight_msgs::CommandConstPtr &msg)
@@ -172,8 +174,8 @@ void Joy::APCommandCallback(const rosflight_msgs::CommandConstPtr &msg)
 
 void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
 {
-  double dt = ros::Time::now().toSec() - last_time_;
-  last_time_ = ros::Time::now().toSec();
+  double dt = _ros_clock.now().seconds() - last_time_;
+  last_time_ = _ros_clock.now().seconds();
 
   current_joy_ = *msg;
 

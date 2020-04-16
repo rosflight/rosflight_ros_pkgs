@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(rosflight_utils)
 
 find_package(catkin REQUIRED COMPONENTS
@@ -18,7 +18,7 @@ catkin_package(
   CATKIN_DEPENDS roscpp rospy rosflight_msgs sensor_msgs std_srvs visualization_msgs
 )
 
-add_definitions(-std=c++11)
+add_definitions(-std=c++14)
 
 include_directories(include)
 include_directories(${catkin_INCLUDE_DIRS})
@@ -36,3 +36,11 @@ target_link_libraries(rosflight_postprocess ${catkin_LIBRARIES} stdc++fs)
 add_executable(viz src/viz.cpp)
 add_dependencies(viz ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(viz ${catkin_LIBRARIES})
+
+# Install launch files.
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}/
+)
+
+ament_package()
