@@ -110,6 +110,7 @@ private:
   ros::Subscriber rc_sub_;
   rosflight_msgs::RCRaw latestRC_;
   bool rc_received_;
+  ros::Time last_rc_message_;
 
   std::string mav_type_;
   int pwm_outputs_[14];  //assumes maximum of 14 channels
