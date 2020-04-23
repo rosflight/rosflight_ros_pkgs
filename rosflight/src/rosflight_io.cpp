@@ -829,7 +829,7 @@ void rosflightIO::handle_rosflight_gnss_raw_msg(const mavlink_message_t &msg)
   mavlink_rosflight_gnss_raw_t raw;
   mavlink_msg_rosflight_gnss_raw_decode(&msg, &raw);
 
-  rosflight_msgs::GNSSRaw msg_out;
+  rosflight_msgs::GNSSFull msg_out;
   msg_out.header.stamp = ros::Time::now();
   msg_out.time_of_week = raw.time_of_week;
   msg_out.year = raw.year;
@@ -859,7 +859,7 @@ void rosflightIO::handle_rosflight_gnss_raw_msg(const mavlink_message_t &msg)
   msg_out.p_dop = raw.p_dop;
 
   if (gnss_raw_pub_.getTopic().empty())
-    gnss_raw_pub_ = nh_.advertise<rosflight_msgs::GNSSRaw>("gps_raw", 1);
+    gnss_raw_pub_ = nh_.advertise<rosflight_msgs::GNSSFull>("gnss_raw", 1);
   gnss_raw_pub_.publish(msg_out);
 }
 
