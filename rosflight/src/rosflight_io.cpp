@@ -775,9 +775,19 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
   navsat_fix.position_covariance[8] = gnss.v_acc * gnss.v_acc;
   navsat_fix.position_covariance_type = sensor_msgs::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
   sensor_msgs::NavSatStatus navsat_status;
-  //3 or 4 from UBX corresponds to a fix. 0 means a fix to ROS, else -1 for no fix.
   auto fix_type = gnss.fix_type;
-  navsat_status.status = (fix_type == GNSS_FIX_FIX || fix_type == GNSS_FIX_RTK_FLOAT || fix_type == GNSS_FIX_RTK_FIXED) ? 0 : -1;
+  switch (fix_type)
+  {
+  case GNSS_FIX_RTK_FLOAT:
+  case GNSS_FIX_RTK_FIXED:
+    navsat_status.status = sensor_msgs::NavSatStatus::STATUS_GBAS_FIX;
+    break;
+  case GNSS_FIX_FIX:
+    navsat_status.status = sensor_msgs::NavSatStatus::STATUS_FIX;
+    break;
+  default:
+    navsat_status.status = sensor_msgs::NavSatStatus::STATUS_NO_FIX;
+  }
   //The UBX is not configured to report which system is used, even though it supports them all
   navsat_status.service = 1; //Report that only GPS was used, even though others may have been
   navsat_fix.status = navsat_status;
