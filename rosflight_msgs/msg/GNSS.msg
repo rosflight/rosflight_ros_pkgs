@@ -1,5 +1,5 @@
 Header header # Estimated ROS time at moment of measurement
-uint8 fix # fix type, as defined in the UBX protocol, enums defined below
+uint8 fix # fix type, enums defined below
 time time # GPS time at moment of measurement
 float64[3] position # m, ECEF frame
 float64 horizontal_accuracy # m
