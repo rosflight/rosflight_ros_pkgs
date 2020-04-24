@@ -189,7 +189,7 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
     handle_rosflight_gnss_msg(msg);
     break;
   case MAVLINK_MSG_ID_ROSFLIGHT_GNSS_RAW:
-    handle_rosflight_gnss_ful_msg(msg);
+    handle_rosflight_gnss_full_msg(msg);
     break;
   case MAVLINK_MSG_ID_ROSFLIGHT_VERSION:
     handle_version_msg(msg);
@@ -824,7 +824,7 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
   time_reference_pub_.publish(time_ref);
 }
 
-void rosflightIO::handle_rosflight_gnss_ful_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_rosflight_gnss_full_msg(const mavlink_message_t &msg)
 {
   mavlink_rosflight_gnss_raw_t raw;
   mavlink_msg_rosflight_gnss_raw_decode(&msg, &raw);

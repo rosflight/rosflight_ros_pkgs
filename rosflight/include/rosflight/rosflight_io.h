@@ -117,7 +117,7 @@ private:
   void handle_small_baro_msg(const mavlink_message_t &msg);
   void handle_small_mag_msg(const mavlink_message_t &msg);
   void handle_rosflight_gnss_msg(const mavlink_message_t &msg);
-  void handle_rosflight_gnss_ful_msg(const mavlink_message_t &msg);
+  void handle_rosflight_gnss_full_msg(const mavlink_message_t &msg);
   void handle_named_value_int_msg(const mavlink_message_t &msg);
   void handle_named_value_float_msg(const mavlink_message_t &msg);
   void handle_named_command_struct_msg(const mavlink_message_t &msg);
