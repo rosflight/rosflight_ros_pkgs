@@ -206,7 +206,7 @@ public:
 
   rosflight_firmware::GNSSData gnss_read() override;
   bool gnss_has_new_data() override;
-  rosflight_firmware::GNSSRaw gnss_raw_read() override;
+  rosflight_firmware::GNSSFull gnss_full_read() override;
 
   bool battery_voltage_present() const override;
   float battery_voltage_read() const override;

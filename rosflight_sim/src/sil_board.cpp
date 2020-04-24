@@ -443,17 +443,16 @@ void SIL_Board::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
 
 float SIL_Board::rc_read(uint8_t channel)
 {
-  return static_cast<float>(latestRC_.values[channel] - 1000) / 1000.0;
-  // if(rc_sub_.getNumPublishers() > 0)
-  // {
-  // return static_cast<float>(latestRC_.values[channel]-1000)/1000.0;
-  // }
+  if (rc_sub_.getNumPublishers() > 0)
+  {
+    return static_cast<float>(latestRC_.values[channel] - 1000) / 1000.0;
+  }
 
-  // //no publishers, set throttle low and center everything else
-  // if(channel == 2)
-  // return 0.0;
+  //no publishers, set throttle low and center everything else
+  if (channel == 2)
+    return 0.0;
 
-  // return 0.5;
+  return 0.5;
 }
 
 void SIL_Board::pwm_write(uint8_t channel, float value)
@@ -468,12 +467,7 @@ void SIL_Board::pwm_disable()
 
 bool SIL_Board::rc_lost(void)
 {
-  if ((ros::Time::now() - last_rc_message_).toSec() > 1)
-  {
-    //ROS_INFO("RC timeout");
-    return true;
-  }
-  return !rc_received_ || ((ros::Time::now() - last_rc_message_).toSec() > 1);
+  return !rc_received_;
 }
 
 void SIL_Board::rc_init(rc_type_t rc_type) {}
@@ -629,9 +623,9 @@ rosflight_firmware::GNSSData SIL_Board::gnss_read()
 }
 
 bool SIL_Board::gnss_has_new_data() { return GAZEBO_MAJOR_VERSION >= 9; }
-rosflight_firmware::GNSSRaw SIL_Board::gnss_raw_read()
+rosflight_firmware::GNSSFull SIL_Board::gnss_full_read()
 {
-  rosflight_firmware::GNSSRaw out;
+  rosflight_firmware::GNSSFull out;
 #if GAZEBO_MAJOR_VERSION >= 9
   using Vec3 = ignition::math::Vector3d;
   using Vec3 = ignition::math::Vector3d;

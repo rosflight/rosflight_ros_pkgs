@@ -188,7 +188,7 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
   case MAVLINK_MSG_ID_ROSFLIGHT_GNSS:
     handle_rosflight_gnss_msg(msg);
     break;
-  case MAVLINK_MSG_ID_ROSFLIGHT_GNSS_RAW:
+  case MAVLINK_MSG_ID_ROSFLIGHT_GNSS_FULL:
     handle_rosflight_gnss_full_msg(msg);
     break;
   case MAVLINK_MSG_ID_ROSFLIGHT_VERSION:
@@ -826,37 +826,37 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
 
 void rosflightIO::handle_rosflight_gnss_full_msg(const mavlink_message_t &msg)
 {
-  mavlink_rosflight_gnss_raw_t raw;
-  mavlink_msg_rosflight_gnss_raw_decode(&msg, &raw);
+  mavlink_rosflight_gnss_full_t full;
+  mavlink_msg_rosflight_gnss_full_decode(&msg, &full);
 
   rosflight_msgs::GNSSFull msg_out;
   msg_out.header.stamp = ros::Time::now();
-  msg_out.time_of_week = raw.time_of_week;
-  msg_out.year = raw.year;
-  msg_out.month = raw.month;
-  msg_out.day = raw.day;
-  msg_out.hour = raw.hour;
-  msg_out.min = raw.min;
-  msg_out.sec = raw.sec;
-  msg_out.valid = raw.valid;
-  msg_out.t_acc = raw.t_acc;
-  msg_out.nano = raw.nano;
-  msg_out.fix_type = raw.fix_type;
-  msg_out.num_sat = raw.num_sat;
-  msg_out.lon = raw.lon;
-  msg_out.lat = raw.lat;
-  msg_out.height = raw.height;
-  msg_out.height_msl = raw.height_msl;
-  msg_out.h_acc = raw.h_acc;
-  msg_out.v_acc = raw.v_acc;
-  msg_out.vel_n = raw.vel_n;
-  msg_out.vel_e = raw.vel_e;
-  msg_out.vel_d = raw.vel_d;
-  msg_out.g_speed = raw.g_speed;
-  msg_out.head_mot = raw.head_mot;
-  msg_out.s_acc = raw.s_acc;
-  msg_out.head_acc = raw.head_acc;
-  msg_out.p_dop = raw.p_dop;
+  msg_out.time_of_week = full.time_of_week;
+  msg_out.year = full.year;
+  msg_out.month = full.month;
+  msg_out.day = full.day;
+  msg_out.hour = full.hour;
+  msg_out.min = full.min;
+  msg_out.sec = full.sec;
+  msg_out.valid = full.valid;
+  msg_out.t_acc = full.t_acc;
+  msg_out.nano = full.nano;
+  msg_out.fix_type = full.fix_type;
+  msg_out.num_sat = full.num_sat;
+  msg_out.lon = full.lon;
+  msg_out.lat = full.lat;
+  msg_out.height = full.height;
+  msg_out.height_msl = full.height_msl;
+  msg_out.h_acc = full.h_acc;
+  msg_out.v_acc = full.v_acc;
+  msg_out.vel_n = full.vel_n;
+  msg_out.vel_e = full.vel_e;
+  msg_out.vel_d = full.vel_d;
+  msg_out.g_speed = full.g_speed;
+  msg_out.head_mot = full.head_mot;
+  msg_out.s_acc = full.s_acc;
+  msg_out.head_acc = full.head_acc;
+  msg_out.p_dop = full.p_dop;
 
   if (gnss_full_pub_.getTopic().empty())
     gnss_full_pub_ = nh_.advertise<rosflight_msgs::GNSSFull>("gnss_raw", 1);
