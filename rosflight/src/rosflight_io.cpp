@@ -189,7 +189,7 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
     handle_rosflight_gnss_msg(msg);
     break;
   case MAVLINK_MSG_ID_ROSFLIGHT_GNSS_RAW:
-    handle_rosflight_gnss_raw_msg(msg);
+    handle_rosflight_gnss_ful_msg(msg);
     break;
   case MAVLINK_MSG_ID_ROSFLIGHT_VERSION:
     handle_version_msg(msg);
@@ -824,7 +824,7 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
   time_reference_pub_.publish(time_ref);
 }
 
-void rosflightIO::handle_rosflight_gnss_raw_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_rosflight_gnss_ful_msg(const mavlink_message_t &msg)
 {
   mavlink_rosflight_gnss_raw_t raw;
   mavlink_msg_rosflight_gnss_raw_decode(&msg, &raw);
@@ -858,9 +858,9 @@ void rosflightIO::handle_rosflight_gnss_raw_msg(const mavlink_message_t &msg)
   msg_out.head_acc = raw.head_acc;
   msg_out.p_dop = raw.p_dop;
 
-  if (gnss_raw_pub_.getTopic().empty())
-    gnss_raw_pub_ = nh_.advertise<rosflight_msgs::GNSSFull>("gnss_raw", 1);
-  gnss_raw_pub_.publish(msg_out);
+  if (gnss_full_pub_.getTopic().empty())
+    gnss_full_pub_ = nh_.advertise<rosflight_msgs::GNSSFull>("gnss_raw", 1);
+  gnss_full_pub_.publish(msg_out);
 }
 
 void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)

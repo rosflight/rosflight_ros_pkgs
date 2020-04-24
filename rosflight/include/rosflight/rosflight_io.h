@@ -117,7 +117,7 @@ private:
   void handle_small_baro_msg(const mavlink_message_t &msg);
   void handle_small_mag_msg(const mavlink_message_t &msg);
   void handle_rosflight_gnss_msg(const mavlink_message_t &msg);
-  void handle_rosflight_gnss_raw_msg(const mavlink_message_t &msg);
+  void handle_rosflight_gnss_ful_msg(const mavlink_message_t &msg);
   void handle_named_value_int_msg(const mavlink_message_t &msg);
   void handle_named_value_float_msg(const mavlink_message_t &msg);
   void handle_named_command_struct_msg(const mavlink_message_t &msg);
@@ -176,7 +176,7 @@ private:
   ros::Publisher baro_pub_;
   ros::Publisher sonar_pub_;
   ros::Publisher gnss_pub_;
-  ros::Publisher gnss_raw_pub_;
+  ros::Publisher gnss_full_pub_;
   ros::Publisher nav_sat_fix_pub_;
   ros::Publisher twist_stamped_pub_;
   ros::Publisher time_reference_pub_;
