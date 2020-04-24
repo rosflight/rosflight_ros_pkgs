@@ -859,7 +859,7 @@ void rosflightIO::handle_rosflight_gnss_full_msg(const mavlink_message_t &msg)
   msg_out.p_dop = full.p_dop;
 
   if (gnss_full_pub_.getTopic().empty())
-    gnss_full_pub_ = nh_.advertise<rosflight_msgs::GNSSFull>("gnss_raw", 1);
+    gnss_full_pub_ = nh_.advertise<rosflight_msgs::GNSSFull>("gnss_full", 1);
   gnss_full_pub_.publish(msg_out);
 }
 
