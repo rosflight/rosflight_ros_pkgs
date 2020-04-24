@@ -34,13 +34,11 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#include <rosflight/mavrosflight/mavrosflight.h>
-
 #include <ros/ros.h>
+#include <rosflight/mavrosflight/mavrosflight.h>
 
 namespace mavrosflight
 {
-
 using boost::asio::serial_port_base;
 
 MavROSflight::MavROSflight(MavlinkComm &mavlink_comm, uint8_t sysid /* = 1 */, uint8_t compid /* = 50 */) :

@@ -52,7 +52,12 @@ SimplePID::SimplePID()
 // Initialize the controller
 //
 SimplePID::SimplePID(double p, double i, double d, double max, double min, double tau) :
-  kp_(p), ki_(i), kd_(d), max_(max), min_(min), tau_(tau)
+  kp_(p),
+  ki_(i),
+  kd_(d),
+  max_(max),
+  min_(min),
+  tau_(tau)
 {
   integrator_ = 0.0;
   differentiator_ = 0.0;
@@ -85,10 +90,9 @@ double SimplePID::computePID(double desired, double current, double dt, double x
     differentiator_ = 0.0;
   }
 
-  double p_term = error*kp_;
+  double p_term = error * kp_;
   double i_term = 0.0;
   double d_term = 0.0;
-
 
   // Calculate Derivative Term
   if (kd_ > 0.0)
@@ -104,15 +108,15 @@ double SimplePID::computePID(double desired, double current, double dt, double x
       // last_error_);
       differentiator_ =
           (2 * tau_ - dt) / (2 * tau_ + dt) * differentiator_ + 2 / (2 * tau_ + dt) * (current - last_state_);
-      d_term = kd_* differentiator_;
+      d_term = kd_ * differentiator_;
     }
   }
 
   // Calculate Integrator Term
   if (ki_ > 0.0)
   {
-      integrator_ += dt / 2 * (error + last_error_); // (trapezoidal rule)
-      i_term = ki_ * integrator_;
+    integrator_ += dt / 2 * (error + last_error_); // (trapezoidal rule)
+    i_term = ki_ * integrator_;
   }
 
   // Save off this state for next loop
@@ -125,18 +129,17 @@ double SimplePID::computePID(double desired, double current, double dt, double x
   return u;
 
   // Integrator anti-windup
-//  double u_sat = saturate(u, min_, max_);
-//  if (u != u_sat && std::fabs(i_term) > fabs(u - p_term + d_term))
-//  {
-//    // If we are at the saturation limits, then make sure the integrator doesn't get
-//    // bigger if it won't do anything (except take longer to unwind).  Just set it to the
-//    // largest value it could be to max out the control
-//    integrator_ = (u_sat - p_term + d_term) / ki_;
-//  }
+  //  double u_sat = saturate(u, min_, max_);
+  //  if (u != u_sat && std::fabs(i_term) > fabs(u - p_term + d_term))
+  //  {
+  //    // If we are at the saturation limits, then make sure the integrator doesn't get
+  //    // bigger if it won't do anything (except take longer to unwind).  Just set it to the
+  //    // largest value it could be to max out the control
+  //    integrator_ = (u_sat - p_term + d_term) / ki_;
+  //  }
 
-//  return u_sat;
+  //  return u_sat;
 }
-
 
 //
 // Late initialization or redo
@@ -150,4 +153,4 @@ void SimplePID::setGains(double p, double i, double d, double tau)
   tau_ = tau;
 }
 
-}  // namespace relative_nav
+} // namespace rosflight_utils

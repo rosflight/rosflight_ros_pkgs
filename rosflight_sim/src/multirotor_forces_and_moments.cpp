@@ -33,14 +33,14 @@
 
 namespace rosflight_sim
 {
-
 Multirotor::Multirotor(ros::NodeHandle *nh)
 {
   nh_ = nh;
 
   // Pull Parameters off of rosparam server
   num_rotors_ = 0;
-  ROS_ASSERT_MSG(nh_->getParam("ground_effect", ground_effect_), "missing parameters in %s namespace", nh_->getNamespace().c_str());
+  ROS_ASSERT_MSG(nh_->getParam("ground_effect", ground_effect_), "missing parameters in %s namespace",
+                 nh_->getNamespace().c_str());
   ROS_ASSERT(nh_->getParam("mass", mass_));
   ROS_ASSERT(nh_->getParam("linear_mu", linear_mu_));
   ROS_ASSERT(nh_->getParam("angular_mu", angular_mu_));
@@ -65,17 +65,17 @@ Multirotor::Multirotor(ros::NodeHandle *nh)
   /* Load Rotor Configuration */
   motors_.resize(num_rotors_);
 
-  force_allocation_matrix_.resize(4,num_rotors_);
-  torque_allocation_matrix_.resize(4,num_rotors_);
-  for(int i = 0; i < num_rotors_; i++)
+  force_allocation_matrix_.resize(4, num_rotors_);
+  torque_allocation_matrix_.resize(4, num_rotors_);
+  for (int i = 0; i < num_rotors_; i++)
   {
     motors_[i].rotor = rotor;
     motors_[i].position.resize(3);
     motors_[i].normal.resize(3);
     for (int j = 0; j < 3; j++)
     {
-      motors_[i].position(j) = rotor_positions[3*i + j];
-      motors_[i].normal(j) = rotor_vector_normal[3*i + j];
+      motors_[i].position(j) = rotor_positions[3 * i + j];
+      motors_[i].normal(j) = rotor_vector_normal[3 * i + j];
     }
     motors_[i].normal.normalize();
     motors_[i].direction = rotor_rotation_directions[i];
@@ -84,18 +84,20 @@ Multirotor::Multirotor(ros::NodeHandle *nh)
     Eigen::Vector3d moment_from_torque = motors_[i].direction * motors_[i].normal;
 
     // build allocation_matrices
-    force_allocation_matrix_(0,i) = moment_from_thrust(0); // l
-    force_allocation_matrix_(1,i) = moment_from_thrust(1); // m
-    force_allocation_matrix_(2,i) = moment_from_thrust(2); // n
-    force_allocation_matrix_(3,i) = motors_[i].normal(2); // F
+    force_allocation_matrix_(0, i) = moment_from_thrust(0); // l
+    force_allocation_matrix_(1, i) = moment_from_thrust(1); // m
+    force_allocation_matrix_(2, i) = moment_from_thrust(2); // n
+    force_allocation_matrix_(3, i) = motors_[i].normal(2);  // F
 
-    torque_allocation_matrix_(0,i) = moment_from_torque(0); // l
-    torque_allocation_matrix_(1,i) = moment_from_torque(1); // m
-    torque_allocation_matrix_(2,i) = moment_from_torque(2); // n
-    torque_allocation_matrix_(3,i) = 0.0; // F
+    torque_allocation_matrix_(0, i) = moment_from_torque(0); // l
+    torque_allocation_matrix_(1, i) = moment_from_torque(1); // m
+    torque_allocation_matrix_(2, i) = moment_from_torque(2); // n
+    torque_allocation_matrix_(3, i) = 0.0;                   // F
   }
 
-  ROS_INFO_STREAM("allocation matrices:\nFORCE \n" << force_allocation_matrix_ << "\nTORQUE\n" << torque_allocation_matrix_ << "\n");
+  ROS_INFO_STREAM("allocation matrices:\nFORCE \n"
+                  << force_allocation_matrix_ << "\nTORQUE\n"
+                  << torque_allocation_matrix_ << "\n");
 
   // Initialize size of dynamic force and torque matrices
   desired_forces_.resize(num_rotors_);
@@ -105,10 +107,10 @@ Multirotor::Multirotor(ros::NodeHandle *nh)
 
   for (int i = 0; i < num_rotors_; i++)
   {
-    desired_forces_(i)=0.0;
-    desired_torques_(i)=0.0;
-    actual_forces_(i)=0.0;
-    actual_torques_(i)=0.0;
+    desired_forces_(i) = 0.0;
+    desired_torques_(i) = 0.0;
+    actual_forces_(i) = 0.0;
+    actual_torques_(i) = 0.0;
   }
 
   wind_ = Eigen::Vector3d::Zero();
@@ -127,37 +129,42 @@ Eigen::Matrix<double, 6, 1> Multirotor::updateForcesAndTorques(Current_State x, 
   double pd = x.pos[2];
 
   // Get airspeed vector for drag force calculation (rotate wind into body frame and add to inertial velocity)
-  Eigen::Vector3d Va = x.vel + x.rot.inverse()*wind_;
+  Eigen::Vector3d Va = x.vel + x.rot.inverse() * wind_;
 
   // Calculate Forces
-  for (int i = 0; i<num_rotors_; i++)
+  for (int i = 0; i < num_rotors_; i++)
   {
     // First, figure out the desired force output from passing the signal into the quadratic approximation
     double signal = act_cmds[i];
-    desired_forces_(i,0) = motors_[i].rotor.F_poly[0]*signal*signal + motors_[i].rotor.F_poly[1]*signal + motors_[i].rotor.F_poly[2];
-    desired_torques_(i,0) = motors_[i].rotor.T_poly[0]*signal*signal + motors_[i].rotor.T_poly[1]*signal + motors_[i].rotor.T_poly[2];
+    desired_forces_(i, 0) =
+        motors_[i].rotor.F_poly[0] * signal * signal + motors_[i].rotor.F_poly[1] * signal + motors_[i].rotor.F_poly[2];
+    desired_torques_(i, 0) =
+        motors_[i].rotor.T_poly[0] * signal * signal + motors_[i].rotor.T_poly[1] * signal + motors_[i].rotor.T_poly[2];
 
     // Then, Calculate Actual force and torque for each rotor using first-order dynamics
-    double tau = (desired_forces_(i,0) > actual_forces_(i,0)) ? motors_[i].rotor.tau_up : motors_[i].rotor.tau_down;
-    double alpha = dt/(tau + dt);
-    actual_forces_(i,0) = sat((1-alpha)*actual_forces_(i) + alpha*desired_forces_(i), motors_[i].rotor.max, 0.0);
-    actual_torques_(i,0) = sat((1-alpha)*actual_torques_(i) + alpha*desired_torques_(i), motors_[i].rotor.max, 0.0);
+    double tau = (desired_forces_(i, 0) > actual_forces_(i, 0)) ? motors_[i].rotor.tau_up : motors_[i].rotor.tau_down;
+    double alpha = dt / (tau + dt);
+    actual_forces_(i, 0) = sat((1 - alpha) * actual_forces_(i) + alpha * desired_forces_(i), motors_[i].rotor.max, 0.0);
+    actual_torques_(i, 0) =
+        sat((1 - alpha) * actual_torques_(i) + alpha * desired_torques_(i), motors_[i].rotor.max, 0.0);
   }
 
   // Use the allocation matrix to calculate the body-fixed force and torques
-  Eigen::Vector4d output_forces = force_allocation_matrix_*actual_forces_;
-  Eigen::Vector4d output_torques = torque_allocation_matrix_*actual_torques_;
+  Eigen::Vector4d output_forces = force_allocation_matrix_ * actual_forces_;
+  Eigen::Vector4d output_torques = torque_allocation_matrix_ * actual_torques_;
   Eigen::Vector4d output_forces_and_torques = output_forces + output_torques;
 
   // Calculate Ground Effect
   double z = -pd;
-  double ground_effect = max(ground_effect_[0]*z*z*z*z + ground_effect_[1]*z*z*z + ground_effect_[2]*z*z + ground_effect_[3]*z + ground_effect_[4], 0);
+  double ground_effect = max(ground_effect_[0] * z * z * z * z + ground_effect_[1] * z * z * z
+                                 + ground_effect_[2] * z * z + ground_effect_[3] * z + ground_effect_[4],
+                             0);
 
-  Eigen::Matrix<double, 6,1> forces;
-  // Apply other forces (drag) <- follows "Quadrotors and Accelerometers - State Estimation With an Improved Dynamic Model"
-  // By Rob Leishman et al.
-  forces.block<3,1>(0,0) = -linear_mu_ * Va;
-  forces.block<3,1>(3,0) = -angular_mu_ * x.omega + output_forces_and_torques.block<3,1>(0,0);
+  Eigen::Matrix<double, 6, 1> forces;
+  // Apply other forces (drag) <- follows "Quadrotors and Accelerometers - State Estimation With an Improved Dynamic
+  // Model" By Rob Leishman et al.
+  forces.block<3, 1>(0, 0) = -linear_mu_ * Va;
+  forces.block<3, 1>(3, 0) = -angular_mu_ * x.omega + output_forces_and_torques.block<3, 1>(0, 0);
 
   // Apply ground effect and thrust
   forces(2) += output_forces_and_torques(3) - ground_effect;
@@ -170,4 +177,4 @@ void Multirotor::set_wind(Eigen::Vector3d wind)
   wind_ = wind;
 }
 
-}
+} // namespace rosflight_sim

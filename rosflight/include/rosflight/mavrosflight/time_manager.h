@@ -37,18 +37,16 @@
 #ifndef MAVROSFLIGHT_TIME_MANAGER_H
 #define MAVROSFLIGHT_TIME_MANAGER_H
 
+#include <ros/ros.h>
 #include <rosflight/mavrosflight/mavlink_bridge.h>
 #include <rosflight/mavrosflight/mavlink_comm.h>
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
-
-#include <ros/ros.h>
+#include <stdint.h>
 
 #include <cstdlib>
-#include <stdint.h>
 
 namespace mavrosflight
 {
-
 class TimeManager : MavlinkListenerInterface
 {
 public:

@@ -37,20 +37,17 @@
 #ifndef MAVROSFLIGHT_MAVLINK_SERIAL_H
 #define MAVROSFLIGHT_MAVLINK_SERIAL_H
 
-#include <rosflight/mavrosflight/mavlink_comm.h>
-
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
+#include <rosflight/mavrosflight/mavlink_comm.h>
 
 #include <string>
 
 namespace mavrosflight
 {
-
 class MavlinkSerial : public MavlinkComm
 {
 public:
-
   /**
    * \brief Instantiates the class and begins communication on the specified serial port
    * \param port Name of the serial port (e.g. "/dev/ttyUSB0")
@@ -64,7 +61,6 @@ public:
   ~MavlinkSerial();
 
 private:
-
   //===========================================================================
   // methods
   //===========================================================================
@@ -76,13 +72,15 @@ private:
   /**
    * \brief Initiate an asynchronous read operation
    */
-  virtual void do_async_read(const boost::asio::mutable_buffers_1 &buffer, boost::function<void(const boost::system::error_code&, size_t)> handler);
+  virtual void do_async_read(const boost::asio::mutable_buffers_1 &buffer,
+                             boost::function<void(const boost::system::error_code &, size_t)> handler);
 
   /**
    * \brief Initialize an asynchronous write operation
    * \param check_write_state If true, only start another write operation if a write sequence is not already running
    */
-  virtual void do_async_write(const boost::asio::const_buffers_1 &buffer, boost::function<void(const boost::system::error_code&, size_t)> handler);
+  virtual void do_async_write(const boost::asio::const_buffers_1 &buffer,
+                              boost::function<void(const boost::system::error_code &, size_t)> handler);
 
   //===========================================================================
   // member variables

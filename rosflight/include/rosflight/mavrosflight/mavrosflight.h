@@ -37,26 +37,22 @@
 #ifndef MAVROSFLIGHT_MAVROSFLIGHT_H
 #define MAVROSFLIGHT_MAVROSFLIGHT_H
 
+#include <boost/function.hpp>
 #include <rosflight/mavrosflight/mavlink_bridge.h>
 #include <rosflight/mavrosflight/mavlink_comm.h>
-#include <rosflight/mavrosflight/param_manager.h>
-#include <rosflight/mavrosflight/time_manager.h>
-
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
 #include <rosflight/mavrosflight/param_listener_interface.h>
-
-#include <boost/function.hpp>
-
+#include <rosflight/mavrosflight/param_manager.h>
+#include <rosflight/mavrosflight/time_manager.h>
 #include <stdint.h>
+
 #include <string>
 
 namespace mavrosflight
 {
-
 class MavROSflight
 {
 public:
-
   /**
    * \brief Instantiates the class and begins communication on the specified serial port
    * \param mavlink_comm Reference to a MavlinkComm object (serial or UDP)
@@ -75,7 +71,6 @@ public:
   TimeManager time;
 
 private:
-
   // member variables
   uint8_t sysid_;
   uint8_t compid_;

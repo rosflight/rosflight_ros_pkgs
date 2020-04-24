@@ -37,20 +37,17 @@
 #ifndef MAVROSFLIGHT_MAVLINK_UDP_H
 #define MAVROSFLIGHT_MAVLINK_UDP_H
 
-#include <rosflight/mavrosflight/mavlink_comm.h>
-
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
+#include <rosflight/mavrosflight/mavlink_comm.h>
 
 #include <string>
 
 namespace mavrosflight
 {
-
 class MavlinkUDP : public MavlinkComm
 {
 public:
-
   /**
    * \brief Instantiates the class and begins communication on the specified serial port
    * \param bind_host Host where this node is running
@@ -66,7 +63,6 @@ public:
   ~MavlinkUDP();
 
 private:
-
   //===========================================================================
   // methods
   //===========================================================================
@@ -74,8 +70,10 @@ private:
   virtual bool is_open();
   virtual void do_open();
   virtual void do_close();
-  virtual void do_async_read(const boost::asio::mutable_buffers_1 &buffer, boost::function<void(const boost::system::error_code&, size_t)> handler);
-  virtual void do_async_write(const boost::asio::const_buffers_1 &buffer, boost::function<void(const boost::system::error_code&, size_t)> handler);
+  virtual void do_async_read(const boost::asio::mutable_buffers_1 &buffer,
+                             boost::function<void(const boost::system::error_code &, size_t)> handler);
+  virtual void do_async_write(const boost::asio::const_buffers_1 &buffer,
+                              boost::function<void(const boost::system::error_code &, size_t)> handler);
 
   //===========================================================================
   // member variables

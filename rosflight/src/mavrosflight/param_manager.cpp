@@ -34,16 +34,15 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#include <rosflight/mavrosflight/param_manager.h>
 #include <ros/ros.h>
+#include <rosflight/mavrosflight/param_manager.h>
 #include <yaml-cpp/yaml.h>
 
 #include <fstream>
 
 namespace mavrosflight
 {
-
-ParamManager::ParamManager(MavlinkComm * const comm) :
+ParamManager::ParamManager(MavlinkComm *const comm) :
   comm_(comm),
   unsaved_changes_(false),
   write_request_in_progress_(false),
@@ -54,8 +53,7 @@ ParamManager::ParamManager(MavlinkComm * const comm) :
 {
   comm_->register_mavlink_listener(this);
 
-  param_set_timer_ = nh_.createTimer(ros::Duration(ros::Rate(100)),
-                                     &ParamManager::param_set_timer_callback, this,
+  param_set_timer_ = nh_.createTimer(ros::Duration(ros::Rate(100)), &ParamManager::param_set_timer_callback, this,
                                      false, /* not oneshot */
                                      false /* not autostart */);
 }
@@ -186,7 +184,7 @@ bool ParamManager::save_to_file(std::string filename)
     yaml << YAML::Flow;
     yaml << YAML::BeginMap;
     yaml << YAML::Key << "name" << YAML::Value << it->second.getName();
-    yaml << YAML::Key << "type" << YAML::Value << (int) it->second.getType();
+    yaml << YAML::Key << "type" << YAML::Value << (int)it->second.getType();
     yaml << YAML::Key << "value" << YAML::Value << it->second.getValue();
     yaml << YAML::EndMap;
   }
@@ -222,7 +220,7 @@ bool ParamManager::load_from_file(std::string filename)
         if (is_param_id(root[i]["name"].as<std::string>()))
         {
           Param param = params_.find(root[i]["name"].as<std::string>())->second;
-          if ((MAV_PARAM_TYPE) root[i]["type"].as<int>() == param.getType())
+          if ((MAV_PARAM_TYPE)root[i]["type"].as<int>() == param.getType())
           {
             set_param_value(root[i]["name"].as<std::string>(), root[i]["value"].as<double>());
           }
@@ -267,7 +265,7 @@ void ParamManager::request_param(int index)
 {
   mavlink_message_t param_request_msg;
   char empty[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
-  mavlink_msg_param_request_read_pack(1, 50, &param_request_msg, 1, MAV_COMP_ID_ALL, empty, (int16_t) index);
+  mavlink_msg_param_request_read_pack(1, 50, &param_request_msg, 1, MAV_COMP_ID_ALL, empty, (int16_t)index);
   comm_->send_message(param_request_msg);
 }
 
@@ -301,13 +299,12 @@ void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
 
     // increase the param count
     received_count_++;
-    if(received_count_ == num_params_)
+    if (received_count_ == num_params_)
     {
       got_all_params_ = true;
     }
 
-    for (int i = 0; i < listeners_.size(); i++)
-      listeners_[i]->on_new_param_received(name, params_[name].getValue());
+    for (int i = 0; i < listeners_.size(); i++) listeners_[i]->on_new_param_received(name, params_[name].getValue());
   }
   else // otherwise check if we have new unsaved changes as a result of a param set request
   {
@@ -333,13 +330,12 @@ void ParamManager::handle_command_ack_msg(const mavlink_message_t &msg)
     if (ack.command == ROSFLIGHT_CMD_WRITE_PARAMS)
     {
       write_request_in_progress_ = false;
-      if(ack.success == ROSFLIGHT_CMD_SUCCESS)
+      if (ack.success == ROSFLIGHT_CMD_SUCCESS)
       {
         ROS_INFO("Param write succeeded");
         unsaved_changes_ = false;
 
-        for (int i = 0; i < listeners_.size(); i++)
-          listeners_[i]->on_params_saved_change(unsaved_changes_);
+        for (int i = 0; i < listeners_.size(); i++) listeners_[i]->on_params_saved_change(unsaved_changes_);
       }
       else
       {

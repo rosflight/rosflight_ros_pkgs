@@ -2,12 +2,10 @@
 
 namespace rosflight_utils
 {
-
-Viz::Viz() :
-  nh_private_("~")
+Viz::Viz() : nh_private_("~")
 {
   // retrieve params
-  
+
   // initialize variables
   mag_sum_ = 0;
   mag_skip_ = 20;
@@ -25,7 +23,7 @@ Viz::Viz() :
 }
 
 void Viz::magCallback(const sensor_msgs::MagneticFieldConstPtr &msg)
-{  
+{
   if (mag_throttle_ > mag_skip_)
   {
     // unpack message
@@ -35,7 +33,7 @@ void Viz::magCallback(const sensor_msgs::MagneticFieldConstPtr &msg)
 
     // get euler angles from vector (assume no roll)
     double yaw = atan2(y, x);
-    double pitch = atan2(-z, sqrt(x*x + y*y));
+    double pitch = atan2(-z, sqrt(x * x + y * y));
 
     // convert to body quaternion and rotation into the vehicle frame
     tf::Quaternion q_v = tf::createQuaternionFromRPY(0, pitch, yaw);
@@ -51,7 +49,6 @@ void Viz::magCallback(const sensor_msgs::MagneticFieldConstPtr &msg)
 
     // Publish the messages
     mag_pub_.publish(pose_msg);
-
 
     // MEASUREMENT CLOUD //
 
@@ -80,7 +77,7 @@ void Viz::magCallback(const sensor_msgs::MagneticFieldConstPtr &msg)
 
     for (uint32_t i = 0; i < pts_list_.size(); ++i)
     {
-        pts_msg.points.push_back(pts_list_[i]);
+      pts_msg.points.push_back(pts_list_[i]);
     }
 
     // publish point cloud
@@ -91,7 +88,6 @@ void Viz::magCallback(const sensor_msgs::MagneticFieldConstPtr &msg)
 
 void Viz::attCallback(const rosflight_msgs::AttitudeConstPtr &msg)
 {
-
   geometry_msgs::PoseStamped pose;
   pose.header = msg->header;
   pose.header.frame_id = fixed_frame_;
@@ -102,11 +98,10 @@ void Viz::attCallback(const rosflight_msgs::AttitudeConstPtr &msg)
 
 } // namespace rosflight_utils
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
   ros::init(argc, argv, "viz_node");
   rosflight_utils::Viz viz;
   ros::spin();
   return 0;
 }
-
