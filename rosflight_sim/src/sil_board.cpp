@@ -444,7 +444,7 @@ void SIL_Board::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
 
 float SIL_Board::rc_read(uint8_t channel)
 {
-  if(rc_sub_.getNumPublishers() > 0)
+  if (rc_received_)
   {
     return static_cast<float>(latestRC_.values[channel]-1000)/1000.0;
   }
@@ -468,7 +468,12 @@ void SIL_Board::pwm_disable()
 
 bool SIL_Board::rc_lost(void)
 {
-  return !rc_received_;
+  if ((ros::Time::now() - last_rc_message_).toSec() > 1)
+  {
+    ROS_INFO_THROTTLE(20, "RC timeout");
+    return true;
+  }
+  return !rc_received_ || ((ros::Time::now() - last_rc_message_).toSec() > 1);
 }
 
 void SIL_Board::rc_init(rc_type_t rc_type) {}
