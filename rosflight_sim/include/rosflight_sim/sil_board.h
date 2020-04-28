@@ -106,20 +106,21 @@ private:
   gazebo::physics::ModelPtr model_;
   gazebo::physics::LinkPtr link_;
 
-  ros::NodeHandle* nh_;
+  ros::NodeHandle *nh_;
   ros::Subscriber rc_sub_;
   rosflight_msgs::RCRaw latestRC_;
+  ros::Time last_rc_message_timestamp_;
   bool rc_received_;
 
   std::string mav_type_;
-  int pwm_outputs_[14];  //assumes maximum of 14 channels
+  int pwm_outputs_[14]; //assumes maximum of 14 channels
 
   // Time variables
   gazebo::common::Time boot_time_;
   uint64_t next_imu_update_time_us_;
   uint64_t imu_update_period_us_;
 
-  void RCCallback(const rosflight_msgs::RCRaw& msg);
+  void RCCallback(const rosflight_msgs::RCRaw &msg);
   bool motors_spinning();
 
   GazeboVector prev_vel_1_;
@@ -149,24 +150,24 @@ public:
   uint16_t num_sensor_errors(void) override;
 
   bool new_imu_data() override;
-  bool imu_read(float accel[3], float* temperature, float gyro[3], uint64_t* time_us) override;
+  bool imu_read(float accel[3], float *temperature, float gyro[3], uint64_t *time_us) override;
   void imu_not_responding_error() override;
 
   bool mag_present(void) override;
   void mag_read(float mag[3]) override;
-  void mag_update(void) override {};
+  void mag_update(void) override{};
 
   bool baro_present(void) override;
   void baro_read(float *pressure, float *temperature) override;
-  void baro_update(void) override {};
+  void baro_update(void) override{};
 
   bool diff_pressure_present(void) override;
   void diff_pressure_read(float *diff_pressure, float *temperature) override;
-  void diff_pressure_update(void) override {};
+  void diff_pressure_update(void) override{};
 
   bool sonar_present(void) override;
   float sonar_read(void) override;
-  void sonar_update(void) override {};
+  void sonar_update(void) override{};
 
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)
@@ -179,11 +180,10 @@ public:
   void rc_init(rc_type_t rc_type) override;
   bool rc_lost(void) override;
 
-
   // non-volatile memory
   void memory_init(void) override;
-  bool memory_read(void * dest, size_t len) override;
-  bool memory_write(const void * src, size_t len) override;
+  bool memory_read(void *dest, size_t len) override;
+  bool memory_write(const void *src, size_t len) override;
 
   // LEDs
   void led0_on(void) override;
@@ -216,13 +216,12 @@ public:
   void battery_current_set_multiplier(double multiplier) override;
 
   // Gazebo stuff
-  void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world, gazebo::physics::ModelPtr model, ros::NodeHandle* nh, std::string mav_type);
-  inline const int* get_outputs() const { return pwm_outputs_; }
+  void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world, gazebo::physics::ModelPtr model, ros::NodeHandle *nh, std::string mav_type);
+  inline const int *get_outputs() const { return pwm_outputs_; }
 #if GAZEBO_MAJOR_VERSION >= 9
   gazebo::common::SphericalCoordinates sph_coord_;
 #endif
-
-  };
+};
 
 } // namespace rosflight_sim
 
