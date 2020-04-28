@@ -467,7 +467,7 @@ void SIL_Board::pwm_disable()
 
 bool SIL_Board::rc_lost(void)
 {
-  if ((ros::Time::now() - last_rc_message_timestamp_).toSec() > 1)
+  if ((ros::Time::now() - last_rc_message_timestamp_).toSec() > RC_TIMEOUT_PERIOD_S)
   {
     ROS_INFO_THROTTLE(20, "RC timeout");
     return true;
