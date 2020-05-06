@@ -52,11 +52,9 @@
 
 namespace mavrosflight
 {
-
 class MavROSflight
 {
 public:
-
   /**
    * \brief Instantiates the class and begins communication on the specified serial port
    * \param mavlink_comm Reference to a MavlinkComm object (serial or UDP)
@@ -75,7 +73,6 @@ public:
   TimeManager time;
 
 private:
-
   // member variables
   uint8_t sysid_;
   uint8_t compid_;

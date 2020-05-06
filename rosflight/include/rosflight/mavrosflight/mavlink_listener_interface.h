@@ -41,14 +41,12 @@
 
 namespace mavrosflight
 {
-
 /**
  * \brief Describes an interface classes can implement to receive and handle mavlink messages
  */
 class MavlinkListenerInterface
 {
 public:
-
   /**
    * \brief The handler function for mavlink messages to be implemented by derived classes
    * \param msg The mavlink message to handle

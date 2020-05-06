@@ -33,13 +33,13 @@
  *  \brief This file defines a simple PID controller to be used by other classes to implement a PID control loop
  *  \author Robert Leishman
  *  \date Dec. 2013
-*/
+ */
 
 #ifndef ROTOR_CONTROLLER_SIMPLE_PID_H
 #define ROTOR_CONTROLLER_SIMPLE_PID_H
 
+#include <ros/ros.h> // included temporarily for debug statements
 #include <cmath>
-#include <ros/ros.h>  // included temporarily for debug statements
 
 namespace rosflight_utils
 {
@@ -99,22 +99,19 @@ public:
   /*!
    * \brief clearIntegrator allows you to clear the integrator, in case of integrator windup.
    */
-  void clearIntegrator()
-  {
-    integrator_ = 0.0;
-  }
+  void clearIntegrator() { integrator_ = 0.0; }
 
 protected:
-  double kp_;              //!< the proportional gain
-  double ki_;              //!< the integral gain (zero if you don't want integral control)
-  double kd_;              //!< the derivative gain (zero if you don't want derivative control)
-  double integrator_;      //!< the integral of p_error
-  double differentiator_;  //!< used for noise reduced differentiation
-  double last_error_;      //!< the last p_error, for computing the derivative;
-  double last_state_;      //!< the last state, for computing the derivative;
-  double tau_;             //!< the noise reduction term for the derivative
-  double max_;             //!< Maximum Output
-  double min_;             //!< Minimum Output
+  double kp_;             //!< the proportional gain
+  double ki_;             //!< the integral gain (zero if you don't want integral control)
+  double kd_;             //!< the derivative gain (zero if you don't want derivative control)
+  double integrator_;     //!< the integral of p_error
+  double differentiator_; //!< used for noise reduced differentiation
+  double last_error_;     //!< the last p_error, for computing the derivative;
+  double last_state_;     //!< the last state, for computing the derivative;
+  double tau_;            //!< the noise reduction term for the derivative
+  double max_;            //!< Maximum Output
+  double min_;            //!< Minimum Output
 
   /*!
    * \brief saturate saturates the variable val
@@ -132,6 +129,6 @@ protected:
     return val;
   }
 };
-}
+} // namespace rosflight_utils
 
-#endif  // ROTOR_CONTROLLER_SIMPLE_PID_H
+#endif // ROTOR_CONTROLLER_SIMPLE_PID_H
