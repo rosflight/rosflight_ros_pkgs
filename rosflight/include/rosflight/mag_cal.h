@@ -46,7 +46,7 @@
 #include <sensor_msgs/MagneticField.h>
 
 #include <eigen3/Eigen/Eigen>
-#include <math.h>
+#include <cmath>
 #include <random>
 
 #include <boost/bind.hpp>
@@ -142,14 +142,14 @@ private:
 
   /*
       This function gets ellipsoid parameters via least squares on ellipsoidal data
-      according to the paper: Li, Qingde, and John G. Griffiths. "Least squares ellipsoid 
+      according to the paper: Li, Qingde, and John G. Griffiths. "Least squares ellipsoid
       specific fitting." Geometric modeling and processing, 2004. proceedings. IEEE, 2004.
   */
   Eigen::MatrixXd ellipsoidLS(EigenSTL::vector_Vector3d meas);
 
   /*
       This function compute magnetometer calibration parameters according to Section 5.3 of the
-      paper: Renaudin, Valérie, Muhammad Haris Afzal, and Gérard Lachapelle. "Complete triaxis 
+      paper: Renaudin, Valérie, Muhammad Haris Afzal, and Gérard Lachapelle. "Complete triaxis
       magnetometer calibration in the magnetic domain." Journal of sensors 2010 (2010).
   */
   void magCal(Eigen::MatrixXd u, Eigen::MatrixXd &A, Eigen::MatrixXd &bb);

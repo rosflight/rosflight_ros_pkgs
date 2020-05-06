@@ -44,7 +44,7 @@
 #include <ros/ros.h>
 
 #include <cstdlib>
-#include <stdint.h>
+#include <cstdint>
 
 namespace mavrosflight
 {

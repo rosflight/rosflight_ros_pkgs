@@ -48,8 +48,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
-
-#include <stdint.h>
+#include <cstdint>
 
 #define MAVLINK_SERIAL_READ_BUF_SIZE 256
 

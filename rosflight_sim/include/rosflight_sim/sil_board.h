@@ -33,9 +33,9 @@
 #define ROSFLIGHT_SIM_SIL_BOARD_H
 
 #include <cmath>
-#include <stddef.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include <cstddef>
+#include <cstdbool>
+#include <cstdint>
 
 #include <gazebo/common/common.hh>
 #include <gazebo/common/Plugin.hh>
