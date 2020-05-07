@@ -45,7 +45,7 @@
 
 #include <sensor_msgs/MagneticField.h>
 
-#include <math.h>
+#include <cmath>
 #include <eigen3/Eigen/Eigen>
 #include <random>
 

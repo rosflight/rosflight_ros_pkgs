@@ -42,8 +42,8 @@
 #include <rosflight/mavrosflight/mavlink_serial.h>
 #include <rosflight/mavrosflight/mavlink_udp.h>
 #include <rosflight/mavrosflight/serial_exception.h>
-#include <stdint.h>
 #include <tf/tf.h>
+#include <cstdint>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
 #include <string>
@@ -197,8 +197,8 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
   case MAVLINK_MSG_ID_ROSFLIGHT_GNSS:
     handle_rosflight_gnss_msg(msg);
     break;
-  case MAVLINK_MSG_ID_ROSFLIGHT_GNSS_RAW:
-    handle_rosflight_gnss_raw_msg(msg);
+  case MAVLINK_MSG_ID_ROSFLIGHT_GNSS_FULL:
+    handle_rosflight_gnss_full_msg(msg);
     break;
   case MAVLINK_MSG_ID_ROSFLIGHT_VERSION:
     handle_version_msg(msg);
@@ -809,8 +809,19 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
   navsat_fix.position_covariance[8] = gnss.v_acc * gnss.v_acc;
   navsat_fix.position_covariance_type = sensor_msgs::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
   sensor_msgs::NavSatStatus navsat_status;
-  // 3 or 4 from UBX corresponds to a fix. 0 means a fix to ROS, else -1 for no fix.
-  navsat_status.status = (gnss.fix_type == 3 || gnss.fix_type == 4) ? 0 : -1;
+  auto fix_type = gnss.fix_type;
+  switch (fix_type)
+  {
+  case GNSS_FIX_RTK_FLOAT:
+  case GNSS_FIX_RTK_FIXED:
+    navsat_status.status = sensor_msgs::NavSatStatus::STATUS_GBAS_FIX;
+    break;
+  case GNSS_FIX_FIX:
+    navsat_status.status = sensor_msgs::NavSatStatus::STATUS_FIX;
+    break;
+  default:
+    navsat_status.status = sensor_msgs::NavSatStatus::STATUS_NO_FIX;
+  }
   // The UBX is not configured to report which system is used, even though it supports them all
   navsat_status.service = 1; // Report that only GPS was used, even though others may have been
   navsat_fix.status = navsat_status;
@@ -842,46 +853,48 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
   time_ref.time_ref = ros::Time(gnss.time, gnss.nanos);
 
   if (time_reference_pub_.getTopic().empty())
-    time_reference_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("navsat_compat/time_reference", 1);
+    time_reference_pub_ = nh_.advertise<sensor_msgs::TimeReference>("navsat_compat/time_reference", 1);
+
+  time_reference_pub_.publish(time_ref);
 }
 
-void rosflightIO::handle_rosflight_gnss_raw_msg(const mavlink_message_t &msg)
+void rosflightIO::handle_rosflight_gnss_full_msg(const mavlink_message_t &msg)
 {
-  mavlink_rosflight_gnss_raw_t raw;
-  mavlink_msg_rosflight_gnss_raw_decode(&msg, &raw);
+  mavlink_rosflight_gnss_full_t full;
+  mavlink_msg_rosflight_gnss_full_decode(&msg, &full);
 
-  rosflight_msgs::GNSSRaw msg_out;
+  rosflight_msgs::GNSSFull msg_out;
   msg_out.header.stamp = ros::Time::now();
-  msg_out.time_of_week = raw.time_of_week;
-  msg_out.year = raw.year;
-  msg_out.month = raw.month;
-  msg_out.day = raw.day;
-  msg_out.hour = raw.hour;
-  msg_out.min = raw.min;
-  msg_out.sec = raw.sec;
-  msg_out.valid = raw.valid;
-  msg_out.t_acc = raw.t_acc;
-  msg_out.nano = raw.nano;
-  msg_out.fix_type = raw.fix_type;
-  msg_out.num_sat = raw.num_sat;
-  msg_out.lon = raw.lon;
-  msg_out.lat = raw.lat;
-  msg_out.height = raw.height;
-  msg_out.height_msl = raw.height_msl;
-  msg_out.h_acc = raw.h_acc;
-  msg_out.v_acc = raw.v_acc;
-  msg_out.vel_n = raw.vel_n;
-  msg_out.vel_e = raw.vel_e;
-  msg_out.vel_d = raw.vel_d;
-  msg_out.g_speed = raw.g_speed;
-  msg_out.head_mot = raw.head_mot;
-  msg_out.s_acc = raw.s_acc;
-  msg_out.head_acc = raw.head_acc;
-  msg_out.p_dop = raw.p_dop;
+  msg_out.time_of_week = full.time_of_week;
+  msg_out.year = full.year;
+  msg_out.month = full.month;
+  msg_out.day = full.day;
+  msg_out.hour = full.hour;
+  msg_out.min = full.min;
+  msg_out.sec = full.sec;
+  msg_out.valid = full.valid;
+  msg_out.t_acc = full.t_acc;
+  msg_out.nano = full.nano;
+  msg_out.fix_type = full.fix_type;
+  msg_out.num_sat = full.num_sat;
+  msg_out.lon = full.lon;
+  msg_out.lat = full.lat;
+  msg_out.height = full.height;
+  msg_out.height_msl = full.height_msl;
+  msg_out.h_acc = full.h_acc;
+  msg_out.v_acc = full.v_acc;
+  msg_out.vel_n = full.vel_n;
+  msg_out.vel_e = full.vel_e;
+  msg_out.vel_d = full.vel_d;
+  msg_out.g_speed = full.g_speed;
+  msg_out.head_mot = full.head_mot;
+  msg_out.s_acc = full.s_acc;
+  msg_out.head_acc = full.head_acc;
+  msg_out.p_dop = full.p_dop;
 
-  if (gnss_raw_pub_.getTopic().empty())
-    gnss_raw_pub_ = nh_.advertise<rosflight_msgs::GNSSRaw>("gps_raw", 1);
-  gnss_raw_pub_.publish(msg_out);
+  if (gnss_full_pub_.getTopic().empty())
+    gnss_full_pub_ = nh_.advertise<rosflight_msgs::GNSSFull>("gnss_full", 1);
+  gnss_full_pub_.publish(msg_out);
 }
 
 void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)

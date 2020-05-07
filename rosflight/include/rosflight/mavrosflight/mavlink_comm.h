@@ -44,12 +44,11 @@
 #include <boost/function.hpp>
 #include <boost/thread.hpp>
 
+#include <cstdint>
 #include <iostream>
 #include <list>
 #include <string>
 #include <vector>
-
-#include <stdint.h>
 
 #define MAVLINK_SERIAL_READ_BUF_SIZE 256
 

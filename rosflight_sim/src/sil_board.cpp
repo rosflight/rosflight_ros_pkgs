@@ -561,6 +561,7 @@ void SIL_Board::backup_memory_clear(size_t len)
 void SIL_Board::RCCallback(const rosflight_msgs::RCRaw &msg)
 {
   rc_received_ = true;
+  last_rc_message_ = ros::Time::now();
   latestRC_ = msg;
 }
 
@@ -630,9 +631,9 @@ bool SIL_Board::gnss_has_new_data()
 {
   return GAZEBO_MAJOR_VERSION >= 9;
 }
-rosflight_firmware::GNSSRaw SIL_Board::gnss_raw_read()
+rosflight_firmware::GNSSFull SIL_Board::gnss_full_read()
 {
-  rosflight_firmware::GNSSRaw out;
+  rosflight_firmware::GNSSFull out;
 #if GAZEBO_MAJOR_VERSION >= 9
   using Vec3 = ignition::math::Vector3d;
   using Vec3 = ignition::math::Vector3d;

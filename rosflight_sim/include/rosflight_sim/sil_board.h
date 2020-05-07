@@ -32,10 +32,10 @@
 #ifndef ROSFLIGHT_SIM_SIL_BOARD_H
 #define ROSFLIGHT_SIM_SIL_BOARD_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 #include <cmath>
+#include <cstdbool>
+#include <cstddef>
+#include <cstdint>
 
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/common.hh>
@@ -109,6 +109,7 @@ private:
   ros::Subscriber rc_sub_;
   rosflight_msgs::RCRaw latestRC_;
   bool rc_received_;
+  ros::Time last_rc_message_;
 
   std::string mav_type_;
   int pwm_outputs_[14]; // assumes maximum of 14 channels
@@ -203,7 +204,7 @@ public:
 
   rosflight_firmware::GNSSData gnss_read() override;
   bool gnss_has_new_data() override;
-  rosflight_firmware::GNSSRaw gnss_raw_read() override;
+  rosflight_firmware::GNSSFull gnss_full_read() override;
 
   bool battery_voltage_present() const override;
   float battery_voltage_read() const override;

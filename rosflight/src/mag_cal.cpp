@@ -36,7 +36,7 @@
  */
 
 #include <rosflight/mag_cal.h>
-#include <stdio.h>
+#include <cstdio>
 
 namespace rosflight
 {

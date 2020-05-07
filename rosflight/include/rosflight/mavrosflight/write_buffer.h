@@ -39,7 +39,7 @@
 
 #include <rosflight/mavrosflight/mavlink_bridge.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 namespace mavrosflight
 {

@@ -31,8 +31,8 @@
 
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
-#include <stdint.h>
-#include <stdio.h>
+#include <cstdint>
+#include <cstdio>
 #include <sstream>
 
 #include <eigen3/Eigen/Core>

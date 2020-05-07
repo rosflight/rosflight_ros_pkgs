@@ -47,7 +47,7 @@
 
 #include <boost/function.hpp>
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 namespace mavrosflight

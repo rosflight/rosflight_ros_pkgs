@@ -31,7 +31,7 @@
 
 #include <rosflight_utils/turbomath.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 static const int16_t atan_lookup_table[250] = {
     0,    40,   80,   120,  160,  200,  240,  280,  320,  360,  400,  440,  480,  520,  559,  599,  639,  679,

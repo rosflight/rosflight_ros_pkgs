@@ -43,7 +43,7 @@
 
 #include <ros/ros.h>
 
-#include <stdint.h>
+#include <cstdint>
 #include <cstdlib>
 
 namespace mavrosflight
