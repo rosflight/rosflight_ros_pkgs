@@ -1,22 +1,19 @@
-#include <string>
 #include <chrono>
 #include <iostream>
+#include <string>
 
 class ProgressBar
 {
 public:
-  ProgressBar(){}
-  ProgressBar(int total, int barwidth) :
-    initialized_(false),
-    barwidth_(barwidth),
-    total_(total)
+  ProgressBar() {}
+  ProgressBar(int total, int barwidth) : initialized_(false), barwidth_(barwidth), total_(total)
   {
-      init(total, barwidth);
+    init(total, barwidth);
   }
 
   ~ProgressBar()
   {
-//    std::cout << std::endl;
+    //    std::cout << std::endl;
   }
 
   void init(int total, int barwidth)
@@ -29,8 +26,8 @@ public:
 
   void set_theme_line() { bars_ = {"─", "─", "─", "╾", "╾", "╾", "╾", "━", "═"}; }
   void set_theme_circle() { bars_ = {" ", "◓", "◑", "◒", "◐", "◓", "◑", "◒", "#"}; }
-  void set_theme_braille() { bars_ = {" ", "⡀", "⡄", "⡆", "⡇", "⡏", "⡟", "⡿", "⣿" }; }
-  void set_theme_braille_spin() { bars_ = {" ", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠇", "⠿" }; }
+  void set_theme_braille() { bars_ = {" ", "⡀", "⡄", "⡆", "⡇", "⡏", "⡟", "⡿", "⣿"}; }
+  void set_theme_braille_spin() { bars_ = {" ", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠇", "⠿"}; }
 
   void print(int completed)
   {
@@ -51,13 +48,16 @@ public:
       std::cout << " \r [";
       double pos = barwidth_ * (completed / (double)total_);
       for (int i = 0; i < barwidth_; ++i)
-        if (i < floor(pos)) std::cout << *(bars_.end()-1);
-        else if (i == floor(pos)) std::cout << bars_[round((pos - floor(pos)) * (bars_.size() -1))];
-        else std::cout << " ";
+        if (i < floor(pos))
+          std::cout << *(bars_.end() - 1);
+        else if (i == floor(pos))
+          std::cout << bars_[round((pos - floor(pos)) * (bars_.size() - 1))];
+        else
+          std::cout << " ";
       std::cout << "]  ";
-      printf("%.0f%% ", (completed / (double)total_)*100.0);
+      printf("%.0f%% ", (completed / (double)total_) * 100.0);
       double it_s = completed / elapsed;
-      std::string left_stamp = ms_to_stamp(((total_ - completed) / it_s)*1000);
+      std::string left_stamp = ms_to_stamp(((total_ - completed) / it_s) * 1000);
       std::string elapsed_stamp = ms_to_stamp(elapsed * 1000.0);
       printf("[%s<%s, %.2fit/s] ", elapsed_stamp.c_str(), left_stamp.c_str(), it_s);
       std::cout.flush();
@@ -65,12 +65,9 @@ public:
     last_completed_ = completed;
   }
 
-  void finished()
-  {
-    print(total_);
-  }
-private:
+  void finished() { print(total_); }
 
+private:
   std::string ms_to_stamp(int ms)
   {
     if (ms <= 0.0)
@@ -79,9 +76,9 @@ private:
     }
     int millis = ms % 1000;
     int sec = ((ms - millis) % (60 * 1000)) / 1000;
-    int min = ((ms - (millis + sec*1000)) % (60 * 60 * 1000)) / (60*1000);
-    int hour = ((ms - (millis + (sec + min*60)*1000)) % (24 * 60 * 60 * 1000)) / (60*60*1000);
-    int day = ((ms - (millis + (sec + (min + hour * 60) * 60) * 1000)) / (24 * 60 * 60 * 1000))/(24*60*60*1000);
+    int min = ((ms - (millis + sec * 1000)) % (60 * 60 * 1000)) / (60 * 1000);
+    int hour = ((ms - (millis + (sec + min * 60) * 1000)) % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000);
+    int day = ((ms - (millis + (sec + (min + hour * 60) * 60) * 1000)) / (24 * 60 * 60 * 1000)) / (24 * 60 * 60 * 1000);
     char buf[25];
     int n;
     if (day > 0)
@@ -98,9 +95,7 @@ private:
     return out;
   }
 
-
-
-//  }
+  //  }
 
   int barwidth_;
   int total_;

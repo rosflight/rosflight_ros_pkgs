@@ -38,15 +38,15 @@
 #ifndef ROSFLIGHT_SENSORS_CALBRATE_MAG_H
 #define ROSFLIGHT_SENSORS_CALBRATE_MAG_H
 
-#include <ros/ros.h>
 #include <message_filters/subscriber.h>
+#include <ros/ros.h>
 
 #include <rosflight_msgs/ParamSet.h>
 
 #include <sensor_msgs/MagneticField.h>
 
+#include <cmath>
 #include <eigen3/Eigen/Eigen>
-#include <math.h>
 #include <random>
 
 #include <boost/bind.hpp>
@@ -56,14 +56,12 @@
 
 namespace rosflight
 {
-
 /**
  * \brief CalibrateMag sensor class
  */
 class CalibrateMag
 {
 public:
-
   CalibrateMag();
 
   void run();
@@ -79,7 +77,7 @@ public:
    * @brief set_refence_magnetic_field_strength
    * @param reference_magnetic_field
    */
-  bool mag_callback(const sensor_msgs::MagneticField::ConstPtr& mag);
+  bool mag_callback(const sensor_msgs::MagneticField::ConstPtr &mag);
 
   void set_reference_magnetic_field_strength(double reference_magnetic_field);
 
@@ -118,11 +116,11 @@ private:
 
   double reference_field_strength_; //!< the strength of earth's magnetic field at your location
 
-  bool calibrating_; //!< whether a temperature calibration is in progress
-  bool first_time_; //!< waiting for first measurement for calibration
+  bool calibrating_;        //!< whether a temperature calibration is in progress
+  bool first_time_;         //!< waiting for first measurement for calibration
   double calibration_time_; //!< seconds to record data for temperature compensation
-  double start_time_; //!< timestamp of first calibration measurement
-  int ransac_iters_; //!< number of ransac iterations to fit ellipsoid to mag measurements
+  double start_time_;       //!< timestamp of first calibration measurement
+  int ransac_iters_;        //!< number of ransac iterations to fit ellipsoid to mag measurements
   int measurement_skip_;
   int measurement_throttle_;
   double inlier_thresh_; //!< threshold to consider measurement an inlier in ellipsoidRANSAC
@@ -142,19 +140,19 @@ private:
 
   /*
       This function gets ellipsoid parameters via least squares on ellipsoidal data
-      according to the paper: Li, Qingde, and John G. Griffiths. "Least squares ellipsoid 
+      according to the paper: Li, Qingde, and John G. Griffiths. "Least squares ellipsoid
       specific fitting." Geometric modeling and processing, 2004. proceedings. IEEE, 2004.
   */
   Eigen::MatrixXd ellipsoidLS(EigenSTL::vector_Vector3d meas);
 
   /*
       This function compute magnetometer calibration parameters according to Section 5.3 of the
-      paper: Renaudin, Valérie, Muhammad Haris Afzal, and Gérard Lachapelle. "Complete triaxis 
+      paper: Renaudin, Valérie, Muhammad Haris Afzal, and Gérard Lachapelle. "Complete triaxis
       magnetometer calibration in the magnetic domain." Journal of sensors 2010 (2010).
   */
   void magCal(Eigen::MatrixXd u, Eigen::MatrixXd &A, Eigen::MatrixXd &bb);
 };
 
-} // namespace mag_cal
+} // namespace rosflight
 
 #endif // MAVROSFLIGHT_SENSORS_MAG_H

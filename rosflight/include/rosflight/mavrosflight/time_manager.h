@@ -43,12 +43,11 @@
 
 #include <ros/ros.h>
 
+#include <cstdint>
 #include <cstdlib>
-#include <stdint.h>
 
 namespace mavrosflight
 {
-
 class TimeManager : MavlinkListenerInterface
 {
 public:

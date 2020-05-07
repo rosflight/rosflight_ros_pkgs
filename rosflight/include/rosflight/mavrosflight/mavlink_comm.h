@@ -41,25 +41,22 @@
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
 
 #include <boost/asio.hpp>
-#include <boost/thread.hpp>
 #include <boost/function.hpp>
+#include <boost/thread.hpp>
 
+#include <cstdint>
+#include <iostream>
 #include <list>
 #include <string>
 #include <vector>
-#include <iostream>
-
-#include <stdint.h>
 
 #define MAVLINK_SERIAL_READ_BUF_SIZE 256
 
 namespace mavrosflight
 {
-
 class MavlinkComm
 {
 public:
-
   /**
    * \brief Instantiates the class and begins communication on the specified serial port
    * \param port Name of the serial port (e.g. "/dev/ttyUSB0")
@@ -86,13 +83,13 @@ public:
    * \brief Register a listener for mavlink messages
    * \param listener Pointer to an object that implements the MavlinkListenerInterface interface
    */
-  void register_mavlink_listener(MavlinkListenerInterface * const listener);
+  void register_mavlink_listener(MavlinkListenerInterface *const listener);
 
   /**
    * \brief Unregister a listener for mavlink messages
    * \param listener Pointer to an object that implements the MavlinkListenerInterface interface
    */
-  void unregister_mavlink_listener(MavlinkListenerInterface * const listener);
+  void unregister_mavlink_listener(MavlinkListenerInterface *const listener);
 
   /**
    * \brief Send a mavlink message
@@ -104,13 +101,14 @@ protected:
   virtual bool is_open() = 0;
   virtual void do_open() = 0;
   virtual void do_close() = 0;
-  virtual void do_async_read(const boost::asio::mutable_buffers_1 &buffer, boost::function<void(const boost::system::error_code&, size_t)> handler) = 0;
-  virtual void do_async_write(const boost::asio::const_buffers_1 &buffer, boost::function<void(const boost::system::error_code&, size_t)> handler) = 0;
+  virtual void do_async_read(const boost::asio::mutable_buffers_1 &buffer,
+                             boost::function<void(const boost::system::error_code &, size_t)> handler) = 0;
+  virtual void do_async_write(const boost::asio::const_buffers_1 &buffer,
+                              boost::function<void(const boost::system::error_code &, size_t)> handler) = 0;
 
   boost::asio::io_service io_service_; //!< boost io service provider
 
 private:
-
   //===========================================================================
   // definitions
   //===========================================================================
@@ -126,13 +124,13 @@ private:
 
     WriteBuffer() : len(0), pos(0) {}
 
-    WriteBuffer(const uint8_t * buf, uint16_t len) : len(len), pos(0)
+    WriteBuffer(const uint8_t *buf, uint16_t len) : len(len), pos(0)
     {
       assert(len <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
       memcpy(data, buf, len);
     }
 
-    const uint8_t * dpos() const { return data + pos; }
+    const uint8_t *dpos() const { return data + pos; }
 
     size_t nbytes() const { return len - pos; }
   };
@@ -156,7 +154,7 @@ private:
    * \param error Error code
    * \param bytes_transferred Number of bytes received
    */
-  void async_read_end(const boost::system::error_code& error, size_t bytes_transferred);
+  void async_read_end(const boost::system::error_code &error, size_t bytes_transferred);
 
   /**
    * \brief Initialize an asynchronous write operation
@@ -169,15 +167,15 @@ private:
    * \param error Error code
    * \param bytes_transferred Number of bytes sent
    */
-  void async_write_end(const boost::system::error_code& error, size_t bytes_transferred);
+  void async_write_end(const boost::system::error_code &error, size_t bytes_transferred);
 
   //===========================================================================
   // member variables
   //===========================================================================
 
-  std::vector<MavlinkListenerInterface*> listeners_; //!< listeners for mavlink messages
+  std::vector<MavlinkListenerInterface *> listeners_; //!< listeners for mavlink messages
 
-  boost::thread io_thread_; //!< thread on which the io service runs
+  boost::thread io_thread_;      //!< thread on which the io service runs
   boost::recursive_mutex mutex_; //!< mutex for threadsafe operation
 
   uint8_t sysid_;
@@ -188,8 +186,8 @@ private:
   mavlink_message_t msg_in_;
   mavlink_status_t status_in_;
 
-  std::list<WriteBuffer*> write_queue_; //!< queue of buffers to be written to the serial port
-  bool write_in_progress_; //!< flag for whether async_write is already running
+  std::list<WriteBuffer *> write_queue_; //!< queue of buffers to be written to the serial port
+  bool write_in_progress_;               //!< flag for whether async_write is already running
 };
 
 } // namespace mavrosflight

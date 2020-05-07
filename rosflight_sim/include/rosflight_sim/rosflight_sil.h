@@ -32,27 +32,26 @@
 #ifndef ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
 #define ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
 
-#include <gazebo/common/common.hh>
-#include <gazebo/common/Plugin.hh>
-#include <gazebo/gazebo.hh>
-#include <gazebo/physics/physics.hh>
-#include <ros/ros.h>
 #include <geometry_msgs/Vector3.h>
 #include <nav_msgs/Odometry.h>
+#include <ros/ros.h>
+#include <gazebo/common/Plugin.hh>
+#include <gazebo/common/common.hh>
+#include <gazebo/gazebo.hh>
+#include <gazebo/physics/physics.hh>
 
+#include <mavlink/mavlink.h>
 #include <rosflight.h>
 #include <rosflight_sim/sil_board.h>
-#include <mavlink/mavlink.h>
 
+#include <rosflight_sim/fixedwing_forces_and_moments.h>
 #include <rosflight_sim/mav_forces_and_moments.h>
 #include <rosflight_sim/multirotor_forces_and_moments.h>
-#include <rosflight_sim/fixedwing_forces_and_moments.h>
 
 #include <rosflight_sim/gz_compat.h>
 
 namespace rosflight_sim
 {
-
 class ROSflightSIL : public gazebo::ModelPlugin
 {
 public:
@@ -62,10 +61,10 @@ public:
 protected:
   void Reset() override;
   void Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf) override;
-  void OnUpdate(const gazebo::common::UpdateInfo &_info);
+  void OnUpdate(const gazebo::common::UpdateInfo& _info);
 
 private:
-  void windCallback(const geometry_msgs::Vector3 &msg);
+  void windCallback(const geometry_msgs::Vector3& msg);
   void publishTruth();
 
   SIL_Board board_;
@@ -104,7 +103,6 @@ private:
   Eigen::Vector3d vec3_to_eigen_from_gazebo(GazeboVector vec);
   GazeboVector vec3_to_gazebo_from_eigen(Eigen::Vector3d vec);
   Eigen::Matrix3d rotation_to_eigen_from_gazebo(GazeboQuaternion vec);
-
 };
 
 } // namespace rosflight_sim

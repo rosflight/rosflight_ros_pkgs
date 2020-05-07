@@ -38,18 +38,11 @@
 
 namespace mavrosflight
 {
-
 using boost::asio::serial_port_base;
 
-MavlinkComm::MavlinkComm() :
-  io_service_(),
-  write_in_progress_(false)
-{
-}
+MavlinkComm::MavlinkComm() : io_service_(), write_in_progress_(false) {}
 
-MavlinkComm::~MavlinkComm()
-{
-}
+MavlinkComm::~MavlinkComm() {}
 
 void MavlinkComm::open()
 {
@@ -74,7 +67,7 @@ void MavlinkComm::close()
   }
 }
 
-void MavlinkComm::register_mavlink_listener(MavlinkListenerInterface * const listener)
+void MavlinkComm::register_mavlink_listener(MavlinkListenerInterface *const listener)
 {
   if (listener == NULL)
     return;
@@ -93,7 +86,7 @@ void MavlinkComm::register_mavlink_listener(MavlinkListenerInterface * const lis
     listeners_.push_back(listener);
 }
 
-void MavlinkComm::unregister_mavlink_listener(MavlinkListenerInterface * const listener)
+void MavlinkComm::unregister_mavlink_listener(MavlinkListenerInterface *const listener)
 {
   if (listener == NULL)
     return;
@@ -110,20 +103,18 @@ void MavlinkComm::unregister_mavlink_listener(MavlinkListenerInterface * const l
 
 void MavlinkComm::async_read()
 {
-  if (!is_open()) return;
+  if (!is_open())
+    return;
 
-  do_async_read(
-        boost::asio::buffer(read_buf_raw_, MAVLINK_SERIAL_READ_BUF_SIZE),
-        boost::bind(
-          &MavlinkComm::async_read_end,
-          this,
-          boost::asio::placeholders::error,
-          boost::asio::placeholders::bytes_transferred));
+  do_async_read(boost::asio::buffer(read_buf_raw_, MAVLINK_SERIAL_READ_BUF_SIZE),
+                boost::bind(&MavlinkComm::async_read_end, this, boost::asio::placeholders::error,
+                            boost::asio::placeholders::bytes_transferred));
 }
 
 void MavlinkComm::async_read_end(const boost::system::error_code &error, size_t bytes_transferred)
 {
-  if (!is_open()) return;
+  if (!is_open())
+    return;
 
   if (error)
   {
@@ -170,14 +161,9 @@ void MavlinkComm::async_write(bool check_write_state)
 
   write_in_progress_ = true;
   WriteBuffer *buffer = write_queue_.front();
-  do_async_write(
-        boost::asio::buffer(buffer->dpos(), buffer->nbytes()),
-        boost::bind(
-          &MavlinkComm::async_write_end,
-          this,
-          boost::asio::placeholders::error,
-          boost::asio::placeholders::bytes_transferred));
-
+  do_async_write(boost::asio::buffer(buffer->dpos(), buffer->nbytes()),
+                 boost::bind(&MavlinkComm::async_write_end, this, boost::asio::placeholders::error,
+                             boost::asio::placeholders::bytes_transferred));
 }
 
 void MavlinkComm::async_write_end(const boost::system::error_code &error, std::size_t bytes_transferred)

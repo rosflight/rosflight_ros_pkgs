@@ -1,38 +1,38 @@
-#include <iostream>
-#include <cstdio>
-#include <vector>
-#include <unistd.h>
 #include <sys/stat.h>
-#include <string>
+#include <unistd.h>
+#include <cstdio>
 #include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
-#include <yaml-cpp/yaml.h>
-#include <rosbag/bag.h>
-#include <rosbag/view.h>
-#include <sensor_msgs/Imu.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <rosbag/bag.h>
+#include <rosbag/view.h>
 #include <rosflight_msgs/Command.h>
+#include <sensor_msgs/Imu.h>
+#include <yaml-cpp/yaml.h>
 #include <boost/foreach.hpp>
 #include <experimental/filesystem>
 #pragma GCC diagnostic pop
 
+#include "mavlink/mavlink.h"
+#include "rosflight.h"
 #include "rosflight_utils/input_parser.h"
 #include "rosflight_utils/progress_bar.h"
-#include "rosflight.h"
 #include "test_board.h"
-#include "mavlink/mavlink.h"
 
 using namespace std;
 namespace fs = std::experimental::filesystem;
 
-bool loadParameters(const string filename, rosflight_firmware::ROSflight& RF)
+bool loadParameters(const string filename, rosflight_firmware::ROSflight &RF)
 {
-  (void) RF;
+  (void)RF;
   if (!fs::exists(filename))
   {
     cout << "unable to find parameter file " << filename << endl;
@@ -64,10 +64,10 @@ bool loadParameters(const string filename, rosflight_firmware::ROSflight& RF)
   return true;
 }
 
-
 void displayHelp()
 {
-  cout << "USAGE: rosbag_parser [options]" << "\n\n";
+  cout << "USAGE: rosbag_parser [options]"
+       << "\n\n";
   cout << "Options:\n";
   cout << "\t -h, --help\tShow this help message and exit\n";
   cout << "\t -f FILENAME\tBagfile to parse\n";
@@ -78,9 +78,7 @@ void displayHelp()
   cout << endl;
 }
 
-
-
-int main(int argc, char * argv[])
+int main(int argc, char *argv[])
 {
   string bag_filename = "";
   bool verbose = false;
@@ -103,7 +101,7 @@ int main(int argc, char * argv[])
   {
     bag.open(bag_filename.c_str(), rosbag::bagmode::Read);
   }
-  catch(rosbag::BagIOException e)
+  catch (rosbag::BagIOException e)
   {
     fprintf(stderr, "unable to load rosbag %s, %s", bag_filename.c_str(), e.what());
     return -1;
@@ -118,7 +116,8 @@ int main(int argc, char * argv[])
     vector<string> types;
     cout << "\nloaded bagfile: " << bag_filename << "\n===================================\n";
     cout << "Topics\t\tTypes\n----------------------------\n\n" << endl;
-    for(const rosbag::ConnectionInfo *info : connections) {
+    for (const rosbag::ConnectionInfo *info : connections)
+    {
       topics.push_back(info->topic);
       types.push_back(info->datatype);
       cout << info->topic << "\t\t" << info->datatype << endl;
@@ -127,7 +126,9 @@ int main(int argc, char * argv[])
 
   // Figure out the end time of the bag
   double end_time = start_time + duration;
-  end_time = (end_time < view.getEndTime().toSec() - view.getBeginTime().toSec()) ? end_time : view.getEndTime().toSec() - view.getBeginTime().toSec();
+  end_time = (end_time < view.getEndTime().toSec() - view.getBeginTime().toSec())
+                 ? end_time
+                 : view.getEndTime().toSec() - view.getBeginTime().toSec();
   if (verbose)
     cout << "Playing bag from: = " << start_time << "s to: " << end_time << "s" << endl;
 
@@ -147,7 +148,6 @@ int main(int argc, char * argv[])
   ros::Time bag_start = view.getBeginTime() + ros::Duration(start_time);
   ros::Time bag_end = view.getBeginTime() + ros::Duration(end_time);
 
-
   // Prepare the output file
   fstream est_log, truth_log, imu_log, filtered_imu_log, cmd_log;
   fs::create_directories("/tmp/rosflight_post_process/");
@@ -157,18 +157,19 @@ int main(int argc, char * argv[])
   filtered_imu_log.open("/tmp/rosflight_post_process/imu_filt.bin", std::ofstream::out | std::ofstream::trunc);
   cmd_log.open("/tmp/rosflight_post_process/cmd.bin", std::ofstream::out | std::ofstream::trunc);
 
-
   ProgressBar prog(view.size(), 80);
   int i = 0;
   bool time_initialized = false;
   bool pose_initialized = false;
-  for(rosbag::MessageInstance const m : view)
+  for (rosbag::MessageInstance const m : view)
   {
     // skip messages before start time
-    if (m.getTime() < bag_start) continue;
+    if (m.getTime() < bag_start)
+      continue;
 
     // End bag after duration has passed
-    if (m.getTime() > bag_end) break;
+    if (m.getTime() > bag_end)
+      break;
 
     prog.print(++i);
 
@@ -181,7 +182,6 @@ int main(int argc, char * argv[])
     {
       const sensor_msgs::ImuConstPtr imu(m.instantiate<sensor_msgs::Imu>());
 
-
       if (!time_initialized)
       {
         bag_start = imu->header.stamp;
@@ -190,33 +190,28 @@ int main(int argc, char * argv[])
       }
 
       // Move the board time forward
-      float acc[3] = {(float)imu->linear_acceleration.x,
-                      (float)imu->linear_acceleration.y,
+      float acc[3] = {(float)imu->linear_acceleration.x, (float)imu->linear_acceleration.y,
                       (float)imu->linear_acceleration.z};
-      float gyro[3] = {(float)imu->angular_velocity.x,
-                       (float)imu->angular_velocity.y,
-                       (float)imu->angular_velocity.z};
-      int64_t t_us = (imu->header.stamp - bag_start).toNSec()/1000;
-
+      float gyro[3] = {(float)imu->angular_velocity.x, (float)imu->angular_velocity.y, (float)imu->angular_velocity.z};
+      int64_t t_us = (imu->header.stamp - bag_start).toNSec() / 1000;
 
       board.set_imu(acc, gyro, t_us);
       RF.run();
-      double est[8] = {(double) t_us/1e6,
-                       (double) RF.estimator_.state().attitude.w,
-                       (double) RF.estimator_.state().attitude.x,
-                       (double) RF.estimator_.state().attitude.y,
-                       (double) RF.estimator_.state().attitude.z,
-                       (double) RF.estimator_.bias().x,
-                       (double) RF.estimator_.bias().y,
-                       (double) RF.estimator_.bias().z};
-      est_log.write((char*) est, sizeof(est));
+      double est[8] = {(double)t_us / 1e6,
+                       (double)RF.estimator_.state().attitude.w,
+                       (double)RF.estimator_.state().attitude.x,
+                       (double)RF.estimator_.state().attitude.y,
+                       (double)RF.estimator_.state().attitude.z,
+                       (double)RF.estimator_.bias().x,
+                       (double)RF.estimator_.bias().y,
+                       (double)RF.estimator_.bias().z};
+      est_log.write((char *)est, sizeof(est));
 
-      double imud[7] = {(double) t_us/1e6,
-                        (double)acc[0], (double)acc[1], (double)acc[2],
-                        (double)gyro[0], (double)gyro[1], (double)gyro[2]};
-      imu_log.write((char*) imud, sizeof(imud));
+      double imud[7] = {(double)t_us / 1e6, (double)acc[0],  (double)acc[1], (double)acc[2],
+                        (double)gyro[0],    (double)gyro[1], (double)gyro[2]};
+      imu_log.write((char *)imud, sizeof(imud));
 
-      double imuf[7] = {(double)t_us/1e6,
+      double imuf[7] = {(double)t_us / 1e6,
                         (double)RF.estimator_.accLPF().x,
                         (double)RF.estimator_.accLPF().y,
                         (double)RF.estimator_.accLPF().z,
@@ -224,48 +219,36 @@ int main(int argc, char * argv[])
                         (double)RF.estimator_.gyroLPF().y,
                         (double)RF.estimator_.gyroLPF().z};
 
-      filtered_imu_log.write((char*) imuf, sizeof(imuf));
+      filtered_imu_log.write((char *)imuf, sizeof(imuf));
     }
 
     else if (datatype.compare("geometry_msgs/PoseStamped") == 0)
     {
       const geometry_msgs::PoseStampedConstPtr pose(m.instantiate<geometry_msgs::PoseStamped>());
       double t = (pose->header.stamp - bag_start).toSec();
-      double truth[5] = {t,
-                         pose->pose.orientation.w,
-                         pose->pose.orientation.x,
-                         pose->pose.orientation.y,
+      double truth[5] = {t, pose->pose.orientation.w, pose->pose.orientation.x, pose->pose.orientation.y,
                          pose->pose.orientation.z};
-      truth_log.write((char*) truth, sizeof(truth));
+      truth_log.write((char *)truth, sizeof(truth));
     }
 
     else if (datatype.compare("geometry_msgs/TransformStamped") == 0)
     {
       const geometry_msgs::TransformStampedConstPtr trans(m.instantiate<geometry_msgs::TransformStamped>());
       double t = (trans->header.stamp - bag_start).toSec();
-      double truth[5] = {t,
-                         trans->transform.rotation.w,
-                         trans->transform.rotation.x,
-                         trans->transform.rotation.y,
+      double truth[5] = {t, trans->transform.rotation.w, trans->transform.rotation.x, trans->transform.rotation.y,
                          trans->transform.rotation.z};
-      truth_log.write((char*) truth, sizeof(truth));
+      truth_log.write((char *)truth, sizeof(truth));
     }
 
     else if (datatype.compare("rosflight_msgs/Command") == 0)
     {
       const rosflight_msgs::CommandConstPtr cmd(m.instantiate<rosflight_msgs::Command>());
       double t = (cmd->header.stamp - bag_start).toSec();
-      double cmdarr[5] = {t,
-                          cmd->x,
-                          cmd->y,
-                          cmd->z,
-                          cmd->F};
-      cmd_log.write((char*)cmdarr, sizeof(cmdarr));
+      double cmdarr[5] = {t, cmd->x, cmd->y, cmd->z, cmd->F};
+      cmd_log.write((char *)cmdarr, sizeof(cmdarr));
     }
   }
   prog.finished();
   std::cout << std::endl;
 }
 #pragma GCC diagnostic pop
-
-
