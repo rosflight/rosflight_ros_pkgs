@@ -722,7 +722,7 @@ void rosflightIO::handle_version_msg(const mavlink_message_t &msg)
   }
   version_pub_.publish(version_msg);
 #ifdef GIT_VERSION_STRING // Macro so that is compiles even if git is not available
-  std::string git_version_string = GIT_VERSION_STRING;
+  const std::string git_version_string = GIT_VERSION_STRING;
   const std::string rosflight_major_minor_version = get_major_minor_version(git_version_string);
   const std::string firmware_version(version.version);
   const std::string firmware_major_minor_version = get_major_minor_version(firmware_version);
