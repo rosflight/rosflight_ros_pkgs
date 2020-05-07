@@ -705,12 +705,9 @@ void rosflightIO::handle_version_msg(const mavlink_message_t &msg)
   version_pub_.publish(version_msg);
 #ifdef GIT_VERSION_STRING // Macro so that is compiles even if git is not available
   std::string git_version_string = GIT_VERSION_STRING;
-  ROS_INFO("ROSflight version: %s", git_version_string.c_str());
   std::string rosflight_major_minor_version = git_version_string.substr(0, git_version_string.find('.', git_version_string.find('.') + 1));
-  ROS_WARN("ROSflight major/minor: %s", rosflight_major_minor_version.c_str());
   std::string firmware_version(version.version);
   std::string firmware_major_minor_version = firmware_version.substr(1, firmware_version.find('.', firmware_version.find('.') + 1) - 1);
-  ROS_WARN("firmware major/minor: %s", firmware_major_minor_version.c_str());
   if (rosflight_major_minor_version == firmware_major_minor_version)
   {
     ROS_INFO("ROSflight/firmware version: %s", firmware_major_minor_version.c_str());
@@ -723,7 +720,7 @@ void rosflightIO::handle_version_msg(const mavlink_message_t &msg)
   }
 
 #else
-  ROS_WARN("Version checking unavailable");
+  ROS_WARN("Version checking unavailable. Firmware version may or may not be compatible with ROSflight version");
   ROS_WARN("Firmware version: %s", version.version);
 #endif
 }
