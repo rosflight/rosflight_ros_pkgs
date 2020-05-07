@@ -120,6 +120,7 @@ private:
   void handle_named_value_float_msg(const mavlink_message_t &msg);
   void handle_named_command_struct_msg(const mavlink_message_t &msg);
   void handle_small_range_msg(const mavlink_message_t &msg);
+  std::string get_major_minor_version(const std::string &version);
   void handle_version_msg(const mavlink_message_t &msg);
   void handle_hard_error_msg(const mavlink_message_t &msg);
   void handle_battery_status_msg(const mavlink_message_t &msg);
