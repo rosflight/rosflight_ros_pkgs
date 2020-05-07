@@ -32,10 +32,10 @@
 #ifndef ROSFLIGHT_COMMON_JOY_JOY_H
 #define ROSFLIGHT_COMMON_JOY_JOY_H
 
-#include <ros/ros.h>
-#include <sensor_msgs/Joy.h>
-#include <rosflight_msgs/Command.h>
 #include <gazebo_msgs/ModelState.h>
+#include <ros/ros.h>
+#include <rosflight_msgs/Command.h>
+#include <sensor_msgs/Joy.h>
 
 struct Axes
 {
@@ -120,7 +120,6 @@ private:
   double current_yaw_setpoint_;
   double last_time_;
 
-
   double current_yaw_vel_;
   double v_yaw_step_;
   double mass_;
@@ -138,4 +137,4 @@ public:
   Joy();
 };
 
-#endif  // ROSFLIGHT_COMMON_JOY_JOY_H
+#endif // ROSFLIGHT_COMMON_JOY_JOY_H

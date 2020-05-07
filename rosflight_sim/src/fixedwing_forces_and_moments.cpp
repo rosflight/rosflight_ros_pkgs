@@ -33,7 +33,6 @@
 
 namespace rosflight_sim
 {
-
 Fixedwing::Fixedwing(ros::NodeHandle* nh)
 {
   nh_ = nh;
@@ -133,17 +132,17 @@ Fixedwing::Fixedwing(ros::NodeHandle* nh)
 
 Eigen::Matrix<double, 6, 1> Fixedwing::updateForcesAndTorques(Current_State x, const int act_cmds[])
 {
-  delta_.a = (act_cmds[0] - 1500.0)/500.0;
-  delta_.e = -(act_cmds[1] - 1500.0)/500.0;
-  delta_.t = (act_cmds[2] - 1000.0)/1000.0;
-  delta_.r = -(act_cmds[3] - 1500.0)/500.0;
+  delta_.a = (act_cmds[0] - 1500.0) / 500.0;
+  delta_.e = -(act_cmds[1] - 1500.0) / 500.0;
+  delta_.t = (act_cmds[2] - 1000.0) / 1000.0;
+  delta_.r = -(act_cmds[3] - 1500.0) / 500.0;
 
   double p = x.omega(0);
   double q = x.omega(1);
   double r = x.omega(2);
 
   // Calculate airspeed
-  Eigen::Vector3d V_airspeed = x.vel + x.rot.inverse()*wind_;
+  Eigen::Vector3d V_airspeed = x.vel + x.rot.inverse() * wind_;
   double ur = V_airspeed(0);
   double vr = V_airspeed(1);
   double wr = V_airspeed(2);
@@ -153,45 +152,59 @@ Eigen::Matrix<double, 6, 1> Fixedwing::updateForcesAndTorques(Current_State x, c
   Eigen::Matrix<double, 6, 1> forces;
 
   // Be sure that we have some significant airspeed before we run aerodynamics, and don't let NaNs get through
-  if(Va > 1.0 && std::isfinite(Va))
+  if (Va > 1.0 && std::isfinite(Va))
   {
     /*
-       * The following math follows the method described in chapter 4 of
-       * Small Unmanned Aircraft: Theory and Practice
-       * By Randy Beard and Tim McLain.
-       * Look there for a detailed explanation of each line in the rest of this function
-       */
-    double alpha = atan2(wr , ur);
-    double beta = asin(vr/Va);
+     * The following math follows the method described in chapter 4 of
+     * Small Unmanned Aircraft: Theory and Practice
+     * By Randy Beard and Tim McLain.
+     * Look there for a detailed explanation of each line in the rest of this function
+     */
+    double alpha = atan2(wr, ur);
+    double beta = asin(vr / Va);
 
     double ca = cos(alpha);
     double sa = sin(alpha);
 
-    double sign = (alpha >= 0? 1: -1);//Sigmoid function
-    double sigma_a = (1 + exp(-(wing_.M*(alpha - wing_.alpha0))) + exp((wing_.M*(alpha + wing_.alpha0))))/((1 + exp(-(wing_.M*(alpha - wing_.alpha0))))*(1 + exp((wing_.M*(alpha + wing_.alpha0)))));
-    double CL_a = (1 - sigma_a)*(CL_.O + CL_.alpha*alpha) + sigma_a*(2*sign*sa*sa*ca);
-    double AR = (pow(wing_.b, 2.0))/wing_.S;
-    double CD_a = CD_.p + ((pow((CL_.O + CL_.alpha*(alpha)),2.0))/(3.14159*0.9*AR));//the const 0.9 in this equation replaces the e (Oswald Factor) variable and may be inaccurate
+    double sign = (alpha >= 0 ? 1 : -1); // Sigmoid function
+    double sigma_a = (1 + exp(-(wing_.M * (alpha - wing_.alpha0))) + exp((wing_.M * (alpha + wing_.alpha0))))
+                     / ((1 + exp(-(wing_.M * (alpha - wing_.alpha0)))) * (1 + exp((wing_.M * (alpha + wing_.alpha0)))));
+    double CL_a = (1 - sigma_a) * (CL_.O + CL_.alpha * alpha) + sigma_a * (2 * sign * sa * sa * ca);
+    double AR = (pow(wing_.b, 2.0)) / wing_.S;
+    double CD_a =
+        CD_.p
+        + ((pow((CL_.O + CL_.alpha * (alpha)), 2.0))
+           / (3.14159 * 0.9
+              * AR)); // the const 0.9 in this equation replaces the e (Oswald Factor) variable and may be inaccurate
 
-    double CX_a = -CD_a*ca + CL_a*sa;
-    double CX_q_a = -CD_.q*ca + CL_.q*sa;
-    double CX_deltaE_a = -CD_.delta_e*ca + CL_.delta_e*sa;
+    double CX_a = -CD_a * ca + CL_a * sa;
+    double CX_q_a = -CD_.q * ca + CL_.q * sa;
+    double CX_deltaE_a = -CD_.delta_e * ca + CL_.delta_e * sa;
 
-    double CZ_a = -CD_a*sa - CL_a*ca;
-    double CZ_q_a = -CD_.q*sa - CL_.q*ca;
-    double CZ_deltaE_a = -CD_.delta_e*sa - CL_.delta_e*ca;
+    double CZ_a = -CD_a * sa - CL_a * ca;
+    double CZ_q_a = -CD_.q * sa - CL_.q * ca;
+    double CZ_deltaE_a = -CD_.delta_e * sa - CL_.delta_e * ca;
 
-    forces(0) = 0.5*(rho_)*Va*Va*wing_.S*(CX_a + (CX_q_a*wing_.c*q)/(2.0*Va) + CX_deltaE_a * delta_.e) + 0.5*rho_*prop_.S*prop_.C*(pow((prop_.k_motor*delta_.t),2.0) - Va*Va);
-    forces(1) = 0.5*(rho_)*Va*Va*wing_.S*(CY_.O + CY_.beta*beta + ((CY_.p*wing_.b*p)/(2.0*Va)) + ((CY_.r*wing_.b*r)/(2.0*Va)) + CY_.delta_a*delta_.a + CY_.delta_r*delta_.r);
-    forces(2) = 0.5*(rho_)*Va*Va*wing_.S*(CZ_a + (CZ_q_a*wing_.c*q)/(2.0*Va) + CZ_deltaE_a * delta_.e);
+    forces(0) = 0.5 * (rho_)*Va * Va * wing_.S * (CX_a + (CX_q_a * wing_.c * q) / (2.0 * Va) + CX_deltaE_a * delta_.e)
+                + 0.5 * rho_ * prop_.S * prop_.C * (pow((prop_.k_motor * delta_.t), 2.0) - Va * Va);
+    forces(1) = 0.5 * (rho_)*Va * Va * wing_.S
+                * (CY_.O + CY_.beta * beta + ((CY_.p * wing_.b * p) / (2.0 * Va)) + ((CY_.r * wing_.b * r) / (2.0 * Va))
+                   + CY_.delta_a * delta_.a + CY_.delta_r * delta_.r);
+    forces(2) = 0.5 * (rho_)*Va * Va * wing_.S * (CZ_a + (CZ_q_a * wing_.c * q) / (2.0 * Va) + CZ_deltaE_a * delta_.e);
 
-    forces(3) = 0.5*(rho_)*Va*Va*wing_.S*wing_.b*(Cell_.O + Cell_.beta*beta + (Cell_.p*wing_.b*p)/(2.0*Va) + (Cell_.r*wing_.b*r)/(2.0*Va) + Cell_.delta_a*delta_.a + Cell_.delta_r*delta_.r) - prop_.k_T_P*pow((prop_.k_Omega*delta_.t),2.0);
-    forces(4) = 0.5*(rho_)*Va*Va*wing_.S*wing_.c*(Cm_.O + Cm_.alpha*alpha + (Cm_.q*wing_.c*q)/(2.0*Va) + Cm_.delta_e*delta_.e);
-    forces(5) = 0.5*(rho_)*Va*Va*wing_.S*wing_.b*(Cn_.O + Cn_.beta*beta + (Cn_.p*wing_.b*p)/(2.0*Va) + (Cn_.r*wing_.b*r)/(2.0*Va) + Cn_.delta_a*delta_.a + Cn_.delta_r*delta_.r);
+    forces(3) = 0.5 * (rho_)*Va * Va * wing_.S * wing_.b
+                    * (Cell_.O + Cell_.beta * beta + (Cell_.p * wing_.b * p) / (2.0 * Va)
+                       + (Cell_.r * wing_.b * r) / (2.0 * Va) + Cell_.delta_a * delta_.a + Cell_.delta_r * delta_.r)
+                - prop_.k_T_P * pow((prop_.k_Omega * delta_.t), 2.0);
+    forces(4) = 0.5 * (rho_)*Va * Va * wing_.S * wing_.c
+                * (Cm_.O + Cm_.alpha * alpha + (Cm_.q * wing_.c * q) / (2.0 * Va) + Cm_.delta_e * delta_.e);
+    forces(5) = 0.5 * (rho_)*Va * Va * wing_.S * wing_.b
+                * (Cn_.O + Cn_.beta * beta + (Cn_.p * wing_.b * p) / (2.0 * Va) + (Cn_.r * wing_.b * r) / (2.0 * Va)
+                   + Cn_.delta_a * delta_.a + Cn_.delta_r * delta_.r);
   }
   else
   {
-    forces(0) = 0.5*rho_*prop_.S*prop_.C*((prop_.k_motor*delta_.t*prop_.k_motor*delta_.t));
+    forces(0) = 0.5 * rho_ * prop_.S * prop_.C * ((prop_.k_motor * delta_.t * prop_.k_motor * delta_.t));
     forces(1) = 0.0;
     forces(2) = 0.0;
     forces(3) = 0.0;
@@ -207,4 +220,4 @@ void Fixedwing::set_wind(Eigen::Vector3d wind)
   wind_ = wind;
 }
 
-}
+} // namespace rosflight_sim

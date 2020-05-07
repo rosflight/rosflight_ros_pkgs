@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <rosflight_utils/joy.h>
 #include <gazebo_msgs/SetModelState.h>
+#include <rosflight_utils/joy.h>
 #include <std_srvs/Empty.h>
 
 Joy::Joy()
@@ -45,8 +45,8 @@ Joy::Joy()
   double max_thrust;
   namespace_nh.param<double>("mass", mass_, 3.61);
   namespace_nh.param<double>("max_F", max_thrust, 64.50);
-  namespace_nh.param<std::string>("mav_name", mav_name_,"shredder");
-  equilibrium_thrust_ = (mass_*9.80665) / max_thrust;
+  namespace_nh.param<std::string>("mav_name", mav_name_, "shredder");
+  equilibrium_thrust_ = (mass_ * 9.80665) / max_thrust;
 
   // Get Parameters from joystick configuration yaml
   pnh.param<std::string>("gazebo_namespace", gazebo_ns_, "");
@@ -185,14 +185,14 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
   buttons_.override.prev_value = msg->buttons[buttons_.override.index];
 
   // Resets the mav to the origin
-  if (msg->buttons[buttons_.reset.index] == 0 && buttons_.reset.prev_value == 1)  // button release
+  if (msg->buttons[buttons_.reset.index] == 0 && buttons_.reset.prev_value == 1) // button release
   {
     ResetMav();
   }
   buttons_.reset.prev_value = msg->buttons[buttons_.reset.index];
 
   // Pauses/Unpauses the simulation
-  if (msg->buttons[buttons_.pause.index] == 0 && buttons_.pause.prev_value == 1)  // button release
+  if (msg->buttons[buttons_.pause.index] == 0 && buttons_.pause.prev_value == 1) // button release
   {
     if (!paused)
     {
@@ -238,7 +238,7 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
   buttons_.mode.prev_value = msg->buttons[buttons_.mode.index];
 
   // calculate the output command from the joysticks
-  if(override_autopilot_)
+  if (override_autopilot_)
   {
     command_msg_.F = msg->axes[axes_.F] * axes_.F_direction;
     command_msg_.x = msg->axes[axes_.x] * axes_.x_direction;
@@ -257,7 +257,7 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
       }
       else
       {
-        command_msg_.F = equilibrium_thrust_ + (equilibrium_thrust_) * command_msg_.F;
+        command_msg_.F = equilibrium_thrust_ + (equilibrium_thrust_)*command_msg_.F;
       }
       break;
 
@@ -271,7 +271,7 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
       }
       else
       {
-        command_msg_.F = equilibrium_thrust_ + (equilibrium_thrust_) * command_msg_.F;
+        command_msg_.F = equilibrium_thrust_ + (equilibrium_thrust_)*command_msg_.F;
       }
       break;
 
