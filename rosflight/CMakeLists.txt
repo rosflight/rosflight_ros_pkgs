@@ -32,6 +32,15 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/include/rosflight/mavlink/v1.0/.git")
   )
 endif()
 
+execute_process(COMMAND git describe --tags --abbrev=8 --always --dirty --long WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_VARIABLE GIT_VERSION_STRING RESULT_VARIABLE GIT_RESULT)
+if(GIT_RESULT EQUAL 0)
+	string(REGEX REPLACE "\n$" "" GIT_VERSION_STRING "${GIT_VERSION_STRING}") # remove trailing newline
+	message("GIT_VERSION_STRING: ${GIT_VERSION_STRING}")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DROSFLIGHT_VERSION=${GIT_VERSION_STRING}")
+else()
+	message("Could not determine rosflight version through git")
+endif()
+
 ###################################
 ## catkin specific configuration ##
 ###################################
