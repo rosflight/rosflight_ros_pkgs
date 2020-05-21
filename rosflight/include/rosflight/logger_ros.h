@@ -52,7 +52,7 @@ namespace rosflight
  * This is a convenience logger implementation for ROS-based projects.
  * The implementation simply forwards messages to the appropriate rosconsole loggers.
  */
-class LoggerROS : public LoggerInterface
+class LoggerROS : public mavrosflight::LoggerInterface
 {
 public:
   inline void debug(const std::string &message) override { ROS_DEBUG("[mavrosflight]: %s", message.c_str()); }
