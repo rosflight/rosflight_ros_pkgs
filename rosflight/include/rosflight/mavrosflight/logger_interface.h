@@ -56,10 +56,19 @@ class LoggerInterface
 {
 public:
   virtual void debug(const std::string& message) = 0;
-  virtual void  info(const std::string& message) = 0;
-  virtual void  warn(const std::string& message) = 0;
+  virtual void debug_throttle(float rate, const std::string& message) = 0;
+
+  virtual void info(const std::string& message) = 0;
+  virtual void info_throttle(float rate, const std::string& message) = 0;
+
+  virtual void warn(const std::string& message) = 0;
+  virtual void warn_throttle(float rate, const std::string& message) = 0;
+
   virtual void error(const std::string& message) = 0;
+  virtual void error_throttle(float rate, const std::string& message) = 0;
+
   virtual void fatal(const std::string& message) = 0;
+  virtual void fatal_throttle(float rate, const std::string& message) = 0;
 };
 
 /**
