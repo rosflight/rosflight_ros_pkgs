@@ -56,19 +56,19 @@ class LoggerInterface
 {
 public:
   virtual void debug(const std::string& message) = 0;
-  virtual void debug_throttle(float rate, const std::string& message) = 0;
+  virtual void debug_throttle(float period, const std::string& message) = 0;
 
   virtual void info(const std::string& message) = 0;
-  virtual void info_throttle(float rate, const std::string& message) = 0;
+  virtual void info_throttle(float period, const std::string& message) = 0;
 
   virtual void warn(const std::string& message) = 0;
-  virtual void warn_throttle(float rate, const std::string& message) = 0;
+  virtual void warn_throttle(float period, const std::string& message) = 0;
 
   virtual void error(const std::string& message) = 0;
-  virtual void error_throttle(float rate, const std::string& message) = 0;
+  virtual void error_throttle(float period, const std::string& message) = 0;
 
   virtual void fatal(const std::string& message) = 0;
-  virtual void fatal_throttle(float rate, const std::string& message) = 0;
+  virtual void fatal_throttle(float period, const std::string& message) = 0;
 };
 
 /**
@@ -79,19 +79,19 @@ class DefaultLogger : public LoggerInterface
 {
 public:
   inline void debug(const std::string &message) override { std::cout << "[mavrosflight][DEBUG]: " << message << std::endl; }
-  inline void debug_throttle(float rate, const std::string &message) override { debug(message); }
+  inline void debug_throttle(float period, const std::string &message) override { debug(message); }
 
   inline void info(const std::string &message) override { std::cout << "[mavrosflight][INFO]: " << message << std::endl; }
-  inline void info_throttle(float rate, const std::string &message) override { info(message); }
+  inline void info_throttle(float period, const std::string &message) override { info(message); }
 
   inline void warn(const std::string &message) override { std::cerr << "[mavrosflight][WARN]: " << message << std::endl; }
-  inline void warn_throttle(float rate, const std::string &message) override { warn(message); }
+  inline void warn_throttle(float period, const std::string &message) override { warn(message); }
 
   inline void error(const std::string &message) override { std::cerr << "[mavrosflight][ERROR]: " << message << std::endl; }
-  inline void error_throttle(float rate, const std::string &message) override { error(message); }
+  inline void error_throttle(float period, const std::string &message) override { error(message); }
 
   inline void fatal(const std::string &message) override { std::cerr << "[mavrosflight][FATAL]: " << message << std::endl; }
-  inline void fatal_throttle(float rate, const std::string &message) override { fatal(message); }
+  inline void fatal_throttle(float period, const std::string &message) override { fatal(message); }
 };
 
 } // namespace mavrosflight

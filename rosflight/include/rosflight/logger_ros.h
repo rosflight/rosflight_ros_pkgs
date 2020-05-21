@@ -56,19 +56,19 @@ class LoggerROS : public LoggerInterface
 {
 public:
   inline void debug(const std::string &message) override { ROS_DEBUG("[mavrosflight]: %s", message.c_str()); }
-  inline void debug_throttle(float rate, const std::string &message) override { ROS_DEBUG_THROTTLE(rate, "[mavrosflight]: %s", message.c_str()); }
+  inline void debug_throttle(float period, const std::string &message) override { ROS_DEBUG_THROTTLE(period, "[mavrosflight]: %s", message.c_str()); }
 
   inline void info(const std::string &message) override { ROS_INFO("[mavrosflight]: %s", message.c_str()); }
-  inline void info_throttle(float rate, const std::string &message) override { ROS_INFO_THROTTLE(rate, "[mavrosflight]: %s", message.c_str()); }
+  inline void info_throttle(float period, const std::string &message) override { ROS_INFO_THROTTLE(period, "[mavrosflight]: %s", message.c_str()); }
 
   inline void warn(const std::string &message) override { ROS_WARN("[mavrosflight]: %s", message.c_str()); }
-  inline void warn_throttle(float rate, const std::string &message) override { ROS_WARN_THROTTLE(rate, "[mavrosflight]: %s", message.c_str()); }
+  inline void warn_throttle(float period, const std::string &message) override { ROS_WARN_THROTTLE(period, "[mavrosflight]: %s", message.c_str()); }
 
   inline void error(const std::string &message) override { ROS_ERROR("[mavrosflight]: %s", message.c_str()); }
-  inline void error_throttle(float rate, const std::string &message) override { ROS_ERROR_THROTTLE(rate, "[mavrosflight]: %s", message.c_str()); }
+  inline void error_throttle(float period, const std::string &message) override { ROS_ERROR_THROTTLE(period, "[mavrosflight]: %s", message.c_str()); }
 
   inline void fatal(const std::string &message) override { ROS_FATAL("[mavrosflight]: %s", message.c_str()); }
-  inline void fatal_throttle(float rate, const std::string &message) override { ROS_FATAL_THROTTLE(rate, "[mavrosflight]: %s", message.c_str()); }
+  inline void fatal_throttle(float period, const std::string &message) override { ROS_FATAL_THROTTLE(period, "[mavrosflight]: %s", message.c_str()); }
 };
 
 } // namespace rosflight
