@@ -38,12 +38,14 @@
 
 namespace mavrosflight
 {
-TimeManager::TimeManager(MavlinkComm *comm) :
+TimeManager::TimeManager(MavlinkComm *comm, LoggerInterface& logger) :
   comm_(comm),
   offset_alpha_(0.95),
   offset_ns_(0),
   offset_(0.0),
-  initialized_(false)
+  initialized_(false),
+  logger_(logger)
+
 {
   comm_->register_mavlink_listener(this);
 

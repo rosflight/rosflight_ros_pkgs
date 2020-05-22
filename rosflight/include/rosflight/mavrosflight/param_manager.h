@@ -37,6 +37,7 @@
 #ifndef MAVROSFLIGHT_PARAM_MANAGER_H
 #define MAVROSFLIGHT_PARAM_MANAGER_H
 
+#include <rosflight/mavrosflight/logger_interface.h>
 #include <rosflight/mavrosflight/mavlink_bridge.h>
 #include <rosflight/mavrosflight/mavlink_comm.h>
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
@@ -55,7 +56,7 @@ namespace mavrosflight
 class ParamManager : public MavlinkListenerInterface
 {
 public:
-  ParamManager(MavlinkComm *const comm);
+  ParamManager(MavlinkComm *const comm, LoggerInterface& logger);
   ~ParamManager();
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
@@ -106,6 +107,8 @@ private:
   ros::Timer param_set_timer_;
   bool param_set_in_progress_;
   void param_set_timer_callback(const ros::TimerEvent &event);
+
+  LoggerInterface& logger_;
 };
 
 } // namespace mavrosflight

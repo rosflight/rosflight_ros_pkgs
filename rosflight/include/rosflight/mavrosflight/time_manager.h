@@ -37,6 +37,7 @@
 #ifndef MAVROSFLIGHT_TIME_MANAGER_H
 #define MAVROSFLIGHT_TIME_MANAGER_H
 
+#include <rosflight/mavrosflight/logger_interface.h>
 #include <rosflight/mavrosflight/mavlink_bridge.h>
 #include <rosflight/mavrosflight/mavlink_comm.h>
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
@@ -51,7 +52,7 @@ namespace mavrosflight
 class TimeManager : MavlinkListenerInterface
 {
 public:
-  TimeManager(MavlinkComm *comm);
+  TimeManager(MavlinkComm *comm, LoggerInterface& logger);
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
 
@@ -69,6 +70,8 @@ private:
   ros::Duration offset_;
 
   bool initialized_;
+
+  LoggerInterface& logger_;
 };
 
 } // namespace mavrosflight

@@ -42,14 +42,15 @@
 
 namespace mavrosflight
 {
-ParamManager::ParamManager(MavlinkComm *const comm) :
+ParamManager::ParamManager(MavlinkComm *const comm, LoggerInterface& logger) :
   comm_(comm),
   unsaved_changes_(false),
   write_request_in_progress_(false),
   first_param_received_(false),
   received_count_(0),
   got_all_params_(false),
-  param_set_in_progress_(false)
+  param_set_in_progress_(false),
+  logger_(logger)
 {
   comm_->register_mavlink_listener(this);
 
