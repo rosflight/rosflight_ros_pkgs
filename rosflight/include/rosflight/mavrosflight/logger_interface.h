@@ -38,8 +38,10 @@
 #ifndef MAVROSFLIGHT_LOGGER_INTERFACE_H
 #define MAVROSFLIGHT_LOGGER_INTERFACE_H
 
-#include <iostream>
+#include <sstream>
 #include <string>
+
+#include <stdio.h>
 
 namespace mavrosflight
 {
@@ -55,20 +57,30 @@ namespace mavrosflight
 class LoggerInterface
 {
 public:
-  virtual void debug(const std::string& message) = 0;
-  virtual void debug_throttle(float period, const std::string& message) = 0;
+  template <typename... T>
+  virtual void debug(const std::string& format, T... args) = 0;
+  template <typename... T>
+  virtual void debug_throttle(float period, const std::string& format, T... args) = 0;
 
-  virtual void info(const std::string& message) = 0;
-  virtual void info_throttle(float period, const std::string& message) = 0;
+  template <typename... T>
+  virtual void info(const std::string& format, T... args) = 0;
+  template <typename... T>
+  virtual void info_throttle(float period, const std::string& format, T... args) = 0;
 
-  virtual void warn(const std::string& message) = 0;
-  virtual void warn_throttle(float period, const std::string& message) = 0;
+  template <typename... T>
+  virtual void warn(const std::string& format, T... args) = 0;
+  template <typename... T>
+  virtual void warn_throttle(float period, const std::string& format, T... args) = 0;
 
-  virtual void error(const std::string& message) = 0;
-  virtual void error_throttle(float period, const std::string& message) = 0;
+  template <typename... T>
+  virtual void error(const std::string& format, T... args) = 0;
+  template <typename... T>
+  virtual void error_throttle(float period, const std::string& format, T... args) = 0;
 
-  virtual void fatal(const std::string& message) = 0;
-  virtual void fatal_throttle(float period, const std::string& message) = 0;
+  template <typename... T>
+  virtual void fatal(const std::string& format, T... args) = 0;
+  template <typename... T>
+  virtual void fatal_throttle(float period, const std::string& format, T... args) = 0;
 };
 
 /**
@@ -78,21 +90,30 @@ public:
 class DefaultLogger : public LoggerInterface
 {
 public:
-  inline void debug(const std::string &message) override { std::cout << "[mavrosflight][DEBUG]: " << message << std::endl; }
-  inline void debug_throttle(float period, const std::string &message) override { debug(message); }
+  inline void debug(const std::string &format, T... args) override {_log(stdout, "DEBUG", format, args...);}
+  inline void debug_throttle(float period, const std::string &format, T... args) override { debug(format); }
 
-  inline void info(const std::string &message) override { std::cout << "[mavrosflight][INFO]: " << message << std::endl; }
-  inline void info_throttle(float period, const std::string &message) override { info(message); }
+  inline void info(const std::string &format, T... args) override {_log(stdout, "INFO", format, args...);}
+  inline void info_throttle(float period, const std::string &format, T... args) override { info(format); }
 
-  inline void warn(const std::string &message) override { std::cerr << "[mavrosflight][WARN]: " << message << std::endl; }
-  inline void warn_throttle(float period, const std::string &message) override { warn(message); }
+  inline void warn(const std::string &format, T... args) override {_log(stderr, "WARN", format, args...);}
+  inline void warn_throttle(float period, const std::string &format, T... args) override { warn(format); }
 
-  inline void error(const std::string &message) override { std::cerr << "[mavrosflight][ERROR]: " << message << std::endl; }
-  inline void error_throttle(float period, const std::string &message) override { error(message); }
+  inline void error(const std::string &format, T... args) override {_log(stderr, "ERROR", format, args...);}
+  inline void error_throttle(float period, const std::string &format, T... args) override { error(format); }
 
-  inline void fatal(const std::string &message) override { std::cerr << "[mavrosflight][FATAL]: " << message << std::endl; }
-  inline void fatal_throttle(float period, const std::string &message) override { fatal(message); }
+  inline void fatal(const std::string &format, T... args) override {_log(stderr, "FATAL", format, args...);}
+  inline void fatal_throttle(float period, const std::string &format, T... args) override { fatal(format); }
 };
+
+private:
+  template <typename ... T>
+  inline void _log(FILE *fs, const std::string &name, const std::string &format, T... args)
+  {
+    std::stringstream ss;
+    ss << "[mavrosflight][" << name << "]: " << format << std::endl;
+    fprintf(fs, ss.str().c_str(), args);
+  }
 
 } // namespace mavrosflight
 
