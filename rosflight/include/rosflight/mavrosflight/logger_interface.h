@@ -51,59 +51,100 @@ namespace mavrosflight
  * \brief Abstract base class for message handler
  *
  * The implementations of this class define how messages are displayed, logged,
- * etc. To create custom behavior, derive from this base class and override the
- * pure virtual functions.
+ * etc. To create custom behavior, a derived class should implement each of the
+ * public functions.
  */
+template <typename Derived>
 class LoggerInterface
 {
 public:
   template <typename... T>
-  virtual void debug(const std::string& format, T... args) = 0;
+  void debug(const std::string& format, T... args)
+  {
+    Derived& derived = static_cast<Derived&>(*this);
+    derived.debug(format, args...);
+  }
   template <typename... T>
-  virtual void debug_throttle(float period, const std::string& format, T... args) = 0;
+  void debug_throttle(float period, const std::string& format, T... args)
+  {
+    Derived& derived = static_cast<Derived&>(*this);
+    derived.debug_throttle(format, args...);
+  }
 
   template <typename... T>
-  virtual void info(const std::string& format, T... args) = 0;
+  void info(const std::string& format, T... args)
+  {
+    Derived& derived = static_cast<Derived&>(*this);
+    derived.info(format, args...);
+  }
   template <typename... T>
-  virtual void info_throttle(float period, const std::string& format, T... args) = 0;
+  void info_throttle(float period, const std::string& format, T... args)
+  {
+    Derived& derived = static_cast<Derived&>(*this);
+    derived.info_throttle(format, args...);
+  }
 
   template <typename... T>
-  virtual void warn(const std::string& format, T... args) = 0;
+  void warn(const std::string& format, T... args)
+  {
+    Derived& derived = static_cast<Derived&>(*this);
+    derived.warn(format, args...);
+  }
   template <typename... T>
-  virtual void warn_throttle(float period, const std::string& format, T... args) = 0;
+  void warn_throttle(float period, const std::string& format, T... args)
+  {
+    Derived& derived = static_cast<Derived&>(*this);
+    derived.warn_throttle(format, args...);
+  }
 
   template <typename... T>
-  virtual void error(const std::string& format, T... args) = 0;
+  void error(const std::string& format, T... args)
+  {
+    Derived& derived = static_cast<Derived&>(*this);
+    derived.error(format, args...);
+  }
   template <typename... T>
-  virtual void error_throttle(float period, const std::string& format, T... args) = 0;
+  void error_throttle(float period, const std::string& format, T... args)
+  {
+    Derived& derived = static_cast<Derived&>(*this);
+    derived.error_throttle(format, args...);
+  }
 
   template <typename... T>
-  virtual void fatal(const std::string& format, T... args) = 0;
+  void fatal(const std::string& format, T... args)
+  {
+    Derived& derived = static_cast<Derived&>(*this);
+    derived.fatal(format, args...);
+  }
   template <typename... T>
-  virtual void fatal_throttle(float period, const std::string& format, T... args) = 0;
+  void fatal_throttle(float period, const std::string& format, T... args)
+  {
+    Derived& derived = static_cast<Derived&>(*this);
+    derived.fatal_throttle(format, args...);
+  }
 };
 
 /**
  * \class DefaultLogger
  * \brief Default logger that outputs to stdout and stderr
  */
-class DefaultLogger : public LoggerInterface
+class DefaultLogger : public LoggerInterface<DefaultLogger>
 {
 public:
-  inline void debug(const std::string &format, T... args) override {_log(stdout, "DEBUG", format, args...);}
-  inline void debug_throttle(float period, const std::string &format, T... args) override { debug(format); }
+  inline void debug(const std::string &format, T... args) {_log(stdout, "DEBUG", format, args...);}
+  inline void debug_throttle(float period, const std::string &format, T... args) { debug(format); }
 
-  inline void info(const std::string &format, T... args) override {_log(stdout, "INFO", format, args...);}
-  inline void info_throttle(float period, const std::string &format, T... args) override { info(format); }
+  inline void info(const std::string &format, T... args) {_log(stdout, "INFO", format, args...);}
+  inline void info_throttle(float period, const std::string &format, T... args) { info(format); }
 
-  inline void warn(const std::string &format, T... args) override {_log(stderr, "WARN", format, args...);}
-  inline void warn_throttle(float period, const std::string &format, T... args) override { warn(format); }
+  inline void warn(const std::string &format, T... args) {_log(stderr, "WARN", format, args...);}
+  inline void warn_throttle(float period, const std::string &format, T... args) { warn(format); }
 
-  inline void error(const std::string &format, T... args) override {_log(stderr, "ERROR", format, args...);}
-  inline void error_throttle(float period, const std::string &format, T... args) override { error(format); }
+  inline void error(const std::string &format, T... args) {_log(stderr, "ERROR", format, args...);}
+  inline void error_throttle(float period, const std::string &format, T... args) { error(format); }
 
-  inline void fatal(const std::string &format, T... args) override {_log(stderr, "FATAL", format, args...);}
-  inline void fatal_throttle(float period, const std::string &format, T... args) override { fatal(format); }
+  inline void fatal(const std::string &format, T... args) {_log(stderr, "FATAL", format, args...);}
+  inline void fatal_throttle(float period, const std::string &format, T... args) { fatal(format); }
 };
 
 private:
