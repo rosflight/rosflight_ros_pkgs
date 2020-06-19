@@ -53,6 +53,7 @@
 
 namespace mavrosflight
 {
+template<typename DerivedLogger>
 class MavROSflight
 {
 public:
@@ -61,7 +62,7 @@ public:
    * \param mavlink_comm Reference to a MavlinkComm object (serial or UDP)
    * \param baud_rate Serial communication baud rate
    */
-  MavROSflight(MavlinkComm& mavlink_comm, LoggerInterface& logger, uint8_t sysid = 1, uint8_t compid = 50);
+  MavROSflight(MavlinkComm& mavlink_comm, LoggerInterface<DerivedLogger>& logger, uint8_t sysid = 1, uint8_t compid = 50);
 
   /**
    * \brief Stops communication and closes the serial port before the object is destroyed
@@ -70,8 +71,8 @@ public:
 
   // public member objects
   MavlinkComm& comm;
-  ParamManager param;
-  TimeManager time;
+  ParamManager<DerivedLogger> param;
+  TimeManager<DerivedLogger> time;
 
 private:
   // member variables

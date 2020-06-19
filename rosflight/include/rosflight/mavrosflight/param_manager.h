@@ -53,10 +53,11 @@
 
 namespace mavrosflight
 {
+template<typename DerivedLogger>
 class ParamManager : public MavlinkListenerInterface
 {
 public:
-  ParamManager(MavlinkComm *const comm, LoggerInterface& logger);
+  ParamManager(MavlinkComm *const comm, LoggerInterface<DerivedLogger>& logger);
   ~ParamManager();
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
@@ -108,7 +109,7 @@ private:
   bool param_set_in_progress_;
   void param_set_timer_callback(const ros::TimerEvent &event);
 
-  LoggerInterface& logger_;
+  LoggerInterface<DerivedLogger>& logger_;
 };
 
 } // namespace mavrosflight
