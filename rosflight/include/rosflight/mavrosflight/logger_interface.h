@@ -39,7 +39,6 @@
 #define MAVROSFLIGHT_LOGGER_INTERFACE_H
 
 #include <sstream>
-#include <string>
 
 #include <stdio.h>
 
@@ -58,65 +57,65 @@ class LoggerInterface
 {
 public:
   template <typename... T>
-  void debug(const std::string& format, const T&... args)
+  void debug(const char* format, const T&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.debug(format, args...);
   }
   template <typename... T>
-  void debug_throttle(float period, const std::string& format, const T&... args)
+  void debug_throttle(float period, const char* format, const T&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.debug_throttle(period, format, args...);
   }
 
   template <typename... T>
-  void info(const std::string& format, const T&... args)
+  void info(const char* format, const T&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.info(format, args...);
   }
   template <typename... T>
-  void info_throttle(float period, const std::string& format, const T&... args)
+  void info_throttle(float period, const char* format, const T&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.info_throttle(period, format, args...);
   }
 
   template <typename... T>
-  void warn(const std::string& format, const T&... args)
+  void warn(const char* format, const T&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.warn(format, args...);
   }
   template <typename... T>
-  void warn_throttle(float period, const std::string& format, const T&... args)
+  void warn_throttle(float period, const char* format, const T&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.warn_throttle(period, format, args...);
   }
 
   template <typename... T>
-  void error(const std::string& format, const T&... args)
+  void error(const char* format, const T&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.error(format, args...);
   }
   template <typename... T>
-  void error_throttle(float period, const std::string& format, const T&... args)
+  void error_throttle(float period, const char* format, const T&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.error_throttle(period, format, args...);
   }
 
   template <typename... T>
-  void fatal(const std::string& format, const T&... args)
+  void fatal(const char* format, const T&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.fatal(format, args...);
   }
   template <typename... T>
-  void fatal_throttle(float period, const std::string& format, const T&... args)
+  void fatal_throttle(float period, const char* format, const T&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.fatal_throttle(period, format, args...);
@@ -131,63 +130,63 @@ class DefaultLogger : public LoggerInterface<DefaultLogger>
 {
 public:
   template <typename... T>
-  inline void debug(const std::string& format, const T&... args)
+  inline void debug(const char* format, const T&... args)
   {
     _log(stdout, "DEBUG", format, args...);
   }
   template <typename... T>
-  inline void debug_throttle(float period, const std::string& format, const T&... args)
+  inline void debug_throttle(float period, const char* format, const T&... args)
   {
     debug(format, args...);
   }
 
   template <typename... T>
-  inline void info(const std::string& format, const T&... args)
+  inline void info(const char* format, const T&... args)
   {
     _log(stdout, "INFO", format, args...);
   }
   template <typename... T>
-  inline void info_throttle(float period, const std::string& format, const T&... args)
+  inline void info_throttle(float period, const char* format, const T&... args)
   {
     info(format, args...);
   }
 
   template <typename... T>
-  inline void warn(const std::string& format, const T&... args)
+  inline void warn(const char* format, const T&... args)
   {
     _log(stderr, "WARN", format, args...);
   }
   template <typename... T>
-  inline void warn_throttle(float period, const std::string& format, const T&... args)
+  inline void warn_throttle(float period, const char* format, const T&... args)
   {
     warn(format, args...);
   }
 
   template <typename... T>
-  inline void error(const std::string& format, const T&... args)
+  inline void error(const char* format, const T&... args)
   {
     _log(stderr, "ERROR", format, args...);
   }
   template <typename... T>
-  inline void error_throttle(float period, const std::string& format, const T&... args)
+  inline void error_throttle(float period, const char* format, const T&... args)
   {
     error(format, args...);
   }
 
   template <typename... T>
-  inline void fatal(const std::string& format, const T&... args)
+  inline void fatal(const char* format, const T&... args)
   {
     _log(stderr, "FATAL", format, args...);
   }
   template <typename... T>
-  inline void fatal_throttle(float period, const std::string& format, const T&... args)
+  inline void fatal_throttle(float period, const char* format, const T&... args)
   {
     fatal(format, args...);
   }
 
 private:
   template <typename... T>
-  inline void _log(FILE* fs, const std::string& name, const std::string& format, const T&... args)
+  inline void _log(FILE* fs, const char* name, const char* format, const T&... args)
   {
     std::stringstream ss;
     ss << "[mavrosflight][" << name << "]: " << format << std::endl;
