@@ -38,6 +38,8 @@
 
 #if defined(USE_ROS)
 #include <rosflight/ros_logger.h>
+#elif defined(STANDALONE)
+#include <rosflight/mavrosflight/logger_interface.h>
 #endif
 
 namespace mavrosflight
@@ -137,6 +139,8 @@ void TimeManager<DerivedLogger>::timer_callback(const ros::TimerEvent &event)
 
 #if defined(USE_ROS)
 template class TimeManager<rosflight::ROSLogger>;
+#elif defined(STANDALONE)
+template class TimeManager<mavrosflight::DefaultLogger>;
 #endif
 
 } // namespace mavrosflight

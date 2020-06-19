@@ -38,6 +38,8 @@
 
 #if defined(USE_ROS)
 #include <rosflight/ros_logger.h>
+#elif defined(STANDALONE)
+#include <rosflight/mavrosflight/logger_interface.h>
 #endif
 
 #include <ros/ros.h>
@@ -66,6 +68,8 @@ MavROSflight<DerivedLogger>::~MavROSflight()
 
 #if defined(USE_ROS)
 template class MavROSflight<rosflight::ROSLogger>;
+#elif defined(STANDALONE)
+template class MavROSflight<mavrosflight::DefaultLogger>;
 #endif
 
 } // namespace mavrosflight
