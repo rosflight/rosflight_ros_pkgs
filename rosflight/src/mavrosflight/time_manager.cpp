@@ -72,8 +72,8 @@ void TimeManager<DerivedLogger>::handle_mavlink_message(const mavlink_message_t 
       if (!initialized_ || std::abs(offset_ns_ - offset_ns) > 1e7) // if difference > 10ms, use it directly
       {
         offset_ns_ = offset_ns;
-        ROS_INFO("Detected time offset of %0.3f s.", offset_ns / 1e9);
-        ROS_DEBUG("FCU time: %0.3f, System time: %0.3f", tsync.tc1 * 1e-9, tsync.ts1 * 1e-9);
+        logger_.info("Detected time offset of %0.3f s.", offset_ns / 1e9);
+        logger_.debug("FCU time: %0.3f, System time: %0.3f", tsync.tc1 * 1e-9, tsync.ts1 * 1e-9);
         initialized_ = true;
       }
       else // otherwise low-pass filter the offset
@@ -95,7 +95,7 @@ ros::Time TimeManager<DerivedLogger>::get_ros_time_ms(uint32_t boot_ms)
   int64_t ns = boot_ns + offset_ns_;
   if (ns < 0)
   {
-    ROS_ERROR_THROTTLE(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time", boot_ns,
+    logger_.error_throttle(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time", boot_ns,
                        offset_ns_);
     return ros::Time::now();
   }
@@ -115,7 +115,7 @@ ros::Time TimeManager<DerivedLogger>::get_ros_time_us(uint64_t boot_us)
   int64_t ns = boot_ns + offset_ns_;
   if (ns < 0)
   {
-    ROS_ERROR_THROTTLE(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time", boot_ns,
+    logger_.error_throttle(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time", boot_ns,
                        offset_ns_);
     return ros::Time::now();
   }

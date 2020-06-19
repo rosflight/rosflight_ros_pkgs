@@ -350,14 +350,14 @@ void ParamManager<DerivedLogger>::handle_command_ack_msg(const mavlink_message_t
       write_request_in_progress_ = false;
       if (ack.success == ROSFLIGHT_CMD_SUCCESS)
       {
-        ROS_INFO("Param write succeeded");
+        logger_.info("Param write succeeded");
         unsaved_changes_ = false;
 
         for (int i = 0; i < listeners_.size(); i++) listeners_[i]->on_params_saved_change(unsaved_changes_);
       }
       else
       {
-        ROS_INFO("Param write failed - maybe disarm the aricraft and try again?");
+        logger_.info("Param write failed - maybe disarm the aricraft and try again?");
         write_request_in_progress_ = false;
         unsaved_changes_ = true;
       }
