@@ -35,7 +35,10 @@
  */
 
 #include <rosflight/mavrosflight/time_manager.h>
+
+#if defined(USE_ROS)
 #include <rosflight/ros_logger.h>
+#endif
 
 namespace mavrosflight
 {
@@ -132,6 +135,8 @@ void TimeManager<DerivedLogger>::timer_callback(const ros::TimerEvent &event)
   comm_->send_message(msg);
 }
 
+#if defined(USE_ROS)
 template class TimeManager<rosflight::ROSLogger>;
+#endif
 
 } // namespace mavrosflight

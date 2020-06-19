@@ -36,8 +36,11 @@
 
 #include <ros/ros.h>
 #include <rosflight/mavrosflight/param_manager.h>
-#include <rosflight/ros_logger.h>
 #include <yaml-cpp/yaml.h>
+
+#if defined(USE_ROS)
+#include <rosflight/ros_logger.h>
+#endif
 
 #include <fstream>
 
@@ -411,6 +414,8 @@ void ParamManager<DerivedLogger>::param_set_timer_callback(const ros::TimerEvent
   }
 }
 
+#if defined(USE_ROS)
 template class ParamManager<rosflight::ROSLogger>;
+#endif
 
 } // namespace mavrosflight
