@@ -35,6 +35,7 @@
  */
 
 #include <rosflight/mavrosflight/mavrosflight.h>
+#include <rosflight/ros_logger.h>
 
 #include <ros/ros.h>
 
@@ -59,5 +60,7 @@ MavROSflight<DerivedLogger>::~MavROSflight()
 {
   comm.close();
 }
+
+template class MavROSflight<rosflight::ROSLogger>;
 
 } // namespace mavrosflight

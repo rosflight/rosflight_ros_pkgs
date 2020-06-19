@@ -36,6 +36,7 @@
 
 #include <ros/ros.h>
 #include <rosflight/mavrosflight/param_manager.h>
+#include <rosflight/ros_logger.h>
 #include <yaml-cpp/yaml.h>
 
 #include <fstream>
@@ -409,5 +410,7 @@ void ParamManager<DerivedLogger>::param_set_timer_callback(const ros::TimerEvent
     param_set_queue_.pop_front();
   }
 }
+
+template class ParamManager<rosflight::ROSLogger>;
 
 } // namespace mavrosflight

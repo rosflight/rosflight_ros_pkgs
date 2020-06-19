@@ -35,6 +35,7 @@
  */
 
 #include <rosflight/mavrosflight/time_manager.h>
+#include <rosflight/ros_logger.h>
 
 namespace mavrosflight
 {
@@ -130,5 +131,7 @@ void TimeManager<DerivedLogger>::timer_callback(const ros::TimerEvent &event)
   mavlink_msg_timesync_pack(1, 50, &msg, 0, ros::Time::now().toNSec());
   comm_->send_message(msg);
 }
+
+template class TimeManager<rosflight::ROSLogger>;
 
 } // namespace mavrosflight
