@@ -56,29 +56,29 @@ class LoggerROS : public mavrosflight::LoggerInterface<LoggerROS>
 {
 public:
   template <typename... T>
-  inline void debug(const std::string &format.c_str(), const T&... args) { ROS_DEBUG(format.c_str(), args...); }
+  inline void debug(const std::string &format, const T&... args) { ROS_DEBUG(format.c_str(), args...); }
   template <typename... T>
-  inline void debug_throttle(float period, const std::string &format.c_str(), const T&... args) { ROS_DEBUG_THROTTLE(period, format.c_str(), args...); }
+  inline void debug_throttle(float period, const std::string &format, const T&... args) { ROS_DEBUG_THROTTLE(period, format.c_str(), args...); }
 
   template <typename... T>
-  inline void info(const std::string &format.c_str(), const T&... args) { ROS_INFO(format.c_str(), args...); }
+  inline void info(const std::string &format, const T&... args) { ROS_INFO(format.c_str(), args...); }
   template <typename... T>
-  inline void info_throttle(float period, const std::string &format.c_str(), const T&... args) { ROS_INFO_THROTTLE(period, format.c_str(), args...); }
+  inline void info_throttle(float period, const std::string &format, const T&... args) { ROS_INFO_THROTTLE(period, format.c_str(), args...); }
 
   template <typename... T>
-  inline void warn(const std::string &format.c_str(), const T&... args) { ROS_WARN(format.c_str(), args...); }
+  inline void warn(const std::string &format, const T&... args) { ROS_WARN(format.c_str(), args...); }
   template <typename... T>
-  inline void warn_throttle(float period, const std::string &format.c_str(), const T&... args) { ROS_WARN_THROTTLE(period, format.c_str(), args...); }
+  inline void warn_throttle(float period, const std::string &format, const T&... args) { ROS_WARN_THROTTLE(period, format.c_str(), args...); }
 
   template <typename... T>
-  inline void error(const std::string &format.c_str(), const T&... args) { ROS_ERROR(format.c_str(), args...); }
+  inline void error(const std::string &format, const T&... args) { ROS_ERROR(format.c_str(), args...); }
   template <typename... T>
-  inline void error_throttle(float period, const std::string &format.c_str(), const T&... args) { ROS_ERROR_THROTTLE(period, format.c_str(), args...); }
+  inline void error_throttle(float period, const std::string &format, const T&... args) { ROS_ERROR_THROTTLE(period, format.c_str(), args...); }
 
   template <typename... T>
-  inline void fatal(const std::string &format.c_str(), const T&... args) { ROS_FATAL(format.c_str(), args...); }
+  inline void fatal(const std::string &format, const T&... args) { ROS_FATAL(format.c_str(), args...); }
   template <typename... T>
-  inline void fatal_throttle(float period, const std::string &format.c_str(), const T&... args) { ROS_FATAL_THROTTLE(period, format.c_str(), args...); }
+  inline void fatal_throttle(float period, const std::string &format, const T&... args) { ROS_FATAL_THROTTLE(period, format.c_str(), args...); }
 };
 
 } // namespace rosflight
