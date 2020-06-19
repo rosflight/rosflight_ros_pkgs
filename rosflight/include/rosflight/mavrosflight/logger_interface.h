@@ -68,7 +68,7 @@ public:
   void debug_throttle(float period, const std::string& format, const T&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
-    derived.debug_throttle(format, args...);
+    derived.debug_throttle(period, format, args...);
   }
 
   template <typename... T>
@@ -81,7 +81,7 @@ public:
   void info_throttle(float period, const std::string& format, const T&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
-    derived.info_throttle(format, args...);
+    derived.info_throttle(period, format, args...);
   }
 
   template <typename... T>
@@ -94,7 +94,7 @@ public:
   void warn_throttle(float period, const std::string& format, const T&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
-    derived.warn_throttle(format, args...);
+    derived.warn_throttle(period, format, args...);
   }
 
   template <typename... T>
@@ -107,7 +107,7 @@ public:
   void error_throttle(float period, const std::string& format, const T&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
-    derived.error_throttle(format, args...);
+    derived.error_throttle(period, format, args...);
   }
 
   template <typename... T>
@@ -120,7 +120,7 @@ public:
   void fatal_throttle(float period, const std::string& format, const T&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
-    derived.fatal_throttle(format, args...);
+    derived.fatal_throttle(period, format, args...);
   }
 };
 
