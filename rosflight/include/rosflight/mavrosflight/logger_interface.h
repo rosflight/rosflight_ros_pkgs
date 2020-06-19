@@ -155,7 +155,6 @@ public:
   inline void fatal(const std::string &format, const T&... args) {_log(stderr, "FATAL", format, args...);}
   template <typename... T>
   inline void fatal_throttle(float period, const std::string &format, const T&... args) { fatal(format); }
-};
 
 private:
   template <typename ... T>
@@ -163,9 +162,10 @@ private:
   {
     std::stringstream ss;
     ss << "[mavrosflight][" << name << "]: " << format << std::endl;
-    fprintf(fs, ss.str().c_str(), args);
+    fprintf(fs, ss.str().c_str(), args...);
   }
 
+};
 } // namespace mavrosflight
 
 #endif // MAVROSFLIGHT_LOGGER_INTERFACE_H
