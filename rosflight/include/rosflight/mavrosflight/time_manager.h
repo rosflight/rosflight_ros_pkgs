@@ -49,11 +49,11 @@
 
 namespace mavrosflight
 {
-template<typename DerivedLogger>
+template <typename DerivedLogger>
 class TimeManager : MavlinkListenerInterface
 {
 public:
-  TimeManager(MavlinkComm *comm, LoggerInterface<DerivedLogger>& logger);
+  TimeManager(MavlinkComm *comm, LoggerInterface<DerivedLogger> &logger);
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
 
@@ -72,7 +72,7 @@ private:
 
   bool initialized_;
 
-  LoggerInterface<DerivedLogger>& logger_;
+  LoggerInterface<DerivedLogger> &logger_;
 };
 
 } // namespace mavrosflight

@@ -39,10 +39,10 @@
 #define GIT_VERSION_STRING TOSTRING(ROSFLIGHT_VERSION)
 #endif
 
-#include <rosflight/ros_logger.h>
 #include <rosflight/mavrosflight/mavlink_serial.h>
 #include <rosflight/mavrosflight/mavlink_udp.h>
 #include <rosflight/mavrosflight/serial_exception.h>
+#include <rosflight/ros_logger.h>
 #include <tf/tf.h>
 #include <cstdint>
 #include <eigen3/Eigen/Core>

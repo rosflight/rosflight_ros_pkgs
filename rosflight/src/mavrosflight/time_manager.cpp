@@ -44,8 +44,8 @@
 
 namespace mavrosflight
 {
-template<typename DerivedLogger>
-TimeManager<DerivedLogger>::TimeManager(MavlinkComm *comm, LoggerInterface<DerivedLogger>& logger) :
+template <typename DerivedLogger>
+TimeManager<DerivedLogger>::TimeManager(MavlinkComm *comm, LoggerInterface<DerivedLogger> &logger) :
   comm_(comm),
   offset_alpha_(0.95),
   offset_ns_(0),
@@ -60,7 +60,7 @@ TimeManager<DerivedLogger>::TimeManager(MavlinkComm *comm, LoggerInterface<Deriv
   time_sync_timer_ = nh.createTimer(ros::Duration(ros::Rate(10)), &TimeManager::timer_callback, this);
 }
 
-template<typename DerivedLogger>
+template <typename DerivedLogger>
 void TimeManager<DerivedLogger>::handle_mavlink_message(const mavlink_message_t &msg)
 {
   int64_t now_ns = ros::Time::now().toNSec();
@@ -89,7 +89,7 @@ void TimeManager<DerivedLogger>::handle_mavlink_message(const mavlink_message_t 
   }
 }
 
-template<typename DerivedLogger>
+template <typename DerivedLogger>
 ros::Time TimeManager<DerivedLogger>::get_ros_time_ms(uint32_t boot_ms)
 {
   if (!initialized_)
@@ -100,8 +100,8 @@ ros::Time TimeManager<DerivedLogger>::get_ros_time_ms(uint32_t boot_ms)
   int64_t ns = boot_ns + offset_ns_;
   if (ns < 0)
   {
-    logger_.error_throttle(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time", boot_ns,
-                       offset_ns_);
+    logger_.error_throttle(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time",
+                           boot_ns, offset_ns_);
     return ros::Time::now();
   }
   ros::Time now;
@@ -109,7 +109,7 @@ ros::Time TimeManager<DerivedLogger>::get_ros_time_ms(uint32_t boot_ms)
   return now;
 }
 
-template<typename DerivedLogger>
+template <typename DerivedLogger>
 ros::Time TimeManager<DerivedLogger>::get_ros_time_us(uint64_t boot_us)
 {
   if (!initialized_)
@@ -120,8 +120,8 @@ ros::Time TimeManager<DerivedLogger>::get_ros_time_us(uint64_t boot_us)
   int64_t ns = boot_ns + offset_ns_;
   if (ns < 0)
   {
-    logger_.error_throttle(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time", boot_ns,
-                       offset_ns_);
+    logger_.error_throttle(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time",
+                           boot_ns, offset_ns_);
     return ros::Time::now();
   }
   ros::Time now;
@@ -129,7 +129,7 @@ ros::Time TimeManager<DerivedLogger>::get_ros_time_us(uint64_t boot_us)
   return now;
 }
 
-template<typename DerivedLogger>
+template <typename DerivedLogger>
 void TimeManager<DerivedLogger>::timer_callback(const ros::TimerEvent &event)
 {
   mavlink_message_t msg;

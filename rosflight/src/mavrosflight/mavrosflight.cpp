@@ -48,8 +48,11 @@ namespace mavrosflight
 {
 using boost::asio::serial_port_base;
 
-template<typename DerivedLogger>
-MavROSflight<DerivedLogger>::MavROSflight(MavlinkComm &mavlink_comm, LoggerInterface<DerivedLogger> &logger, uint8_t sysid /* = 1 */, uint8_t compid /* = 50 */) :
+template <typename DerivedLogger>
+MavROSflight<DerivedLogger>::MavROSflight(MavlinkComm &mavlink_comm,
+                                          LoggerInterface<DerivedLogger> &logger,
+                                          uint8_t sysid /* = 1 */,
+                                          uint8_t compid /* = 50 */) :
   comm(mavlink_comm),
   param(&comm, logger),
   time(&comm, logger),
@@ -60,7 +63,7 @@ MavROSflight<DerivedLogger>::MavROSflight(MavlinkComm &mavlink_comm, LoggerInter
   // comm.open();
 }
 
-template<typename DerivedLogger>
+template <typename DerivedLogger>
 MavROSflight<DerivedLogger>::~MavROSflight()
 {
   comm.close();
