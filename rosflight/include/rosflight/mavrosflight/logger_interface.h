@@ -138,7 +138,7 @@ public:
   template <typename... T>
   inline void debug_throttle(float period, const std::string& format, const T&... args)
   {
-    debug(format);
+    debug(format, args...);
   }
 
   template <typename... T>
@@ -149,7 +149,7 @@ public:
   template <typename... T>
   inline void info_throttle(float period, const std::string& format, const T&... args)
   {
-    info(format);
+    info(format, args...);
   }
 
   template <typename... T>
@@ -160,7 +160,7 @@ public:
   template <typename... T>
   inline void warn_throttle(float period, const std::string& format, const T&... args)
   {
-    warn(format);
+    warn(format, args...);
   }
 
   template <typename... T>
@@ -171,7 +171,7 @@ public:
   template <typename... T>
   inline void error_throttle(float period, const std::string& format, const T&... args)
   {
-    error(format);
+    error(format, args...);
   }
 
   template <typename... T>
@@ -182,7 +182,7 @@ public:
   template <typename... T>
   inline void fatal_throttle(float period, const std::string& format, const T&... args)
   {
-    fatal(format);
+    fatal(format, args...);
   }
 
 private:
