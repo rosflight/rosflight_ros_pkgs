@@ -31,12 +31,12 @@
  */
 
 /**
- * @file logger_ros.h
+ * @file ros_logger.h
  * @author Daniel Koch <danielpkoch@gmail.com>
  */
 
-#ifndef ROSFLIGHT_LOGGER_ROS_H
-#define ROSFLIGHT_LOGGER_ROS_H
+#ifndef ROSFLIGHT_ROS_LOGGER_H
+#define ROSFLIGHT_ROS_LOGGER_H
 
 #include <rosflight/mavrosflight/logger_interface.h>
 
@@ -46,13 +46,13 @@ namespace rosflight
 {
 
 /**
- * @class LoggerROS
+ * @class ROSLogger
  * @brief Logger implementation for ROS environments
  *
  * This is a convenience logger implementation for ROS-based projects.
  * The implementation simply forwards messages to the appropriate rosconsole loggers.
  */
-class LoggerROS : public mavrosflight::LoggerInterface<LoggerROS>
+class ROSLogger : public mavrosflight::LoggerInterface<ROSLogger>
 {
 public:
   template <typename... T>
@@ -83,4 +83,4 @@ public:
 
 } // namespace rosflight
 
-#endif // ROSFLIGHT_LOGGER_ROS_H
+#endif // ROSFLIGHT_ROS_LOGGER_H
