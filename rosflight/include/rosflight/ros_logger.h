@@ -55,56 +55,56 @@ class ROSLogger : public mavrosflight::LoggerInterface<ROSLogger>
 {
 public:
   template <typename... T>
-  inline void debug(const char* format, const T &... args)
+  inline void debug(const char* format, const T&... args)
   {
     ROS_DEBUG(format, args...);
   }
   template <typename... T>
-  inline void debug_throttle(float period, const char* format, const T &... args)
+  inline void debug_throttle(float period, const char* format, const T&... args)
   {
     ROS_DEBUG_THROTTLE(period, format, args...);
   }
 
   template <typename... T>
-  inline void info(const char* format, const T &... args)
+  inline void info(const char* format, const T&... args)
   {
     ROS_INFO(format, args...);
   }
   template <typename... T>
-  inline void info_throttle(float period, const char* format, const T &... args)
+  inline void info_throttle(float period, const char* format, const T&... args)
   {
     ROS_INFO_THROTTLE(period, format, args...);
   }
 
   template <typename... T>
-  inline void warn(const char* format, const T &... args)
+  inline void warn(const char* format, const T&... args)
   {
     ROS_WARN(format, args...);
   }
   template <typename... T>
-  inline void warn_throttle(float period, const char* format, const T &... args)
+  inline void warn_throttle(float period, const char* format, const T&... args)
   {
     ROS_WARN_THROTTLE(period, format, args...);
   }
 
   template <typename... T>
-  inline void error(const char* format, const T &... args)
+  inline void error(const char* format, const T&... args)
   {
     ROS_ERROR(format, args...);
   }
   template <typename... T>
-  inline void error_throttle(float period, const char* format, const T &... args)
+  inline void error_throttle(float period, const char* format, const T&... args)
   {
     ROS_ERROR_THROTTLE(period, format, args...);
   }
 
   template <typename... T>
-  inline void fatal(const char* format, const T &... args)
+  inline void fatal(const char* format, const T&... args)
   {
     ROS_FATAL(format, args...);
   }
   template <typename... T>
-  inline void fatal_throttle(float period, const char* format, const T &... args)
+  inline void fatal_throttle(float period, const char* format, const T&... args)
   {
     ROS_FATAL_THROTTLE(period, format, args...);
   }
