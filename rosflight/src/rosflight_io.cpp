@@ -39,6 +39,7 @@
 #define GIT_VERSION_STRING TOSTRING(ROSFLIGHT_VERSION)
 #endif
 
+#include <rosflight/ros_logger.h>
 #include <rosflight/mavrosflight/mavlink_serial.h>
 #include <rosflight/mavrosflight/mavlink_udp.h>
 #include <rosflight/mavrosflight/serial_exception.h>
@@ -101,7 +102,8 @@ rosflightIO::rosflightIO()
   try
   {
     mavlink_comm_->open(); //! \todo move this into the MavROSflight constructor
-    mavrosflight_ = new mavrosflight::MavROSflight(*mavlink_comm_);
+    rosflight::ROSLogger logger;
+    mavrosflight_ = new mavrosflight::MavROSflight<rosflight::ROSLogger>(*mavlink_comm_, logger);
   }
   catch (mavrosflight::SerialException e)
   {
