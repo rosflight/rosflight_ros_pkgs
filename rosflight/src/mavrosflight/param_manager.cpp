@@ -420,6 +420,8 @@ void ParamManager<DerivedLogger>::param_set_timer_callback(const ros::TimerEvent
 template class ParamManager<rosflight::ROSLogger>;
 #elif defined(STANDALONE)
 template class ParamManager<mavrosflight::DefaultLogger>;
+#else
+#error Unknown logging backend supplied for mavrosflight. Define USE_ROS or STANDALONE.
 #endif
 
 } // namespace mavrosflight

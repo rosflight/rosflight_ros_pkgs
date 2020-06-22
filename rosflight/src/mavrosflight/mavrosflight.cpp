@@ -73,6 +73,8 @@ MavROSflight<DerivedLogger>::~MavROSflight()
 template class MavROSflight<rosflight::ROSLogger>;
 #elif defined(STANDALONE)
 template class MavROSflight<mavrosflight::DefaultLogger>;
+#else
+#error Unknown logging backend supplied for mavrosflight. Define USE_ROS or STANDALONE.
 #endif
 
 } // namespace mavrosflight

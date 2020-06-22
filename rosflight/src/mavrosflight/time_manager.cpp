@@ -141,6 +141,8 @@ void TimeManager<DerivedLogger>::timer_callback(const ros::TimerEvent &event)
 template class TimeManager<rosflight::ROSLogger>;
 #elif defined(STANDALONE)
 template class TimeManager<mavrosflight::DefaultLogger>;
+#else
+#error Unknown logging backend supplied for mavrosflight. Define USE_ROS or STANDALONE.
 #endif
 
 } // namespace mavrosflight
