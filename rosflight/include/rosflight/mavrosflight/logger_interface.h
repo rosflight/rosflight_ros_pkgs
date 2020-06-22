@@ -1,7 +1,7 @@
 /*
  * Software License Agreement (BSD-3 License)
  *
- * Copyright (c) 2018 Daniel Koch.
+ * Copyright (c) 2020 Jacob Willis.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 
 /**
  * @file logger_interface.h
- * @author Daniel Koch <danielpkoch@gmail.com>
+ * @author Jacob Willis <jbwillis272@gmail.com>
  */
 
 #ifndef MAVROSFLIGHT_LOGGER_INTERFACE_H
