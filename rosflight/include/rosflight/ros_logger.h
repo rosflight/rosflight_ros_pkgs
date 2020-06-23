@@ -57,86 +57,86 @@ public:
   template <typename... T>
   inline void debug(const char* format, const T&... args)
   {
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wformat-security"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
     ROS_DEBUG(format, args...);
-    #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
   }
   template <typename... T>
   inline void debug_throttle(float period, const char* format, const T&... args)
   {
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wformat-security"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
     ROS_DEBUG_THROTTLE(period, format, args...);
-    #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
   }
 
   template <typename... T>
   inline void info(const char* format, const T&... args)
   {
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wformat-security"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
     ROS_INFO(format, args...);
-    #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
   }
   template <typename... T>
   inline void info_throttle(float period, const char* format, const T&... args)
   {
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wformat-security"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
     ROS_INFO_THROTTLE(period, format, args...);
-    #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
   }
 
   template <typename... T>
   inline void warn(const char* format, const T&... args)
   {
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wformat-security"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
     ROS_WARN(format, args...);
-    #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
   }
   template <typename... T>
   inline void warn_throttle(float period, const char* format, const T&... args)
   {
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wformat-security"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
     ROS_WARN_THROTTLE(period, format, args...);
-    #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
   }
 
   template <typename... T>
   inline void error(const char* format, const T&... args)
   {
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wformat-security"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
     ROS_ERROR(format, args...);
-    #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
   }
   template <typename... T>
   inline void error_throttle(float period, const char* format, const T&... args)
   {
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wformat-security"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
     ROS_ERROR_THROTTLE(period, format, args...);
-    #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
   }
 
   template <typename... T>
   inline void fatal(const char* format, const T&... args)
   {
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wformat-security"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
     ROS_FATAL(format, args...);
-    #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
   }
   template <typename... T>
   inline void fatal_throttle(float period, const char* format, const T&... args)
   {
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wformat-security"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
     ROS_FATAL_THROTTLE(period, format, args...);
-    #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
   }
 };
 
