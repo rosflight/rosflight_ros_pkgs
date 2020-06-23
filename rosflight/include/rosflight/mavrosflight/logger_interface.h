@@ -190,7 +190,11 @@ private:
   {
     std::stringstream ss;
     ss << "[mavrosflight][" << name << "]: " << format << std::endl;
+
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wformat-security"
     fprintf(fs, ss.str().c_str(), args...);
+    #pragma GCC diagnostic pop
   }
 };
 } // namespace mavrosflight
