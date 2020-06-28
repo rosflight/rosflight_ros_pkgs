@@ -11,7 +11,9 @@ FailsafeMultiplexer::FailsafeMultiplexer()
   command_pub_ = node_handle_.advertise<rosflight_msgs::Command>("command", 1);
   status_sub_ = node_handle_.subscribe("status", 1, &FailsafeMultiplexer::status_cb, this);
   normal_command_sub_ = node_handle_.subscribe("normal_command", 1, &FailsafeMultiplexer::normal_command_cb, this);
-  failsafe_command_sub_ = node_handle_.subscribe("failsafe_command", 1, &FailsafeMultiplexer::failsafe_command_cb, this);
+  failsafe_command_sub_ =
+      node_handle_.subscribe("failsafe_command", 1, &FailsafeMultiplexer::failsafe_command_cb, this);
+  node_handle_.advertiseService("set_force_failsafe", &FailsafeMultiplexer::failsafe_force_service_cb, this);
 }
 
 void FailsafeMultiplexer::status_cb(const rosflight_msgs::Status &status)
@@ -21,19 +23,44 @@ void FailsafeMultiplexer::status_cb(const rosflight_msgs::Status &status)
 
 void FailsafeMultiplexer::normal_command_cb(const rosflight_msgs::Command &command)
 {
-  if(!in_failsafe_)
+  if (!do_failsafe())
+  {
     command_pub_.publish(command);
+  }
 }
 
 void FailsafeMultiplexer::failsafe_command_cb(const rosflight_msgs::Command &command)
 {
-  if(in_failsafe_)
+  if (do_failsafe())
+  {
     command_pub_.publish(command);
+  }
 }
 
 bool FailsafeMultiplexer::failsafe_force_service_cb(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &resp)
 {
-  return false;
+  if (force_failsafe_)
+  {
+    if (req.data)
+    {
+      resp.message = "Forced failsafe is already enabled.";
+    }
+    else
+    {
+      resp.message = "Forced failsafe disabled.";
+    }
+  }
+  else if (req.data)
+  {
+    resp.message = "Forced failsafe enabled.";
+  }
+  else
+  {
+    resp.message = "Forced failsafe already disabled.";
+  }
+  force_failsafe_ = req.data;
+  resp.success = true;
+  return true;
 }
 } // failsafe_multiplexer
 
