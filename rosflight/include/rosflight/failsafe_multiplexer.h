@@ -29,6 +29,7 @@ private:
   ros::Subscriber status_sub_;
   ros::Subscriber failsafe_command_sub_;
   ros::Subscriber normal_command_sub_;
+  ros::ServiceServer set_force_failsafe_service_server_;
 
   inline bool do_failsafe(){return in_failsafe_ || force_failsafe_;}
   bool in_failsafe_{ false };

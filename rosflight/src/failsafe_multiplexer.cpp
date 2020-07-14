@@ -13,7 +13,7 @@ FailsafeMultiplexer::FailsafeMultiplexer()
   normal_command_sub_ = node_handle_.subscribe("normal_command", 1, &FailsafeMultiplexer::normal_command_cb, this);
   failsafe_command_sub_ =
       node_handle_.subscribe("failsafe_command", 1, &FailsafeMultiplexer::failsafe_command_cb, this);
-  node_handle_.advertiseService("set_force_failsafe", &FailsafeMultiplexer::failsafe_force_service_cb, this);
+  set_force_failsafe_service_server_ = node_handle_.advertiseService("set_force_failsafe", &FailsafeMultiplexer::failsafe_force_service_cb, this);
 }
 
 void FailsafeMultiplexer::status_cb(const rosflight_msgs::Status &status)
