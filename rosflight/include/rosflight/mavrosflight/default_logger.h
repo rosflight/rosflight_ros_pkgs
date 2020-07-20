@@ -35,88 +35,92 @@
  * @author Jacob Willis <jbwillis272@gmail.com>
  */
 
-#ifndef MAVROSFLIGHT_LOGGER_INTERFACE_H
-#define MAVROSFLIGHT_LOGGER_INTERFACE_H
+#ifndef MAVROSFLIGHT_DEFAULT_LOGGER_H
+#define MAVROSFLIGHT_DEFAULT_LOGGER_H
+
+#include <cstdio>
+#include <sstream>
+
+#include <rosflight/mavrosflight/logger_interface.h>
 
 namespace mavrosflight
 {
 /**
- * \class LoggerInterface
- * \brief Abstract base class for message handler
- *
- * The implementations of this class define how messages are displayed, logged,
- * etc. To create custom behavior, a derived class should implement each of the
- * public functions.
+ * \class DefaultLogger
+ * \brief Default logger that outputs to stdout and stderr. Throttling
+ *  is ignored to reduce timing complexity.
  */
-template <typename Derived>
-class LoggerInterface
+class DefaultLogger : public LoggerInterface<DefaultLogger>
 {
 public:
   template <typename... T>
-  void debug(const char* format, const T&... args)
+  inline void debug(const char* format, const T&... args)
   {
-    Derived& derived = static_cast<Derived&>(*this);
-    derived.debug(format, args...);
+    _log(stdout, "DEBUG", format, args...);
   }
   template <typename... T>
-  void debug_throttle(float period, const char* format, const T&... args)
+  inline void debug_throttle(float period, const char* format, const T&... args)
   {
-    Derived& derived = static_cast<Derived&>(*this);
-    derived.debug_throttle(period, format, args...);
+    debug(format, args...);
   }
 
   template <typename... T>
-  void info(const char* format, const T&... args)
+  inline void info(const char* format, const T&... args)
   {
-    Derived& derived = static_cast<Derived&>(*this);
-    derived.info(format, args...);
+    _log(stdout, "INFO", format, args...);
   }
   template <typename... T>
-  void info_throttle(float period, const char* format, const T&... args)
+  inline void info_throttle(float period, const char* format, const T&... args)
   {
-    Derived& derived = static_cast<Derived&>(*this);
-    derived.info_throttle(period, format, args...);
+    info(format, args...);
   }
 
   template <typename... T>
-  void warn(const char* format, const T&... args)
+  inline void warn(const char* format, const T&... args)
   {
-    Derived& derived = static_cast<Derived&>(*this);
-    derived.warn(format, args...);
+    _log(stderr, "WARN", format, args...);
   }
   template <typename... T>
-  void warn_throttle(float period, const char* format, const T&... args)
+  inline void warn_throttle(float period, const char* format, const T&... args)
   {
-    Derived& derived = static_cast<Derived&>(*this);
-    derived.warn_throttle(period, format, args...);
+    warn(format, args...);
   }
 
   template <typename... T>
-  void error(const char* format, const T&... args)
+  inline void error(const char* format, const T&... args)
   {
-    Derived& derived = static_cast<Derived&>(*this);
-    derived.error(format, args...);
+    _log(stderr, "ERROR", format, args...);
   }
   template <typename... T>
-  void error_throttle(float period, const char* format, const T&... args)
+  inline void error_throttle(float period, const char* format, const T&... args)
   {
-    Derived& derived = static_cast<Derived&>(*this);
-    derived.error_throttle(period, format, args...);
+    error(format, args...);
   }
 
   template <typename... T>
-  void fatal(const char* format, const T&... args)
+  inline void fatal(const char* format, const T&... args)
   {
-    Derived& derived = static_cast<Derived&>(*this);
-    derived.fatal(format, args...);
+    _log(stderr, "FATAL", format, args...);
   }
   template <typename... T>
-  void fatal_throttle(float period, const char* format, const T&... args)
+  inline void fatal_throttle(float period, const char* format, const T&... args)
   {
-    Derived& derived = static_cast<Derived&>(*this);
-    derived.fatal_throttle(period, format, args...);
+    fatal(format, args...);
+  }
+
+private:
+  template <typename... T>
+  inline void _log(FILE* fs, const char* name, const char* format, const T&... args)
+  {
+    std::stringstream ss;
+    ss << "[mavrosflight][" << name << "]: " << format << std::endl;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
+    fprintf(fs, ss.str().c_str(), args...);
+#pragma GCC diagnostic pop
   }
 };
 
 } // namespace mavrosflight
-#endif // MAVROSFLIGHT_LOGGER_INTERFACE_H
+#endif // MAVROSFLIGHT_DEFAULT_LOGGER_H

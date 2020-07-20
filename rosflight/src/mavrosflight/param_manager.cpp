@@ -41,6 +41,7 @@
 #if defined(USE_ROS)
 #include <rosflight/ros_logger.h>
 #elif defined(STANDALONE)
+#include <rosflight/mavrosflight/default_logger.h>
 #include <rosflight/mavrosflight/logger_interface.h>
 #endif
 
