@@ -52,66 +52,66 @@ template <typename Derived>
 class LoggerInterface
 {
 public:
-  template <typename... T>
-  void debug(const char* format, const T&... args)
+  template <typename... Args>
+  void debug(const char* format, const Args&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.debug(format, args...);
   }
-  template <typename... T>
-  void debug_throttle(float period, const char* format, const T&... args)
+  template <typename... Args>
+  void debug_throttle(float period, const char* format, const Args&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.debug_throttle(period, format, args...);
   }
 
-  template <typename... T>
-  void info(const char* format, const T&... args)
+  template <typename... Args>
+  void info(const char* format, const Args&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.info(format, args...);
   }
-  template <typename... T>
-  void info_throttle(float period, const char* format, const T&... args)
+  template <typename... Args>
+  void info_throttle(float period, const char* format, const Args&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.info_throttle(period, format, args...);
   }
 
-  template <typename... T>
-  void warn(const char* format, const T&... args)
+  template <typename... Args>
+  void warn(const char* format, const Args&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.warn(format, args...);
   }
-  template <typename... T>
-  void warn_throttle(float period, const char* format, const T&... args)
+  template <typename... Args>
+  void warn_throttle(float period, const char* format, const Args&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.warn_throttle(period, format, args...);
   }
 
-  template <typename... T>
-  void error(const char* format, const T&... args)
+  template <typename... Args>
+  void error(const char* format, const Args&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.error(format, args...);
   }
-  template <typename... T>
-  void error_throttle(float period, const char* format, const T&... args)
+  template <typename... Args>
+  void error_throttle(float period, const char* format, const Args&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.error_throttle(period, format, args...);
   }
 
-  template <typename... T>
-  void fatal(const char* format, const T&... args)
+  template <typename... Args>
+  void fatal(const char* format, const Args&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.fatal(format, args...);
   }
-  template <typename... T>
-  void fatal_throttle(float period, const char* format, const T&... args)
+  template <typename... Args>
+  void fatal_throttle(float period, const char* format, const Args&... args)
   {
     Derived& derived = static_cast<Derived&>(*this);
     derived.fatal_throttle(period, format, args...);

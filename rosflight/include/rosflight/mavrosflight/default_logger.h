@@ -53,64 +53,64 @@ namespace mavrosflight
 class DefaultLogger : public LoggerInterface<DefaultLogger>
 {
 public:
-  template <typename... T>
-  inline void debug(const char* format, const T&... args)
+  template <typename... Args>
+  inline void debug(const char* format, const Args&... args)
   {
     _log(stdout, "DEBUG", format, args...);
   }
-  template <typename... T>
-  inline void debug_throttle(float period, const char* format, const T&... args)
+  template <typename... Args>
+  inline void debug_throttle(float period, const char* format, const Args&... args)
   {
     debug(format, args...);
   }
 
-  template <typename... T>
-  inline void info(const char* format, const T&... args)
+  template <typename... Args>
+  inline void info(const char* format, const Args&... args)
   {
     _log(stdout, "INFO", format, args...);
   }
-  template <typename... T>
-  inline void info_throttle(float period, const char* format, const T&... args)
+  template <typename... Args>
+  inline void info_throttle(float period, const char* format, const Args&... args)
   {
     info(format, args...);
   }
 
-  template <typename... T>
-  inline void warn(const char* format, const T&... args)
+  template <typename... Args>
+  inline void warn(const char* format, const Args&... args)
   {
     _log(stderr, "WARN", format, args...);
   }
-  template <typename... T>
-  inline void warn_throttle(float period, const char* format, const T&... args)
+  template <typename... Args>
+  inline void warn_throttle(float period, const char* format, const Args&... args)
   {
     warn(format, args...);
   }
 
-  template <typename... T>
-  inline void error(const char* format, const T&... args)
+  template <typename... Args>
+  inline void error(const char* format, const Args&... args)
   {
     _log(stderr, "ERROR", format, args...);
   }
-  template <typename... T>
-  inline void error_throttle(float period, const char* format, const T&... args)
+  template <typename... Args>
+  inline void error_throttle(float period, const char* format, const Args&... args)
   {
     error(format, args...);
   }
 
-  template <typename... T>
-  inline void fatal(const char* format, const T&... args)
+  template <typename... Args>
+  inline void fatal(const char* format, const Args&... args)
   {
     _log(stderr, "FATAL", format, args...);
   }
-  template <typename... T>
-  inline void fatal_throttle(float period, const char* format, const T&... args)
+  template <typename... Args>
+  inline void fatal_throttle(float period, const char* format, const Args&... args)
   {
     fatal(format, args...);
   }
 
 private:
-  template <typename... T>
-  inline void _log(FILE* fs, const char* name, const char* format, const T&... args)
+  template <typename... Args>
+  inline void _log(FILE* fs, const char* name, const char* format, const Args&... args)
   {
     std::stringstream ss;
     ss << "[mavrosflight][" << name << "]: " << format << std::endl;
