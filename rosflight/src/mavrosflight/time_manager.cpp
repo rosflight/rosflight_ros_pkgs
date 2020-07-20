@@ -34,14 +34,9 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#include <rosflight/mavrosflight/time_manager.h>
-
-#if defined(USE_ROS)
-#include <rosflight/ros_logger.h>
-#elif defined(STANDALONE)
-#include <rosflight/mavrosflight/default_logger.h>
+#include <rosflight/mavrosflight/logger_adapter.h>
 #include <rosflight/mavrosflight/logger_interface.h>
-#endif
+#include <rosflight/mavrosflight/time_manager.h>
 
 namespace mavrosflight
 {
@@ -138,10 +133,6 @@ void TimeManager<DerivedLogger>::timer_callback(const ros::TimerEvent &event)
   comm_->send_message(msg);
 }
 
-#if defined(USE_ROS)
-template class TimeManager<rosflight::ROSLogger>;
-#elif defined(STANDALONE)
-template class TimeManager<mavrosflight::DefaultLogger>;
-#endif
+template class TimeManager<DerivedLoggerType>;
 
 } // namespace mavrosflight

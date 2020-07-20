@@ -34,14 +34,9 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#include <rosflight/mavrosflight/mavrosflight.h>
-
-#if defined(USE_ROS)
-#include <rosflight/ros_logger.h>
-#elif defined(STANDALONE)
-#include <rosflight/mavrosflight/default_logger.h>
+#include <rosflight/mavrosflight/logger_adapter.h>
 #include <rosflight/mavrosflight/logger_interface.h>
-#endif
+#include <rosflight/mavrosflight/mavrosflight.h>
 
 #include <ros/ros.h>
 
@@ -70,12 +65,6 @@ MavROSflight<DerivedLogger>::~MavROSflight()
   comm.close();
 }
 
-#if defined(USE_ROS)
-template class MavROSflight<rosflight::ROSLogger>;
-#elif defined(STANDALONE)
-template class MavROSflight<mavrosflight::DefaultLogger>;
-#else
-#error Unknown logging backend supplied for mavrosflight. Define USE_ROS or STANDALONE.
-#endif
+template class MavROSflight<DerivedLoggerType>;
 
 } // namespace mavrosflight
