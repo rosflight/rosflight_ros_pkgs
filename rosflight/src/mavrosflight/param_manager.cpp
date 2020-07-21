@@ -35,6 +35,8 @@
  */
 
 #include <ros/ros.h>
+#include <rosflight/mavrosflight/logger_adapter.h>
+#include <rosflight/mavrosflight/logger_interface.h>
 #include <rosflight/mavrosflight/param_manager.h>
 #include <yaml-cpp/yaml.h>
 
@@ -42,14 +44,16 @@
 
 namespace mavrosflight
 {
-ParamManager::ParamManager(MavlinkComm *const comm) :
+template <typename DerivedLogger>
+ParamManager<DerivedLogger>::ParamManager(MavlinkComm *const comm, LoggerInterface<DerivedLogger> &logger) :
   comm_(comm),
   unsaved_changes_(false),
   write_request_in_progress_(false),
   first_param_received_(false),
   received_count_(0),
   got_all_params_(false),
-  param_set_in_progress_(false)
+  param_set_in_progress_(false),
+  logger_(logger)
 {
   comm_->register_mavlink_listener(this);
 
@@ -58,7 +62,8 @@ ParamManager::ParamManager(MavlinkComm *const comm) :
                                      false /* not autostart */);
 }
 
-ParamManager::~ParamManager()
+template <typename DerivedLogger>
+ParamManager<DerivedLogger>::~ParamManager()
 {
   if (first_param_received_)
   {
@@ -66,7 +71,8 @@ ParamManager::~ParamManager()
   }
 }
 
-void ParamManager::handle_mavlink_message(const mavlink_message_t &msg)
+template <typename DerivedLogger>
+void ParamManager<DerivedLogger>::handle_mavlink_message(const mavlink_message_t &msg)
 {
   switch (msg.msgid)
   {
@@ -79,12 +85,14 @@ void ParamManager::handle_mavlink_message(const mavlink_message_t &msg)
   }
 }
 
-bool ParamManager::unsaved_changes()
+template <typename DerivedLogger>
+bool ParamManager<DerivedLogger>::unsaved_changes()
 {
   return unsaved_changes_;
 }
 
-bool ParamManager::get_param_value(std::string name, double *value)
+template <typename DerivedLogger>
+bool ParamManager<DerivedLogger>::get_param_value(std::string name, double *value)
 {
   if (is_param_id(name))
   {
@@ -98,7 +106,8 @@ bool ParamManager::get_param_value(std::string name, double *value)
   }
 }
 
-bool ParamManager::set_param_value(std::string name, double value)
+template <typename DerivedLogger>
+bool ParamManager<DerivedLogger>::set_param_value(std::string name, double value)
 {
   if (is_param_id(name))
   {
@@ -120,7 +129,8 @@ bool ParamManager::set_param_value(std::string name, double value)
   }
 }
 
-bool ParamManager::write_params()
+template <typename DerivedLogger>
+bool ParamManager<DerivedLogger>::write_params()
 {
   if (!write_request_in_progress_)
   {
@@ -139,7 +149,8 @@ bool ParamManager::write_params()
   }
 }
 
-void ParamManager::register_param_listener(ParamListenerInterface *listener)
+template <typename DerivedLogger>
+void ParamManager<DerivedLogger>::register_param_listener(ParamListenerInterface *listener)
 {
   if (listener == NULL)
     return;
@@ -158,7 +169,8 @@ void ParamManager::register_param_listener(ParamListenerInterface *listener)
     listeners_.push_back(listener);
 }
 
-void ParamManager::unregister_param_listener(ParamListenerInterface *listener)
+template <typename DerivedLogger>
+void ParamManager<DerivedLogger>::unregister_param_listener(ParamListenerInterface *listener)
 {
   if (listener == NULL)
     return;
@@ -173,7 +185,8 @@ void ParamManager::unregister_param_listener(ParamListenerInterface *listener)
   }
 }
 
-bool ParamManager::save_to_file(std::string filename)
+template <typename DerivedLogger>
+bool ParamManager<DerivedLogger>::save_to_file(std::string filename)
 {
   // build YAML document
   YAML::Emitter yaml;
@@ -206,7 +219,8 @@ bool ParamManager::save_to_file(std::string filename)
   return true;
 }
 
-bool ParamManager::load_from_file(std::string filename)
+template <typename DerivedLogger>
+bool ParamManager<DerivedLogger>::load_from_file(std::string filename)
 {
   try
   {
@@ -236,7 +250,8 @@ bool ParamManager::load_from_file(std::string filename)
   }
 }
 
-void ParamManager::request_params()
+template <typename DerivedLogger>
+void ParamManager<DerivedLogger>::request_params()
 {
   if (!first_param_received_)
   {
@@ -254,14 +269,16 @@ void ParamManager::request_params()
   }
 }
 
-void ParamManager::request_param_list()
+template <typename DerivedLogger>
+void ParamManager<DerivedLogger>::request_param_list()
 {
   mavlink_message_t param_list_msg;
   mavlink_msg_param_request_list_pack(1, 50, &param_list_msg, 1, MAV_COMP_ID_ALL);
   comm_->send_message(param_list_msg);
 }
 
-void ParamManager::request_param(int index)
+template <typename DerivedLogger>
+void ParamManager<DerivedLogger>::request_param(int index)
 {
   mavlink_message_t param_request_msg;
   char empty[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
@@ -269,7 +286,8 @@ void ParamManager::request_param(int index)
   comm_->send_message(param_request_msg);
 }
 
-void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
+template <typename DerivedLogger>
+void ParamManager<DerivedLogger>::handle_param_value_msg(const mavlink_message_t &msg)
 {
   mavlink_param_value_t param;
   mavlink_msg_param_value_decode(&msg, &param);
@@ -320,7 +338,8 @@ void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
   }
 }
 
-void ParamManager::handle_command_ack_msg(const mavlink_message_t &msg)
+template <typename DerivedLogger>
+void ParamManager<DerivedLogger>::handle_command_ack_msg(const mavlink_message_t &msg)
 {
   if (write_request_in_progress_)
   {
@@ -332,14 +351,14 @@ void ParamManager::handle_command_ack_msg(const mavlink_message_t &msg)
       write_request_in_progress_ = false;
       if (ack.success == ROSFLIGHT_CMD_SUCCESS)
       {
-        ROS_INFO("Param write succeeded");
+        logger_.info("Param write succeeded");
         unsaved_changes_ = false;
 
         for (int i = 0; i < listeners_.size(); i++) listeners_[i]->on_params_saved_change(unsaved_changes_);
       }
       else
       {
-        ROS_INFO("Param write failed - maybe disarm the aricraft and try again?");
+        logger_.info("Param write failed - maybe disarm the aricraft and try again?");
         write_request_in_progress_ = false;
         unsaved_changes_ = true;
       }
@@ -347,12 +366,14 @@ void ParamManager::handle_command_ack_msg(const mavlink_message_t &msg)
   }
 }
 
-bool ParamManager::is_param_id(std::string name)
+template <typename DerivedLogger>
+bool ParamManager<DerivedLogger>::is_param_id(std::string name)
 {
   return (params_.find(name) != params_.end());
 }
 
-int ParamManager::get_num_params()
+template <typename DerivedLogger>
+int ParamManager<DerivedLogger>::get_num_params()
 {
   if (first_param_received_)
   {
@@ -364,17 +385,20 @@ int ParamManager::get_num_params()
   }
 }
 
-int ParamManager::get_params_received()
+template <typename DerivedLogger>
+int ParamManager<DerivedLogger>::get_params_received()
 {
   return received_count_;
 }
 
-bool ParamManager::got_all_params()
+template <typename DerivedLogger>
+bool ParamManager<DerivedLogger>::got_all_params()
 {
   return got_all_params_;
 }
 
-void ParamManager::param_set_timer_callback(const ros::TimerEvent &event)
+template <typename DerivedLogger>
+void ParamManager<DerivedLogger>::param_set_timer_callback(const ros::TimerEvent &event)
 {
   if (param_set_queue_.empty())
   {
@@ -387,5 +411,7 @@ void ParamManager::param_set_timer_callback(const ros::TimerEvent &event)
     param_set_queue_.pop_front();
   }
 }
+
+template class ParamManager<DerivedLoggerType>;
 
 } // namespace mavrosflight

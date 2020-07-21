@@ -80,6 +80,7 @@
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
 #include <rosflight/mavrosflight/mavrosflight.h>
 #include <rosflight/mavrosflight/param_listener_interface.h>
+#include <rosflight/ros_logger.h>
 
 #include <geometry_msgs/Quaternion.h>
 
@@ -214,7 +215,7 @@ private:
   std::string frame_id_;
 
   mavrosflight::MavlinkComm *mavlink_comm_;
-  mavrosflight::MavROSflight *mavrosflight_;
+  mavrosflight::MavROSflight<rosflight::ROSLogger> *mavrosflight_;
 };
 
 } // namespace rosflight_io

@@ -75,6 +75,7 @@ add_library(mavrosflight
   src/mavrosflight/time_manager.cpp
 )
 add_dependencies(mavrosflight ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_compile_definitions(mavrosflight PRIVATE USE_ROS)
 target_link_libraries(mavrosflight
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
