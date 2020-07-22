@@ -1,27 +1,24 @@
 #pragma once
 
-#include <math.h>
+#include <cmath>
 #include <string>
 
-#include <ros/ros.h>
-#include <tf/tf.h>
-#include <sensor_msgs/MagneticField.h>
-#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Point.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <ros/ros.h>
 #include <rosflight_msgs/Attitude.h>
+#include <sensor_msgs/MagneticField.h>
+#include <tf/tf.h>
 #include <visualization_msgs/Marker.h>
 
 namespace rosflight_utils
 {
-
-
 class Viz
 {
 public:
   Viz();
 
 private:
-
   // Node handles, publishers, subscribers
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;

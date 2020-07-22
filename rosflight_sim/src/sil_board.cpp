@@ -29,17 +29,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <ros/ros.h>
 #include <rosflight_sim/sil_board.h>
 #include <fstream>
-#include <ros/ros.h>
 
 #include <iostream>
 
 namespace rosflight_sim
 {
-
-SIL_Board::SIL_Board() : rosflight_firmware::UDPBoard()
-{
+SIL_Board::SIL_Board() : rosflight_firmware::UDPBoard() {
 }
 
 void SIL_Board::init_board(void)
@@ -56,8 +54,11 @@ constexpr double deg2Rad(double x)
   return M_PI / 180.0 * x;
 }
 
-void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
-                             gazebo::physics::ModelPtr model, ros::NodeHandle *nh, std::string mav_type)
+void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link,
+                             gazebo::physics::WorldPtr world,
+                             gazebo::physics::ModelPtr model,
+                             ros::NodeHandle *nh,
+                             std::string mav_type)
 {
   link_ = link;
   world_ = world;
@@ -71,7 +72,8 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   int remote_port = nh->param<int>("ROS_port", 14520);
 
   set_ports(bind_host, bind_port, remote_host, remote_port);
-  gzmsg << "ROSflight SIL Conneced to " << remote_host << ":" << remote_port << " from " << bind_host << ":" << bind_port << "\n";
+  gzmsg << "ROSflight SIL Conneced to " << remote_host << ":" << remote_port << " from " << bind_host << ":"
+        << bind_port << "\n";
 
   // Get Sensor Parameters
   gyro_stdev_ = nh->param<double>("gyro_stdev", 0.13);
@@ -145,9 +147,7 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   next_imu_update_time_us_ = 0;
 }
 
-void SIL_Board::board_reset(bool bootloader)
-{
-}
+void SIL_Board::board_reset(bool bootloader) {}
 
 // clock
 
@@ -163,9 +163,7 @@ uint64_t SIL_Board::clock_micros()
   return micros;
 }
 
-void SIL_Board::clock_delay(uint32_t milliseconds)
-{
-}
+void SIL_Board::clock_delay(uint32_t milliseconds) {}
 
 // sensors
 /// TODO these sensors have noise, no bias
@@ -239,9 +237,12 @@ bool SIL_Board::imu_read(float accel[3], float *temperature, float gyro[3], uint
   }
 
   // Perform Random Walk for biases
-  GZ_COMPAT_SET_X(acc_bias_, GZ_COMPAT_GET_X(acc_bias_) + acc_bias_walk_stdev_ * normal_distribution_(random_generator_));
-  GZ_COMPAT_SET_Y(acc_bias_, GZ_COMPAT_GET_Y(acc_bias_) + acc_bias_walk_stdev_ * normal_distribution_(random_generator_));
-  GZ_COMPAT_SET_Z(acc_bias_, GZ_COMPAT_GET_Z(acc_bias_) + acc_bias_walk_stdev_ * normal_distribution_(random_generator_));
+  GZ_COMPAT_SET_X(acc_bias_,
+                  GZ_COMPAT_GET_X(acc_bias_) + acc_bias_walk_stdev_ * normal_distribution_(random_generator_));
+  GZ_COMPAT_SET_Y(acc_bias_,
+                  GZ_COMPAT_GET_Y(acc_bias_) + acc_bias_walk_stdev_ * normal_distribution_(random_generator_));
+  GZ_COMPAT_SET_Z(acc_bias_,
+                  GZ_COMPAT_GET_Z(acc_bias_) + acc_bias_walk_stdev_ * normal_distribution_(random_generator_));
 
   // Add constant Bias to measurement
   GZ_COMPAT_SET_X(y_acc, GZ_COMPAT_GET_X(y_acc) + GZ_COMPAT_GET_X(acc_bias_));
@@ -264,9 +265,12 @@ bool SIL_Board::imu_read(float accel[3], float *temperature, float gyro[3], uint
   }
 
   // Random Walk for bias
-  GZ_COMPAT_SET_X(gyro_bias_, GZ_COMPAT_GET_X(gyro_bias_) + gyro_bias_walk_stdev_ * normal_distribution_(random_generator_));
-  GZ_COMPAT_SET_Y(gyro_bias_, GZ_COMPAT_GET_Y(gyro_bias_) + gyro_bias_walk_stdev_ * normal_distribution_(random_generator_));
-  GZ_COMPAT_SET_Z(gyro_bias_, GZ_COMPAT_GET_Z(gyro_bias_) + gyro_bias_walk_stdev_ * normal_distribution_(random_generator_));
+  GZ_COMPAT_SET_X(gyro_bias_,
+                  GZ_COMPAT_GET_X(gyro_bias_) + gyro_bias_walk_stdev_ * normal_distribution_(random_generator_));
+  GZ_COMPAT_SET_Y(gyro_bias_,
+                  GZ_COMPAT_GET_Y(gyro_bias_) + gyro_bias_walk_stdev_ * normal_distribution_(random_generator_));
+  GZ_COMPAT_SET_Z(gyro_bias_,
+                  GZ_COMPAT_GET_Z(gyro_bias_) + gyro_bias_walk_stdev_ * normal_distribution_(random_generator_));
 
   // Apply Constant Bias
   GZ_COMPAT_SET_X(y_gyro, GZ_COMPAT_GET_X(y_gyro) + GZ_COMPAT_GET_X(gyro_bias_));
@@ -297,9 +301,12 @@ void SIL_Board::mag_read(float mag[3])
   GZ_COMPAT_SET_Z(noise, mag_stdev_ * normal_distribution_(random_generator_));
 
   // Random Walk for bias
-  GZ_COMPAT_SET_X(mag_bias_, GZ_COMPAT_GET_X(mag_bias_) + mag_bias_walk_stdev_ * normal_distribution_(random_generator_));
-  GZ_COMPAT_SET_Y(mag_bias_, GZ_COMPAT_GET_Y(mag_bias_) + mag_bias_walk_stdev_ * normal_distribution_(random_generator_));
-  GZ_COMPAT_SET_Z(mag_bias_, GZ_COMPAT_GET_Z(mag_bias_) + mag_bias_walk_stdev_ * normal_distribution_(random_generator_));
+  GZ_COMPAT_SET_X(mag_bias_,
+                  GZ_COMPAT_GET_X(mag_bias_) + mag_bias_walk_stdev_ * normal_distribution_(random_generator_));
+  GZ_COMPAT_SET_Y(mag_bias_,
+                  GZ_COMPAT_GET_Y(mag_bias_) + mag_bias_walk_stdev_ * normal_distribution_(random_generator_));
+  GZ_COMPAT_SET_Z(mag_bias_,
+                  GZ_COMPAT_GET_Z(mag_bias_) + mag_bias_walk_stdev_ * normal_distribution_(random_generator_));
 
   // combine parts to create a measurement
   GazeboVector y_mag = GZ_COMPAT_GET_ROT(I_to_B).RotateVectorReverse(inertial_magnetic_field_) + mag_bias_ + noise;
@@ -435,20 +442,19 @@ void SIL_Board::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
   latestRC_.values[4] = 1000; // attitude override
   latestRC_.values[5] = 1000; // arm
 
-  for (size_t i = 0; i < 14; i++)
-    pwm_outputs_[i] = 1000;
+  for (size_t i = 0; i < 14; i++) pwm_outputs_[i] = 1000;
 
   rc_sub_ = nh_->subscribe("RC", 1, &SIL_Board::RCCallback, this);
 }
 
 float SIL_Board::rc_read(uint8_t channel)
 {
-  if (rc_received_)
+  if (rc_sub_.getNumPublishers() > 0)
   {
     return static_cast<float>(latestRC_.values[channel] - 1000) / 1000.0;
   }
 
-  //no publishers, set throttle low and center everything else
+  // no publishers, set throttle low and center everything else
   if (channel == 2)
     return 0.0;
 
@@ -534,9 +540,7 @@ void SIL_Board::led1_on(void) {}
 void SIL_Board::led1_off(void) {}
 void SIL_Board::led1_toggle(void) {}
 
-void SIL_Board::backup_memory_init()
-{
-}
+void SIL_Board::backup_memory_init() {}
 
 bool SIL_Board::backup_memory_read(void *dest, size_t len)
 {
@@ -564,11 +568,15 @@ void SIL_Board::backup_memory_clear(size_t len)
 void SIL_Board::RCCallback(const rosflight_msgs::RCRaw &msg)
 {
   rc_received_ = true;
+  last_rc_message_ = ros::Time::now();
   latestRC_ = msg;
   last_rc_message_timestamp_ = ros::Time::now();
 }
 
-bool SIL_Board::gnss_present() { return GAZEBO_MAJOR_VERSION >= 9; }
+bool SIL_Board::gnss_present()
+{
+  return GAZEBO_MAJOR_VERSION >= 9;
+}
 void SIL_Board::gnss_update() {}
 
 rosflight_firmware::GNSSData SIL_Board::gnss_read()
@@ -627,10 +635,13 @@ rosflight_firmware::GNSSData SIL_Board::gnss_read()
   return out;
 }
 
-bool SIL_Board::gnss_has_new_data() { return GAZEBO_MAJOR_VERSION >= 9; }
-rosflight_firmware::GNSSRaw SIL_Board::gnss_raw_read()
+bool SIL_Board::gnss_has_new_data()
 {
-  rosflight_firmware::GNSSRaw out;
+  return GAZEBO_MAJOR_VERSION >= 9;
+}
+rosflight_firmware::GNSSFull SIL_Board::gnss_full_read()
+{
+  rosflight_firmware::GNSSFull out;
 #if GAZEBO_MAJOR_VERSION >= 9
   using Vec3 = ignition::math::Vector3d;
   using Vec3 = ignition::math::Vector3d;

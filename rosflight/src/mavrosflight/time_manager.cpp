@@ -38,7 +38,6 @@
 
 namespace mavrosflight
 {
-
 TimeManager::TimeManager(MavlinkComm *comm) :
   comm_(comm),
   offset_alpha_(0.95),
@@ -63,18 +62,18 @@ void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
 
     if (tsync.tc1 > 0) // check that this is a response, not a request
     {
-      int64_t offset_ns = (tsync.ts1 + now_ns - 2*tsync.tc1) / 2;
+      int64_t offset_ns = (tsync.ts1 + now_ns - 2 * tsync.tc1) / 2;
 
       if (!initialized_ || std::abs(offset_ns_ - offset_ns) > 1e7) // if difference > 10ms, use it directly
       {
         offset_ns_ = offset_ns;
-        ROS_INFO("Detected time offset of %0.3f s.", offset_ns/1e9);
-        ROS_DEBUG("FCU time: %0.3f, System time: %0.3f", tsync.tc1*1e-9, tsync.ts1*1e-9);
+        ROS_INFO("Detected time offset of %0.3f s.", offset_ns / 1e9);
+        ROS_DEBUG("FCU time: %0.3f, System time: %0.3f", tsync.tc1 * 1e-9, tsync.ts1 * 1e-9);
         initialized_ = true;
       }
       else // otherwise low-pass filter the offset
       {
-        offset_ns_ = offset_alpha_*offset_ns + (1.0 - offset_alpha_)*offset_ns_;
+        offset_ns_ = offset_alpha_ * offset_ns + (1.0 - offset_alpha_) * offset_ns_;
       }
     }
   }
@@ -85,13 +84,13 @@ ros::Time TimeManager::get_ros_time_ms(uint32_t boot_ms)
   if (!initialized_)
     return ros::Time::now();
 
-  int64_t boot_ns = (int64_t)boot_ms*1000000;
+  int64_t boot_ns = (int64_t)boot_ms * 1000000;
 
   int64_t ns = boot_ns + offset_ns_;
   if (ns < 0)
   {
-    ROS_ERROR_THROTTLE(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time",
-              boot_ns, offset_ns_);
+    ROS_ERROR_THROTTLE(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time", boot_ns,
+                       offset_ns_);
     return ros::Time::now();
   }
   ros::Time now;
@@ -104,13 +103,13 @@ ros::Time TimeManager::get_ros_time_us(uint64_t boot_us)
   if (!initialized_)
     return ros::Time::now();
 
-  int64_t boot_ns = (int64_t) boot_us * 1000;
+  int64_t boot_ns = (int64_t)boot_us * 1000;
 
   int64_t ns = boot_ns + offset_ns_;
   if (ns < 0)
   {
-    ROS_ERROR_THROTTLE(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time",
-              boot_ns, offset_ns_);
+    ROS_ERROR_THROTTLE(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time", boot_ns,
+                       offset_ns_);
     return ros::Time::now();
   }
   ros::Time now;

@@ -31,30 +31,24 @@
 
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
+#include <cstdint>
+#include <cstdio>
 #include <sstream>
-#include <stdint.h>
-#include <stdio.h>
 
 #include <eigen3/Eigen/Core>
 
 #include <rosflight_sim/rosflight_sil.h>
 #include <rosflight_sim/sil_board.h>
 
-
 namespace rosflight_sim
 {
-
-ROSflightSIL::ROSflightSIL() :
-  gazebo::ModelPlugin(),
-  nh_(nullptr),
-  comm_(board_),
-  firmware_(board_, comm_)
-{}
+ROSflightSIL::ROSflightSIL() : gazebo::ModelPlugin(), nh_(nullptr), comm_(board_), firmware_(board_, comm_) {}
 
 ROSflightSIL::~ROSflightSIL()
 {
   GZ_COMPAT_DISCONNECT_WORLD_UPDATE_BEGIN(updateConnection_);
-  if (nh_) {
+  if (nh_)
+  {
     nh_->shutdown();
     delete nh_;
   }
@@ -94,17 +88,19 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
     gzthrow("[ROSflight_SIL] Couldn't find specified link \"" << link_name_ << "\".");
 
   /* Load Params from Gazebo Server */
-  if (_sdf->HasElement("mavType")) {
+  if (_sdf->HasElement("mavType"))
+  {
     mav_type_ = _sdf->GetElement("mavType")->Get<std::string>();
   }
-  else {
+  else
+  {
     mav_type_ = "multirotor";
     gzerr << "[rosflight_sim] Please specify a value for parameter \"mavType\".\n";
   }
 
-  if(mav_type_ == "multirotor")
+  if (mav_type_ == "multirotor")
     mav_dynamics_ = new Multirotor(nh_);
-  else if(mav_type_ == "fixedwing")
+  else if (mav_type_ == "fixedwing")
     mav_dynamics_ = new Fixedwing(nh_);
   else
     gzthrow("unknown or unsupported mav type\n");
@@ -122,7 +118,6 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   truth_NWU_pub_ = nh_->advertise<nav_msgs::Odometry>("truth/NWU", 1);
 }
 
-
 // This gets called by the world update event.
 void ROSflightSIL::OnUpdate(const gazebo::common::UpdateInfo& _info)
 {
@@ -139,7 +134,7 @@ void ROSflightSIL::OnUpdate(const gazebo::common::UpdateInfo& _info)
   GazeboVector omega = GZ_COMPAT_GET_RELATIVE_ANGULAR_VEL(link_);
 
   // Convert gazebo types to Eigen and switch to NED frame
-  state.pos = NWU_to_NED * vec3_to_eigen_from_gazebo(GZ_COMPAT_GET_POS(pose)) ;
+  state.pos = NWU_to_NED * vec3_to_eigen_from_gazebo(GZ_COMPAT_GET_POS(pose));
   state.rot = NWU_to_NED * rotation_to_eigen_from_gazebo(GZ_COMPAT_GET_ROT(pose));
   state.vel = NWU_to_NED * vec3_to_eigen_from_gazebo(vel);
   state.omega = NWU_to_NED * vec3_to_eigen_from_gazebo(omega);
@@ -148,24 +143,23 @@ void ROSflightSIL::OnUpdate(const gazebo::common::UpdateInfo& _info)
   forces_ = mav_dynamics_->updateForcesAndTorques(state, board_.get_outputs());
 
   // apply the forces and torques to the joint (apply in NWU)
-  GazeboVector force = vec3_to_gazebo_from_eigen(NWU_to_NED * forces_.block<3,1>(0,0));
-  GazeboVector torque = vec3_to_gazebo_from_eigen(NWU_to_NED *  forces_.block<3,1>(3,0));
+  GazeboVector force = vec3_to_gazebo_from_eigen(NWU_to_NED * forces_.block<3, 1>(0, 0));
+  GazeboVector torque = vec3_to_gazebo_from_eigen(NWU_to_NED * forces_.block<3, 1>(3, 0));
   link_->AddRelativeForce(force);
   link_->AddRelativeTorque(torque);
 
   publishTruth();
-
 }
 
 void ROSflightSIL::Reset()
 {
-    link_->SetWorldPose(initial_pose_);
-    link_->ResetPhysicsStates();
-//  start_time_us_ = (uint64_t)(world_->GetSimTime().Double() * 1e3);
-//  rosflight_init();
+  link_->SetWorldPose(initial_pose_);
+  link_->ResetPhysicsStates();
+  //  start_time_us_ = (uint64_t)(world_->GetSimTime().Double() * 1e3);
+  //  rosflight_init();
 }
 
-void ROSflightSIL::windCallback(const geometry_msgs::Vector3 &msg)
+void ROSflightSIL::windCallback(const geometry_msgs::Vector3& msg)
 {
   Eigen::Vector3d wind;
   wind << msg.x, msg.y, msg.z;
@@ -226,7 +220,8 @@ GazeboVector ROSflightSIL::vec3_to_gazebo_from_eigen(Eigen::Vector3d vec)
 
 Eigen::Matrix3d ROSflightSIL::rotation_to_eigen_from_gazebo(GazeboQuaternion quat)
 {
-  Eigen::Quaterniond eig_quat(GZ_COMPAT_GET_W(quat), GZ_COMPAT_GET_X(quat), GZ_COMPAT_GET_Y(quat), GZ_COMPAT_GET_Z(quat));
+  Eigen::Quaterniond eig_quat(GZ_COMPAT_GET_W(quat), GZ_COMPAT_GET_X(quat), GZ_COMPAT_GET_Y(quat),
+                              GZ_COMPAT_GET_Z(quat));
   return eig_quat.toRotationMatrix();
 }
 

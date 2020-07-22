@@ -38,7 +38,6 @@
 
 namespace mavrosflight
 {
-
 Param::Param()
 {
   init("", -1, MAV_PARAM_TYPE_ENUM_END, 0.0f);
@@ -50,10 +49,7 @@ Param::Param(mavlink_param_value_t msg)
   memcpy(name, msg.param_id, MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN);
   name[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN] = '\0';
 
-  init(std::string(name),
-       msg.param_index,
-       (MAV_PARAM_TYPE) msg.param_type,
-       msg.param_value);
+  init(std::string(name), msg.param_index, (MAV_PARAM_TYPE)msg.param_type, msg.param_value);
 }
 
 Param::Param(std::string name, int index, MAV_PARAM_TYPE type, float raw_value)
@@ -88,8 +84,7 @@ void Param::requestSet(double value, mavlink_message_t *msg)
     new_value_ = getCastValue(value);
     expected_raw_value_ = getRawValue(new_value_);
 
-    mavlink_msg_param_set_pack(1, 50, msg,
-                               1, MAV_COMP_ID_ALL, name_.c_str(), expected_raw_value_, type_);
+    mavlink_msg_param_set_pack(1, 50, msg, 1, MAV_COMP_ID_ALL, name_.c_str(), expected_raw_value_, type_);
 
     set_in_progress_ = true;
   }

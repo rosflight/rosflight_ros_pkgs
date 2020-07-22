@@ -41,14 +41,12 @@
 
 namespace mavrosflight
 {
-
 /**
  * \brief Describes an interface classes can implement to receive and handle mavlink messages
  */
 class ParamListenerInterface
 {
 public:
-
   /**
    * \brief Called when a parameter is received from the autopilot for the first time
    * \param name The name of the parameter

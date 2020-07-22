@@ -39,11 +39,10 @@
 
 #include <rosflight/mavrosflight/mavlink_bridge.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 namespace mavrosflight
 {
-
 /**
  * \brief Struct for buffering the contents of a mavlink message
  */
@@ -55,13 +54,13 @@ struct WriteBuffer
 
   WriteBuffer() : len(0), pos(0) {}
 
-  WriteBuffer(const uint8_t * buf, uint16_t len) : len(len), pos(0)
+  WriteBuffer(const uint8_t* buf, uint16_t len) : len(len), pos(0)
   {
     assert(len <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
     memcpy(data, buf, len);
   }
 
-  uint8_t * dpos() { return data + pos; }
+  uint8_t* dpos() { return data + pos; }
 
   size_t nbytes() { return len - pos; }
 };
