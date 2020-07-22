@@ -37,8 +37,7 @@
 
 namespace rosflight_sim
 {
-SIL_Board::SIL_Board() : rosflight_firmware::UDPBoard() {
-}
+SIL_Board::SIL_Board() : rosflight_firmware::UDPBoard() {}
 
 void SIL_Board::init_board(void)
 {
@@ -467,8 +466,7 @@ void SIL_Board::pwm_write(uint8_t channel, float value)
 }
 void SIL_Board::pwm_disable()
 {
-  for (int i = 0; i < 14; i++)
-    pwm_write(i, 0);
+  for (int i = 0; i < 14; i++) pwm_write(i, 0);
 }
 
 bool SIL_Board::rc_lost(void)

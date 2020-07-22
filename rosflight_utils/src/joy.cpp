@@ -284,8 +284,7 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
       command_msg_.F = current_altitude_setpoint_;
       break;
 
-    case rosflight_msgs::Command::MODE_XVEL_YVEL_YAWRATE_ALTITUDE:
-    {
+    case rosflight_msgs::Command::MODE_XVEL_YVEL_YAWRATE_ALTITUDE: {
       // Remember that roll affects y velocity and pitch affects -x velocity
       double original_x = command_msg_.x;
       command_msg_.x = max_.xvel * -1.0 * command_msg_.y;

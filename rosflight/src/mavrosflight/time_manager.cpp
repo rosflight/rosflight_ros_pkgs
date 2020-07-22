@@ -39,11 +39,7 @@
 namespace mavrosflight
 {
 TimeManager::TimeManager(MavlinkComm *comm) :
-  comm_(comm),
-  offset_alpha_(0.95),
-  offset_ns_(0),
-  offset_(0.0),
-  initialized_(false)
+  comm_(comm), offset_alpha_(0.95), offset_ns_(0), offset_(0.0), initialized_(false)
 {
   comm_->register_mavlink_listener(this);
 

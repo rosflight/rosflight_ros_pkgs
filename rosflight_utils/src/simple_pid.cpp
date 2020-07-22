@@ -52,12 +52,7 @@ SimplePID::SimplePID()
 // Initialize the controller
 //
 SimplePID::SimplePID(double p, double i, double d, double max, double min, double tau) :
-  kp_(p),
-  ki_(i),
-  kd_(d),
-  max_(max),
-  min_(min),
-  tau_(tau)
+  kp_(p), ki_(i), kd_(d), max_(max), min_(min), tau_(tau)
 {
   integrator_ = 0.0;
   differentiator_ = 0.0;
