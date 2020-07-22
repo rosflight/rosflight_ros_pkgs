@@ -600,13 +600,21 @@ void rosflightIO::handle_named_command_struct_msg(const mavlink_message_t &msg)
 
   rosflight_msgs::Command command_msg;
   if (command.type == MODE_PASS_THROUGH)
+  {
     command_msg.mode = rosflight_msgs::Command::MODE_PASS_THROUGH;
+  }
   else if (command.type == MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE)
+  {
     command_msg.mode = rosflight_msgs::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
+  }
   else if (command.type == MODE_ROLL_PITCH_YAWRATE_THROTTLE)
+  {
     command_msg.mode = rosflight_msgs::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE;
+  }
   else if (command.type == MODE_ROLL_PITCH_YAWRATE_ALTITUDE)
+  {
     command_msg.mode = rosflight_msgs::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE;
+  }
 
   command_msg.ignore = command.ignore;
   command_msg.x = command.x;
@@ -764,6 +772,7 @@ void rosflightIO::handle_hard_error_msg(const mavlink_message_t &msg)
   error_msg.pc = error.pc;
   error_pub_.publish(error_msg);
 }
+
 void rosflightIO::handle_battery_status_msg(const mavlink_message_t &msg)
 {
   mavlink_rosflight_battery_status_t battery_status;
@@ -853,7 +862,9 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
   twist_stamped.twist.linear.z = .001 * gnss.vel_d;
 
   if (twist_stamped_pub_.getTopic().empty())
+  {
     twist_stamped_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("navsat_compat/vel", 1);
+  }
   twist_stamped_pub_.publish(twist_stamped);
 
   sensor_msgs::TimeReference time_ref;
@@ -862,7 +873,9 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
   time_ref.time_ref = ros::Time(gnss.time, gnss.nanos);
 
   if (time_reference_pub_.getTopic().empty())
+  {
     time_reference_pub_ = nh_.advertise<sensor_msgs::TimeReference>("navsat_compat/time_reference", 1);
+  }
 
   time_reference_pub_.publish(time_ref);
 }
@@ -902,7 +915,9 @@ void rosflightIO::handle_rosflight_gnss_full_msg(const mavlink_message_t &msg)
   msg_out.p_dop = full.p_dop;
 
   if (gnss_full_pub_.getTopic().empty())
+  {
     gnss_full_pub_ = nh_.advertise<rosflight_msgs::GNSSFull>("gnss_full", 1);
+  }
   gnss_full_pub_.publish(msg_out);
 }
 
@@ -1021,6 +1036,13 @@ void rosflightIO::paramTimerCallback(const ros::TimerEvent &e)
   {
     param_timer_.stop();
     ROS_INFO("Received all parameters");
+    double offboard_failsafe_param{0.};
+    mavrosflight_->param.get_param_value("OFFBRD_FAILSAFE", &offboard_failsafe_param);
+    // Although the parameter is an int, it is sent as a float
+    if (offboard_failsafe_param > 0.9 && offboard_failsafe_param < 1.1)
+    {
+      ROS_WARN("Offboard failsafe is enabled. Ensure your controller handles RC failure well.");
+    }
   }
   else
   {
@@ -1046,6 +1068,7 @@ void rosflightIO::request_version()
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_SEND_VERSION);
   mavrosflight_->comm.send_message(msg);
 }
+
 void rosflightIO::send_heartbeat()
 {
   mavlink_message_t msg;
