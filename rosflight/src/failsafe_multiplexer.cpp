@@ -13,7 +13,8 @@ FailsafeMultiplexer::FailsafeMultiplexer()
   normal_command_sub_ = node_handle_.subscribe("normal_command", 1, &FailsafeMultiplexer::normal_command_cb, this);
   failsafe_command_sub_ =
       node_handle_.subscribe("failsafe_command", 1, &FailsafeMultiplexer::failsafe_command_cb, this);
-  set_force_failsafe_service_server_ = node_handle_.advertiseService("set_force_failsafe", &FailsafeMultiplexer::failsafe_force_service_cb, this);
+  set_force_failsafe_service_server_ =
+      node_handle_.advertiseService("set_force_failsafe", &FailsafeMultiplexer::failsafe_force_service_cb, this);
 }
 
 void FailsafeMultiplexer::status_cb(const rosflight_msgs::Status &status)
@@ -62,7 +63,7 @@ bool FailsafeMultiplexer::failsafe_force_service_cb(std_srvs::SetBool::Request &
   resp.success = true;
   return true;
 }
-} // failsafe_multiplexer
+} // namespace failsafe_multiplexer
 
 int main(int argc, char *argv[])
 {
@@ -71,5 +72,3 @@ int main(int argc, char *argv[])
   ros::spin();
   return 0;
 }
-
-

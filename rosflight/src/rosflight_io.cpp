@@ -80,9 +80,9 @@ rosflightIO::rosflightIO()
   if (nh_private.param<bool>("udp", false))
   {
     std::string bind_host = nh_private.param<std::string>("bind_host", "localhost");
-    uint16_t bind_port = (uint16_t) nh_private.param<int>("bind_port", 14520);
+    uint16_t bind_port = (uint16_t)nh_private.param<int>("bind_port", 14520);
     std::string remote_host = nh_private.param<std::string>("remote_host", bind_host);
-    uint16_t remote_port = (uint16_t) nh_private.param<int>("remote_port", 14525);
+    uint16_t remote_port = (uint16_t)nh_private.param<int>("remote_port", 14525);
 
     ROS_INFO("Connecting over UDP to \"%s:%d\", from \"%s:%d\"", remote_host.c_str(), remote_port, bind_host.c_str(),
              bind_port);
@@ -151,52 +151,73 @@ void rosflightIO::handle_mavlink_message(const mavlink_message_t &msg)
 {
   switch (msg.msgid)
   {
-    case MAVLINK_MSG_ID_HEARTBEAT:handle_heartbeat_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_ROSFLIGHT_STATUS:handle_status_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_ROSFLIGHT_CMD_ACK:handle_command_ack_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_STATUSTEXT:handle_statustext_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_ATTITUDE_QUATERNION:handle_attitude_quaternion_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_SMALL_IMU:handle_small_imu_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_SMALL_MAG:handle_small_mag_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_ROSFLIGHT_OUTPUT_RAW:handle_rosflight_output_raw_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_RC_CHANNELS:handle_rc_channels_raw_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_DIFF_PRESSURE:handle_diff_pressure_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_NAMED_VALUE_INT:handle_named_value_int_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_NAMED_VALUE_FLOAT:handle_named_value_float_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_NAMED_COMMAND_STRUCT:handle_named_command_struct_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_SMALL_BARO:handle_small_baro_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_SMALL_RANGE:handle_small_range_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_ROSFLIGHT_GNSS:handle_rosflight_gnss_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_ROSFLIGHT_GNSS_FULL:handle_rosflight_gnss_full_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_ROSFLIGHT_VERSION:handle_version_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_PARAM_VALUE:
-    case MAVLINK_MSG_ID_TIMESYNC:
-      // silently ignore (handled elsewhere)
-      break;
-    case MAVLINK_MSG_ID_ROSFLIGHT_HARD_ERROR:handle_hard_error_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_ROSFLIGHT_BATTERY_STATUS:handle_battery_status_msg(msg);
-      break;
-    default:ROS_DEBUG("rosflight_io: Got unhandled mavlink message ID %d", msg.msgid);
-      break;
+  case MAVLINK_MSG_ID_HEARTBEAT:
+    handle_heartbeat_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_ROSFLIGHT_STATUS:
+    handle_status_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_ROSFLIGHT_CMD_ACK:
+    handle_command_ack_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_STATUSTEXT:
+    handle_statustext_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_ATTITUDE_QUATERNION:
+    handle_attitude_quaternion_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_SMALL_IMU:
+    handle_small_imu_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_SMALL_MAG:
+    handle_small_mag_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_ROSFLIGHT_OUTPUT_RAW:
+    handle_rosflight_output_raw_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_RC_CHANNELS:
+    handle_rc_channels_raw_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_DIFF_PRESSURE:
+    handle_diff_pressure_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_NAMED_VALUE_INT:
+    handle_named_value_int_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_NAMED_VALUE_FLOAT:
+    handle_named_value_float_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_NAMED_COMMAND_STRUCT:
+    handle_named_command_struct_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_SMALL_BARO:
+    handle_small_baro_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_SMALL_RANGE:
+    handle_small_range_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_ROSFLIGHT_GNSS:
+    handle_rosflight_gnss_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_ROSFLIGHT_GNSS_FULL:
+    handle_rosflight_gnss_full_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_ROSFLIGHT_VERSION:
+    handle_version_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_PARAM_VALUE:
+  case MAVLINK_MSG_ID_TIMESYNC:
+    // silently ignore (handled elsewhere)
+    break;
+  case MAVLINK_MSG_ID_ROSFLIGHT_HARD_ERROR:
+    handle_hard_error_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_ROSFLIGHT_BATTERY_STATUS:
+    handle_battery_status_msg(msg);
+    break;
+  default:
+    ROS_DEBUG("rosflight_io: Got unhandled mavlink message ID %d", msg.msgid);
+    break;
   }
 }
 
@@ -296,13 +317,17 @@ void rosflightIO::handle_status_msg(const mavlink_message_t &msg)
     std::string mode_string;
     switch (status_msg.control_mode)
     {
-      case MODE_PASS_THROUGH:mode_string = "PASS_THROUGH";
-        break;
-      case MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:mode_string = "RATE";
-        break;
-      case MODE_ROLL_PITCH_YAWRATE_THROTTLE:mode_string = "ANGLE";
-        break;
-      default:mode_string = "UNKNOWN";
+    case MODE_PASS_THROUGH:
+      mode_string = "PASS_THROUGH";
+      break;
+    case MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
+      mode_string = "RATE";
+      break;
+    case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
+      mode_string = "ANGLE";
+      break;
+    default:
+      mode_string = "UNKNOWN";
     }
     ROS_WARN_STREAM("Autopilot now in " << mode_string << " mode");
   }
@@ -354,18 +379,22 @@ void rosflightIO::handle_statustext_msg(const mavlink_message_t &msg)
 
   switch (status.severity)
   {
-    case MAV_SEVERITY_EMERGENCY:
-    case MAV_SEVERITY_ALERT:
-    case MAV_SEVERITY_CRITICAL:
-    case MAV_SEVERITY_ERROR:ROS_ERROR("[Autopilot]: %s", c_str);
-      break;
-    case MAV_SEVERITY_WARNING:ROS_WARN("[Autopilot]: %s", c_str);
-      break;
-    case MAV_SEVERITY_NOTICE:
-    case MAV_SEVERITY_INFO:ROS_INFO("[Autopilot]: %s", c_str);
-      break;
-    case MAV_SEVERITY_DEBUG:ROS_DEBUG("[Autopilot]: %s", c_str);
-      break;
+  case MAV_SEVERITY_EMERGENCY:
+  case MAV_SEVERITY_ALERT:
+  case MAV_SEVERITY_CRITICAL:
+  case MAV_SEVERITY_ERROR:
+    ROS_ERROR("[Autopilot]: %s", c_str);
+    break;
+  case MAV_SEVERITY_WARNING:
+    ROS_WARN("[Autopilot]: %s", c_str);
+    break;
+  case MAV_SEVERITY_NOTICE:
+  case MAV_SEVERITY_INFO:
+    ROS_INFO("[Autopilot]: %s", c_str);
+    break;
+  case MAV_SEVERITY_DEBUG:
+    ROS_DEBUG("[Autopilot]: %s", c_str);
+    break;
   }
 }
 
@@ -653,25 +682,28 @@ void rosflightIO::handle_small_range_msg(const mavlink_message_t &msg)
 
   switch (range.type)
   {
-    case ROSFLIGHT_RANGE_SONAR:alt_msg.radiation_type = sensor_msgs::Range::ULTRASOUND;
-      alt_msg.field_of_view = 1.0472; // approx 60 deg
+  case ROSFLIGHT_RANGE_SONAR:
+    alt_msg.radiation_type = sensor_msgs::Range::ULTRASOUND;
+    alt_msg.field_of_view = 1.0472; // approx 60 deg
 
-      if (sonar_pub_.getTopic().empty())
-      {
-        sonar_pub_ = nh_.advertise<sensor_msgs::Range>("sonar", 1);
-      }
-      sonar_pub_.publish(alt_msg);
-      break;
-    case ROSFLIGHT_RANGE_LIDAR:alt_msg.radiation_type = sensor_msgs::Range::INFRARED;
-      alt_msg.field_of_view = .0349066; // approx 2 deg
+    if (sonar_pub_.getTopic().empty())
+    {
+      sonar_pub_ = nh_.advertise<sensor_msgs::Range>("sonar", 1);
+    }
+    sonar_pub_.publish(alt_msg);
+    break;
+  case ROSFLIGHT_RANGE_LIDAR:
+    alt_msg.radiation_type = sensor_msgs::Range::INFRARED;
+    alt_msg.field_of_view = .0349066; // approx 2 deg
 
-      if (lidar_pub_.getTopic().empty())
-      {
-        lidar_pub_ = nh_.advertise<sensor_msgs::Range>("lidar", 1);
-      }
-      lidar_pub_.publish(alt_msg);
-      break;
-    default:break;
+    if (lidar_pub_.getTopic().empty())
+    {
+      lidar_pub_ = nh_.advertise<sensor_msgs::Range>("lidar", 1);
+    }
+    lidar_pub_.publish(alt_msg);
+    break;
+  default:
+    break;
   }
 }
 std::string rosflightIO::get_major_minor_version(const std::string &version)
@@ -798,12 +830,15 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
   auto fix_type = gnss.fix_type;
   switch (fix_type)
   {
-    case GNSS_FIX_RTK_FLOAT:
-    case GNSS_FIX_RTK_FIXED:navsat_status.status = sensor_msgs::NavSatStatus::STATUS_GBAS_FIX;
-      break;
-    case GNSS_FIX_FIX:navsat_status.status = sensor_msgs::NavSatStatus::STATUS_FIX;
-      break;
-    default:navsat_status.status = sensor_msgs::NavSatStatus::STATUS_NO_FIX;
+  case GNSS_FIX_RTK_FLOAT:
+  case GNSS_FIX_RTK_FIXED:
+    navsat_status.status = sensor_msgs::NavSatStatus::STATUS_GBAS_FIX;
+    break;
+  case GNSS_FIX_FIX:
+    navsat_status.status = sensor_msgs::NavSatStatus::STATUS_FIX;
+    break;
+  default:
+    navsat_status.status = sensor_msgs::NavSatStatus::STATUS_NO_FIX;
   }
   // The UBX is not configured to report which system is used, even though it supports them all
   navsat_status.service = 1; // Report that only GPS was used, even though others may have been
@@ -889,8 +924,8 @@ void rosflightIO::handle_rosflight_gnss_full_msg(const mavlink_message_t &msg)
 void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
 {
   //! \todo these are hard-coded to match right now; may want to replace with something more robust
-  OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE) msg->mode;
-  OFFBOARD_CONTROL_IGNORE ignore = (OFFBOARD_CONTROL_IGNORE) msg->ignore;
+  OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE)msg->mode;
+  OFFBOARD_CONTROL_IGNORE ignore = (OFFBOARD_CONTROL_IGNORE)msg->ignore;
 
   float x = msg->x;
   float y = msg->y;
@@ -899,15 +934,18 @@ void rosflightIO::commandCallback(rosflight_msgs::Command::ConstPtr msg)
 
   switch (mode)
   {
-    case MODE_PASS_THROUGH:x = saturate(x, -1.0f, 1.0f);
-      y = saturate(y, -1.0f, 1.0f);
-      z = saturate(z, -1.0f, 1.0f);
-      F = saturate(F, 0.0f, 1.0f);
-      break;
-    case MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
-    case MODE_ROLL_PITCH_YAWRATE_THROTTLE:F = saturate(F, 0.0f, 1.0f);
-      break;
-    case MODE_ROLL_PITCH_YAWRATE_ALTITUDE:break;
+  case MODE_PASS_THROUGH:
+    x = saturate(x, -1.0f, 1.0f);
+    y = saturate(y, -1.0f, 1.0f);
+    z = saturate(z, -1.0f, 1.0f);
+    F = saturate(F, 0.0f, 1.0f);
+    break;
+  case MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
+  case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
+    F = saturate(F, 0.0f, 1.0f);
+    break;
+  case MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
+    break;
   }
 
   mavlink_message_t mavlink_msg;

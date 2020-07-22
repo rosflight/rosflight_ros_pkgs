@@ -42,12 +42,7 @@ namespace mavrosflight
 {
 template <typename DerivedLogger>
 TimeManager<DerivedLogger>::TimeManager(MavlinkComm *comm, LoggerInterface<DerivedLogger> &logger) :
-  comm_(comm),
-  offset_alpha_(0.95),
-  offset_ns_(0),
-  offset_(0.0),
-  initialized_(false),
-  logger_(logger)
+  comm_(comm), offset_alpha_(0.95), offset_ns_(0), offset_(0.0), initialized_(false), logger_(logger)
 
 {
   comm_->register_mavlink_listener(this);
