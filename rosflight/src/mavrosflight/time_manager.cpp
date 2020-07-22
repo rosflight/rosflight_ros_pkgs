@@ -34,16 +34,21 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
+#include <rosflight/mavrosflight/logger_adapter.h>
+#include <rosflight/mavrosflight/logger_interface.h>
 #include <rosflight/mavrosflight/time_manager.h>
 
 namespace mavrosflight
 {
-TimeManager::TimeManager(MavlinkComm *comm) :
+template <typename DerivedLogger>
+TimeManager<DerivedLogger>::TimeManager(MavlinkComm *comm, LoggerInterface<DerivedLogger> &logger) :
   comm_(comm),
   offset_alpha_(0.95),
   offset_ns_(0),
   offset_(0.0),
-  initialized_(false)
+  initialized_(false),
+  logger_(logger)
+
 {
   comm_->register_mavlink_listener(this);
 
@@ -51,7 +56,8 @@ TimeManager::TimeManager(MavlinkComm *comm) :
   time_sync_timer_ = nh.createTimer(ros::Duration(ros::Rate(10)), &TimeManager::timer_callback, this);
 }
 
-void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
+template <typename DerivedLogger>
+void TimeManager<DerivedLogger>::handle_mavlink_message(const mavlink_message_t &msg)
 {
   int64_t now_ns = ros::Time::now().toNSec();
 
@@ -67,8 +73,8 @@ void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
       if (!initialized_ || std::abs(offset_ns_ - offset_ns) > 1e7) // if difference > 10ms, use it directly
       {
         offset_ns_ = offset_ns;
-        ROS_INFO("Detected time offset of %0.3f s.", offset_ns / 1e9);
-        ROS_DEBUG("FCU time: %0.3f, System time: %0.3f", tsync.tc1 * 1e-9, tsync.ts1 * 1e-9);
+        logger_.info("Detected time offset of %0.3f s.", offset_ns / 1e9);
+        logger_.debug("FCU time: %0.3f, System time: %0.3f", tsync.tc1 * 1e-9, tsync.ts1 * 1e-9);
         initialized_ = true;
       }
       else // otherwise low-pass filter the offset
@@ -79,7 +85,8 @@ void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
   }
 }
 
-ros::Time TimeManager::get_ros_time_ms(uint32_t boot_ms)
+template <typename DerivedLogger>
+ros::Time TimeManager<DerivedLogger>::get_ros_time_ms(uint32_t boot_ms)
 {
   if (!initialized_)
     return ros::Time::now();
@@ -89,8 +96,8 @@ ros::Time TimeManager::get_ros_time_ms(uint32_t boot_ms)
   int64_t ns = boot_ns + offset_ns_;
   if (ns < 0)
   {
-    ROS_ERROR_THROTTLE(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time", boot_ns,
-                       offset_ns_);
+    logger_.error_throttle(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time",
+                           boot_ns, offset_ns_);
     return ros::Time::now();
   }
   ros::Time now;
@@ -98,7 +105,8 @@ ros::Time TimeManager::get_ros_time_ms(uint32_t boot_ms)
   return now;
 }
 
-ros::Time TimeManager::get_ros_time_us(uint64_t boot_us)
+template <typename DerivedLogger>
+ros::Time TimeManager<DerivedLogger>::get_ros_time_us(uint64_t boot_us)
 {
   if (!initialized_)
     return ros::Time::now();
@@ -108,8 +116,8 @@ ros::Time TimeManager::get_ros_time_us(uint64_t boot_us)
   int64_t ns = boot_ns + offset_ns_;
   if (ns < 0)
   {
-    ROS_ERROR_THROTTLE(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time", boot_ns,
-                       offset_ns_);
+    logger_.error_throttle(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time",
+                           boot_ns, offset_ns_);
     return ros::Time::now();
   }
   ros::Time now;
@@ -117,11 +125,14 @@ ros::Time TimeManager::get_ros_time_us(uint64_t boot_us)
   return now;
 }
 
-void TimeManager::timer_callback(const ros::TimerEvent &event)
+template <typename DerivedLogger>
+void TimeManager<DerivedLogger>::timer_callback(const ros::TimerEvent &event)
 {
   mavlink_message_t msg;
   mavlink_msg_timesync_pack(1, 50, &msg, 0, ros::Time::now().toNSec());
   comm_->send_message(msg);
 }
+
+template class TimeManager<DerivedLoggerType>;
 
 } // namespace mavrosflight

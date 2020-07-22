@@ -33,10 +33,16 @@
  * \file rosflight_io.cpp
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
+#ifdef ROSFLIGHT_VERSION
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x) // Somehow, C++ requires two macros to convert a macro to a string
+#define GIT_VERSION_STRING TOSTRING(ROSFLIGHT_VERSION)
+#endif
 
 #include <rosflight/mavrosflight/mavlink_serial.h>
 #include <rosflight/mavrosflight/mavlink_udp.h>
 #include <rosflight/mavrosflight/serial_exception.h>
+#include <rosflight/ros_logger.h>
 #include <tf/tf.h>
 #include <cstdint>
 #include <eigen3/Eigen/Core>
@@ -96,7 +102,8 @@ rosflightIO::rosflightIO()
   try
   {
     mavlink_comm_->open(); //! \todo move this into the MavROSflight constructor
-    mavrosflight_ = new mavrosflight::MavROSflight(*mavlink_comm_);
+    rosflight::ROSLogger logger;
+    mavrosflight_ = new mavrosflight::MavROSflight<rosflight::ROSLogger>(*mavlink_comm_, logger);
   }
   catch (mavrosflight::SerialException e)
   {
@@ -667,6 +674,15 @@ void rosflightIO::handle_small_range_msg(const mavlink_message_t &msg)
     default:break;
   }
 }
+std::string rosflightIO::get_major_minor_version(const std::string &version)
+{
+  size_t start_index = 0;
+  if (version[0] == 'v' || version[0] == 'V') // Skipping the 'v' prefix
+    start_index = 1;
+  size_t dot_index = version.find('.');         // index of the first dot
+  dot_index = version.find('.', dot_index + 1); // index of the second dot
+  return version.substr(start_index, dot_index - start_index);
+}
 
 void rosflightIO::handle_version_msg(const mavlink_message_t &msg)
 {
@@ -683,8 +699,26 @@ void rosflightIO::handle_version_msg(const mavlink_message_t &msg)
     version_pub_ = nh_.advertise<std_msgs::String>("version", 1, true);
   }
   version_pub_.publish(version_msg);
+#ifdef GIT_VERSION_STRING // Macro so that is compiles even if git is not available
+  const std::string git_version_string = GIT_VERSION_STRING;
+  const std::string rosflight_major_minor_version = get_major_minor_version(git_version_string);
+  const std::string firmware_version(version.version);
+  const std::string firmware_major_minor_version = get_major_minor_version(firmware_version);
+  if (rosflight_major_minor_version == firmware_major_minor_version)
+  {
+    ROS_INFO("ROSflight/firmware version: %s", firmware_major_minor_version.c_str());
+  }
+  else
+  {
+    ROS_WARN("ROSflight version does not match firmware version. Errors or missing features may result");
+    ROS_WARN("ROSflight version: %s", rosflight_major_minor_version.c_str());
+    ROS_WARN("Firmware version: %s", firmware_major_minor_version.c_str());
+  }
 
-  ROS_INFO("Firmware version: %s", version.version);
+#else
+  ROS_WARN("Version checking unavailable. Firmware version may or may not be compatible with ROSflight version");
+  ROS_WARN("Firmware version: %s", version.version);
+#endif
 }
 
 void rosflightIO::handle_hard_error_msg(const mavlink_message_t &msg)
