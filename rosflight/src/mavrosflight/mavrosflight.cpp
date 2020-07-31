@@ -49,11 +49,7 @@ MavROSflight<DerivedLogger>::MavROSflight(MavlinkComm &mavlink_comm,
                                           LoggerInterface<DerivedLogger> &logger,
                                           uint8_t sysid /* = 1 */,
                                           uint8_t compid /* = 50 */) :
-  comm(mavlink_comm),
-  param(&comm, logger),
-  time(&comm, logger),
-  sysid_(sysid),
-  compid_(compid)
+  comm(mavlink_comm), param(&comm, logger), time(&comm, logger), sysid_(sysid), compid_(compid)
 {
   //! \todo Fix constructors so that we can open the port in here
   // comm.open();

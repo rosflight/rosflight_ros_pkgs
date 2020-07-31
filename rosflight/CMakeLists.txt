@@ -94,6 +94,16 @@ target_link_libraries(rosflight_io
   ${Boost_LIBRARES}
 )
 
+# failsafe_multiplexer node
+add_executable(failsafe_multiplexer
+        src/failsafe_multiplexer.cpp
+)
+add_dependencies(failsafe_multiplexer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(failsafe_multiplexer
+  mavrosflight
+  ${catkin_LIBRARIES}
+)
+
 add_executable(calibrate_mag
     src/mag_cal_node.cpp
     src/mag_cal.cpp

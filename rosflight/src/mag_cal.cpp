@@ -41,10 +41,7 @@
 namespace rosflight
 {
 CalibrateMag::CalibrateMag() :
-  calibrating_(false),
-  nh_private_("~"),
-  reference_field_strength_(1.0),
-  mag_subscriber_(nh_, "/magnetometer", 1)
+  calibrating_(false), nh_private_("~"), reference_field_strength_(1.0), mag_subscriber_(nh_, "/magnetometer", 1)
 {
   A_ = Eigen::MatrixXd::Zero(3, 3);
   b_ = Eigen::MatrixXd::Zero(3, 1);

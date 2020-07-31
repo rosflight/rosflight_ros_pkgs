@@ -108,6 +108,8 @@ private:
   ros::NodeHandle* nh_;
   ros::Subscriber rc_sub_;
   rosflight_msgs::RCRaw latestRC_;
+  ros::Time last_rc_message_timestamp_;
+  static constexpr float RC_TIMEOUT_PERIOD_S{1.0};
   bool rc_received_;
   ros::Time last_rc_message_;
 

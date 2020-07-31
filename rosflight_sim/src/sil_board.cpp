@@ -471,7 +471,12 @@ void SIL_Board::pwm_disable()
 
 bool SIL_Board::rc_lost(void)
 {
-  return !rc_received_;
+  if ((ros::Time::now() - last_rc_message_timestamp_).toSec() > RC_TIMEOUT_PERIOD_S)
+  {
+    ROS_INFO_THROTTLE(20, "RC timeout");
+    return true;
+  }
+  return !rc_received_ || ((ros::Time::now() - last_rc_message_timestamp_).toSec() > 1);
 }
 
 void SIL_Board::rc_init(rc_type_t rc_type) {}
@@ -563,6 +568,7 @@ void SIL_Board::RCCallback(const rosflight_msgs::RCRaw &msg)
   rc_received_ = true;
   last_rc_message_ = ros::Time::now();
   latestRC_ = msg;
+  last_rc_message_timestamp_ = ros::Time::now();
 }
 
 bool SIL_Board::gnss_present()
