@@ -36,18 +36,22 @@
 
 #include <rosflight/mavrosflight/logger_adapter.h>
 #include <rosflight/mavrosflight/logger_interface.h>
+#include <rosflight/mavrosflight/time_interface.h>
 #include <rosflight/mavrosflight/time_manager.h>
 
 namespace mavrosflight
 {
 template <typename DerivedLogger>
-TimeManager<DerivedLogger>::TimeManager(MavlinkComm *comm, LoggerInterface<DerivedLogger> &logger) :
+TimeManager<DerivedLogger>::TimeManager(MavlinkComm *comm,
+                                        LoggerInterface<DerivedLogger> &logger,
+                                        TimeInterface &time_intf) :
   comm_(comm),
   offset_alpha_(0.95),
   offset_ns_(0),
   offset_(0.0),
   initialized_(false),
-  logger_(logger)
+  logger_(logger),
+  time_intf_(time_intf)
 
 {
   comm_->register_mavlink_listener(this);
@@ -86,10 +90,10 @@ void TimeManager<DerivedLogger>::handle_mavlink_message(const mavlink_message_t 
 }
 
 template <typename DerivedLogger>
-ros::Time TimeManager<DerivedLogger>::get_ros_time_ms(uint32_t boot_ms)
+time_ns_t TimeManager<DerivedLogger>::get_time_boot_ms(uint32_t boot_ms)
 {
   if (!initialized_)
-    return ros::Time::now();
+    return time_intf_.now_ns();
 
   int64_t boot_ns = (int64_t)boot_ms * 1000000;
 
@@ -98,18 +102,16 @@ ros::Time TimeManager<DerivedLogger>::get_ros_time_ms(uint32_t boot_ms)
   {
     logger_.error_throttle(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time",
                            boot_ns, offset_ns_);
-    return ros::Time::now();
+    return time_intf_.now_ns();
   }
-  ros::Time now;
-  now.fromNSec(ns);
-  return now;
+  return (time_ns_t)ns;
 }
 
 template <typename DerivedLogger>
-ros::Time TimeManager<DerivedLogger>::get_ros_time_us(uint64_t boot_us)
+time_ns_t TimeManager<DerivedLogger>::get_time_boot_us(uint64_t boot_us)
 {
   if (!initialized_)
-    return ros::Time::now();
+    return time_intf_.now_ns();
 
   int64_t boot_ns = (int64_t)boot_us * 1000;
 
@@ -118,11 +120,9 @@ ros::Time TimeManager<DerivedLogger>::get_ros_time_us(uint64_t boot_us)
   {
     logger_.error_throttle(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time",
                            boot_ns, offset_ns_);
-    return ros::Time::now();
+    return time_intf_.now_ns();
   }
-  ros::Time now;
-  now.fromNSec(ns);
-  return now;
+  return (time_ns_t)ns;
 }
 
 template <typename DerivedLogger>

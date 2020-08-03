@@ -43,6 +43,7 @@
 #include <rosflight/mavrosflight/mavlink_udp.h>
 #include <rosflight/mavrosflight/serial_exception.h>
 #include <rosflight/ros_logger.h>
+#include <rosflight/ros_time.h>
 #include <tf/tf.h>
 #include <cstdint>
 #include <eigen3/Eigen/Core>
@@ -103,7 +104,8 @@ rosflightIO::rosflightIO()
   {
     mavlink_comm_->open(); //! \todo move this into the MavROSflight constructor
     rosflight::ROSLogger logger;
-    mavrosflight_ = new mavrosflight::MavROSflight<rosflight::ROSLogger>(*mavlink_comm_, logger);
+    rosflight::ROSTime time_intf;
+    mavrosflight_ = new mavrosflight::MavROSflight<rosflight::ROSLogger>(*mavlink_comm_, logger, time_intf);
   }
   catch (mavrosflight::SerialException e)
   {
@@ -404,7 +406,9 @@ void rosflightIO::handle_attitude_quaternion_msg(const mavlink_message_t &msg)
   mavlink_msg_attitude_quaternion_decode(&msg, &attitude);
 
   rosflight_msgs::Attitude attitude_msg;
-  attitude_msg.header.stamp = mavrosflight_->time.get_ros_time_ms(attitude.time_boot_ms);
+  ros::Time now;
+  now.fromNSec(mavrosflight_->time.get_time_boot_ms(attitude.time_boot_ms));
+  attitude_msg.header.stamp = now;
   attitude_msg.attitude.w = attitude.q1;
   attitude_msg.attitude.x = attitude.q2;
   attitude_msg.attitude.y = attitude.q3;
@@ -440,7 +444,9 @@ void rosflightIO::handle_small_imu_msg(const mavlink_message_t &msg)
   mavlink_msg_small_imu_decode(&msg, &imu);
 
   sensor_msgs::Imu imu_msg;
-  imu_msg.header.stamp = mavrosflight_->time.get_ros_time_us(imu.time_boot_us);
+  ros::Time now;
+  now.fromNSec(mavrosflight_->time.get_time_boot_us(imu.time_boot_us));
+  imu_msg.header.stamp = now;
   imu_msg.header.frame_id = frame_id_;
   imu_msg.linear_acceleration.x = imu.xacc;
   imu_msg.linear_acceleration.y = imu.yacc;
@@ -474,7 +480,9 @@ void rosflightIO::handle_rosflight_output_raw_msg(const mavlink_message_t &msg)
   mavlink_msg_rosflight_output_raw_decode(&msg, &servo);
 
   rosflight_msgs::OutputRaw out_msg;
-  out_msg.header.stamp = mavrosflight_->time.get_ros_time_us(servo.stamp);
+  ros::Time now;
+  now.fromNSec(mavrosflight_->time.get_time_boot_us(servo.stamp));
+  out_msg.header.stamp = now;
   for (int i = 0; i < 14; i++)
   {
     out_msg.values[i] = servo.values[i];
@@ -493,7 +501,9 @@ void rosflightIO::handle_rc_channels_raw_msg(const mavlink_message_t &msg)
   mavlink_msg_rc_channels_raw_decode(&msg, &rc);
 
   rosflight_msgs::RCRaw out_msg;
-  out_msg.header.stamp = mavrosflight_->time.get_ros_time_ms(rc.time_boot_ms);
+  ros::Time now;
+  now.fromNSec(mavrosflight_->time.get_time_boot_ms(rc.time_boot_ms));
+  out_msg.header.stamp = now;
 
   out_msg.values[0] = rc.chan1_raw;
   out_msg.values[1] = rc.chan2_raw;
@@ -785,7 +795,8 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
   mavlink_rosflight_gnss_t gnss;
   mavlink_msg_rosflight_gnss_decode(&msg, &gnss);
 
-  ros::Time stamp = mavrosflight_->time.get_ros_time_us(gnss.rosflight_timestamp);
+  ros::Time stamp;
+  stamp.fromNSec(mavrosflight_->time.get_time_boot_us(gnss.rosflight_timestamp));
 
   rosflight_msgs::GNSS gnss_msg;
   gnss_msg.header.stamp = stamp;
