@@ -44,14 +44,14 @@ namespace mavrosflight
 template <typename DerivedLogger>
 TimeManager<DerivedLogger>::TimeManager(MavlinkComm *comm,
                                         LoggerInterface<DerivedLogger> &logger,
-                                        TimeInterface &time_intf) :
+                                        TimeInterface &time_interface) :
   comm_(comm),
   offset_alpha_(0.95),
   offset_ns_(0),
   offset_(0.0),
   initialized_(false),
   logger_(logger),
-  time_intf_(time_intf)
+  time_interface_(time_interface)
 
 {
   comm_->register_mavlink_listener(this);
@@ -93,7 +93,7 @@ template <typename DerivedLogger>
 time_ns_t TimeManager<DerivedLogger>::get_time_boot_ms(uint32_t boot_ms)
 {
   if (!initialized_)
-    return time_intf_.now_ns();
+    return time_interface_.now_ns();
 
   int64_t boot_ns = (int64_t)boot_ms * 1000000;
 
@@ -102,7 +102,7 @@ time_ns_t TimeManager<DerivedLogger>::get_time_boot_ms(uint32_t boot_ms)
   {
     logger_.error_throttle(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time",
                            boot_ns, offset_ns_);
-    return time_intf_.now_ns();
+    return time_interface_.now_ns();
   }
   return (time_ns_t)ns;
 }
@@ -111,7 +111,7 @@ template <typename DerivedLogger>
 time_ns_t TimeManager<DerivedLogger>::get_time_boot_us(uint64_t boot_us)
 {
   if (!initialized_)
-    return time_intf_.now_ns();
+    return time_interface_.now_ns();
 
   int64_t boot_ns = (int64_t)boot_us * 1000;
 
@@ -120,7 +120,7 @@ time_ns_t TimeManager<DerivedLogger>::get_time_boot_us(uint64_t boot_us)
   {
     logger_.error_throttle(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time",
                            boot_ns, offset_ns_);
-    return time_intf_.now_ns();
+    return time_interface_.now_ns();
   }
   return (time_ns_t)ns;
 }

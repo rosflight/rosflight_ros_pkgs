@@ -74,7 +74,7 @@ private:
   bool initialized_;
 
   LoggerInterface<DerivedLogger> &logger_;
-  TimeInterface &time_intf_;
+  TimeInterface &time_interface_;
 };
 
 } // namespace mavrosflight
