@@ -38,30 +38,32 @@
 #include <rosflight/mavrosflight/logger_interface.h>
 #include <rosflight/mavrosflight/time_interface.h>
 #include <rosflight/mavrosflight/time_manager.h>
+#include <rosflight/mavrosflight/timer_interface.h>
 
 namespace mavrosflight
 {
-template <typename DerivedLogger>
-TimeManager<DerivedLogger>::TimeManager(MavlinkComm *comm,
-                                        LoggerInterface<DerivedLogger> &logger,
-                                        TimeInterface &time_interface) :
+template <typename DerivedLogger, typename DerivedTimerInterface>
+TimeManager<DerivedLogger, DerivedTimerInterface>::TimeManager(
+  MavlinkComm *comm,
+  LoggerInterface<DerivedLogger> &logger,
+  TimeInterface &time_interface,
+  TimerInterface<DerivedTimerInterface> &timer_interface):
   comm_(comm),
   offset_alpha_(0.95),
   offset_ns_(0),
   offset_(0.0),
   initialized_(false),
   logger_(logger),
-  time_interface_(time_interface)
-
+  time_interface_(time_interface),
+  timer_interface_(timer_interface)
 {
   comm_->register_mavlink_listener(this);
 
-  ros::NodeHandle nh;
-  time_sync_timer_ = nh.createTimer(ros::Duration(ros::Rate(10)), &TimeManager::timer_callback, this);
+  time_sync_timer_ = timer_interface_.createTimer(10, &TimeManager::timer_callback, this);
 }
 
-template <typename DerivedLogger>
-void TimeManager<DerivedLogger>::handle_mavlink_message(const mavlink_message_t &msg)
+template <typename DerivedLogger, typename DerivedTimerInterface>
+void TimeManager<DerivedLogger, DerivedTimerInterface>::handle_mavlink_message(const mavlink_message_t &msg)
 {
   int64_t now_ns = ros::Time::now().toNSec();
 
@@ -89,8 +91,8 @@ void TimeManager<DerivedLogger>::handle_mavlink_message(const mavlink_message_t 
   }
 }
 
-template <typename DerivedLogger>
-time_ns_t TimeManager<DerivedLogger>::get_time_boot_ms(uint32_t boot_ms)
+template <typename DerivedLogger, typename DerivedTimerInterface>
+time_ns_t TimeManager<DerivedLogger, DerivedTimerInterface>::get_time_boot_ms(uint32_t boot_ms)
 {
   if (!initialized_)
     return time_interface_.now_ns();
@@ -107,8 +109,8 @@ time_ns_t TimeManager<DerivedLogger>::get_time_boot_ms(uint32_t boot_ms)
   return (time_ns_t)ns;
 }
 
-template <typename DerivedLogger>
-time_ns_t TimeManager<DerivedLogger>::get_time_boot_us(uint64_t boot_us)
+template <typename DerivedLogger, typename DerivedTimerInterface>
+time_ns_t TimeManager<DerivedLogger, DerivedTimerInterface>::get_time_boot_us(uint64_t boot_us)
 {
   if (!initialized_)
     return time_interface_.now_ns();
@@ -125,14 +127,14 @@ time_ns_t TimeManager<DerivedLogger>::get_time_boot_us(uint64_t boot_us)
   return (time_ns_t)ns;
 }
 
-template <typename DerivedLogger>
-void TimeManager<DerivedLogger>::timer_callback(const ros::TimerEvent &event)
+template <typename DerivedLogger, typename DerivedTimerInterface>
+void TimeManager<DerivedLogger, DerivedTimerInterface>::timer_callback()
 {
   mavlink_message_t msg;
   mavlink_msg_timesync_pack(1, 50, &msg, 0, ros::Time::now().toNSec());
   comm_->send_message(msg);
 }
 
-template class TimeManager<DerivedLoggerType>;
+template class TimeManager<DerivedLoggerType, DerivedTimerInterfaceType>;
 
 } // namespace mavrosflight

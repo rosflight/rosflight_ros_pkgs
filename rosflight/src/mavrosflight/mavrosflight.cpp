@@ -42,15 +42,17 @@ namespace mavrosflight
 {
 using boost::asio::serial_port_base;
 
-template <typename DerivedLogger>
-MavROSflight<DerivedLogger>::MavROSflight(MavlinkComm &mavlink_comm,
-                                          LoggerInterface<DerivedLogger> &logger,
-                                          TimeInterface &time_interface,
-                                          uint8_t sysid /* = 1 */,
-                                          uint8_t compid /* = 50 */) :
+template <typename DerivedLogger, typename DerivedTimerInterface>
+MavROSflight<DerivedLogger, DerivedTimerInterface>::MavROSflight(
+  MavlinkComm &mavlink_comm,
+  LoggerInterface<DerivedLogger> &logger,
+  TimeInterface &time_interface,
+  TimerInterface<DerivedTimerInterface>& timer_interface,
+  uint8_t sysid /* = 1 */,
+  uint8_t compid /* = 50 */) :
   comm(mavlink_comm),
   param(&comm, logger),
-  time(&comm, logger, time_interface),
+  time(&comm, logger, time_interface, timer_interface),
   sysid_(sysid),
   compid_(compid)
 {
@@ -58,12 +60,12 @@ MavROSflight<DerivedLogger>::MavROSflight(MavlinkComm &mavlink_comm,
   // comm.open();
 }
 
-template <typename DerivedLogger>
-MavROSflight<DerivedLogger>::~MavROSflight()
+template <typename DerivedLogger, typename DerivedTimerInterface>
+MavROSflight<DerivedLogger, DerivedTimerInterface>::~MavROSflight()
 {
   comm.close();
 }
 
-template class MavROSflight<DerivedLoggerType>;
+template class MavROSflight<DerivedLoggerType, DerivedTimerInterfaceType>;
 
 } // namespace mavrosflight

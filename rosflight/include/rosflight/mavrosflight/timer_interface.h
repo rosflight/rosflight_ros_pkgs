@@ -31,29 +31,49 @@
  */
 
 /**
- * @file interface_adapter.h
+ * @file timer_interface.h
  * @author Jacob Willis <jbwillis272@gmail.com>
  */
 
-#ifndef MAVROSFLIGHT_LOGGER_ADAPTER_H
-#define MAVROSFLIGHT_LOGGER_ADAPTER_H
+#ifndef MAVROSFLIGHT_TIMER_INTERFACE_H
+#define MAVROSFLIGHT_TIMER_INTERFACE_H
 
-#if defined(USE_ROS)
-#include <rosflight/ros_logger.h>
-#include <rosflight/ros_timer.h>
+#include <cstdint>
+
 namespace mavrosflight
 {
-using DerivedLoggerType = rosflight::ROSLogger;
-using DerivedTimerInterfaceType = rosflight::ROSTimerInterface;
-}
-#elif defined(STANDALONE)
-#include <rosflight/mavrosflight/default_logger.h>
-namespace mavrosflight
+/**
+ * \class AbstractTimer
+ * \brief Abstracts basic timer functionality
+ *
+ */
+class AbstractTimer
 {
-using DerivedLoggerType = mavrosflight::DefaultLogger;
-}
-#else
-#error "Unknown logging backend supplied for mavrosflight. Define USE_ROS or STANDALONE."
-#endif
+public:
+  virtual void start() = 0;
+  virtual void stop() = 0;
+};
 
-#endif // MAVROSFLIGHT_LOGGER_ADAPTER_H
+/**
+ * \class TimerInterface
+ * \brief Provide an interface for creating timers
+ *
+ */
+template <typename Derived>
+class TimerInterface
+{
+public:
+  template <class T>
+  AbstractTimer* createTimer(uint32_t rate_hz,
+                             void (T::*callback)(),
+                             T* obj,
+                             bool oneshot = false,
+                             bool autostart = true)
+  {
+    Derived& derived = static_cast<Derived&>(*this);
+    derived.createTimer(rate_hz, callback, obj, oneshot, autostart);
+  }
+};
+
+} // namespace mavrosflight
+#endif /* MAVROSFLIGHT_TIMER_INTERFACE_H */

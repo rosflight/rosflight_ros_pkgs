@@ -31,29 +31,65 @@
  */
 
 /**
- * @file interface_adapter.h
+ * @file ros_timer.h
  * @author Jacob Willis <jbwillis272@gmail.com>
  */
 
-#ifndef MAVROSFLIGHT_LOGGER_ADAPTER_H
-#define MAVROSFLIGHT_LOGGER_ADAPTER_H
+#ifndef ROSFLIGHT_ROS_TIMER_H
+#define ROSFLIGHT_ROS_TIMER_H
 
-#if defined(USE_ROS)
-#include <rosflight/ros_logger.h>
-#include <rosflight/ros_timer.h>
-namespace mavrosflight
-{
-using DerivedLoggerType = rosflight::ROSLogger;
-using DerivedTimerInterfaceType = rosflight::ROSTimerInterface;
-}
-#elif defined(STANDALONE)
-#include <rosflight/mavrosflight/default_logger.h>
-namespace mavrosflight
-{
-using DerivedLoggerType = mavrosflight::DefaultLogger;
-}
-#else
-#error "Unknown logging backend supplied for mavrosflight. Define USE_ROS or STANDALONE."
-#endif
+#include <rosflight/mavrosflight/timer_interface.h>
 
-#endif // MAVROSFLIGHT_LOGGER_ADAPTER_H
+#include <ros/ros.h>
+
+#include <vector>
+
+namespace rosflight
+{
+class ROSTimer : public mavrosflight::AbstractTimer
+{
+public:
+  inline ROSTimer(ros::Timer timer) : timer_(timer) {}
+
+  inline void start() { timer_.start(); }
+
+  inline void stop() { timer_.stop(); }
+
+private:
+  ros::Timer timer_;
+};
+
+class ROSTimerInterface : public mavrosflight::TimerInterface<ROSTimerInterface>
+{
+public:
+  template <class T>
+  inline mavrosflight::AbstractTimer* createTimer(uint32_t rate_hz,
+                                                  void (T::*callback)(),
+                                                  T* obj,
+                                                  bool oneshot = false,
+                                                  bool autostart = true)
+  {
+    ros::NodeHandle nh;
+    ros::Timer new_timer;
+    auto callback_ros = [&](ros::TimerEvent& event) { (obj->*callback)(); };
+
+    new_timer = nh.createTimer(ros::Duration(ros::Rate(rate_hz)), callback_ros, oneshot, autostart);
+    ROSTimer* new_ros_timer = new ROSTimer(new_timer);
+    timer_vec_.push_back(new_ros_timer);
+    return new_ros_timer;
+  }
+
+  inline ~ROSTimerInterface()
+  {
+    for (ROSTimer* rt : timer_vec_)
+    {
+      delete rt;
+    }
+  }
+
+private:
+  std::vector<ROSTimer*> timer_vec_;
+};
+
+} // namespace rosflight
+#endif /* ROSFLIGHT_ROS_TIMER_H */

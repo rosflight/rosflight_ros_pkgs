@@ -53,7 +53,7 @@
 
 namespace mavrosflight
 {
-template <typename DerivedLogger>
+template <typename DerivedLogger, typename DerivedTimerInterface>
 class MavROSflight
 {
 public:
@@ -65,6 +65,7 @@ public:
   MavROSflight(MavlinkComm& mavlink_comm,
                LoggerInterface<DerivedLogger>& logger,
                TimeInterface& time_interface,
+               TimerInterface<DerivedTimerInterface>& timer_interface,
                uint8_t sysid = 1,
                uint8_t compid = 50);
 
@@ -76,7 +77,7 @@ public:
   // public member objects
   MavlinkComm& comm;
   ParamManager<DerivedLogger> param;
-  TimeManager<DerivedLogger> time;
+  TimeManager<DerivedLogger, DerivedTimerInterface> time;
 
 private:
   // member variables
