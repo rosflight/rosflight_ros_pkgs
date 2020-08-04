@@ -31,7 +31,7 @@
  */
 
 /**
- * @file logger_interface.h
+ * @file interface_adapter.h
  * @author Jacob Willis <jbwillis272@gmail.com>
  */
 
