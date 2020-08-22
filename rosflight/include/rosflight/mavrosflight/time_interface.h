@@ -38,21 +38,18 @@
 #ifndef MAVROSFLIGHT_TIME_INTERFACE_H
 #define MAVROSFLIGHT_TIME_INTERFACE_H
 
-#include <cstdint>
+#include <chrono>
 
 namespace mavrosflight
 {
-typedef uint64_t time_ns_t;
 /**
  * \class TimeInterface
  * \brief Interface for acquiring system time
- *
- * For simplicity, times are int64_t, in nanoseconds.
  */
 class TimeInterface
 {
 public:
-  virtual time_ns_t now_ns() = 0;
+  virtual std::chrono::nanoseconds now_ns() = 0;
 };
 
 } // namespace mavrosflight

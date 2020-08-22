@@ -48,7 +48,6 @@ TimeManager<DerivedLogger>::TimeManager(MavlinkComm *comm,
   comm_(comm),
   offset_alpha_(0.95),
   offset_ns_(0),
-  offset_(0.0),
   initialized_(false),
   logger_(logger),
   time_interface_(time_interface)
@@ -63,73 +62,59 @@ TimeManager<DerivedLogger>::TimeManager(MavlinkComm *comm,
 template <typename DerivedLogger>
 void TimeManager<DerivedLogger>::handle_mavlink_message(const mavlink_message_t &msg)
 {
-  int64_t now_ns = ros::Time::now().toNSec();
+  std::chrono::nanoseconds now_ns = time_interface_.now_ns();
 
   if (msg.msgid == MAVLINK_MSG_ID_TIMESYNC)
   {
     mavlink_timesync_t tsync;
     mavlink_msg_timesync_decode(&msg, &tsync);
 
-    if (tsync.tc1 > 0) // check that this is a response, not a request
-    {
-      int64_t offset_ns = (tsync.ts1 + now_ns - 2 * tsync.tc1) / 2;
+    std::chrono::nanoseconds tc1_chrono(tsync.tc1);
 
-      if (!initialized_ || std::abs(offset_ns_ - offset_ns) > 1e7) // if difference > 10ms, use it directly
+    if (tc1_chrono > std::chrono::nanoseconds::zero()) // check that this is a response, not a request
+    {
+      std::chrono::nanoseconds ts1_chrono(tsync.ts1);
+      std::chrono::nanoseconds offset_ns((ts1_chrono + now_ns - 2 * tc1_chrono) / 2);
+
+      // if difference > 10ms, use it directly
+      if (!initialized_ || (offset_ns_ - offset_ns) > std::chrono::milliseconds(10)
+          || (offset_ns_ - offset_ns) < std::chrono::milliseconds(-10))
       {
         offset_ns_ = offset_ns;
-        logger_.info("Detected time offset of %0.3f s.", offset_ns / 1e9);
+        logger_.info("Detected time offset of %0.3f s.", std::chrono::duration<double>(offset_ns).count());
         logger_.debug("FCU time: %0.3f, System time: %0.3f", tsync.tc1 * 1e-9, tsync.ts1 * 1e-9);
         initialized_ = true;
       }
       else // otherwise low-pass filter the offset
       {
-        offset_ns_ = offset_alpha_ * offset_ns + (1.0 - offset_alpha_) * offset_ns_;
+        offset_ns_ = std::chrono::duration_cast<std::chrono::nanoseconds>(offset_alpha_ * offset_ns
+                                                                          + (1.0 - offset_alpha_) * offset_ns_);
       }
     }
   }
 }
 
 template <typename DerivedLogger>
-time_ns_t TimeManager<DerivedLogger>::get_time_boot_ms(uint32_t boot_ms)
+std::chrono::nanoseconds TimeManager<DerivedLogger>::get_time_boot(std::chrono::nanoseconds boot_ns)
 {
   if (!initialized_)
     return time_interface_.now_ns();
 
-  int64_t boot_ns = (int64_t)boot_ms * 1000000;
-
-  int64_t ns = boot_ns + offset_ns_;
-  if (ns < 0)
+  std::chrono::nanoseconds ns = boot_ns + offset_ns_;
+  if (ns < std::chrono::nanoseconds::zero())
   {
     logger_.error_throttle(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time",
                            boot_ns, offset_ns_);
     return time_interface_.now_ns();
   }
-  return (time_ns_t)ns;
-}
-
-template <typename DerivedLogger>
-time_ns_t TimeManager<DerivedLogger>::get_time_boot_us(uint64_t boot_us)
-{
-  if (!initialized_)
-    return time_interface_.now_ns();
-
-  int64_t boot_ns = (int64_t)boot_us * 1000;
-
-  int64_t ns = boot_ns + offset_ns_;
-  if (ns < 0)
-  {
-    logger_.error_throttle(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time",
-                           boot_ns, offset_ns_);
-    return time_interface_.now_ns();
-  }
-  return (time_ns_t)ns;
+  return ns;
 }
 
 template <typename DerivedLogger>
 void TimeManager<DerivedLogger>::timer_callback(const ros::TimerEvent &event)
 {
   mavlink_message_t msg;
-  mavlink_msg_timesync_pack(1, 50, &msg, 0, ros::Time::now().toNSec());
+  mavlink_msg_timesync_pack(1, 50, &msg, 0, time_interface_.now_ns().count());
   comm_->send_message(msg);
 }
 

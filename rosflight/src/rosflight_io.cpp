@@ -407,7 +407,8 @@ void rosflightIO::handle_attitude_quaternion_msg(const mavlink_message_t &msg)
 
   rosflight_msgs::Attitude attitude_msg;
   ros::Time now;
-  now.fromNSec(mavrosflight_->time.get_time_boot_ms(attitude.time_boot_ms));
+  std::chrono::milliseconds time_boot(attitude.time_boot_ms);
+  now.fromNSec(mavrosflight_->time.get_time_boot(std::chrono::nanoseconds(time_boot)).count());
   attitude_msg.header.stamp = now;
   attitude_msg.attitude.w = attitude.q1;
   attitude_msg.attitude.x = attitude.q2;
@@ -445,7 +446,8 @@ void rosflightIO::handle_small_imu_msg(const mavlink_message_t &msg)
 
   sensor_msgs::Imu imu_msg;
   ros::Time now;
-  now.fromNSec(mavrosflight_->time.get_time_boot_us(imu.time_boot_us));
+  std::chrono::microseconds time_boot(imu.time_boot_us);
+  now.fromNSec(mavrosflight_->time.get_time_boot(std::chrono::nanoseconds(time_boot)).count());
   imu_msg.header.stamp = now;
   imu_msg.header.frame_id = frame_id_;
   imu_msg.linear_acceleration.x = imu.xacc;
@@ -481,7 +483,8 @@ void rosflightIO::handle_rosflight_output_raw_msg(const mavlink_message_t &msg)
 
   rosflight_msgs::OutputRaw out_msg;
   ros::Time now;
-  now.fromNSec(mavrosflight_->time.get_time_boot_us(servo.stamp));
+  std::chrono::microseconds stamp(servo.stamp);
+  now.fromNSec(mavrosflight_->time.get_time_boot(std::chrono::nanoseconds(stamp)).count());
   out_msg.header.stamp = now;
   for (int i = 0; i < 14; i++)
   {
@@ -502,7 +505,8 @@ void rosflightIO::handle_rc_channels_raw_msg(const mavlink_message_t &msg)
 
   rosflight_msgs::RCRaw out_msg;
   ros::Time now;
-  now.fromNSec(mavrosflight_->time.get_time_boot_ms(rc.time_boot_ms));
+  std::chrono::milliseconds time_boot(rc.time_boot_ms);
+  now.fromNSec(mavrosflight_->time.get_time_boot(std::chrono::nanoseconds(time_boot)).count());
   out_msg.header.stamp = now;
 
   out_msg.values[0] = rc.chan1_raw;
@@ -796,7 +800,8 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
   mavlink_msg_rosflight_gnss_decode(&msg, &gnss);
 
   ros::Time stamp;
-  stamp.fromNSec(mavrosflight_->time.get_time_boot_us(gnss.rosflight_timestamp));
+  std::chrono::microseconds timestamp(gnss.rosflight_timestamp);
+  stamp.fromNSec(mavrosflight_->time.get_time_boot(std::chrono::nanoseconds(timestamp)).count());
 
   rosflight_msgs::GNSS gnss_msg;
   gnss_msg.header.stamp = stamp;

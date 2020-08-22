@@ -45,8 +45,7 @@
 
 #include <ros/ros.h>
 
-#include <cstdint>
-#include <cstdlib>
+#include <chrono>
 
 namespace mavrosflight
 {
@@ -58,8 +57,7 @@ public:
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
 
-  time_ns_t get_time_boot_ms(uint32_t boot_ms);
-  time_ns_t get_time_boot_us(uint64_t boot_us);
+  std::chrono::nanoseconds get_time_boot(std::chrono::nanoseconds boot_ns);
 
 private:
   MavlinkComm *comm_;
@@ -68,8 +66,7 @@ private:
   void timer_callback(const ros::TimerEvent &event);
 
   double offset_alpha_;
-  int64_t offset_ns_;
-  ros::Duration offset_;
+  std::chrono::nanoseconds offset_ns_;
 
   bool initialized_;
 
