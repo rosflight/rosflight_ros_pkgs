@@ -47,7 +47,7 @@ namespace rosflight
 class ROSTime : public mavrosflight::TimeInterface
 {
 public:
-  inline std::chrono::nanoseconds now_ns()
+  inline std::chrono::nanoseconds now_ns() const
   {
     std::chrono::nanoseconds now(ros::Time::now().toNSec());
     return now;
