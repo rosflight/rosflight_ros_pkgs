@@ -43,7 +43,7 @@
 #include <rosflight/mavrosflight/mavlink_udp.h>
 #include <rosflight/mavrosflight/serial_exception.h>
 #include <rosflight/ros_logger.h>
-#include <rosflight/ros_time.h>
+#include <rosflight/ros_time_interface.h>
 #include <tf/tf.h>
 #include <cstdint>
 #include <eigen3/Eigen/Core>
@@ -104,7 +104,7 @@ rosflightIO::rosflightIO()
   {
     mavlink_comm_->open(); //! \todo move this into the MavROSflight constructor
     logger_ = rosflight::ROSLogger();
-    time_interface_ = rosflight::ROSTime();
+    time_interface_ = rosflight::ROSTimeInterface();
     mavrosflight_ = new mavrosflight::MavROSflight<rosflight::ROSLogger>(*mavlink_comm_, logger_, time_interface_);
   }
   catch (mavrosflight::SerialException e)

@@ -31,7 +31,7 @@
  */
 
 /**
- * @file ros_time.h
+ * @file ros_time_interface.h
  * @author Jacob Willis <jbwillis272@gmail.com>
  */
 
@@ -44,7 +44,7 @@
 
 namespace rosflight
 {
-class ROSTime : public mavrosflight::TimeInterface
+class ROSTimeInterface : public mavrosflight::TimeInterface
 {
 public:
   inline std::chrono::nanoseconds now_ns() const
