@@ -81,6 +81,7 @@
 #include <rosflight/mavrosflight/mavrosflight.h>
 #include <rosflight/mavrosflight/param_listener_interface.h>
 #include <rosflight/ros_logger.h>
+#include <rosflight/ros_time.h>
 
 #include <geometry_msgs/Quaternion.h>
 
@@ -216,6 +217,9 @@ private:
 
   mavrosflight::MavlinkComm *mavlink_comm_;
   mavrosflight::MavROSflight<rosflight::ROSLogger> *mavrosflight_;
+
+  rosflight::ROSLogger logger_;
+  rosflight::ROSTime time_interface_;
 };
 
 } // namespace rosflight_io

@@ -103,9 +103,9 @@ rosflightIO::rosflightIO()
   try
   {
     mavlink_comm_->open(); //! \todo move this into the MavROSflight constructor
-    rosflight::ROSLogger logger;
-    rosflight::ROSTime time_interface;
-    mavrosflight_ = new mavrosflight::MavROSflight<rosflight::ROSLogger>(*mavlink_comm_, logger, time_interface);
+    logger_ = rosflight::ROSLogger();
+    time_interface_ = rosflight::ROSTime();
+    mavrosflight_ = new mavrosflight::MavROSflight<rosflight::ROSLogger>(*mavlink_comm_, logger_, time_interface_);
   }
   catch (mavrosflight::SerialException e)
   {
