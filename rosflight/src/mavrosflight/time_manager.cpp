@@ -95,16 +95,16 @@ void TimeManager<DerivedLogger>::handle_mavlink_message(const mavlink_message_t 
 }
 
 template <typename DerivedLogger>
-std::chrono::nanoseconds TimeManager<DerivedLogger>::get_time_boot(std::chrono::nanoseconds boot_ns)
+std::chrono::nanoseconds TimeManager<DerivedLogger>::fcu_time_to_system_time(std::chrono::nanoseconds fcu_time)
 {
   if (!initialized_)
     return time_interface_.now();
 
-  std::chrono::nanoseconds ns = boot_ns + offset_ns_;
+  std::chrono::nanoseconds ns = fcu_time + offset_ns_;
   if (ns < std::chrono::nanoseconds::zero())
   {
-    logger_.error_throttle(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time",
-                           boot_ns, offset_ns_);
+    logger_.error_throttle(1, "negative time calculated from FCU: fcu_time=%ld, offset_ns=%ld.  Using system time",
+                           fcu_time, offset_ns_);
     return time_interface_.now();
   }
   return ns;

@@ -154,6 +154,7 @@ private:
   void request_version();
   void send_heartbeat();
   void check_error_code(uint8_t current, uint8_t previous, ROSFLIGHT_ERROR_CODE code, std::string name);
+  ros::Time fcu_time_to_ros_time(std::chrono::nanoseconds fcu_time);
 
   template <class T>
   inline T saturate(T value, T min, T max)

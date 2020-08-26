@@ -406,10 +406,8 @@ void rosflightIO::handle_attitude_quaternion_msg(const mavlink_message_t &msg)
   mavlink_msg_attitude_quaternion_decode(&msg, &attitude);
 
   rosflight_msgs::Attitude attitude_msg;
-  ros::Time now;
-  std::chrono::milliseconds time_boot(attitude.time_boot_ms);
-  now.fromNSec(mavrosflight_->time.get_time_boot(std::chrono::nanoseconds(time_boot)).count());
-  attitude_msg.header.stamp = now;
+
+  attitude_msg.header.stamp = fcu_time_to_ros_time(std::chrono::milliseconds(attitude.time_boot_ms));
   attitude_msg.attitude.w = attitude.q1;
   attitude_msg.attitude.x = attitude.q2;
   attitude_msg.attitude.y = attitude.q3;
@@ -445,10 +443,7 @@ void rosflightIO::handle_small_imu_msg(const mavlink_message_t &msg)
   mavlink_msg_small_imu_decode(&msg, &imu);
 
   sensor_msgs::Imu imu_msg;
-  ros::Time now;
-  std::chrono::microseconds time_boot(imu.time_boot_us);
-  now.fromNSec(mavrosflight_->time.get_time_boot(std::chrono::nanoseconds(time_boot)).count());
-  imu_msg.header.stamp = now;
+  imu_msg.header.stamp = fcu_time_to_ros_time(std::chrono::microseconds(imu.time_boot_us));
   imu_msg.header.frame_id = frame_id_;
   imu_msg.linear_acceleration.x = imu.xacc;
   imu_msg.linear_acceleration.y = imu.yacc;
@@ -482,10 +477,7 @@ void rosflightIO::handle_rosflight_output_raw_msg(const mavlink_message_t &msg)
   mavlink_msg_rosflight_output_raw_decode(&msg, &servo);
 
   rosflight_msgs::OutputRaw out_msg;
-  ros::Time now;
-  std::chrono::microseconds stamp(servo.stamp);
-  now.fromNSec(mavrosflight_->time.get_time_boot(std::chrono::nanoseconds(stamp)).count());
-  out_msg.header.stamp = now;
+  out_msg.header.stamp = fcu_time_to_ros_time(std::chrono::microseconds(servo.stamp));
   for (int i = 0; i < 14; i++)
   {
     out_msg.values[i] = servo.values[i];
@@ -504,10 +496,7 @@ void rosflightIO::handle_rc_channels_raw_msg(const mavlink_message_t &msg)
   mavlink_msg_rc_channels_raw_decode(&msg, &rc);
 
   rosflight_msgs::RCRaw out_msg;
-  ros::Time now;
-  std::chrono::milliseconds time_boot(rc.time_boot_ms);
-  now.fromNSec(mavrosflight_->time.get_time_boot(std::chrono::nanoseconds(time_boot)).count());
-  out_msg.header.stamp = now;
+  out_msg.header.stamp = fcu_time_to_ros_time(std::chrono::milliseconds(rc.time_boot_ms));
 
   out_msg.values[0] = rc.chan1_raw;
   out_msg.values[1] = rc.chan2_raw;
@@ -712,6 +701,14 @@ void rosflightIO::handle_small_range_msg(const mavlink_message_t &msg)
     break;
   }
 }
+
+ros::Time rosflightIO::fcu_time_to_ros_time(std::chrono::nanoseconds fcu_time)
+{
+  ros::Time now;
+  now.fromNSec(mavrosflight_->time.fcu_time_to_system_time(fcu_time).count());
+  return now;
+}
+
 std::string rosflightIO::get_major_minor_version(const std::string &version)
 {
   size_t start_index = 0;
@@ -799,10 +796,7 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
   mavlink_rosflight_gnss_t gnss;
   mavlink_msg_rosflight_gnss_decode(&msg, &gnss);
 
-  ros::Time stamp;
-  std::chrono::microseconds timestamp(gnss.rosflight_timestamp);
-  stamp.fromNSec(mavrosflight_->time.get_time_boot(std::chrono::nanoseconds(timestamp)).count());
-
+  ros::Time stamp = fcu_time_to_ros_time(std::chrono::microseconds(gnss.rosflight_timestamp));
   rosflight_msgs::GNSS gnss_msg;
   gnss_msg.header.stamp = stamp;
   gnss_msg.header.frame_id = "ECEF";

@@ -57,7 +57,7 @@ public:
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
 
-  std::chrono::nanoseconds get_time_boot(std::chrono::nanoseconds boot_ns);
+  std::chrono::nanoseconds fcu_time_to_system_time(std::chrono::nanoseconds fcu_time);
 
 private:
   MavlinkComm *comm_;
