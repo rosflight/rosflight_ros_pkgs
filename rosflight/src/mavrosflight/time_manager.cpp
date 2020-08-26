@@ -71,7 +71,7 @@ void TimeManager<DerivedLogger>::handle_mavlink_message(const mavlink_message_t 
 
     std::chrono::nanoseconds tc1_chrono(tsync.tc1);
 
-    if (tc1_chrono > std::chrono::nanoseconds::zero()) // check that this is a response, not a request
+    if (tsync.tc1 > 0) // check that this is a response, not a request
     {
       std::chrono::nanoseconds ts1_chrono(tsync.ts1);
       std::chrono::nanoseconds offset_ns((ts1_chrono + now - 2 * tc1_chrono) / 2);
