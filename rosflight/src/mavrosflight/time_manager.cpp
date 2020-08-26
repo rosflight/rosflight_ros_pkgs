@@ -44,7 +44,7 @@ namespace mavrosflight
 template <typename DerivedLogger>
 TimeManager<DerivedLogger>::TimeManager(MavlinkComm *comm,
                                         LoggerInterface<DerivedLogger> &logger,
-                                        TimeInterface &time_interface) :
+                                        const TimeInterface &time_interface) :
   comm_(comm),
   offset_alpha_(0.95),
   offset_ns_(0),
