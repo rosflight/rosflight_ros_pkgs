@@ -49,7 +49,7 @@ namespace mavrosflight
 class TimeInterface
 {
 public:
-  virtual std::chrono::nanoseconds now_ns() const = 0;
+  virtual std::chrono::nanoseconds now() const = 0;
 };
 
 } // namespace mavrosflight

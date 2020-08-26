@@ -62,7 +62,7 @@ TimeManager<DerivedLogger>::TimeManager(MavlinkComm *comm,
 template <typename DerivedLogger>
 void TimeManager<DerivedLogger>::handle_mavlink_message(const mavlink_message_t &msg)
 {
-  std::chrono::nanoseconds now_ns = time_interface_.now_ns();
+  std::chrono::nanoseconds now = time_interface_.now();
 
   if (msg.msgid == MAVLINK_MSG_ID_TIMESYNC)
   {
@@ -74,7 +74,7 @@ void TimeManager<DerivedLogger>::handle_mavlink_message(const mavlink_message_t 
     if (tc1_chrono > std::chrono::nanoseconds::zero()) // check that this is a response, not a request
     {
       std::chrono::nanoseconds ts1_chrono(tsync.ts1);
-      std::chrono::nanoseconds offset_ns((ts1_chrono + now_ns - 2 * tc1_chrono) / 2);
+      std::chrono::nanoseconds offset_ns((ts1_chrono + now - 2 * tc1_chrono) / 2);
 
       // if difference > 10ms, use it directly
       if (!initialized_ || (offset_ns_ - offset_ns) > std::chrono::milliseconds(10)
@@ -98,14 +98,14 @@ template <typename DerivedLogger>
 std::chrono::nanoseconds TimeManager<DerivedLogger>::get_time_boot(std::chrono::nanoseconds boot_ns)
 {
   if (!initialized_)
-    return time_interface_.now_ns();
+    return time_interface_.now();
 
   std::chrono::nanoseconds ns = boot_ns + offset_ns_;
   if (ns < std::chrono::nanoseconds::zero())
   {
     logger_.error_throttle(1, "negative time calculated from FCU: boot_ns=%ld, offset_ns=%ld.  Using system time",
                            boot_ns, offset_ns_);
-    return time_interface_.now_ns();
+    return time_interface_.now();
   }
   return ns;
 }
@@ -114,7 +114,7 @@ template <typename DerivedLogger>
 void TimeManager<DerivedLogger>::timer_callback(const ros::TimerEvent &event)
 {
   mavlink_message_t msg;
-  mavlink_msg_timesync_pack(1, 50, &msg, 0, time_interface_.now_ns().count());
+  mavlink_msg_timesync_pack(1, 50, &msg, 0, time_interface_.now().count());
   comm_->send_message(msg);
 }
 
