@@ -50,8 +50,6 @@
 #include <string>
 #include <vector>
 
-#include <ros/ros.h>
-
 namespace mavrosflight
 {
 template <typename DerivedLogger>
@@ -104,7 +102,6 @@ private:
   bool *received_;
   bool got_all_params_;
 
-  ros::NodeHandle nh_;
   std::deque<mavlink_message_t> param_set_queue_;
   AbstractTimer *param_set_timer_;
   bool param_set_in_progress_;

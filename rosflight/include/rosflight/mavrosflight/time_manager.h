@@ -44,8 +44,6 @@
 #include <rosflight/mavrosflight/time_interface.h>
 #include <rosflight/mavrosflight/timer_interface.h>
 
-#include <ros/ros.h>
-
 #include <chrono>
 
 namespace mavrosflight
