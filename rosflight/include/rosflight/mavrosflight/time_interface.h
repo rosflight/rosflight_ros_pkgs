@@ -31,27 +31,26 @@
  */
 
 /**
- * @file logger_interface.h
+ * @file time_interface.h
  * @author Jacob Willis <jbwillis272@gmail.com>
  */
 
-#ifndef MAVROSFLIGHT_LOGGER_ADAPTER_H
-#define MAVROSFLIGHT_LOGGER_ADAPTER_H
+#ifndef MAVROSFLIGHT_TIME_INTERFACE_H
+#define MAVROSFLIGHT_TIME_INTERFACE_H
 
-#if defined(USE_ROS)
-#include <rosflight/ros_logger.h>
+#include <chrono>
+
 namespace mavrosflight
 {
-using DerivedLoggerType = rosflight::ROSLogger;
-}
-#elif defined(STANDALONE)
-#include <rosflight/mavrosflight/default_logger.h>
-namespace mavrosflight
+/**
+ * \class TimeInterface
+ * \brief Interface for acquiring system time
+ */
+class TimeInterface
 {
-using DerivedLoggerType = mavrosflight::DefaultLogger;
-}
-#else
-#error "Unknown logging backend supplied for mavrosflight. Define USE_ROS or STANDALONE."
-#endif
+public:
+  virtual std::chrono::nanoseconds now() const = 0;
+};
 
-#endif // MAVROSFLIGHT_LOGGER_ADAPTER_H
+} // namespace mavrosflight
+#endif /* MAVROSFLIGHT_TIME_INTERFACE_H */

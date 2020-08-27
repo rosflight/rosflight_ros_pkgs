@@ -81,6 +81,7 @@
 #include <rosflight/mavrosflight/mavrosflight.h>
 #include <rosflight/mavrosflight/param_listener_interface.h>
 #include <rosflight/ros_logger.h>
+#include <rosflight/ros_time_interface.h>
 
 #include <geometry_msgs/Quaternion.h>
 
@@ -153,6 +154,7 @@ private:
   void request_version();
   void send_heartbeat();
   void check_error_code(uint8_t current, uint8_t previous, ROSFLIGHT_ERROR_CODE code, std::string name);
+  ros::Time fcu_time_to_ros_time(std::chrono::nanoseconds fcu_time);
 
   template <class T>
   inline T saturate(T value, T min, T max)
@@ -216,6 +218,9 @@ private:
 
   mavrosflight::MavlinkComm *mavlink_comm_;
   mavrosflight::MavROSflight<rosflight::ROSLogger> *mavrosflight_;
+
+  rosflight::ROSLogger logger_;
+  rosflight::ROSTimeInterface time_interface_;
 };
 
 } // namespace rosflight_io

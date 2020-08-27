@@ -35,7 +35,7 @@
  */
 
 #include <ros/ros.h>
-#include <rosflight/mavrosflight/logger_adapter.h>
+#include <rosflight/mavrosflight/interface_adapter.h>
 #include <rosflight/mavrosflight/logger_interface.h>
 #include <rosflight/mavrosflight/param_manager.h>
 #include <yaml-cpp/yaml.h>
