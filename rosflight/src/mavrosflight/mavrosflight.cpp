@@ -46,11 +46,12 @@ template <typename DerivedLogger>
 MavROSflight<DerivedLogger>::MavROSflight(MavlinkComm &mavlink_comm,
                                           LoggerInterface<DerivedLogger> &logger,
                                           const TimeInterface &time_interface,
+                                          TimerInterface &timer_interface,
                                           uint8_t sysid /* = 1 */,
                                           uint8_t compid /* = 50 */) :
   comm(mavlink_comm),
-  param(&comm, logger),
-  time(&comm, logger, time_interface),
+  param(&comm, logger, timer_interface),
+  time(&comm, logger, time_interface, timer_interface),
   sysid_(sysid),
   compid_(compid)
 {

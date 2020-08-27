@@ -42,6 +42,7 @@
 #include <rosflight/mavrosflight/mavlink_comm.h>
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
 #include <rosflight/mavrosflight/time_interface.h>
+#include <rosflight/mavrosflight/timer_interface.h>
 
 #include <ros/ros.h>
 
@@ -53,7 +54,10 @@ template <typename DerivedLogger>
 class TimeManager : MavlinkListenerInterface
 {
 public:
-  TimeManager(MavlinkComm *comm, LoggerInterface<DerivedLogger> &logger, const TimeInterface &time);
+  TimeManager(MavlinkComm *comm,
+              LoggerInterface<DerivedLogger> &logger,
+              const TimeInterface &time_interface,
+              TimerInterface &timer_interface);
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
 
@@ -62,8 +66,8 @@ public:
 private:
   MavlinkComm *comm_;
 
-  ros::Timer time_sync_timer_;
-  void timer_callback(const ros::TimerEvent &event);
+  AbstractTimer *time_sync_timer_;
+  void timer_callback();
 
   double offset_alpha_;
   std::chrono::nanoseconds offset_ns_;
@@ -72,6 +76,7 @@ private:
 
   LoggerInterface<DerivedLogger> &logger_;
   const TimeInterface &time_interface_;
+  TimerInterface &timer_interface_;
 };
 
 } // namespace mavrosflight

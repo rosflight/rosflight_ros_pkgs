@@ -34,18 +34,21 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
+#include <fstream>
+#include <functional>
+
 #include <ros/ros.h>
 #include <rosflight/mavrosflight/interface_adapter.h>
 #include <rosflight/mavrosflight/logger_interface.h>
 #include <rosflight/mavrosflight/param_manager.h>
 #include <yaml-cpp/yaml.h>
 
-#include <fstream>
-
 namespace mavrosflight
 {
 template <typename DerivedLogger>
-ParamManager<DerivedLogger>::ParamManager(MavlinkComm *const comm, LoggerInterface<DerivedLogger> &logger) :
+ParamManager<DerivedLogger>::ParamManager(MavlinkComm *const comm,
+                                          LoggerInterface<DerivedLogger> &logger,
+                                          TimerInterface &timer_interface) :
   comm_(comm),
   unsaved_changes_(false),
   write_request_in_progress_(false),
@@ -53,13 +56,15 @@ ParamManager<DerivedLogger>::ParamManager(MavlinkComm *const comm, LoggerInterfa
   received_count_(0),
   got_all_params_(false),
   param_set_in_progress_(false),
-  logger_(logger)
+  logger_(logger),
+  timer_interface_(timer_interface)
 {
   comm_->register_mavlink_listener(this);
 
-  param_set_timer_ = nh_.createTimer(ros::Duration(ros::Rate(100)), &ParamManager::param_set_timer_callback, this,
-                                     false, /* not oneshot */
-                                     false /* not autostart */);
+  std::function<void()> bound_callback = std::bind(&ParamManager<DerivedLogger>::param_set_timer_callback, this);
+  param_set_timer_ =
+      timer_interface_.createTimer(std::chrono::milliseconds(10), bound_callback, false, /* not oneshot */
+                                   false /* not autostart */);
 }
 
 template <typename DerivedLogger>
@@ -117,7 +122,7 @@ bool ParamManager<DerivedLogger>::set_param_value(std::string name, double value
     param_set_queue_.push_back(msg);
     if (!param_set_in_progress_)
     {
-      param_set_timer_.start();
+      param_set_timer_->start();
       param_set_in_progress_ = true;
     }
 
@@ -398,11 +403,11 @@ bool ParamManager<DerivedLogger>::got_all_params()
 }
 
 template <typename DerivedLogger>
-void ParamManager<DerivedLogger>::param_set_timer_callback(const ros::TimerEvent &event)
+void ParamManager<DerivedLogger>::param_set_timer_callback()
 {
   if (param_set_queue_.empty())
   {
-    param_set_timer_.stop();
+    param_set_timer_->stop();
     param_set_in_progress_ = false;
   }
   else
