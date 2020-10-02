@@ -41,6 +41,7 @@
 
 #include <chrono>
 #include <functional>
+#include <memory>
 
 namespace mavrosflight
 {
@@ -63,10 +64,10 @@ public:
 class TimerInterface
 {
 public:
-  virtual AbstractTimer* createTimer(std::chrono::nanoseconds period,
-                                     std::function<void()> callback,
-                                     const bool oneshot = false,
-                                     const bool autostart = true) = 0;
+  virtual std::shared_ptr<AbstractTimer> createTimer(std::chrono::nanoseconds period,
+                                                     std::function<void()> callback,
+                                                     const bool oneshot = false,
+                                                     const bool autostart = true) = 0;
 };
 
 } // namespace mavrosflight

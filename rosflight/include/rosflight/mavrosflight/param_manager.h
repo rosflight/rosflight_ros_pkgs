@@ -47,6 +47,7 @@
 
 #include <deque>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -103,7 +104,7 @@ private:
   bool got_all_params_;
 
   std::deque<mavlink_message_t> param_set_queue_;
-  AbstractTimer *param_set_timer_;
+  std::shared_ptr<AbstractTimer> param_set_timer_;
   bool param_set_in_progress_;
   void param_set_timer_callback();
 

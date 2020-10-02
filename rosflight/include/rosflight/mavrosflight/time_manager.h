@@ -45,6 +45,7 @@
 #include <rosflight/mavrosflight/timer_interface.h>
 
 #include <chrono>
+#include <memory>
 
 namespace mavrosflight
 {
@@ -64,7 +65,7 @@ public:
 private:
   MavlinkComm *comm_;
 
-  AbstractTimer *time_sync_timer_;
+  std::shared_ptr<AbstractTimer> time_sync_timer_;
   void timer_callback();
 
   double offset_alpha_;

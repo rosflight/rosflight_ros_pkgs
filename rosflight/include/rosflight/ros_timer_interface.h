@@ -42,6 +42,7 @@
 
 #include <ros/ros.h>
 
+#include <memory>
 #include <vector>
 
 namespace rosflight
@@ -74,26 +75,17 @@ private:
 class ROSTimerInterface : public mavrosflight::TimerInterface
 {
 public:
-  inline mavrosflight::AbstractTimer* createTimer(std::chrono::nanoseconds period,
-                                                  std::function<void()> callback,
-                                                  const bool oneshot = false,
-                                                  const bool autostart = true)
+  inline std::shared_ptr<mavrosflight::AbstractTimer> createTimer(std::chrono::nanoseconds period,
+                                                                  std::function<void()> callback,
+                                                                  const bool oneshot = false,
+                                                                  const bool autostart = true)
   {
-    ROSAbstractTimer* new_ros_abstract_timer = new ROSAbstractTimer(period, callback, oneshot, autostart);
-    timer_vec_.push_back(new_ros_abstract_timer);
-    return new_ros_abstract_timer;
-  }
-
-  inline ~ROSTimerInterface()
-  {
-    for (ROSAbstractTimer* rt : timer_vec_)
-    {
-      delete rt;
-    }
+    timer_vec_.push_back(std::make_shared<ROSAbstractTimer>(period, callback, oneshot, autostart));
+    return timer_vec_.back();
   }
 
 private:
-  std::vector<ROSAbstractTimer*> timer_vec_;
+  std::vector<std::shared_ptr<ROSAbstractTimer>> timer_vec_;
 };
 
 } // namespace rosflight
