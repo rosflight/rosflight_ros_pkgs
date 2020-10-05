@@ -80,12 +80,10 @@ public:
                                                                   const bool oneshot = false,
                                                                   const bool autostart = true)
   {
-    timer_vec_.push_back(std::make_shared<ROSAbstractTimer>(period, callback, oneshot, autostart));
-    return timer_vec_.back();
+    return std::make_shared<ROSAbstractTimer>(period, callback, oneshot, autostart);
   }
 
 private:
-  std::vector<std::shared_ptr<ROSAbstractTimer>> timer_vec_;
 };
 
 } // namespace rosflight
