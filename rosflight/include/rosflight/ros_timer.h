@@ -51,14 +51,13 @@ class ROSTimer : public mavrosflight::TimerInterface
 {
 public:
   inline ROSTimer(std::chrono::nanoseconds period,
-                          std::function<void()> callback,
-                          const bool oneshot,
-                          const bool autostart) :
+                  std::function<void()> callback,
+                  const bool oneshot,
+                  const bool autostart) :
     callback_(callback)
   {
     ros::NodeHandle nh;
-    ros_timer_ =
-        nh.createTimer(ros::Duration(0, period.count()), &ROSTimer::callback_ros_, this, oneshot, autostart);
+    ros_timer_ = nh.createTimer(ros::Duration(0, period.count()), &ROSTimer::callback_ros_, this, oneshot, autostart);
   }
 
   inline void start() { ros_timer_.start(); }
