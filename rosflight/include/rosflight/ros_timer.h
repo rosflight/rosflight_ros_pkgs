@@ -31,12 +31,12 @@
  */
 
 /**
- * @file ros_timer_interface.h
+ * @file ros_timer.h
  * @author Jacob Willis <jbwillis272@gmail.com>
  */
 
-#ifndef ROSFLIGHT_ROS_TIMER_INTERFACE_H
-#define ROSFLIGHT_ROS_TIMER_INTERFACE_H
+#ifndef ROSFLIGHT_ROS_TIMER_H
+#define ROSFLIGHT_ROS_TIMER_H
 
 #include <rosflight/mavrosflight/timer_interface.h>
 

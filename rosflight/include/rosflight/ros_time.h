@@ -31,7 +31,7 @@
  */
 
 /**
- * @file ros_time_interface.h
+ * @file ros_time.h
  * @author Jacob Willis <jbwillis272@gmail.com>
  */
 
@@ -52,4 +52,4 @@ public:
 
 } // namespace rosflight
 
-#endif /* ROSFLIGHT_ROS_TIMER_H */
+#endif /* ROSFLIGHT_ROS_TIME_H */
