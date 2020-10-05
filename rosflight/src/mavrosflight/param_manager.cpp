@@ -47,7 +47,7 @@ namespace mavrosflight
 template <typename DerivedLogger>
 ParamManager<DerivedLogger>::ParamManager(MavlinkComm *const comm,
                                           LoggerInterface<DerivedLogger> &logger,
-                                          TimerInterface &timer_interface) :
+                                          TimerProviderInterface &timer_provider) :
   comm_(comm),
   unsaved_changes_(false),
   write_request_in_progress_(false),
@@ -56,13 +56,13 @@ ParamManager<DerivedLogger>::ParamManager(MavlinkComm *const comm,
   got_all_params_(false),
   param_set_in_progress_(false),
   logger_(logger),
-  timer_interface_(timer_interface)
+  timer_provider_(timer_provider)
 {
   comm_->register_mavlink_listener(this);
 
   std::function<void()> bound_callback = std::bind(&ParamManager<DerivedLogger>::param_set_timer_callback, this);
   param_set_timer_ =
-      timer_interface_.createTimer(std::chrono::milliseconds(10), bound_callback, false, /* not oneshot */
+      timer_provider_.create_timer(std::chrono::milliseconds(10), bound_callback, false, /* not oneshot */
                                    false /* not autostart */);
 }
 

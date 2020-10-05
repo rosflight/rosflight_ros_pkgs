@@ -46,11 +46,11 @@
 namespace mavrosflight
 {
 /**
- * \class AbstractTimer
+ * \class TimerInterface
  * \brief Abstracts basic timer functionality
  *
  */
-class AbstractTimer
+class TimerInterface
 {
 public:
   virtual void start() = 0;
@@ -58,16 +58,16 @@ public:
 };
 
 /**
- * \class TimerInterface
+ * \class TimerProviderInterface
  * \brief Provide an interface for creating timers
  */
-class TimerInterface
+class TimerProviderInterface
 {
 public:
-  virtual std::shared_ptr<AbstractTimer> createTimer(std::chrono::nanoseconds period,
-                                                     std::function<void()> callback,
-                                                     const bool oneshot = false,
-                                                     const bool autostart = true) = 0;
+  virtual std::shared_ptr<TimerInterface> create_timer(std::chrono::nanoseconds period,
+                                                       std::function<void()> callback,
+                                                       const bool oneshot = false,
+                                                       const bool autostart = true) = 0;
 };
 
 } // namespace mavrosflight

@@ -47,7 +47,7 @@
 
 namespace rosflight
 {
-class ROSAbstractTimer : public mavrosflight::AbstractTimer
+class ROSAbstractTimer : public mavrosflight::TimerInterface
 {
 public:
   inline ROSAbstractTimer(std::chrono::nanoseconds period,
@@ -72,13 +72,13 @@ private:
   std::function<void()> callback_;
 };
 
-class ROSTimerInterface : public mavrosflight::TimerInterface
+class ROSTimerProvider : public mavrosflight::TimerProviderInterface
 {
 public:
-  inline std::shared_ptr<mavrosflight::AbstractTimer> createTimer(std::chrono::nanoseconds period,
-                                                                  std::function<void()> callback,
-                                                                  const bool oneshot = false,
-                                                                  const bool autostart = true)
+  inline std::shared_ptr<mavrosflight::TimerInterface> create_timer(std::chrono::nanoseconds period,
+                                                                    std::function<void()> callback,
+                                                                    const bool oneshot = false,
+                                                                    const bool autostart = true)
   {
     return std::make_shared<ROSAbstractTimer>(period, callback, oneshot, autostart);
   }

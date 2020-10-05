@@ -57,7 +57,7 @@ template <typename DerivedLogger>
 class ParamManager : public MavlinkListenerInterface
 {
 public:
-  ParamManager(MavlinkComm *const comm, LoggerInterface<DerivedLogger> &logger, TimerInterface &timer_interface);
+  ParamManager(MavlinkComm *const comm, LoggerInterface<DerivedLogger> &logger, TimerProviderInterface &timer_provider);
   ~ParamManager();
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
@@ -104,12 +104,12 @@ private:
   bool got_all_params_;
 
   std::deque<mavlink_message_t> param_set_queue_;
-  std::shared_ptr<AbstractTimer> param_set_timer_;
+  std::shared_ptr<TimerInterface> param_set_timer_;
   bool param_set_in_progress_;
   void param_set_timer_callback();
 
   LoggerInterface<DerivedLogger> &logger_;
-  TimerInterface &timer_interface_;
+  TimerProviderInterface &timer_provider_;
 };
 
 } // namespace mavrosflight

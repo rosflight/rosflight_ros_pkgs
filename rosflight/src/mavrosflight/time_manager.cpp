@@ -46,18 +46,18 @@ template <typename DerivedLogger>
 TimeManager<DerivedLogger>::TimeManager(MavlinkComm *comm,
                                         LoggerInterface<DerivedLogger> &logger,
                                         const TimeInterface &time_interface,
-                                        TimerInterface &timer_interface) :
+                                        TimerProviderInterface &timer_provider) :
   comm_(comm),
   offset_alpha_(0.95),
   offset_ns_(0),
   initialized_(false),
   logger_(logger),
   time_interface_(time_interface),
-  timer_interface_(timer_interface)
+  timer_provider_(timer_provider)
 {
   comm_->register_mavlink_listener(this);
   std::function<void()> bound_callback = std::bind(&TimeManager<DerivedLogger>::timer_callback, this);
-  time_sync_timer_ = timer_interface_.createTimer(std::chrono::milliseconds(100), bound_callback);
+  time_sync_timer_ = timer_provider_.create_timer(std::chrono::milliseconds(100), bound_callback);
 }
 
 template <typename DerivedLogger>

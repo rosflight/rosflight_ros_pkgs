@@ -56,7 +56,7 @@ public:
   TimeManager(MavlinkComm *comm,
               LoggerInterface<DerivedLogger> &logger,
               const TimeInterface &time_interface,
-              TimerInterface &timer_interface);
+              TimerProviderInterface &timer_provider);
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
 
@@ -65,7 +65,7 @@ public:
 private:
   MavlinkComm *comm_;
 
-  std::shared_ptr<AbstractTimer> time_sync_timer_;
+  std::shared_ptr<TimerInterface> time_sync_timer_;
   void timer_callback();
 
   double offset_alpha_;
@@ -75,7 +75,7 @@ private:
 
   LoggerInterface<DerivedLogger> &logger_;
   const TimeInterface &time_interface_;
-  TimerInterface &timer_interface_;
+  TimerProviderInterface &timer_provider_;
 };
 
 } // namespace mavrosflight
