@@ -82,8 +82,6 @@ public:
   {
     return std::make_shared<ROSAbstractTimer>(period, callback, oneshot, autostart);
   }
-
-private:
 };
 
 } // namespace rosflight
