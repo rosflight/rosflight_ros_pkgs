@@ -33,6 +33,7 @@
  * \file time_manager.cpp
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
+#include <functional>
 
 #include <rosflight/mavrosflight/interface_adapter.h>
 #include <rosflight/mavrosflight/logger_interface.h>
@@ -44,19 +45,19 @@ namespace mavrosflight
 template <typename DerivedLogger>
 TimeManager<DerivedLogger>::TimeManager(MavlinkComm *comm,
                                         LoggerInterface<DerivedLogger> &logger,
-                                        const TimeInterface &time_interface) :
+                                        const TimeInterface &time_interface,
+                                        TimerProviderInterface &timer_provider) :
   comm_(comm),
   offset_alpha_(0.95),
   offset_ns_(0),
   initialized_(false),
   logger_(logger),
-  time_interface_(time_interface)
-
+  time_interface_(time_interface),
+  timer_provider_(timer_provider)
 {
   comm_->register_mavlink_listener(this);
-
-  ros::NodeHandle nh;
-  time_sync_timer_ = nh.createTimer(ros::Duration(ros::Rate(10)), &TimeManager::timer_callback, this);
+  std::function<void()> bound_callback = std::bind(&TimeManager<DerivedLogger>::timer_callback, this);
+  time_sync_timer_ = timer_provider_.create_timer(std::chrono::milliseconds(100), bound_callback);
 }
 
 template <typename DerivedLogger>
@@ -111,7 +112,7 @@ std::chrono::nanoseconds TimeManager<DerivedLogger>::fcu_time_to_system_time(std
 }
 
 template <typename DerivedLogger>
-void TimeManager<DerivedLogger>::timer_callback(const ros::TimerEvent &event)
+void TimeManager<DerivedLogger>::timer_callback()
 {
   mavlink_message_t msg;
   mavlink_msg_timesync_pack(1, 50, &msg, 0, time_interface_.now().count());

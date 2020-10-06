@@ -31,25 +31,57 @@
  */
 
 /**
- * @file ros_time_interface.h
+ * @file ros_timer.h
  * @author Jacob Willis <jbwillis272@gmail.com>
  */
 
-#ifndef ROSFLIGHT_ROS_TIME_H
-#define ROSFLIGHT_ROS_TIME_H
+#ifndef ROSFLIGHT_ROS_TIMER_H
+#define ROSFLIGHT_ROS_TIMER_H
 
-#include <rosflight/mavrosflight/time_interface.h>
+#include <rosflight/mavrosflight/timer_interface.h>
 
 #include <ros/ros.h>
 
+#include <memory>
+#include <vector>
+
 namespace rosflight
 {
-class ROSTimeInterface : public mavrosflight::TimeInterface
+class ROSTimer : public mavrosflight::TimerInterface
 {
 public:
-  inline std::chrono::nanoseconds now() const { return std::chrono::nanoseconds(ros::Time::now().toNSec()); }
+  inline ROSTimer(std::chrono::nanoseconds period,
+                  std::function<void()> callback,
+                  const bool oneshot,
+                  const bool autostart) :
+    callback_(callback)
+  {
+    ros::NodeHandle nh;
+    ros_timer_ = nh.createTimer(ros::Duration(0, period.count()), &ROSTimer::callback_ros_, this, oneshot, autostart);
+  }
+
+  inline void start() { ros_timer_.start(); }
+
+  inline void stop() { ros_timer_.stop(); }
+
+  inline void callback_ros_(const ros::TimerEvent& event) const { callback_(); };
+
+private:
+  ros::Timer ros_timer_;
+  std::function<void()> callback_;
+};
+
+class ROSTimerProvider : public mavrosflight::TimerProviderInterface
+{
+public:
+  inline std::shared_ptr<mavrosflight::TimerInterface> create_timer(std::chrono::nanoseconds period,
+                                                                    std::function<void()> callback,
+                                                                    const bool oneshot = false,
+                                                                    const bool autostart = true)
+  {
+    return std::make_shared<ROSTimer>(period, callback, oneshot, autostart);
+  }
 };
 
 } // namespace rosflight
-
 #endif /* ROSFLIGHT_ROS_TIMER_H */
