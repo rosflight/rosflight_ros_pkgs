@@ -66,7 +66,6 @@ class TimerProviderInterface
 public:
   virtual std::shared_ptr<TimerInterface> create_timer(std::chrono::nanoseconds period,
                                                        std::function<void()> callback,
-                                                       const bool oneshot = false,
                                                        const bool autostart = true) = 0;
 };
 

@@ -62,8 +62,7 @@ ParamManager<DerivedLogger>::ParamManager(MavlinkComm *const comm,
 
   std::function<void()> bound_callback = std::bind(&ParamManager<DerivedLogger>::param_set_timer_callback, this);
   param_set_timer_ =
-      timer_provider_.create_timer(std::chrono::milliseconds(10), bound_callback, false, /* not oneshot */
-                                   false /* not autostart */);
+      timer_provider_.create_timer(std::chrono::milliseconds(10), bound_callback, false /* not autostart */);
 }
 
 template <typename DerivedLogger>

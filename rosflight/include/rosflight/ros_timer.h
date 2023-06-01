@@ -52,22 +52,26 @@ class ROSTimer : public mavrosflight::TimerInterface
 public:
   inline ROSTimer(std::chrono::nanoseconds period,
                   std::function<void()> callback,
-                  const bool oneshot,
                   const bool autostart) :
-    callback_(callback)
+      callback_(callback)
   {
-    ros::NodeHandle nh;
-    ros_timer_ = nh.createTimer(ros::Duration(0, period.count()), &ROSTimer::callback_ros_, this, oneshot, autostart);
+    node_ = rclcpp::Node::make_shared("ros_timer_node");
+    ros_timer_ = node_->create_wall_timer(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(0)) + period,
+                                          std::bind(&ROSTimer::callback_ros_, this), nullptr);
+    if (!autostart) {
+      ros_timer_->cancel();
+    }
   }
 
-  inline void start() { ros_timer_.start(); }
+  inline void start() { ros_timer_->reset(); }
 
-  inline void stop() { ros_timer_.stop(); }
+  inline void stop() { ros_timer_->cancel(); }
 
-  inline void callback_ros_(const ros::TimerEvent& event) const { callback_(); };
+  inline void callback_ros_() const { callback_(); };
 
 private:
-  ros::Timer ros_timer_;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp::TimerBase::SharedPtr ros_timer_;
   std::function<void()> callback_;
 };
 
@@ -76,10 +80,9 @@ class ROSTimerProvider : public mavrosflight::TimerProviderInterface
 public:
   inline std::shared_ptr<mavrosflight::TimerInterface> create_timer(std::chrono::nanoseconds period,
                                                                     std::function<void()> callback,
-                                                                    const bool oneshot = false,
                                                                     const bool autostart = true)
   {
-    return std::make_shared<ROSTimer>(period, callback, oneshot, autostart);
+    return std::make_shared<ROSTimer>(period, callback, autostart);
   }
 };
 
