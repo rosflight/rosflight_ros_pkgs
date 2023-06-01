@@ -20,4 +20,4 @@ uint8 ignore # bitmask for ignore specific setpoint values
 float32 x
 float32 y
 float32 z
-float32 F
+float32 f
