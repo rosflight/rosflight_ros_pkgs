@@ -87,11 +87,11 @@ void CalibrateMag::run()
   start_mag_calibration();
 
   // wait for data to arrive
-  rclcpp::Duration timeout(3.0);
-  rclcpp::Time start = rclcpp::Time::now();
-  while (rclcpp::Time::now() - start < timeout && first_time_ && rclcpp::ok())
+  ros::Duration timeout(3.0);
+  ros::Time start = ros::Time::now();
+  while (ros::Time::now() - start < timeout && first_time_ && ros::ok())
   {
-    rclcpp::spinOnce();
+    ros::spinOnce();
   }
 
   if (first_time_)
@@ -100,12 +100,12 @@ void CalibrateMag::run()
     return;
   }
 
-  while (calibrating_ && rclcpp::ok())
+  while (calibrating_ && ros::ok())
   {
-    rclcpp::spinOnce();
+    ros::spinOnce();
   }
 
-  if (! calibrating_)
+  if (!calibrating_)
   {
     // compute calibration
     do_mag_calibration();
@@ -164,10 +164,10 @@ bool CalibrateMag::mag_callback(const sensor_msgs::MagneticField::ConstPtr &mag)
     {
       first_time_ = false;
       ROS_WARN_ONCE("Calibrating Mag, do the mag dance for %g seconds!", calibration_time_);
-      start_time_ = rclcpp::Time::now().toSec();
+      start_time_ = ros::Time::now().toSec();
     }
 
-    double elapsed = rclcpp::Time::now().toSec() - start_time_;
+    double elapsed = ros::Time::now().toSec() - start_time_;
 
     printf("\r%.1f seconds remaining", calibration_time_ - elapsed);
 

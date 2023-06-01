@@ -13,3 +13,6 @@
 *CMakeFiles*
 *catkin_generated*
 *Makefile
+build
+install
+log

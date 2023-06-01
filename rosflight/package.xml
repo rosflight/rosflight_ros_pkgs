@@ -15,7 +15,6 @@
   <url type="repository">https://github.com/rosflight/rosflight</url>
   <url type="bugtracker">https://github.com/rosflight/rosflight/issues</url>
 
-  <!-- <buildtool_depend condition="$ROS_VERSION == 2">ament_cmake</buildtool_depend> -->
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <!-- ROS packages -->
@@ -26,7 +25,6 @@
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
-  <!-- <depend>tf</depend> -->
 
   <!-- system libraries -->
   <depend>boost</depend>

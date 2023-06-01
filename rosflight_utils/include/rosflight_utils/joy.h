@@ -41,11 +41,11 @@ struct Axes
 {
   int x;
   int y;
-  int F; // Is this actually throttle? And, why is it before z, it isn't this way anywhere else
+  int F;
   int z;
   int x_direction;
   int y_direction;
-  int F_direction; // Is this (throttle) thrust direction?
+  int F_direction;
   int z_direction;
 };
 
@@ -91,8 +91,6 @@ private:
   ros::Publisher command_pub_;
   ros::Subscriber autopilot_command_sub_;
   ros::Subscriber joy_sub_;
-
-  rclcpp::Clock _ros_clock;
 
   std::string namespace_;
   std::string command_topic_;

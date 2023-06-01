@@ -38,8 +38,6 @@ Joy::Joy()
   ros::NodeHandle pnh("~");
   ros::NodeHandle namespace_nh(ros::this_node::getNamespace());
 
-  _ros_clock(RCL_ROS_TIME)
-
   pnh.param<std::string>("command_topic", command_topic_, "command");
   pnh.param<std::string>("autopilot_command_topic", autopilot_command_topic_, "autopilot_command");
 
@@ -54,12 +52,12 @@ Joy::Joy()
   pnh.param<std::string>("gazebo_namespace", gazebo_ns_, "");
   pnh.param<int>("x_axis", axes_.x, 1);
   pnh.param<int>("y_axis", axes_.y, 2);
-  pnh.param<int>("F_axis", axes_.F, 0); // Is this throttle or thrust?
+  pnh.param<int>("F_axis", axes_.F, 0);
   pnh.param<int>("z_axis", axes_.z, 4);
 
   pnh.param<int>("x_sign", axes_.x_direction, 1);
   pnh.param<int>("y_sign", axes_.y_direction, 1);
-  pnh.param<int>("F_sign", axes_.F_direction, -1); // And why is it before z?
+  pnh.param<int>("F_sign", axes_.F_direction, -1);
   pnh.param<int>("z_sign", axes_.z_direction, 1);
 
   pnh.param<double>("max_aileron", max_.aileron, 15.0 * M_PI / 180.0);
@@ -104,7 +102,7 @@ Joy::Joy()
   command_msg_.x = 0;
   command_msg_.y = 0;
   command_msg_.z = 0;
-  command_msg_.throttle = 0;
+  command_msg_.F = 0;
   command_msg_.ignore = 0xFF;
 
   current_yaw_vel_ = 0;
@@ -123,7 +121,7 @@ void Joy::StopMav()
   command_msg_.x = 0;
   command_msg_.y = 0;
   command_msg_.z = 0;
-  command_msg_.throttle = 0;
+  command_msg_.F = 0;
 }
 
 /* Resets the mav back to origin */
@@ -164,7 +162,7 @@ void Joy::ResumeSimulation()
   ros::ServiceClient client = n.serviceClient<std_srvs::Empty>("/gazebo/unpause_physics");
   std_srvs::Empty resumeSim;
   client.call(resumeSim);
-  last_time_ = _ros_clock.now().seconds();
+  last_time_ = ros::Time::now().toSec();
 }
 
 void Joy::APCommandCallback(const rosflight_msgs::CommandConstPtr &msg)
@@ -174,8 +172,8 @@ void Joy::APCommandCallback(const rosflight_msgs::CommandConstPtr &msg)
 
 void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
 {
-  double dt = _ros_clock.now().seconds() - last_time_;
-  last_time_ = _ros_clock.now().seconds();
+  double dt = ros::Time::now().toSec() - last_time_;
+  last_time_ = ros::Time::now().toSec();
 
   current_joy_ = *msg;
 
@@ -242,7 +240,7 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
   // calculate the output command from the joysticks
   if (override_autopilot_)
   {
-    command_msg_.throttle = msg->axes[axes_.F] * axes_.F_direction; // These F may need to change too
+    command_msg_.F = msg->axes[axes_.F] * axes_.F_direction;
     command_msg_.x = msg->axes[axes_.x] * axes_.x_direction;
     command_msg_.y = msg->axes[axes_.y] * axes_.y_direction;
     command_msg_.z = msg->axes[axes_.z] * axes_.z_direction;
@@ -253,13 +251,13 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
       command_msg_.x *= max_.roll_rate;
       command_msg_.y *= max_.pitch_rate;
       command_msg_.z *= max_.yaw_rate;
-      if (command_msg_.throttle > 0.0)
+      if (command_msg_.F > 0.0)
       {
-        command_msg_.throttle = equilibrium_thrust_ + (1.0 - equilibrium_thrust_) * command_msg_.throttle;
+        command_msg_.F = equilibrium_thrust_ + (1.0 - equilibrium_thrust_) * command_msg_.F;
       }
       else
       {
-        command_msg_.throttle = equilibrium_thrust_ + (equilibrium_thrust_) * command_msg_.throttle;
+        command_msg_.F = equilibrium_thrust_ + (equilibrium_thrust_)*command_msg_.F;
       }
       break;
 
@@ -267,13 +265,13 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
       command_msg_.x *= max_.roll;
       command_msg_.y *= max_.pitch;
       command_msg_.z *= max_.yaw_rate;
-      if (command_msg_.throttle > 0.0)
+      if (command_msg_.F > 0.0)
       {
-        command_msg_.throttle = equilibrium_thrust_ + (1.0 - equilibrium_thrust_) * command_msg_.throttle;
+        command_msg_.F = equilibrium_thrust_ + (1.0 - equilibrium_thrust_) * command_msg_.F;
       }
       else
       {
-        command_msg_.throttle = equilibrium_thrust_ + (equilibrium_thrust_) * command_msg_.throttle;
+        command_msg_.F = equilibrium_thrust_ + (equilibrium_thrust_)*command_msg_.F;
       }
       break;
 
@@ -282,8 +280,8 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
       command_msg_.y *= max_.pitch;
       command_msg_.z *= max_.yaw_rate;
       // Integrate altitude
-      current_altitude_setpoint_ -= dt * max_.zvel * command_msg_.throttle;
-      command_msg_.throttle = current_altitude_setpoint_;
+      current_altitude_setpoint_ -= dt * max_.zvel * command_msg_.F;
+      command_msg_.F = current_altitude_setpoint_;
       break;
 
     case rosflight_msgs::Command::MODE_XVEL_YVEL_YAWRATE_ALTITUDE:
@@ -294,8 +292,8 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
       command_msg_.y = max_.yvel * original_x;
       command_msg_.z *= max_.yaw_rate;
       // Integrate altitude
-      current_altitude_setpoint_ -= dt * max_.zvel * command_msg_.throttle;
-      command_msg_.throttle = current_altitude_setpoint_;
+      current_altitude_setpoint_ -= dt * max_.zvel * command_msg_.F;
+      command_msg_.F = current_altitude_setpoint_;
       break;
     }
 

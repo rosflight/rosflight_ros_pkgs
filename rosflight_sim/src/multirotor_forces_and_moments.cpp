@@ -87,12 +87,12 @@ Multirotor::Multirotor(ros::NodeHandle *nh)
     force_allocation_matrix_(0, i) = moment_from_thrust(0); // l
     force_allocation_matrix_(1, i) = moment_from_thrust(1); // m
     force_allocation_matrix_(2, i) = moment_from_thrust(2); // n
-    force_allocation_matrix_(3, i) = motors_[i].normal(2);  // F -- Is this actually throttle?
+    force_allocation_matrix_(3, i) = motors_[i].normal(2);  // F
 
     torque_allocation_matrix_(0, i) = moment_from_torque(0); // l
     torque_allocation_matrix_(1, i) = moment_from_torque(1); // m
     torque_allocation_matrix_(2, i) = moment_from_torque(2); // n
-    torque_allocation_matrix_(3, i) = 0.0;                   // F -- Is this actually throttle?
+    torque_allocation_matrix_(3, i) = 0.0;                   // F
   }
 
   ROS_INFO_STREAM("allocation matrices:\nFORCE \n"

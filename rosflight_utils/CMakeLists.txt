@@ -38,8 +38,8 @@ add_dependencies(viz ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGE
 target_link_libraries(viz ${catkin_LIBRARIES})
 
 # Install launch files.
-install(DIRECTORY
-  launch
+install(
+  DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}/
 )
 

@@ -1,5 +1,4 @@
-
-# raw GNSS
+# GNSS Full
 
 std_msgs/Header header
 # header.frame_id may take value of __ or __

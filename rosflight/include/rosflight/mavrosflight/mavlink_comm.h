@@ -138,8 +138,7 @@ private:
   /**
    * \brief Convenience typedef for mutex lock
    */
-  // typedef boost::lock_guard<boost::recursive_mutex> mutex_lock;
-  using mutex_lock = boost::lock_guard<boost::recursive_mutex>;
+  typedef boost::lock_guard<boost::recursive_mutex> mutex_lock;
 
   //===========================================================================
   // methods

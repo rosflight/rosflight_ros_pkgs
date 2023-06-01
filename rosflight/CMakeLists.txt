@@ -46,7 +46,6 @@ endif()
 ## Build ##
 ###########
 
-# include_directories()
 include_directories(include
   ${ament_INCLUDE_DIRS}
   ${rclcpp_INCLUDE_DIRS}
@@ -73,13 +72,11 @@ target_link_libraries(mavrosflight
   ${YAML_CPP_LIBRARIES}
 )
 
-
 # rosflight_io_node
 add_executable(rosflight_io
   src/rosflight_io_node.cpp
   src/rosflight_io.cpp
 )
-# add_dependencies(rosflight_io ${${PROJECT_NAME}_EXPORTED_TARGETS} ${ament_EXPORTED_TARGETS})
 target_link_libraries(rosflight_io
   mavrosflight
   ${rclcpp_LIBRARIES}
@@ -106,11 +103,8 @@ target_link_libraries(rosflight_io
 ## ament specific configuration ##
 ###################################
 
-# AFTER all targets have been registered
-
 ament_target_dependencies(mavrosflight rclcpp)
 ament_export_dependencies(rclcpp eigen_stl_containers geometry_msgs rosflight_msgs sensor_msgs std_msgs
-# DEPENDS Boost EIGEN3 YAML_CPP)
 Boost EIGEN3 YAML_CPP)
 ament_export_include_directories(include)
 ament_export_libraries(mavrosflight)
@@ -138,5 +132,3 @@ install(DIRECTORY include/rosflight/mavrosflight/
 ament_package(
   # CONFIG_EXTRAS
 )
-
-#

@@ -437,7 +437,7 @@ void SIL_Board::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
   latestRC_.values[0] = 1500; // x
   latestRC_.values[1] = 1500; // y
   latestRC_.values[3] = 1500; // z
-  latestRC_.values[2] = 1000; // F -- Is this actually throttle?
+  latestRC_.values[2] = 1000; // F
   latestRC_.values[4] = 1000; // attitude override
   latestRC_.values[5] = 1000; // arm
 

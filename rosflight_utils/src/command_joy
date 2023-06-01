@@ -29,31 +29,31 @@ if 'Taranis' in joy.get_name():
     mapping['x'] = 0
     mapping['y'] = 1
     mapping['z'] = 3
-    mapping['throttle'] = 2
+    mapping['F'] = 2
     mapping['xsign'] = 1
     mapping['ysign'] = 1
     mapping['zsign'] = 1
-    mapping['throttle_sign'] = 1 # perhaps this ought to be {throttle|thrust}_dir_sign
+    mapping['Fsign'] = 1
 elif 'Xbox' in joy.get_name() or 'X-Box' in joy.get_name():
     print "found xbox"
     mapping['x'] = 3
     mapping['y'] = 4
     mapping['z'] = 0
-    mapping['throttle'] = 1
+    mapping['F'] = 1
     mapping['xsign'] = 1
     mapping['ysign'] = 1
     mapping['zsign'] = 1
-    mapping['throttle_sign'] = -1
+    mapping['Fsign'] = -1
 else:
     print "using realflght mapping"
     mapping['x'] = 1
     mapping['y'] = 2
     mapping['z'] = 4
-    mapping['throttle'] = 0
+    mapping['F'] = 0
     mapping['xsign'] = 1
     mapping['ysign'] = 1
     mapping['zsign'] = 1
-    mapping['throttle_sign'] = 1
+    mapping['Fsign'] = 1
 
 # Main event loop
 next_update_time = time.time()
@@ -72,7 +72,7 @@ while not rospy.is_shutdown():
         msg.x = joy.get_axis(mapping['x']) * mapping['xsign'] * 0.785
         msg.y = joy.get_axis(mapping['y']) * mapping['ysign'] * 0.785
         msg.z = joy.get_axis(mapping['z']) * mapping['zsign'] * 1.507
-        msg.throttle = joy.get_axis(mapping['throttle']) * mapping['throttle_sign'] * 0.5 + 0.5
+        msg.F = joy.get_axis(mapping['F']) * mapping['Fsign'] * 0.5 + 0.5
 
         msg.ignore = 0
         command_pub.publish(msg)
