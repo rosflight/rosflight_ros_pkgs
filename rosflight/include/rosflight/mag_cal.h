@@ -38,12 +38,11 @@
 #ifndef ROSFLIGHT_SENSORS_CALBRATE_MAG_H
 #define ROSFLIGHT_SENSORS_CALBRATE_MAG_H
 
-#include <message_filters/subscriber.h>
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 
-#include <rosflight_msgs/ParamSet.h>
+#include <rosflight_msgs/srv/param_set.hpp>
 
-#include <sensor_msgs/MagneticField.h>
+#include <sensor_msgs/msg/magnetic_field.hpp>
 
 #include <cmath>
 #include <eigen3/Eigen/Eigen>

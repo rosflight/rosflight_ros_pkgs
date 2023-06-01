@@ -34,7 +34,7 @@
  * \author Devon Morris <devonmorris1992@gmail.com>
  */
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <rosflight/mag_cal.h>
 
 int main(int argc, char **argv)

@@ -40,7 +40,7 @@
 
 #include <rosflight/mavrosflight/logger_interface.h>
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 
 namespace rosflight
 {

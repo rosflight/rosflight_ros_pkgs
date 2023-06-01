@@ -40,41 +40,41 @@
 #include <map>
 #include <string>
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 
-#include <geometry_msgs/Quaternion.h>
-#include <geometry_msgs/TwistStamped.h>
-#include <std_msgs/Bool.h>
-#include <std_msgs/Float32.h>
-#include <std_msgs/Int32.h>
-#include <std_msgs/String.h>
+#include <geometry_msgs/msg/quaternion.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
+#include <std_msgs/msg/bool.hpp>
+#include <std_msgs/msg/float32.hpp>
+#include <std_msgs/msg/int32.hpp>
+#include <std_msgs/msg/string.hpp>
 
-#include <sensor_msgs/FluidPressure.h>
-#include <sensor_msgs/Imu.h>
-#include <sensor_msgs/MagneticField.h>
-#include <sensor_msgs/NavSatFix.h>
-#include <sensor_msgs/Range.h>
-#include <sensor_msgs/Temperature.h>
-#include <sensor_msgs/TimeReference.h>
+#include <sensor_msgs/msg/fluid_pressure.hpp>
+#include <sensor_msgs/msg/imu.hpp>
+#include <sensor_msgs/msg/magnetic_field.hpp>
+#include <sensor_msgs/msg/nav_sat_fix.hpp>
+#include <sensor_msgs/msg/range.hpp>
+#include <sensor_msgs/msg/temperature.hpp>
+#include <sensor_msgs/msg/time_reference.hpp>
 
-#include <std_srvs/Trigger.h>
+#include <std_srvs/srv/trigger.hpp>
 
-#include <rosflight_msgs/Airspeed.h>
-#include <rosflight_msgs/Attitude.h>
-#include <rosflight_msgs/AuxCommand.h>
-#include <rosflight_msgs/Barometer.h>
-#include <rosflight_msgs/BatteryStatus.h>
-#include <rosflight_msgs/Command.h>
-#include <rosflight_msgs/Error.h>
-#include <rosflight_msgs/GNSS.h>
-#include <rosflight_msgs/GNSSFull.h>
-#include <rosflight_msgs/OutputRaw.h>
-#include <rosflight_msgs/RCRaw.h>
-#include <rosflight_msgs/Status.h>
+#include <rosflight_msgs/msg/airspeed.hpp>
+#include <rosflight_msgs/msg/airspeed.hpp>
+#include <rosflight_msgs/msg/aux_command.hpp>
+#include <rosflight_msgs/msg/barometer.hpp>
+#include <rosflight_msgs/msg/battery_status.hpp>
+#include <rosflight_msgs/msg/command.hpp>
+#include <rosflight_msgs/msg/error.hpp>
+#include <rosflight_msgs/msg/gnss.hpp>
+#include <rosflight_msgs/msg/gnss_full.hpp>
+#include <rosflight_msgs/msg/output_raw.hpp>
+#include <rosflight_msgs/msg/rc_raw.hpp>
+#include <rosflight_msgs/msg/status.hpp>
 
-#include <rosflight_msgs/ParamFile.h>
-#include <rosflight_msgs/ParamGet.h>
-#include <rosflight_msgs/ParamSet.h>
+#include <rosflight_msgs/srv/param_file.hpp>
+#include <rosflight_msgs/srv/param_get.hpp>
+#include <rosflight_msgs/srv/param_set.hpp>
 
 #include <rosflight/mavrosflight/mavlink_comm.h>
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>

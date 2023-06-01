@@ -36,7 +36,7 @@
  * Entry point for the mavrosflight_node executable
  */
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <rosflight/rosflight_io.h>
 
 int main(int argc, char **argv)
