@@ -44,6 +44,7 @@
 
 #include <geometry_msgs/msg/quaternion.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
+#include <geometry_msgs/msg/vector3_stamped.hpp>
 #include <std_msgs/msg/bool.hpp>
 #include <std_msgs/msg/float32.hpp>
 #include <std_msgs/msg/int32.hpp>
@@ -60,7 +61,7 @@
 #include <std_srvs/srv/trigger.hpp>
 
 #include <rosflight_msgs/msg/airspeed.hpp>
-#include <rosflight_msgs/msg/airspeed.hpp>
+#include <rosflight_msgs/msg/attitude.hpp>
 #include <rosflight_msgs/msg/aux_command.hpp>
 #include <rosflight_msgs/msg/barometer.hpp>
 #include <rosflight_msgs/msg/battery_status.hpp>
@@ -127,27 +128,27 @@ private:
   void handle_battery_status_msg(const mavlink_message_t &msg);
 
   // ROS message callbacks
-  void commandCallback(rosflight_msgs::Command::ConstPtr msg);
-  void auxCommandCallback(rosflight_msgs::AuxCommand::ConstPtr msg);
-  void externalAttitudeCallback(geometry_msgs::Quaternion::ConstPtr msg);
+  void commandCallback(rosflight_msgs::msg::Command::ConstSharedPtr msg);
+  void auxCommandCallback(rosflight_msgs::msg::AuxCommand::ConstSharedPtr msg);
+  void externalAttitudeCallback(rosflight_msgs::msg::Attitude::ConstSharedPtr msg);
 
   // ROS service callbacks
-  bool paramGetSrvCallback(rosflight_msgs::ParamGet::Request &req, rosflight_msgs::ParamGet::Response &res);
-  bool paramSetSrvCallback(rosflight_msgs::ParamSet::Request &req, rosflight_msgs::ParamSet::Response &res);
-  bool paramWriteSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool paramSaveToFileCallback(rosflight_msgs::ParamFile::Request &req, rosflight_msgs::ParamFile::Response &res);
-  bool paramLoadFromFileCallback(rosflight_msgs::ParamFile::Request &req, rosflight_msgs::ParamFile::Response &res);
-  bool calibrateImuBiasSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool calibrateBaroSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool calibrateAirspeedSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool rebootSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool rebootToBootloaderSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+  bool paramGetSrvCallback(rosflight_msgs::srv::ParamGet::Request &req, rosflight_msgs::srv::ParamGet::Response &res);
+  bool paramSetSrvCallback(rosflight_msgs::srv::ParamSet::Request &req, rosflight_msgs::srv::ParamSet::Response &res);
+  bool paramWriteSrvCallback(std_srvs::srv::Trigger::Request &req, std_srvs::srv::Trigger::Response &res);
+  bool paramSaveToFileCallback(rosflight_msgs::srv::ParamFile::Request &req, rosflight_msgs::srv::ParamFile::Response &res);
+  bool paramLoadFromFileCallback(rosflight_msgs::srv::ParamFile::Request &req, rosflight_msgs::srv::ParamFile::Response &res);
+  bool calibrateImuBiasSrvCallback(std_srvs::srv::Trigger::Request &req, std_srvs::srv::Trigger::Response &res);
+  bool calibrateRCTrimSrvCallback(std_srvs::srv::Trigger::Request &req, std_srvs::srv::Trigger::Response &res);
+  bool calibrateBaroSrvCallback(std_srvs::srv::Trigger::Request &req, std_srvs::srv::Trigger::Response &res);
+  bool calibrateAirspeedSrvCallback(std_srvs::srv::Trigger::Request &req, std_srvs::srv::Trigger::Response &res);
+  bool rebootSrvCallback(std_srvs::srv::Trigger::Request &req, std_srvs::srv::Trigger::Response &res);
+  bool rebootToBootloaderSrvCallback(std_srvs::srv::Trigger::Request &req, std_srvs::srv::Trigger::Response &res);
 
   // timer callbacks
-  void paramTimerCallback(const ros::TimerEvent &e);
-  void versionTimerCallback(const ros::TimerEvent &e);
-  void heartbeatTimerCallback(const ros::TimerEvent &e);
+  void paramTimerCallback();
+  void versionTimerCallback();
+  void heartbeatTimerCallback();
 
   // helpers
   void request_version();
@@ -161,56 +162,56 @@ private:
     return value < min ? min : (value > max ? max : value);
   }
 
-  ros::NodeHandle nh_;
+  rclcpp::Node::SharedPtr node_;
 
-  ros::Subscriber command_sub_;
-  ros::Subscriber aux_command_sub_;
-  ros::Subscriber extatt_sub_;
+  rclcpp::Subscription<rosflight_msgs::msg::Command>::SharedPtr command_sub_;
+  rclcpp::Subscription<rosflight_msgs::msg::AuxCommand>::SharedPtr aux_command_sub_;
+  rclcpp::Subscription<rosflight_msgs::msg::Attitude>::SharedPtr extatt_sub_;
 
-  ros::Publisher unsaved_params_pub_;
-  ros::Publisher imu_pub_;
-  ros::Publisher imu_temp_pub_;
-  ros::Publisher output_raw_pub_;
-  ros::Publisher rc_raw_pub_;
-  ros::Publisher diff_pressure_pub_;
-  ros::Publisher temperature_pub_;
-  ros::Publisher baro_pub_;
-  ros::Publisher sonar_pub_;
-  ros::Publisher gnss_pub_;
-  ros::Publisher gnss_full_pub_;
-  ros::Publisher nav_sat_fix_pub_;
-  ros::Publisher twist_stamped_pub_;
-  ros::Publisher time_reference_pub_;
-  ros::Publisher mag_pub_;
-  ros::Publisher attitude_pub_;
-  ros::Publisher euler_pub_;
-  ros::Publisher status_pub_;
-  ros::Publisher version_pub_;
-  ros::Publisher lidar_pub_;
-  ros::Publisher error_pub_;
-  ros::Publisher battery_status_pub_;
-  std::map<std::string, ros::Publisher> named_value_int_pubs_;
-  std::map<std::string, ros::Publisher> named_value_float_pubs_;
-  std::map<std::string, ros::Publisher> named_command_struct_pubs_;
+  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr unsaved_params_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::Temperature>::SharedPtr imu_temp_pub_;
+  rclcpp::Publisher<rosflight_msgs::msg::OutputRaw>::SharedPtr output_raw_pub_;
+  rclcpp::Publisher<rosflight_msgs::msg::RCRaw>::SharedPtr rc_raw_pub_;
+  rclcpp::Publisher<rosflight_msgs::msg::Airspeed>::SharedPtr diff_pressure_pub_;
+//  rclcpp::Publisher<>::SharedPtr temperature_pub_;
+  rclcpp::Publisher<rosflight_msgs::msg::Barometer>::SharedPtr baro_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr sonar_pub_;
+  rclcpp::Publisher<rosflight_msgs::msg::GNSS>::SharedPtr gnss_pub_;
+  rclcpp::Publisher<rosflight_msgs::msg::GNSSFull>::SharedPtr gnss_full_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr nav_sat_fix_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_stamped_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::TimeReference>::SharedPtr time_reference_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::MagneticField>::SharedPtr mag_pub_;
+  rclcpp::Publisher<rosflight_msgs::msg::Attitude>::SharedPtr attitude_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::Vector3Stamped>::SharedPtr euler_pub_;
+  rclcpp::Publisher<rosflight_msgs::msg::Status>::SharedPtr status_pub_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr version_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr lidar_pub_;
+  rclcpp::Publisher<rosflight_msgs::msg::Error>::SharedPtr error_pub_;
+  rclcpp::Publisher<rosflight_msgs::msg::BatteryStatus>::SharedPtr battery_status_pub_;
+  std::map<std::string, rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr> named_value_int_pubs_;
+  std::map<std::string, rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr> named_value_float_pubs_;
+  std::map<std::string, rclcpp::Publisher<rosflight_msgs::msg::Command>::SharedPtr> named_command_struct_pubs_;
 
-  ros::ServiceServer param_get_srv_;
-  ros::ServiceServer param_set_srv_;
-  ros::ServiceServer param_write_srv_;
-  ros::ServiceServer param_save_to_file_srv_;
-  ros::ServiceServer param_load_from_file_srv_;
-  ros::ServiceServer imu_calibrate_bias_srv_;
-  ros::ServiceServer imu_calibrate_temp_srv_;
-  ros::ServiceServer calibrate_rc_srv_;
-  ros::ServiceServer calibrate_baro_srv_;
-  ros::ServiceServer calibrate_airspeed_srv_;
-  ros::ServiceServer reboot_srv_;
-  ros::ServiceServer reboot_bootloader_srv_;
+  rclcpp::Service<rosflight_msgs::srv::ParamGet>::SharedPtr param_get_srv_;
+  rclcpp::Service<rosflight_msgs::srv::ParamSet>::SharedPtr param_set_srv_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr param_write_srv_;
+  rclcpp::Service<rosflight_msgs::srv::ParamFile>::SharedPtr param_save_to_file_srv_;
+  rclcpp::Service<rosflight_msgs::srv::ParamFile>::SharedPtr param_load_from_file_srv_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr imu_calibrate_bias_srv_;
+//  rclcpp::Service<>::SharedPtr imu_calibrate_temp_srv_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr calibrate_rc_srv_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr calibrate_baro_srv_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr calibrate_airspeed_srv_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr reboot_srv_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr reboot_bootloader_srv_;
 
   ros::Timer param_timer_;
   ros::Timer version_timer_;
   ros::Timer heartbeat_timer_;
 
-  geometry_msgs::Quaternion attitude_quat_;
+  geometry_msgs::msg::Quaternion attitude_quat_;
   mavlink_rosflight_status_t prev_status_;
 
   std::string frame_id_;
