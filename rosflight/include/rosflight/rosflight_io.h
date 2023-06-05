@@ -87,7 +87,9 @@
 
 namespace rosflight_io
 {
-class rosflightIO : public mavrosflight::MavlinkListenerInterface, public mavrosflight::ParamListenerInterface
+class rosflightIO : public rclcpp::Node,
+    public mavrosflight::MavlinkListenerInterface,
+    public mavrosflight::ParamListenerInterface
 {
 public:
   rosflightIO();
@@ -99,9 +101,9 @@ public:
   virtual void on_param_value_updated(std::string name, double value);
   virtual void on_params_saved_change(bool unsaved_changes);
 
-  static constexpr float HEARTBEAT_PERIOD = 1; // Time between heartbeat messages
-  static constexpr float VERSION_PERIOD = 10;  // Time between version requests
-  static constexpr float PARAMETER_PERIOD = 3; // Time between parameter requests
+  static constexpr long HEARTBEAT_PERIOD = 1; // Time between heartbeat messages
+  static constexpr long VERSION_PERIOD = 10;  // Time between version requests
+  static constexpr long PARAMETER_PERIOD = 3; // Time between parameter requests
 
 private:
   // handle mavlink messages
@@ -133,17 +135,28 @@ private:
   void externalAttitudeCallback(rosflight_msgs::msg::Attitude::ConstSharedPtr msg);
 
   // ROS service callbacks
-  bool paramGetSrvCallback(rosflight_msgs::srv::ParamGet::Request &req, rosflight_msgs::srv::ParamGet::Response &res);
-  bool paramSetSrvCallback(rosflight_msgs::srv::ParamSet::Request &req, rosflight_msgs::srv::ParamSet::Response &res);
-  bool paramWriteSrvCallback(std_srvs::srv::Trigger::Request &req, std_srvs::srv::Trigger::Response &res);
-  bool paramSaveToFileCallback(rosflight_msgs::srv::ParamFile::Request &req, rosflight_msgs::srv::ParamFile::Response &res);
-  bool paramLoadFromFileCallback(rosflight_msgs::srv::ParamFile::Request &req, rosflight_msgs::srv::ParamFile::Response &res);
-  bool calibrateImuBiasSrvCallback(std_srvs::srv::Trigger::Request &req, std_srvs::srv::Trigger::Response &res);
-  bool calibrateRCTrimSrvCallback(std_srvs::srv::Trigger::Request &req, std_srvs::srv::Trigger::Response &res);
-  bool calibrateBaroSrvCallback(std_srvs::srv::Trigger::Request &req, std_srvs::srv::Trigger::Response &res);
-  bool calibrateAirspeedSrvCallback(std_srvs::srv::Trigger::Request &req, std_srvs::srv::Trigger::Response &res);
-  bool rebootSrvCallback(std_srvs::srv::Trigger::Request &req, std_srvs::srv::Trigger::Response &res);
-  bool rebootToBootloaderSrvCallback(std_srvs::srv::Trigger::Request &req, std_srvs::srv::Trigger::Response &res);
+  bool paramGetSrvCallback(rosflight_msgs::srv::ParamGet::Request::SharedPtr req,
+                           rosflight_msgs::srv::ParamGet::Response::SharedPtr res);
+  bool paramSetSrvCallback(rosflight_msgs::srv::ParamSet::Request::SharedPtr req,
+                           rosflight_msgs::srv::ParamSet::Response::SharedPtr res);
+  bool paramWriteSrvCallback(std_srvs::srv::Trigger::Request::SharedPtr req,
+                             std_srvs::srv::Trigger::Response::SharedPtr res);
+  bool paramSaveToFileCallback(rosflight_msgs::srv::ParamFile::Request::SharedPtr req,
+                               rosflight_msgs::srv::ParamFile::Response::SharedPtr res);
+  bool paramLoadFromFileCallback(rosflight_msgs::srv::ParamFile::Request::SharedPtr req,
+                                 rosflight_msgs::srv::ParamFile::Response::SharedPtr res);
+  bool calibrateImuBiasSrvCallback(std_srvs::srv::Trigger::Request::SharedPtr req,
+                                   std_srvs::srv::Trigger::Response::SharedPtr res);
+  bool calibrateRCTrimSrvCallback(std_srvs::srv::Trigger::Request::SharedPtr req,
+                                  std_srvs::srv::Trigger::Response::SharedPtr res);
+  bool calibrateBaroSrvCallback(std_srvs::srv::Trigger::Request::SharedPtr req,
+                                std_srvs::srv::Trigger::Response::SharedPtr res);
+  bool calibrateAirspeedSrvCallback(std_srvs::srv::Trigger::Request::SharedPtr req,
+                                    std_srvs::srv::Trigger::Response::SharedPtr res);
+  bool rebootSrvCallback(std_srvs::srv::Trigger::Request::SharedPtr req,
+                         std_srvs::srv::Trigger::Response::SharedPtr res);
+  bool rebootToBootloaderSrvCallback(std_srvs::srv::Trigger::Request::SharedPtr req,
+                                     std_srvs::srv::Trigger::Response::SharedPtr res);
 
   // timer callbacks
   void paramTimerCallback();
@@ -154,15 +167,13 @@ private:
   void request_version();
   void send_heartbeat();
   void check_error_code(uint8_t current, uint8_t previous, ROSFLIGHT_ERROR_CODE code, std::string name);
-  ros::Time fcu_time_to_ros_time(std::chrono::nanoseconds fcu_time);
+  rclcpp::Time fcu_time_to_ros_time(std::chrono::nanoseconds fcu_time);
 
   template <class T>
   inline T saturate(T value, T min, T max)
   {
     return value < min ? min : (value > max ? max : value);
   }
-
-  rclcpp::Node::SharedPtr node_;
 
   rclcpp::Subscription<rosflight_msgs::msg::Command>::SharedPtr command_sub_;
   rclcpp::Subscription<rosflight_msgs::msg::AuxCommand>::SharedPtr aux_command_sub_;
@@ -174,7 +185,6 @@ private:
   rclcpp::Publisher<rosflight_msgs::msg::OutputRaw>::SharedPtr output_raw_pub_;
   rclcpp::Publisher<rosflight_msgs::msg::RCRaw>::SharedPtr rc_raw_pub_;
   rclcpp::Publisher<rosflight_msgs::msg::Airspeed>::SharedPtr diff_pressure_pub_;
-//  rclcpp::Publisher<>::SharedPtr temperature_pub_;
   rclcpp::Publisher<rosflight_msgs::msg::Barometer>::SharedPtr baro_pub_;
   rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr sonar_pub_;
   rclcpp::Publisher<rosflight_msgs::msg::GNSS>::SharedPtr gnss_pub_;
@@ -200,16 +210,15 @@ private:
   rclcpp::Service<rosflight_msgs::srv::ParamFile>::SharedPtr param_save_to_file_srv_;
   rclcpp::Service<rosflight_msgs::srv::ParamFile>::SharedPtr param_load_from_file_srv_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr imu_calibrate_bias_srv_;
-//  rclcpp::Service<>::SharedPtr imu_calibrate_temp_srv_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr calibrate_rc_srv_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr calibrate_baro_srv_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr calibrate_airspeed_srv_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr reboot_srv_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr reboot_bootloader_srv_;
 
-  ros::Timer param_timer_;
-  ros::Timer version_timer_;
-  ros::Timer heartbeat_timer_;
+  rclcpp::TimerBase::SharedPtr param_timer_;
+  rclcpp::TimerBase::SharedPtr version_timer_;
+  rclcpp::TimerBase::SharedPtr heartbeat_timer_;
 
   geometry_msgs::msg::Quaternion attitude_quat_;
   mavlink_rosflight_status_t prev_status_;

@@ -17,6 +17,8 @@ find_package(rosflight_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(Eigen3 REQUIRED)
@@ -76,7 +78,7 @@ ament_export_dependencies(rclcpp
   rosflight_msgs
   sensor_msgs
   std_msgs
-  Boost 
+  Boost
   EIGEN3
   YAML_CPP
 )
@@ -107,6 +109,8 @@ ament_target_dependencies(rosflight_io
   sensor_msgs
   std_msgs
   std_srvs
+  tf2
+  tf2_geometry_msgs
 )
 
 # calibrate mag node

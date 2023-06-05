@@ -56,8 +56,7 @@ public:
       callback_(callback)
   {
     node_ = rclcpp::Node::make_shared("ros_timer_node");
-    ros_timer_ = node_->create_wall_timer(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(0)) + period,
-                                          std::bind(&ROSTimer::callback_ros_, this), nullptr);
+    ros_timer_ = node_->create_wall_timer(period, std::bind(&ROSTimer::callback_ros_, this), nullptr);
     if (!autostart) {
       ros_timer_->cancel();
     }

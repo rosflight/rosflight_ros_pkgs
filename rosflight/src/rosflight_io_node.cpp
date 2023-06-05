@@ -41,7 +41,8 @@
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "rosflight_io");
-  rosflight_io::rosflightIO rosflight_io;
-  ros::spin();
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<rosflight_io::rosflightIO>());
+  rclcpp::shutdown();
+  return 0;
 }
