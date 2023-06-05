@@ -54,12 +54,14 @@ namespace rosflight
 class ROSLogger : public mavrosflight::LoggerInterface<ROSLogger>
 {
 public:
+  ROSLogger(const rclcpp::Logger& logger, const rclcpp::Clock& clock) : logger_(logger), clock_(clock) {}
+
   template <typename... Args>
   inline void debug(const char* format, const Args&... args)
   {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-security"
-    ROS_DEBUG(format, args...);
+    RCLCPP_DEBUG(logger_, format, args...);
 #pragma GCC diagnostic pop
   }
   template <typename... Args>
@@ -67,7 +69,7 @@ public:
   {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-security"
-    ROS_DEBUG_THROTTLE(period, format, args...);
+    RCLCPP_DEBUG_THROTTLE(logger_, clock_, period, format, args...);
 #pragma GCC diagnostic pop
   }
 
@@ -76,7 +78,7 @@ public:
   {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-security"
-    ROS_INFO(format, args...);
+    RCLCPP_INFO(logger_, format, args...);
 #pragma GCC diagnostic pop
   }
   template <typename... Args>
@@ -84,7 +86,7 @@ public:
   {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-security"
-    ROS_INFO_THROTTLE(period, format, args...);
+    RCLCPP_INFO_THROTTLE(logger_, clock_, period, format, args...);
 #pragma GCC diagnostic pop
   }
 
@@ -93,7 +95,7 @@ public:
   {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-security"
-    ROS_WARN(format, args...);
+    RCLCPP_WARN(logger_, format, args...);
 #pragma GCC diagnostic pop
   }
   template <typename... Args>
@@ -101,7 +103,7 @@ public:
   {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-security"
-    ROS_WARN_THROTTLE(period, format, args...);
+    RCLCPP_WARN_THROTTLE(logger_, clock_, period, format, args...);
 #pragma GCC diagnostic pop
   }
 
@@ -110,7 +112,7 @@ public:
   {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-security"
-    ROS_ERROR(format, args...);
+    RCLCPP_ERROR(logger_, format, args...);
 #pragma GCC diagnostic pop
   }
   template <typename... Args>
@@ -118,7 +120,7 @@ public:
   {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-security"
-    ROS_ERROR_THROTTLE(period, format, args...);
+    RCLCPP_ERROR_THROTTLE(logger_, clock_, period, format, args...);
 #pragma GCC diagnostic pop
   }
 
@@ -127,7 +129,7 @@ public:
   {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-security"
-    ROS_FATAL(format, args...);
+    RCLCPP_FATAL(logger_, format, args...);
 #pragma GCC diagnostic pop
   }
   template <typename... Args>
@@ -135,9 +137,13 @@ public:
   {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-security"
-    ROS_FATAL_THROTTLE(period, format, args...);
+    RCLCPP_FATAL_THROTTLE(logger_, clock_, period, format, args...);
 #pragma GCC diagnostic pop
   }
+
+private:
+  rclcpp::Logger logger_;
+  rclcpp::Clock clock_;
 };
 
 } // namespace rosflight

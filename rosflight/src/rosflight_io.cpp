@@ -57,9 +57,8 @@ using std::placeholders::_2;
 
 namespace rosflight_io
 {
-rosflightIO::rosflightIO() : Node("rosflight_io")
+rosflightIO::rosflightIO() : Node("rosflight_io"), logger_(this->get_logger(), *this->get_clock())
 {
-  rclcpp::SubscriptionOptions sub_options;
   command_sub_ = this->create_subscription<rosflight_msgs::msg::Command>(
       "command", 1, std::bind(&rosflightIO::commandCallback, this, _1));
   aux_command_sub_ = this->create_subscription<rosflight_msgs::msg::AuxCommand>(
@@ -120,7 +119,6 @@ rosflightIO::rosflightIO() : Node("rosflight_io")
   try
   {
     mavlink_comm_->open(); //! \todo move this into the MavROSflight constructor
-    logger_ = rosflight::ROSLogger();
     time_interface_ = rosflight::ROSTimeInterface();
     timer_provider_ = rosflight::ROSTimerProvider();
     mavrosflight_ =
