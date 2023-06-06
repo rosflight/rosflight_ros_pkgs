@@ -1,9 +1,10 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(rosflight_firmware)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
-find_package(catkin REQUIRED COMPONENTS roscpp)
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
 
 # clone firmware submodule if it is missing
@@ -45,16 +46,13 @@ set(FIRMWARE_INCLUDE_DIRS
   firmware/test/
 )
 
-catkin_package(
-  INCLUDE_DIRS include ${FIRMWARE_INCLUDE_DIRS}
-  LIBRARIES rosflight_firmware rosflight_udp_board rosflight_test
-  CATKIN_DEPENDS roscpp
-  CFG_EXTRAS rosflight_firmware-extras.cmake
-)
-
 include_directories(include)
 include_directories(${FIRMWARE_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
+install(
+  DIRECTORY include
+  DESTINATION include
+)
 
 add_library(rosflight_firmware
   firmware/src/rosflight.cpp
@@ -82,7 +80,8 @@ add_library(rosflight_udp_board
 )
 target_link_libraries(rosflight_udp_board
   rosflight_firmware
-  ${catkin_LIBRARIES}
+  ${rclcpp_LIBRARIES}
+  ${ament_LIBRARIES}
   ${Boost_LIBRARIES}
 )
 add_library(rosflight_test
@@ -94,12 +93,14 @@ target_link_libraries(rosflight_test
 
 install(
   TARGETS rosflight_firmware rosflight_udp_board rosflight_test
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  DESTINATION lib
+  LIBRARY DESTINATION lib/${PROJECT_NAME}
 )
 
 install(
   DIRECTORY include/${PROJECT_NAME}/ ${FIRMWARE_INCLUDE_DIRS}
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  DESTINATION INCLUDE/${PROJECT_NAME}
   FILES_MATCHING PATTERN "*.h"
 )
+
+ament_package()
