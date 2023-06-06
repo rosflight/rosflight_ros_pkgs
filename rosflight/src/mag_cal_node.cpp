@@ -39,11 +39,11 @@
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "calibrate_accel_temp");
+  rclcpp::init(argc, argv);
 
   rosflight::CalibrateMag calibrate;
   calibrate.run();
 
-  ros::shutdown();
+  rclcpp::shutdown();
   return 0;
 }

@@ -19,6 +19,7 @@ find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(message_filters REQUIRED)
 
 find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(Eigen3 REQUIRED)
@@ -127,6 +128,7 @@ ament_target_dependencies(calibrate_mag
   rosflight_msgs
   sensor_msgs
   eigen_stl_containers
+  message_filters
 )
 
 

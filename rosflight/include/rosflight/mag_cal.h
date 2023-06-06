@@ -39,6 +39,7 @@
 #define ROSFLIGHT_SENSORS_CALBRATE_MAG_H
 
 #include <rclcpp/rclcpp.hpp>
+#include <message_filters/subscriber.h>
 
 #include <rosflight_msgs/srv/param_set.hpp>
 
@@ -58,7 +59,7 @@ namespace rosflight
 /**
  * \brief CalibrateMag sensor class
  */
-class CalibrateMag
+class CalibrateMag : public rclcpp::Node
 {
 public:
   CalibrateMag();
@@ -76,7 +77,7 @@ public:
    * @brief set_refence_magnetic_field_strength
    * @param reference_magnetic_field
    */
-  bool mag_callback(const sensor_msgs::MagneticField::ConstPtr &mag);
+  bool mag_callback(sensor_msgs::msg::MagneticField::ConstSharedPtr mag);
 
   void set_reference_magnetic_field_strength(double reference_magnetic_field);
 
@@ -103,13 +104,11 @@ public:
 private:
   bool set_param(std::string name, double value);
 
-  ros::NodeHandle nh_;
-  ros::NodeHandle nh_private_;
+  rclcpp::Node::SharedPtr node_private_;
 
-  message_filters::Subscriber<sensor_msgs::MagneticField> mag_subscriber_;
+  message_filters::Subscriber<sensor_msgs::msg::MagneticField> mag_subscriber_;
 
-  ros::ServiceServer mag_cal_srv_;
-  ros::ServiceClient param_set_client_;
+  rclcpp::Client<rosflight_msgs::srv::ParamSet>::SharedPtr param_set_client_;
 
   Eigen::MatrixXd A_, b_;
 

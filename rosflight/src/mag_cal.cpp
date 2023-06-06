@@ -41,25 +41,29 @@
 namespace rosflight
 {
 CalibrateMag::CalibrateMag() :
-  calibrating_(false),
-  nh_private_("~"),
-  reference_field_strength_(1.0),
-  mag_subscriber_(nh_, "/magnetometer", 1)
+    Node("calibrate_accel_temp"),
+    calibrating_(false),
+    reference_field_strength_(1.0)
 {
   A_ = Eigen::MatrixXd::Zero(3, 3);
   b_ = Eigen::MatrixXd::Zero(3, 1);
   ransac_iters_ = 100;
   inlier_thresh_ = 200;
 
-  calibration_time_ = nh_private_.param<double>("calibration_time", 60.0);
-  measurement_skip_ = nh_private_.param<int>("measurement_skip", 20);
+  calibration_time_ = this->get_parameter_or("calibration_time", 60.0);
+  measurement_skip_ = this->get_parameter_or("measurement_skip", 20);
 
-  param_set_client_ = nh_.serviceClient<rosflight_msgs::ParamSet>("param_set");
+  param_set_client_ = this->create_client<rosflight_msgs::srv::ParamSet>("param_set");
   mag_subscriber_.registerCallback(boost::bind(&CalibrateMag::mag_callback, this, _1));
 }
 
 void CalibrateMag::run()
 {
+  // Subscribe to /magnetometer topic
+  rmw_qos_profile_t qos_profile = rmw_qos_profile_default;
+  qos_profile.depth = 1;
+  mag_subscriber_.subscribe(shared_from_this(), "/magnetometer", qos_profile);
+
   // reset calibration parameters
   bool success = true;
   // reset soft iron parameters
@@ -80,29 +84,29 @@ void CalibrateMag::run()
 
   if (!success)
   {
-    ROS_FATAL("Failed to reset calibration parameters");
+    RCLCPP_FATAL(this->get_logger(), "Failed to reset calibration parameters");
     return;
   }
 
   start_mag_calibration();
 
   // wait for data to arrive
-  ros::Duration timeout(3.0);
-  ros::Time start = ros::Time::now();
-  while (ros::Time::now() - start < timeout && first_time_ && ros::ok())
+  rclcpp::Duration timeout(3, 0);
+  rclcpp::Time start = this->get_clock()->now();
+  while (this->get_clock()->now() - start < timeout && first_time_ && rclcpp::ok())
   {
-    ros::spinOnce();
+    rclcpp::spin_some(shared_from_this());
   }
 
   if (first_time_)
   {
-    ROS_FATAL("No messages on magnetometer topic, unable to calibrate");
+    RCLCPP_FATAL(this->get_logger(), "No messages on magnetometer topic, unable to calibrate");
     return;
   }
 
-  while (calibrating_ && ros::ok())
+  while (calibrating_ && rclcpp::ok())
   {
-    ros::spinOnce();
+    rclcpp::spin_some(shared_from_this());
   }
 
   if (!calibrating_)
@@ -148,26 +152,26 @@ void CalibrateMag::start_mag_calibration()
 void CalibrateMag::do_mag_calibration()
 {
   // fit ellipsoid to measurements according to Li paper but in RANSAC form
-  ROS_INFO("Collected %u measurements. Fitting ellipsoid.", (uint32_t)measurements_.size());
+  RCLCPP_INFO(this->get_logger(), "Collected %u measurements. Fitting ellipsoid.", (uint32_t)measurements_.size());
   Eigen::MatrixXd u = ellipsoidRANSAC(measurements_, ransac_iters_, inlier_thresh_);
 
   // magnetometer calibration parameters according to Renaudin paper
-  ROS_INFO("Computing calibration parameters.");
+  RCLCPP_INFO(this->get_logger(), "Computing calibration parameters.");
   magCal(u, A_, b_);
 }
 
-bool CalibrateMag::mag_callback(const sensor_msgs::MagneticField::ConstPtr &mag)
+bool CalibrateMag::mag_callback(sensor_msgs::msg::MagneticField::ConstSharedPtr mag)
 {
   if (calibrating_)
   {
     if (first_time_)
     {
       first_time_ = false;
-      ROS_WARN_ONCE("Calibrating Mag, do the mag dance for %g seconds!", calibration_time_);
-      start_time_ = ros::Time::now().toSec();
+      RCLCPP_WARN_ONCE(this->get_logger(), "Calibrating Mag, do the mag dance for %g seconds!", calibration_time_);
+      start_time_ = this->get_clock()->now().seconds();
     }
 
-    double elapsed = ros::Time::now().toSec() - start_time_;
+    double elapsed = this->get_clock()->now().seconds() - start_time_;
 
     printf("\r%.1f seconds remaining", calibration_time_ - elapsed);
 
@@ -189,7 +193,7 @@ bool CalibrateMag::mag_callback(const sensor_msgs::MagneticField::ConstPtr &mag)
     }
     else
     {
-      ROS_WARN("\rdone!");
+      RCLCPP_WARN(this->get_logger(), "\rdone!");
       calibrating_ = false;
     }
   }
@@ -302,8 +306,8 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, in
   double dist_avg = dist_sum / dist_count;
   if (inlier_thresh > fabs(dist_avg))
   {
-    ROS_WARN("Inlier threshold is greater than average measurement distance from surface. Reduce inlier threshold.");
-    ROS_INFO("Inlier threshold = %7.1f, Average measurement distance = %7.1f", inlier_thresh_, dist_avg);
+    RCLCPP_WARN(this->get_logger(), "Inlier threshold is greater than average measurement distance from surface. Reduce inlier threshold.");
+    RCLCPP_INFO(this->get_logger(), "Inlier threshold = %7.1f, Average measurement distance = %7.1f", inlier_thresh_, dist_avg);
   }
 
   // perform LS on set of best inliers
@@ -505,13 +509,15 @@ void CalibrateMag::magCal(Eigen::MatrixXd u, Eigen::MatrixXd &A, Eigen::MatrixXd
 
 bool CalibrateMag::set_param(std::string name, double value)
 {
-  rosflight_msgs::ParamSet srv;
-  srv.request.name = name;
-  srv.request.value = value;
+  auto req = std::make_shared<rosflight_msgs::srv::ParamSet::Request>();
+  req->name = name;
+  req->value = value;
 
-  if (param_set_client_.call(srv))
+  auto result = param_set_client_->async_send_request(req);
+
+  if (rclcpp::spin_until_future_complete(shared_from_this(), result) == rclcpp::FutureReturnCode::SUCCESS)
   {
-    return srv.response.exists;
+    return result.get()->exists;
   }
   else
   {
