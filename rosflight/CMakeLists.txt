@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(rosflight)
 
-# TODO: Cleanup/rewrite file
-
 set(CMAKE_BUILD_TYPE Release)
 
 message("CMAKE_C_FLAGS_RELEASE is ${CMAKE_C_FLAGS_RELEASE}")
@@ -57,10 +55,6 @@ include_directories(include
   ${EIGEN3_INCLUDE_DIRS}
   ${YAML_CPP_INCLUDEDIR}
 )
-install(
-  DIRECTORY include
-  DESTINATION include
-)
 
 # mavrosflight library
 add_library(mavrosflight
@@ -72,19 +66,6 @@ add_library(mavrosflight
   src/mavrosflight/param.cpp
   src/mavrosflight/time_manager.cpp
 )
-ament_target_dependencies(mavrosflight rclcpp)
-ament_export_dependencies(rclcpp
-  eigen_stl_containers
-  geometry_msgs
-  rosflight_msgs
-  sensor_msgs
-  std_msgs
-  Boost
-  EIGEN3
-  YAML_CPP
-)
-ament_export_include_directories(include)
-ament_export_libraries(mavrosflight)
 target_compile_definitions(mavrosflight PRIVATE USE_ROS)
 target_link_libraries(mavrosflight
   ${ament_LIBRARIES}
@@ -92,6 +73,7 @@ target_link_libraries(mavrosflight
   ${Boost_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
 )
+ament_target_dependencies(mavrosflight rclcpp)
 
 # rosflight_io_node
 add_executable(rosflight_io
@@ -151,6 +133,4 @@ install(DIRECTORY include/rosflight/mavrosflight/
 )
 
 
-ament_package(
-  # CONFIG_EXTRAS
-)
+ament_package()

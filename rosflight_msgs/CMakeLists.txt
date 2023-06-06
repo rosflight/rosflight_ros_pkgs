@@ -14,7 +14,6 @@ find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
 # declare the message files to generate code for
-# TODO: Verify all message files are correct
 set(msg_files
   "msg/Airspeed.msg"
   "msg/Attitude.msg"
@@ -48,6 +47,4 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 ament_export_dependencies(rosidl_default_runtime)
 
-ament_package(
-  # AMENT_DEPENDS builtin_interfaces geometry_msgs std_msgs
-)
+ament_package()

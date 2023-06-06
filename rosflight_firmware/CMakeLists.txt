@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(rosflight_firmware)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+set(CMAKE_CXX_STANDARD 14)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -39,6 +39,11 @@ endif()
 message(STATUS "Firmware version string: ${GIT_VERSION_STRING}")
 message(STATUS "Firmware version hash: ${GIT_VERSION_HASH}")
 
+
+###########
+## Build ##
+###########
+
 set(FIRMWARE_INCLUDE_DIRS
   firmware/include/
   firmware/lib/
@@ -46,14 +51,12 @@ set(FIRMWARE_INCLUDE_DIRS
   firmware/test/
 )
 
-include_directories(include)
-include_directories(${FIRMWARE_INCLUDE_DIRS})
-include_directories(${Boost_INCLUDE_DIRS})
-install(
-  DIRECTORY include
-  DESTINATION include
+include_directories(include
+  ${FIRMWARE_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
 )
 
+# rosflight_firmware
 add_library(rosflight_firmware
   firmware/src/rosflight.cpp
   firmware/src/nanoprintf.cpp
@@ -75,6 +78,7 @@ target_compile_definitions(rosflight_firmware PUBLIC
     GIT_VERSION_HASH=0x${GIT_VERSION_HASH}
     GIT_VERSION_STRING=\"${GIT_VERSION_STRING}\")
 
+# rosflight_udp_board
 add_library(rosflight_udp_board
   src/udp_board.cpp
 )
@@ -84,12 +88,19 @@ target_link_libraries(rosflight_udp_board
   ${ament_LIBRARIES}
   ${Boost_LIBRARIES}
 )
+
+# rosflight_test
 add_library(rosflight_test
     firmware/test/test_board.cpp
 )
 target_link_libraries(rosflight_test
   rosflight_firmware
 )
+
+
+#############
+## Install ##
+#############
 
 install(
   TARGETS rosflight_firmware rosflight_udp_board rosflight_test
@@ -102,5 +113,6 @@ install(
   DESTINATION INCLUDE/${PROJECT_NAME}
   FILES_MATCHING PATTERN "*.h"
 )
+
 
 ament_package()
