@@ -92,14 +92,12 @@ rosflightIO::rosflightIO() : Node("rosflight_io"), logger_(this->get_logger(), *
   reboot_bootloader_srv_ = this->create_service<std_srvs::srv::Trigger>(
       "reboot_to_bootloader", std::bind(&rosflightIO::rebootToBootloaderSrvCallback, this, _1, _2));
 
-  rclcpp::Node::SharedPtr node_ = rclcpp::Node::make_shared("~");
-
-  if (node_->get_parameter_or("udp", false))
+  if (this->get_parameter_or("udp", false))
   {
-    std::string bind_host = node_->get_parameter_or("bind_host", std::string("localhost"));
-    uint16_t bind_port = (uint16_t)node_->get_parameter_or("bind_port", 14520);
-    std::string remote_host = node_->get_parameter_or("remote_host", bind_host);
-    uint16_t remote_port = (uint16_t)node_->get_parameter_or("remote_port", 14525);
+    std::string bind_host = this->get_parameter_or("bind_host", std::string("localhost"));
+    uint16_t bind_port = (uint16_t)this->get_parameter_or("bind_port", 14520);
+    std::string remote_host = this->get_parameter_or("remote_host", bind_host);
+    uint16_t remote_port = (uint16_t)this->get_parameter_or("remote_port", 14525);
 
     RCLCPP_INFO(this->get_logger(), "Connecting over UDP to \"%s:%d\", from \"%s:%d\"", remote_host.c_str(),
                 remote_port, bind_host.c_str(), bind_port);
@@ -108,8 +106,8 @@ rosflightIO::rosflightIO() : Node("rosflight_io"), logger_(this->get_logger(), *
   }
   else
   {
-    std::string port = node_->get_parameter_or("port", std::string("/dev/ttyACM0"));
-    int baud_rate = node_->get_parameter_or("baud_rate", 921600);
+    std::string port = this->get_parameter_or("port", std::string("/dev/ttyACM0"));
+    int baud_rate = this->get_parameter_or("baud_rate", 921600);
 
     RCLCPP_INFO(this->get_logger(), "Connecting to serial port \"%s\", at %d baud", port.c_str(), baud_rate);
 
@@ -149,7 +147,7 @@ rosflightIO::rosflightIO() : Node("rosflight_io"), logger_(this->get_logger(), *
   unsaved_params_pub_->publish(unsaved_msg);
 
   // Set up a few other random things
-  frame_id_ = node_->get_parameter_or("frame_id", std::string("world"));
+  frame_id_ = this->get_parameter_or("frame_id", std::string("world"));
 
   prev_status_.armed = false;
   prev_status_.failsafe = false;
@@ -571,8 +569,7 @@ void rosflightIO::handle_named_value_int_msg(const mavlink_message_t &msg)
 
   if (named_value_int_pubs_.find(name) == named_value_int_pubs_.end())
   {
-    rclcpp::Node::SharedPtr node_ = rclcpp::Node::make_shared("~");
-    named_value_int_pubs_[name] = node_->create_publisher<std_msgs::msg::Int32>("named_value/int/" + name, 1);
+    named_value_int_pubs_[name] = this->create_publisher<std_msgs::msg::Int32>("named_value/int/" + name, 1);
   }
 
   std_msgs::msg::Int32 out_msg;
@@ -594,8 +591,7 @@ void rosflightIO::handle_named_value_float_msg(const mavlink_message_t &msg)
 
   if (named_value_float_pubs_.find(name) == named_value_float_pubs_.end())
   {
-    rclcpp::Node::SharedPtr node_ = rclcpp::Node::make_shared("~");
-    named_value_float_pubs_[name] = node_->create_publisher<std_msgs::msg::Float32>("named_value/float/" + name, 1);
+    named_value_float_pubs_[name] = this->create_publisher<std_msgs::msg::Float32>("named_value/float/" + name, 1);
   }
 
   std_msgs::msg::Float32 out_msg;
@@ -617,8 +613,7 @@ void rosflightIO::handle_named_command_struct_msg(const mavlink_message_t &msg)
 
   if (named_command_struct_pubs_.find(name) == named_command_struct_pubs_.end())
   {
-    rclcpp::Node::SharedPtr node_ = rclcpp::Node::make_shared("~");
-    named_command_struct_pubs_[name] = node_->create_publisher<rosflight_msgs::msg::Command>("named_value/command_struct/" + name, 1);
+    named_command_struct_pubs_[name] = this->create_publisher<rosflight_msgs::msg::Command>("named_value/command_struct/" + name, 1);
   }
 
   rosflight_msgs::msg::Command command_msg;
@@ -1063,7 +1058,7 @@ void rosflightIO::paramTimerCallback()
   {
     mavrosflight_->param.request_params();
     RCLCPP_ERROR(this->get_logger(), "Received %d of %d parameters. Requesting missing parameters...",
-              mavrosflight_->param.get_params_received(), mavrosflight_->param.get_num_params());
+                 mavrosflight_->param.get_params_received(), mavrosflight_->param.get_num_params());
   }
 }
 
