@@ -1,8 +1,6 @@
 # GNSS Full
 
 std_msgs/Header header
-# header.frame_id may take value of __ or __
-
 uint64 time_of_week
 uint16 year
 uint8 month

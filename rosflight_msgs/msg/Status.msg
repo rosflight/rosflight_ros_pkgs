@@ -1,7 +1,6 @@
 # Flight controller status message
 
 std_msgs/Header header
-# header.frame_id may take value of __ or __
 
 bool armed         # True if armed
 bool failsafe      # True if in failsafe

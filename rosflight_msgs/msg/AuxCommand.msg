@@ -6,7 +6,5 @@ uint8 AUX_COMMAND_SERVO = 1
 uint8 AUX_COMMAND_MOTOR = 2
 
 std_msgs/Header header
-# header.frame_id may take value of __ or __
-
 uint8[14] type_array
 float32[14] values
