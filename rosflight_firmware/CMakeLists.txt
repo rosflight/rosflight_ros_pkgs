@@ -76,7 +76,17 @@ add_library(rosflight_firmware
 )
 target_compile_definitions(rosflight_firmware PUBLIC
     GIT_VERSION_HASH=0x${GIT_VERSION_HASH}
-    GIT_VERSION_STRING=\"${GIT_VERSION_STRING}\")
+    GIT_VERSION_STRING=\"${GIT_VERSION_STRING}\"
+)
+ament_export_targets(rosflight_firmware HAS_LIBRARY_TARGET)
+install(
+  TARGETS rosflight_firmware
+  EXPORT rosflight_firmware
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include/${PROJECT_NAME}
+)
 
 # rosflight_udp_board
 add_library(rosflight_udp_board
@@ -88,6 +98,15 @@ target_link_libraries(rosflight_udp_board
   ${ament_LIBRARIES}
   ${Boost_LIBRARIES}
 )
+ament_export_targets(rosflight_udp_board HAS_LIBRARY_TARGET)
+install(
+  TARGETS rosflight_udp_board
+  EXPORT rosflight_udp_board
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include/${PROJECT_NAME}
+)
 
 # rosflight_test
 add_library(rosflight_test
@@ -96,21 +115,20 @@ add_library(rosflight_test
 target_link_libraries(rosflight_test
   rosflight_firmware
 )
-
-
-#############
-## Install ##
-#############
-
+ament_export_targets(rosflight_test HAS_LIBRARY_TARGET)
 install(
-  TARGETS rosflight_firmware rosflight_udp_board rosflight_test
-  DESTINATION lib
-  LIBRARY DESTINATION lib/${PROJECT_NAME}
+  TARGETS rosflight_test
+  EXPORT rosflight_test
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include/${PROJECT_NAME}
 )
+
 
 install(
   DIRECTORY include/${PROJECT_NAME}/ ${FIRMWARE_INCLUDE_DIRS}
-  DESTINATION INCLUDE/${PROJECT_NAME}
+  DESTINATION include/${PROJECT_NAME}
   FILES_MATCHING PATTERN "*.h"
 )
 

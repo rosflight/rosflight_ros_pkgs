@@ -32,7 +32,7 @@
 #ifndef ROSFLIGHT_SIM_FIXEDWING_FORCES_AND_MOMENTS_H
 #define ROSFLIGHT_SIM_FIXEDWING_FORCES_AND_MOMENTS_H
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <rosflight_sim/mav_forces_and_moments.h>
 #include <eigen3/Eigen/Dense>
 
@@ -41,7 +41,7 @@ namespace rosflight_sim
 class Fixedwing : public MAVForcesAndMoments
 {
 private:
-  ros::NodeHandle* nh_;
+  rclcpp::Node::SharedPtr node_;
 
   // physical parameters
   double mass_;
@@ -108,7 +108,7 @@ private:
   Eigen::Vector3d wind_;
 
 public:
-  Fixedwing(ros::NodeHandle* nh);
+  Fixedwing(rclcpp::Node::SharedPtr  node);
   ~Fixedwing();
 
   Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x, const int act_cmds[]);

@@ -32,7 +32,7 @@
 #ifndef ROSFLIGHT_SIM_MULTIROTOR_FORCES_AND_MOMENTS_H
 #define ROSFLIGHT_SIM_MULTIROTOR_FORCES_AND_MOMENTS_H
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <eigen3/Eigen/Dense>
 
 #include <rosflight_sim/mav_forces_and_moments.h>
@@ -42,7 +42,7 @@ namespace rosflight_sim
 class Multirotor : public MAVForcesAndMoments
 {
 private:
-  ros::NodeHandle* nh_;
+  rclcpp::Node::SharedPtr node_;
   Eigen::Vector3d wind_;
 
   double prev_time_;
@@ -103,7 +103,7 @@ private:
   Eigen::VectorXd actual_torques_;
 
 public:
-  Multirotor(ros::NodeHandle* nh);
+  Multirotor(rclcpp::Node::SharedPtr node);
   ~Multirotor();
 
   Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x, const int act_cmds[]);
