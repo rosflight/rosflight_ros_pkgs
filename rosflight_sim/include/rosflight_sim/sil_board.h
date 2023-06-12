@@ -42,10 +42,10 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 
-#include <ros/ros.h>
-#include <rosflight_msgs/RCRaw.h>
+#include <rclcpp/rclcpp.hpp>
+#include <rosflight_msgs/msg/rc_raw.hpp>
 
-#include <rosflight_firmware/udp_board.h>
+#include <udp_board.h>
 
 #include <rosflight_sim/gz_compat.h>
 
@@ -105,11 +105,11 @@ private:
   gazebo::physics::ModelPtr model_;
   gazebo::physics::LinkPtr link_;
 
-  ros::NodeHandle* nh_;
-  ros::Subscriber rc_sub_;
-  rosflight_msgs::RCRaw latestRC_;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp::Subscription<rosflight_msgs::msg::RCRaw>::SharedPtr rc_sub_;
+  rosflight_msgs::msg::RCRaw latestRC_;
   bool rc_received_;
-  ros::Time last_rc_message_;
+  rclcpp::Time last_rc_message_;
 
   std::string mav_type_;
   int pwm_outputs_[14]; // assumes maximum of 14 channels
@@ -119,7 +119,7 @@ private:
   uint64_t next_imu_update_time_us_;
   uint64_t imu_update_period_us_;
 
-  void RCCallback(const rosflight_msgs::RCRaw& msg);
+  void RCCallback(const rosflight_msgs::msg::RCRaw& msg);
   bool motors_spinning();
 
   GazeboVector prev_vel_1_;
@@ -218,7 +218,7 @@ public:
   void gazebo_setup(gazebo::physics::LinkPtr link,
                     gazebo::physics::WorldPtr world,
                     gazebo::physics::ModelPtr model,
-                    ros::NodeHandle* nh,
+                    rclcpp::Node::SharedPtr node,
                     std::string mav_type);
   inline const int* get_outputs() const { return pwm_outputs_; }
 #if GAZEBO_MAJOR_VERSION >= 9

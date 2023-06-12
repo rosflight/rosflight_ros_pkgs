@@ -32,9 +32,9 @@
 #ifndef ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
 #define ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
 
-#include <geometry_msgs/Vector3.h>
-#include <nav_msgs/Odometry.h>
-#include <ros/ros.h>
+#include <geometry_msgs/msg/vector3.hpp>
+#include <nav_msgs/msg/odometry.hpp>
+#include <rclcpp/rclcpp.hpp>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/common.hh>
 #include <gazebo/gazebo.hh>
@@ -64,7 +64,7 @@ protected:
   void OnUpdate(const gazebo::common::UpdateInfo& _info);
 
 private:
-  void windCallback(const geometry_msgs::Vector3& msg);
+  void windCallback(const geometry_msgs::msg::Vector3& msg);
   void publishTruth();
 
   SIL_Board board_;
@@ -82,9 +82,8 @@ private:
   gazebo::physics::EntityPtr parent_link_;
   gazebo::event::ConnectionPtr updateConnection_; // Pointer to the update event connection.
 
-  ros::Subscriber wind_sub_;
-  ros::Publisher truth_NED_pub_;
-  ros::Publisher truth_NWU_pub_;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr truth_NED_pub_;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr truth_NWU_pub_;
 
   MAVForcesAndMoments* mav_dynamics_;
 
@@ -94,7 +93,7 @@ private:
   // Time Counters
   uint64_t start_time_us_;
 
-  ros::NodeHandle* nh_;
+ rclcpp::Node::SharedPtr node_;
 
   // For reset handlin
   GazeboPose initial_pose_;

@@ -42,27 +42,15 @@
 
 namespace rosflight_sim
 {
-ROSflightSIL::ROSflightSIL() : gazebo::ModelPlugin(), nh_(nullptr), comm_(board_), firmware_(board_, comm_) {}
+ROSflightSIL::ROSflightSIL() : gazebo::ModelPlugin(), node_(nullptr), comm_(board_), firmware_(board_, comm_) {}
 
 ROSflightSIL::~ROSflightSIL()
 {
   GZ_COMPAT_DISCONNECT_WORLD_UPDATE_BEGIN(updateConnection_);
-  if (nh_)
-  {
-    nh_->shutdown();
-    delete nh_;
-  }
 }
 
 void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
 {
-  if (!ros::isInitialized())
-  {
-    ROS_FATAL("A ROS node for Gazebo has not been initialized, unable to load plugin");
-    return;
-  }
-  ROS_INFO("Loaded the ROSflight SIL plugin");
-
   model_ = _model;
   world_ = model_->GetWorld();
 
@@ -75,7 +63,7 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
     namespace_ = _sdf->GetElement("namespace")->Get<std::string>();
   else
     gzerr << "[ROSflight_SIL] Please specify a namespace.\n";
-  nh_ = new ros::NodeHandle(namespace_);
+  node_ = std::make_shared<rclcpp::Node>(namespace_);
 
   gzmsg << "loading parameters from " << namespace_ << " ns\n";
 
@@ -99,14 +87,14 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   }
 
   if (mav_type_ == "multirotor")
-    mav_dynamics_ = new Multirotor(nh_);
+    mav_dynamics_ = new Multirotor(node_);
   else if (mav_type_ == "fixedwing")
-    mav_dynamics_ = new Fixedwing(nh_);
+    mav_dynamics_ = new Fixedwing(node_);
   else
     gzthrow("unknown or unsupported mav type\n");
 
   // Initialize the Firmware
-  board_.gazebo_setup(link_, world_, model_, nh_, mav_type_);
+  board_.gazebo_setup(link_, world_, model_, node_, mav_type_);
   firmware_.init();
 
   // Connect the update function to the simulation
@@ -114,8 +102,8 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
   initial_pose_ = GZ_COMPAT_GET_WORLD_COG_POSE(link_);
 
-  truth_NED_pub_ = nh_->advertise<nav_msgs::Odometry>("truth/NED", 1);
-  truth_NWU_pub_ = nh_->advertise<nav_msgs::Odometry>("truth/NWU", 1);
+  truth_NED_pub_ = node_->create_publisher<nav_msgs::msg::Odometry>("truth/NED", 1);
+  truth_NWU_pub_ = node_->create_publisher<nav_msgs::msg::Odometry>("truth/NWU", 1);
 }
 
 // This gets called by the world update event.
@@ -159,7 +147,7 @@ void ROSflightSIL::Reset()
   //  rosflight_init();
 }
 
-void ROSflightSIL::windCallback(const geometry_msgs::Vector3& msg)
+void ROSflightSIL::windCallback(const geometry_msgs::msg::Vector3& msg)
 {
   Eigen::Vector3d wind;
   wind << msg.x, msg.y, msg.z;
@@ -173,9 +161,9 @@ void ROSflightSIL::publishTruth()
   GazeboVector omega = GZ_COMPAT_GET_RELATIVE_ANGULAR_VEL(link_);
 
   // Publish truth
-  nav_msgs::Odometry truth;
+  nav_msgs::msg::Odometry truth;
   truth.header.stamp.sec = GZ_COMPAT_GET_SIM_TIME(world_).sec;
-  truth.header.stamp.nsec = GZ_COMPAT_GET_SIM_TIME(world_).nsec;
+  truth.header.stamp.nanosec = GZ_COMPAT_GET_SIM_TIME(world_).nsec;
   truth.header.frame_id = link_name_ + "_NWU";
   truth.pose.pose.orientation.w = GZ_COMPAT_GET_W(GZ_COMPAT_GET_ROT(pose));
   truth.pose.pose.orientation.x = GZ_COMPAT_GET_X(GZ_COMPAT_GET_ROT(pose));
@@ -190,7 +178,7 @@ void ROSflightSIL::publishTruth()
   truth.twist.twist.angular.x = GZ_COMPAT_GET_X(omega);
   truth.twist.twist.angular.y = GZ_COMPAT_GET_Y(omega);
   truth.twist.twist.angular.z = GZ_COMPAT_GET_Z(omega);
-  truth_NWU_pub_.publish(truth);
+  truth_NWU_pub_->publish(truth);
 
   // Convert to NED
   truth.header.frame_id = link_name_ + "_NED";
@@ -202,7 +190,7 @@ void ROSflightSIL::publishTruth()
   truth.twist.twist.linear.z *= -1.0;
   truth.twist.twist.angular.y *= -1.0;
   truth.twist.twist.angular.z *= -1.0;
-  truth_NED_pub_.publish(truth);
+  truth_NED_pub_->publish(truth);
 }
 
 Eigen::Vector3d ROSflightSIL::vec3_to_eigen_from_gazebo(GazeboVector vec)

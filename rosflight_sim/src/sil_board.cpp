@@ -29,7 +29,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <ros/ros.h>
 #include <rosflight_sim/sil_board.h>
 #include <fstream>
 
@@ -56,68 +55,68 @@ constexpr double deg2Rad(double x)
 void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link,
                              gazebo::physics::WorldPtr world,
                              gazebo::physics::ModelPtr model,
-                             ros::NodeHandle *nh,
+                             rclcpp::Node::SharedPtr node,
                              std::string mav_type)
 {
   link_ = link;
   world_ = world;
   model_ = model;
-  nh_ = nh;
+  node_ = node;
   mav_type_ = mav_type;
 
-  std::string bind_host = nh->param<std::string>("gazebo_host", "localhost");
-  int bind_port = nh->param<int>("gazebo_port", 14525);
-  std::string remote_host = nh->param<std::string>("ROS_host", "localhost");
-  int remote_port = nh->param<int>("ROS_port", 14520);
+  std::string bind_host = node_->get_parameter_or<std::string>("gazebo_host", "localhost");
+  int bind_port = node_->get_parameter_or<int>("gazebo_port", 14525);
+  std::string remote_host = node_->get_parameter_or<std::string>("ROS_host", "localhost");
+  int remote_port = node_->get_parameter_or<int>("ROS_port", 14520);
 
   set_ports(bind_host, bind_port, remote_host, remote_port);
   gzmsg << "ROSflight SIL Conneced to " << remote_host << ":" << remote_port << " from " << bind_host << ":"
         << bind_port << "\n";
 
   // Get Sensor Parameters
-  gyro_stdev_ = nh->param<double>("gyro_stdev", 0.13);
-  gyro_bias_range_ = nh->param<double>("gyro_bias_range", 0.15);
-  gyro_bias_walk_stdev_ = nh->param<double>("gyro_bias_walk_stdev", 0.001);
+  gyro_stdev_ = node_->get_parameter_or<double>("gyro_stdev", 0.13);
+  gyro_bias_range_ = node_->get_parameter_or<double>("gyro_bias_range", 0.15);
+  gyro_bias_walk_stdev_ = node_->get_parameter_or<double>("gyro_bias_walk_stdev", 0.001);
 
-  acc_stdev_ = nh->param<double>("acc_stdev", 1.15);
-  acc_bias_range_ = nh->param<double>("acc_bias_range", 0.15);
-  acc_bias_walk_stdev_ = nh->param<double>("acc_bias_walk_stdev", 0.001);
+  acc_stdev_ = node_->get_parameter_or<double>("acc_stdev", 1.15);
+  acc_bias_range_ = node_->get_parameter_or<double>("acc_bias_range", 0.15);
+  acc_bias_walk_stdev_ = node_->get_parameter_or<double>("acc_bias_walk_stdev", 0.001);
 
-  mag_stdev_ = nh->param<double>("mag_stdev", 1.15);
-  mag_bias_range_ = nh->param<double>("mag_bias_range", 0.15);
-  mag_bias_walk_stdev_ = nh->param<double>("mag_bias_walk_stdev", 0.001);
+  mag_stdev_ = node_->get_parameter_or<double>("mag_stdev", 1.15);
+  mag_bias_range_ = node_->get_parameter_or<double>("mag_bias_range", 0.15);
+  mag_bias_walk_stdev_ = node_->get_parameter_or<double>("mag_bias_walk_stdev", 0.001);
 
-  baro_stdev_ = nh->param<double>("baro_stdev", 1.15);
-  baro_bias_range_ = nh->param<double>("baro_bias_range", 0.15);
-  baro_bias_walk_stdev_ = nh->param<double>("baro_bias_walk_stdev", 0.001);
+  baro_stdev_ = node_->get_parameter_or<double>("baro_stdev", 1.15);
+  baro_bias_range_ = node_->get_parameter_or<double>("baro_bias_range", 0.15);
+  baro_bias_walk_stdev_ = node_->get_parameter_or<double>("baro_bias_walk_stdev", 0.001);
 
-  airspeed_stdev_ = nh_->param<double>("airspeed_stdev", 1.15);
-  airspeed_bias_range_ = nh_->param<double>("airspeed_bias_range", 0.15);
-  airspeed_bias_walk_stdev_ = nh_->param<double>("airspeed_bias_walk_stdev", 0.001);
+  airspeed_stdev_ = node_->get_parameter_or<double>("airspeed_stdev", 1.15);
+  airspeed_bias_range_ = node_->get_parameter_or<double>("airspeed_bias_range", 0.15);
+  airspeed_bias_walk_stdev_ = node_->get_parameter_or<double>("airspeed_bias_walk_stdev", 0.001);
 
-  sonar_stdev_ = nh_->param<double>("sonar_stdev", 1.15);
-  sonar_min_range_ = nh_->param<double>("sonar_min_range", 0.25);
-  sonar_max_range_ = nh_->param<double>("sonar_max_range", 8.0);
+  sonar_stdev_ = node_->get_parameter_or<double>("sonar_stdev", 1.15);
+  sonar_min_range_ = node_->get_parameter_or<double>("sonar_min_range", 0.25);
+  sonar_max_range_ = node_->get_parameter_or<double>("sonar_max_range", 8.0);
 
-  imu_update_rate_ = nh_->param<double>("imu_update_rate", 1000.0);
+  imu_update_rate_ = node_->get_parameter_or<double>("imu_update_rate", 1000.0);
   imu_update_period_us_ = (uint64_t)(1e6 / imu_update_rate_);
 
   // Calculate Magnetic Field Vector (for mag simulation)
-  double inclination = nh_->param<double>("inclination", 1.14316156541);
-  double declination = nh_->param<double>("declination", 0.198584539676);
+  double inclination = node_->get_parameter_or<double>("inclination", 1.14316156541);
+  double declination = node_->get_parameter_or<double>("declination", 0.198584539676);
   GZ_COMPAT_SET_Z(inertial_magnetic_field_, sin(-inclination));
   GZ_COMPAT_SET_X(inertial_magnetic_field_, cos(-inclination) * cos(-declination));
   GZ_COMPAT_SET_Y(inertial_magnetic_field_, cos(-inclination) * sin(-declination));
 
   // Get the desired altitude at the ground (for baro and LLA)
 
-  origin_altitude_ = nh->param<double>("origin_altitude", 1387.0);
-  origin_latitude_ = nh->param<double>("origin_latitude", 40.2463724);
-  origin_longitude_ = nh->param<double>("origin_longitude", -111.6474138);
+  origin_altitude_ = node_->get_parameter_or<double>("origin_altitude", 1387.0);
+  origin_latitude_ = node_->get_parameter_or<double>("origin_latitude", 40.2463724);
+  origin_longitude_ = node_->get_parameter_or<double>("origin_longitude", -111.6474138);
 
-  horizontal_gps_stdev_ = nh->param<double>("horizontal_gps_stdev", 1.0);
-  vertical_gps_stdev_ = nh->param<double>("vertical_gps_stdev", 3.0);
-  gps_velocity_stdev_ = nh->param<double>("gps_velocity_stdev", 0.1);
+  horizontal_gps_stdev_ = node_->get_parameter_or<double>("horizontal_gps_stdev", 1.0);
+  vertical_gps_stdev_ = node_->get_parameter_or<double>("vertical_gps_stdev", 3.0);
+  gps_velocity_stdev_ = node_->get_parameter_or<double>("gps_velocity_stdev", 0.1);
 
   // Configure Noise
   random_generator_ = std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
@@ -288,7 +287,7 @@ bool SIL_Board::imu_read(float accel[3], float *temperature, float gyro[3], uint
 
 void SIL_Board::imu_not_responding_error(void)
 {
-  ROS_ERROR("[gazebo_rosflight_sil] imu not responding");
+  RCLCPP_ERROR(node_->get_logger(), "[gazebo_rosflight_sil] imu not responding");
 }
 
 void SIL_Board::mag_read(float mag[3])
@@ -443,12 +442,13 @@ void SIL_Board::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
 
   for (size_t i = 0; i < 14; i++) pwm_outputs_[i] = 1000;
 
-  rc_sub_ = nh_->subscribe("RC", 1, &SIL_Board::RCCallback, this);
+  rc_sub_ = node_->create_subscription<rosflight_msgs::msg::RCRaw>(
+      "RC", 1, std::bind(&SIL_Board::RCCallback, this, std::placeholders::_1));
 }
 
 float SIL_Board::rc_read(uint8_t channel)
 {
-  if (rc_sub_.getNumPublishers() > 0)
+  if (rc_sub_->get_publisher_count() > 0)
   {
     return static_cast<float>(latestRC_.values[channel] - 1000) / 1000.0;
   }
@@ -481,13 +481,13 @@ void SIL_Board::memory_init(void) {}
 
 bool SIL_Board::memory_read(void *dest, size_t len)
 {
-  std::string directory = "rosflight_memory" + nh_->getNamespace();
+  std::string directory = "rosflight_memory" + std::string(node_->get_namespace());
   std::ifstream memory_file;
   memory_file.open(directory + "/mem.bin", std::ios::binary);
 
   if (!memory_file.is_open())
   {
-    ROS_ERROR("Unable to load rosflight memory file %s/mem.bin", directory.c_str());
+    RCLCPP_ERROR(node_->get_logger(), "Unable to load rosflight memory file %s/mem.bin", directory.c_str());
     return false;
   }
 
@@ -498,13 +498,13 @@ bool SIL_Board::memory_read(void *dest, size_t len)
 
 bool SIL_Board::memory_write(const void *src, size_t len)
 {
-  std::string directory = "rosflight_memory" + nh_->getNamespace();
+  std::string directory = "rosflight_memory" + std::string(node_->get_namespace());
   std::string mkdir_command = "mkdir -p " + directory;
   const int dir_err = system(mkdir_command.c_str());
 
   if (dir_err == -1)
   {
-    ROS_ERROR("Unable to write rosflight memory file %s/mem.bin", directory.c_str());
+    RCLCPP_ERROR(node_->get_logger(), "Unable to write rosflight memory file %s/mem.bin", directory.c_str());
     return false;
   }
 
@@ -558,10 +558,10 @@ void SIL_Board::backup_memory_clear(size_t len)
     memset(backup_memory_, 0, len);
 }
 
-void SIL_Board::RCCallback(const rosflight_msgs::RCRaw &msg)
+void SIL_Board::RCCallback(const rosflight_msgs::msg::RCRaw &msg)
 {
   rc_received_ = true;
-  last_rc_message_ = ros::Time::now();
+  last_rc_message_ = node_->get_clock()->now();
   latestRC_ = msg;
 }
 

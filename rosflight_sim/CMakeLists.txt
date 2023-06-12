@@ -4,7 +4,7 @@ project(rosflight_sim)
 find_package(gazebo_dev)
 IF(gazebo_dev_FOUND)
 
-SET(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 14)
 
 # Default to release build for speed
 if(NOT CMAKE_BUILD_TYPE)
@@ -46,13 +46,15 @@ ament_target_dependencies(rosflight_sil_plugin
   geometry_msgs
   nav_msgs
   rosflight_firmware
+  rosflight_msgs
 )
-ament_export_targets(rosflight_sil_plugin HAS_LIBRARY_EXPORT)
+ament_export_targets(rosflight_sil_plugin HAS_LIBRARY_TARGET)
 ament_export_dependencies(
   rclcpp
   geometry_msgs
   nav_msgs
   rosflight_firmware
+  rosflight_msgs
 )
 
 install(
