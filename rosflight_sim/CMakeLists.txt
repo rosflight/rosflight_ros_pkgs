@@ -4,7 +4,14 @@ project(rosflight_sim)
 find_package(gazebo_dev)
 IF(gazebo_dev_FOUND)
 
-set(CMAKE_CXX_STANDARD 14)
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+
+add_compile_options(-Wall)
 
 # Default to release build for speed
 if(NOT CMAKE_BUILD_TYPE)
@@ -48,7 +55,7 @@ ament_target_dependencies(rosflight_sil_plugin
   rosflight_firmware
   rosflight_msgs
 )
-ament_export_targets(rosflight_sil_plugin HAS_LIBRARY_TARGET)
+ament_export_targets(rosflight_sil_pluginTargets HAS_LIBRARY_TARGET)
 ament_export_dependencies(
   rclcpp
   geometry_msgs
@@ -59,17 +66,16 @@ ament_export_dependencies(
 
 install(
   TARGETS rosflight_sil_plugin
-  EXPORT rosflight_sil_plugin
+  EXPORT rosflight_sil_pluginTargets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include/${PROJECT_NAME}
+  INCLUDES DESTINATION include
 )
 
 install(
   DIRECTORY include/${PROJECT_NAME}
   DESTINATION include/${PROJECT_NAME}
-  FILES_MATCHING PATTERN "*.h"
 )
 
 # Install launch files.

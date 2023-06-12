@@ -1,7 +1,14 @@
 cmake_minimum_required(VERSION 3.5)
 project(rosflight_firmware)
 
-set(CMAKE_CXX_STANDARD 14)
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+
+add_compile_options(-Wall -fPIC)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -35,9 +42,6 @@ endif()
 if("${GIT_VERSION_HASH}" STREQUAL "")
   set(GIT_VERSION_HASH "0")
 endif()
-
-message(STATUS "Firmware version string: ${GIT_VERSION_STRING}")
-message(STATUS "Firmware version hash: ${GIT_VERSION_HASH}")
 
 
 ###########
@@ -78,14 +82,14 @@ target_compile_definitions(rosflight_firmware PUBLIC
     GIT_VERSION_HASH=0x${GIT_VERSION_HASH}
     GIT_VERSION_STRING=\"${GIT_VERSION_STRING}\"
 )
-ament_export_targets(rosflight_firmware HAS_LIBRARY_TARGET)
+ament_export_targets(rosflight_firmwareTargets HAS_LIBRARY_TARGET)
 install(
   TARGETS rosflight_firmware
-  EXPORT rosflight_firmware
+  EXPORT rosflight_firmwareTargets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include/${PROJECT_NAME}
+  INCLUDES DESTINATION include
 )
 
 # rosflight_udp_board
@@ -98,14 +102,14 @@ target_link_libraries(rosflight_udp_board
   ${ament_LIBRARIES}
   ${Boost_LIBRARIES}
 )
-ament_export_targets(rosflight_udp_board HAS_LIBRARY_TARGET)
+ament_export_targets(rosflight_udp_boardTargets HAS_LIBRARY_TARGET)
 install(
   TARGETS rosflight_udp_board
-  EXPORT rosflight_udp_board
+  EXPORT rosflight_udp_boardTargets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include/${PROJECT_NAME}
+  INCLUDES DESTINATION include
 )
 
 # rosflight_test
@@ -115,21 +119,20 @@ add_library(rosflight_test
 target_link_libraries(rosflight_test
   rosflight_firmware
 )
-ament_export_targets(rosflight_test HAS_LIBRARY_TARGET)
+ament_export_targets(rosflight_testTargets HAS_LIBRARY_TARGET)
 install(
   TARGETS rosflight_test
-  EXPORT rosflight_test
+  EXPORT rosflight_testTargets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include/${PROJECT_NAME}
+  INCLUDES DESTINATION include
 )
 
 
 install(
   DIRECTORY include/${PROJECT_NAME}/ ${FIRMWARE_INCLUDE_DIRS}
-  DESTINATION include/${PROJECT_NAME}
-  FILES_MATCHING PATTERN "*.h"
+  DESTINATION include
 )
 
 

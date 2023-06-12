@@ -3,9 +3,14 @@ project(rosflight)
 
 set(CMAKE_BUILD_TYPE Release)
 
-message("CMAKE_C_FLAGS_RELEASE is ${CMAKE_C_FLAGS_RELEASE}")
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 
-set(CMAKE_CXX_STANDARD 14)
+add_compile_options(-Wall)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -37,7 +42,6 @@ endif()
 execute_process(COMMAND git describe --tags --abbrev=8 --always --dirty --long WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_VARIABLE GIT_VERSION_STRING RESULT_VARIABLE GIT_RESULT)
 if(GIT_RESULT EQUAL 0)
   string(REGEX REPLACE "\n$" "" GIT_VERSION_STRING "${GIT_VERSION_STRING}") # remove trailing newline
-  message("GIT_VERSION_STRING: ${GIT_VERSION_STRING}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DROSFLIGHT_VERSION=${GIT_VERSION_STRING}")
 else()
   message("Could not determine rosflight version through git")
