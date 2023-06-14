@@ -52,7 +52,7 @@
 
 namespace rosflight_sim
 {
-class ROSflightSIL : public gazebo::ModelPlugin
+class ROSflightSIL : public rclcpp::Node, public gazebo::ModelPlugin
 {
 public:
   ROSflightSIL();
@@ -92,8 +92,6 @@ private:
 
   // Time Counters
   uint64_t start_time_us_;
-
- rclcpp::Node::SharedPtr node_;
 
   // For reset handlin
   GazeboPose initial_pose_;

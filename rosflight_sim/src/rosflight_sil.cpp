@@ -38,11 +38,14 @@
 #include <eigen3/Eigen/Core>
 
 #include <rosflight_sim/rosflight_sil.h>
-#include <rosflight_sim/sil_board.h>
 
 namespace rosflight_sim
 {
-ROSflightSIL::ROSflightSIL() : gazebo::ModelPlugin(), node_(nullptr), comm_(board_), firmware_(board_, comm_) {}
+ROSflightSIL::ROSflightSIL() :
+  rclcpp::Node("rosflight_sil"),
+  gazebo::ModelPlugin(),
+  comm_(board_),
+  firmware_(board_, comm_) {}
 
 ROSflightSIL::~ROSflightSIL()
 {
@@ -54,19 +57,9 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   model_ = _model;
   world_ = model_->GetWorld();
 
-  namespace_.clear();
-
   /*
    * Connect the Plugin to the Robot and Save pointers to the various elements in the simulation
    */
-  if (_sdf->HasElement("namespace"))
-    namespace_ = _sdf->GetElement("namespace")->Get<std::string>();
-  else
-    gzerr << "[ROSflight_SIL] Please specify a namespace.\n";
-  node_ = std::make_shared<rclcpp::Node>(namespace_);
-
-  gzmsg << "loading parameters from " << namespace_ << " ns\n";
-
   if (_sdf->HasElement("linkName"))
     link_name_ = _sdf->GetElement("linkName")->Get<std::string>();
   else
@@ -87,14 +80,14 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   }
 
   if (mav_type_ == "multirotor")
-    mav_dynamics_ = new Multirotor(node_);
+    mav_dynamics_ = new Multirotor(shared_from_this());
   else if (mav_type_ == "fixedwing")
-    mav_dynamics_ = new Fixedwing(node_);
+    mav_dynamics_ = new Fixedwing(shared_from_this());
   else
     gzthrow("unknown or unsupported mav type\n");
 
   // Initialize the Firmware
-  board_.gazebo_setup(link_, world_, model_, node_, mav_type_);
+  board_.gazebo_setup(link_, world_, model_, shared_from_this(), mav_type_);
   firmware_.init();
 
   // Connect the update function to the simulation
@@ -102,8 +95,8 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
   initial_pose_ = GZ_COMPAT_GET_WORLD_COG_POSE(link_);
 
-  truth_NED_pub_ = node_->create_publisher<nav_msgs::msg::Odometry>("truth/NED", 1);
-  truth_NWU_pub_ = node_->create_publisher<nav_msgs::msg::Odometry>("truth/NWU", 1);
+  truth_NED_pub_ = this->create_publisher<nav_msgs::msg::Odometry>("truth/NED", 1);
+  truth_NWU_pub_ = this->create_publisher<nav_msgs::msg::Odometry>("truth/NWU", 1);
 }
 
 // This gets called by the world update event.
