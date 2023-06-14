@@ -1,13 +1,14 @@
 import os
+from pathlib import Path
 
-from ament_index_python import get_package_share_directory, get_package_share_path
+import xacro
+from ament_index_python import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, ExecuteProcess
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import TextSubstitution, LaunchConfiguration, Command
+from launch.substitutions import TextSubstitution, LaunchConfiguration
 from launch_ros.actions import Node
-from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
@@ -100,6 +101,19 @@ def generate_launch_description():
         }.items()
     )
 
+    # Render xacro file
+    xacro_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'), 'xacro/multirotor.urdf.xacro')
+    urdf_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'), 'resources/multirotor.urdf')
+    robot_description = xacro.process_file(
+        xacro_filepath_string, mappings={
+            'mesh_file_location': os.path.join(
+                get_package_share_directory('rosflight_sim'),
+                'resources/quadrotor_base.dae'
+            )
+        }
+    ).toxml()
+    Path(urdf_filepath_string).write_text(robot_description)
+
     # Spawn vehicle
     spawn_vehicle_node = Node(
         package='gazebo_ros',
@@ -113,7 +127,7 @@ def generate_launch_description():
             }
         ],
         arguments=[
-            '-file', os.path.join(get_package_share_directory('rosflight_sim'), 'xacro/multirotor.urdf'),
+            '-file', urdf_filepath_string,
             '-entity', 'multirotor',
             '-robot_namespace', robot_namespace,
             '-x', x,

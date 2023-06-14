@@ -90,6 +90,11 @@ install(
 )
 
 install(
+  DIRECTORY resources
+  DESTINATION share/${PROJECT_NAME}
+)
+
+install(
   DIRECTORY params
   DESTINATION share/${PROJECT_NAME}
 )
