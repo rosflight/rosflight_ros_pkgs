@@ -37,15 +37,15 @@ Multirotor::Multirotor(rclcpp::Node::SharedPtr node) : node_(std::move(node))
 {
   // Pull Parameters off of rosparam server
   num_rotors_ = 0;
-  if (node_->get_parameter("ground_effect", ground_effect_))
+  if (!node_->get_parameter("ground_effect", ground_effect_))
     RCLCPP_ERROR(node_->get_logger(), "'ground_effect' parameter not set.");
-  if (node_->get_parameter("mass", mass_))
+  if (!node_->get_parameter("mass", mass_))
     RCLCPP_ERROR(node_->get_logger(), "'mass' parameter not set.");
-  if (node_->get_parameter("linear_mu", linear_mu_))
+  if (!node_->get_parameter("linear_mu", linear_mu_))
     RCLCPP_ERROR(node_->get_logger(), "'linear_mu' parameter not set.");
-  if (node_->get_parameter("angular_mu", angular_mu_))
+  if (!node_->get_parameter("angular_mu", angular_mu_))
     RCLCPP_ERROR(node_->get_logger(), "'angular_mu' parameter not set.");
-  if (node_->get_parameter("num_rotors", num_rotors_))
+  if (!node_->get_parameter("num_rotors", num_rotors_))
     RCLCPP_ERROR(node_->get_logger(), "'num_rotors' parameter not set.");
 
   std::vector<double> rotor_positions(3 * num_rotors_);
@@ -55,21 +55,21 @@ Multirotor::Multirotor(rclcpp::Node::SharedPtr node) : node_(std::move(node))
   // For now, just assume all rotors are the same
   Rotor rotor;
 
-  if (node_->get_parameter("rotor_positions", rotor_positions))
+  if (!node_->get_parameter("rotor_positions", rotor_positions))
     RCLCPP_ERROR(node_->get_logger(), "'rotor_positions' parameter not set.");
-  if (node_->get_parameter("rotor_vector_normal", rotor_vector_normal))
+  if (!node_->get_parameter("rotor_vector_normal", rotor_vector_normal))
     RCLCPP_ERROR(node_->get_logger(), "'rotor_vector_normal' parameter not set.");
-  if (node_->get_parameter("rotor_rotation_directions", rotor_rotation_directions))
+  if (!node_->get_parameter("rotor_rotation_directions", rotor_rotation_directions))
     RCLCPP_ERROR(node_->get_logger(), "'rotor_rotation_directions' parameter not set.");
-  if (node_->get_parameter("rotor_max_thrust", rotor.max))
+  if (!node_->get_parameter("rotor_max_thrust", rotor.max))
     RCLCPP_ERROR(node_->get_logger(), "'rotor_max_thrust' parameter not set.");
-  if (node_->get_parameter("rotor_F", rotor.F_poly))
+  if (!node_->get_parameter("rotor_F", rotor.F_poly))
     RCLCPP_ERROR(node_->get_logger(), "'rotor_F' parameter not set.");
-  if (node_->get_parameter("rotor_T", rotor.T_poly))
+  if (!node_->get_parameter("rotor_T", rotor.T_poly))
     RCLCPP_ERROR(node_->get_logger(), "'rotor_T' parameter not set.");
-  if (node_->get_parameter("rotor_tau_up", rotor.tau_up))
+  if (!node_->get_parameter("rotor_tau_up", rotor.tau_up))
     RCLCPP_ERROR(node_->get_logger(), "'rotor_tau_up' parameter not set.");
-  if (node_->get_parameter("rotor_tau_down", rotor.tau_down))
+  if (!node_->get_parameter("rotor_tau_down", rotor.tau_down))
     RCLCPP_ERROR(node_->get_logger(), "'rotor_tau_down' parameter not set.");
 
   /* Load Rotor Configuration */

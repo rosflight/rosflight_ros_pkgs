@@ -45,7 +45,77 @@ ROSflightSIL::ROSflightSIL() :
   rclcpp::Node("rosflight_sil"),
   gazebo::ModelPlugin(),
   comm_(board_),
-  firmware_(board_, comm_) {}
+  firmware_(board_, comm_)
+{
+  // TODO: YAML parameters refuse to be loaded into rosflight_sil, currently are set here. Figure out how to set them
+  //  from YAML.
+
+  // Common Global Physical Parameters
+  this->declare_parameter<double>("mass", 2.0);
+  this->declare_parameter<double>("linear_mu", 0.05);
+  this->declare_parameter<double>("angular_mu", 0.0005);
+  this->declare_parameter<std::vector<double>>(
+    "ground_effect", {-55.3516, 181.8265, -203.9874, 85.3735, -7.6619});
+
+  // Dynamics
+  this->declare_parameter<int>("num_rotors", 4);
+  this->declare_parameter<std::vector<double>>("rotor_positions", {
+     0.1926,  0.230, -0.0762,
+    -0.1907,  0.205, -0.0762,
+    -0.1907, -0.205, -0.0762,
+     0.1926, -0.230, -0.0762
+  });
+  this->declare_parameter<std::vector<double>>("rotor_vector_normal", {
+    -0.02674078,  0.0223925,  -0.99939157,
+     0.02553726,  0.02375588, -0.99939157,
+     0.02553726, -0.02375588, -0.99939157,
+    -0.02674078, -0.0223925,  -0.99939157
+  });
+
+  this->declare_parameter<std::vector<int>>("rotor_rotation_directions", {-1, 1, -1, 1});
+  this->declare_parameter<double>("rotor_max_thrust", 14.961);
+  this->declare_parameter<std::vector<double>>("rotor_F", {1.5e-5, -0.024451, 9.00225});
+  this->declare_parameter<std::vector<double>>("rotor_T", {2.22e-7, -3.51e-4, 0.12531});
+  this->declare_parameter<double>("rotor_tau_up", 0.2164);
+  this->declare_parameter<double>("rotor_tau_down", 0.1644);
+
+  this->declare_parameter<double>("ground_altitude", 1387);
+
+  // Sensor Noise Parameters (These are empirically-determined)
+  // gyro_stdev: 0.25
+  // gyro_bias_range: 0.25
+  // gyro_bias_walk_stdev: 0.00001
+  this->declare_parameter<double>("gyro_stdev", 0.0);
+  this->declare_parameter<double>("gyro_bias_range", 0.0);
+  this->declare_parameter<double>("gyro_bias_walk_stdev", 0.00000);
+
+  // acc_stdev: 0.561
+  // acc_bias_range: 0.6
+  // acc_bias_walk_stdev: 0.00001
+  this->declare_parameter<double>("acc_stdev", 0.0);
+  this->declare_parameter<double>("acc_bias_range", 0.0);
+  this->declare_parameter<double>("acc_bias_walk_stdev", 0.00000);
+
+  this->declare_parameter<double>("baro_stdev", 4.0);
+  this->declare_parameter<double>("baro_bias_range", 500);
+  this->declare_parameter<double>("baro_bias_walk_stdev", 0.1);
+
+  this->declare_parameter<double>("sonar_stdev", 0.03);
+  this->declare_parameter<double>("sonar_min_range", 0.25);
+  this->declare_parameter<double>("sonar_max_range", 8.0);
+
+  this->declare_parameter<double>("airspeed_stdev", 1.15);
+  this->declare_parameter<double>("airspeed_bias_range", 0.15);
+  this->declare_parameter<double>("airspeed_bias_walk_stdev", 0.001);
+
+  this->declare_parameter<double>("mag_stdev", 1.15);
+  this->declare_parameter<double>("mag_bias_range", 0.15);
+  this->declare_parameter<double>("mag_bias_walk_stdev", 0.001);
+
+  this->declare_parameter<double>("inclination", 1.14316156541);
+  this->declare_parameter<double>("declination", 0.198584539676);
+
+}
 
 ROSflightSIL::~ROSflightSIL()
 {
@@ -79,6 +149,7 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
     gzerr << "[rosflight_sim] Please specify a value for parameter \"mavType\".\n";
   }
 
+  auto node_ptr = rclcpp::Node::SharedPtr(this);
   if (mav_type_ == "multirotor")
     mav_dynamics_ = new Multirotor(shared_from_this());
   else if (mav_type_ == "fixedwing")
@@ -87,7 +158,7 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
     gzthrow("unknown or unsupported mav type\n");
 
   // Initialize the Firmware
-  board_.gazebo_setup(link_, world_, model_, shared_from_this(), mav_type_);
+  board_.gazebo_setup(link_, world_, model_, node_ptr, mav_type_);
   firmware_.init();
 
   // Connect the update function to the simulation

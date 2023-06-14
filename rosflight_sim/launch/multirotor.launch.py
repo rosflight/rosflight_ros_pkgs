@@ -122,9 +122,7 @@ def generate_launch_description():
         output='screen',
         parameters=[
             os.path.join(get_package_share_directory('rosflight_sim'), 'params/multirotor.yaml'),
-            {
-                'tf_prefix': tf_prefix
-            }
+            {'tf_prefix': tf_prefix}
         ],
         arguments=[
             '-file', urdf_filepath_string,

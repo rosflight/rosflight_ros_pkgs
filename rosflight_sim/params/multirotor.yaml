@@ -1,9 +1,11 @@
 # Parameters for ROSflight software-in-the-loop simulation
 
-# Common Global Physical Parameters
+# TODO: These parameters are currently unused and are being set in rosflight_sil.cpp because ros
+#  is not setting parameters loaded from YAML files for some reason.
 
 /**:
   ros__parameters:
+    # Common Global Physical Parameters
     mass: 2.0
     linear_mu: 0.05
     angular_mu: 0.0005
