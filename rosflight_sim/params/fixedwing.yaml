@@ -1,5 +1,7 @@
 # Based on My Twin Dream parameters
 
+# TODO: ROS is not setting these parameters for some reason
+
 /**:
   ros__parameters:
     mass: 3.92
@@ -84,11 +86,3 @@
     C_Y_delta_a: -0.02344
     C_Y_delta_e: 0.0
     C_Y_delta_r:  0.1591
-
-    # trim conditions
-    phi0: 0
-    theta0: 0.0349 # 2 degrees
-    psi0: 0
-    Va0: 16.38
-    delta_e0: 0.02967 # 1.7 degrees
-    delta_t0: 0.4

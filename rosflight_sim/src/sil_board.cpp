@@ -74,27 +74,27 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link,
         << bind_port << "\n";
 
   // Get Sensor Parameters
-  gyro_stdev_ = node_->get_parameter_or<double>("gyro_stdev", 0.13);
-  gyro_bias_range_ = node_->get_parameter_or<double>("gyro_bias_range", 0.15);
-  gyro_bias_walk_stdev_ = node_->get_parameter_or<double>("gyro_bias_walk_stdev", 0.001);
+  gyro_stdev_ = node_->get_parameter_or<double>("gyro_stdev", 0.25);
+  gyro_bias_range_ = node_->get_parameter_or<double>("gyro_bias_range", 0.25);
+  gyro_bias_walk_stdev_ = node_->get_parameter_or<double>("gyro_bias_walk_stdev", 0.00001);
 
-  acc_stdev_ = node_->get_parameter_or<double>("acc_stdev", 1.15);
-  acc_bias_range_ = node_->get_parameter_or<double>("acc_bias_range", 0.15);
-  acc_bias_walk_stdev_ = node_->get_parameter_or<double>("acc_bias_walk_stdev", 0.001);
+  acc_stdev_ = node_->get_parameter_or<double>("acc_stdev", 0.561);
+  acc_bias_range_ = node_->get_parameter_or<double>("acc_bias_range", 0.6);
+  acc_bias_walk_stdev_ = node_->get_parameter_or<double>("acc_bias_walk_stdev", 0.00001);
 
   mag_stdev_ = node_->get_parameter_or<double>("mag_stdev", 1.15);
   mag_bias_range_ = node_->get_parameter_or<double>("mag_bias_range", 0.15);
   mag_bias_walk_stdev_ = node_->get_parameter_or<double>("mag_bias_walk_stdev", 0.001);
 
-  baro_stdev_ = node_->get_parameter_or<double>("baro_stdev", 1.15);
-  baro_bias_range_ = node_->get_parameter_or<double>("baro_bias_range", 0.15);
-  baro_bias_walk_stdev_ = node_->get_parameter_or<double>("baro_bias_walk_stdev", 0.001);
+  baro_stdev_ = node_->get_parameter_or<double>("baro_stdev", 4.0);
+  baro_bias_range_ = node_->get_parameter_or<double>("baro_bias_range", 500);
+  baro_bias_walk_stdev_ = node_->get_parameter_or<double>("baro_bias_walk_stdev", 0.1);
 
   airspeed_stdev_ = node_->get_parameter_or<double>("airspeed_stdev", 1.15);
   airspeed_bias_range_ = node_->get_parameter_or<double>("airspeed_bias_range", 0.15);
   airspeed_bias_walk_stdev_ = node_->get_parameter_or<double>("airspeed_bias_walk_stdev", 0.001);
 
-  sonar_stdev_ = node_->get_parameter_or<double>("sonar_stdev", 1.15);
+  sonar_stdev_ = node_->get_parameter_or<double>("sonar_stdev", 0.03);
   sonar_min_range_ = node_->get_parameter_or<double>("sonar_min_range", 0.25);
   sonar_max_range_ = node_->get_parameter_or<double>("sonar_max_range", 8.0);
 

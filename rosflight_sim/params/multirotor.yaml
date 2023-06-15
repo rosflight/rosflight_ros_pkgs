@@ -1,7 +1,6 @@
 # Parameters for ROSflight software-in-the-loop simulation
 
-# TODO: These parameters are currently unused and are being set in rosflight_sil.cpp because ros
-#  is not setting parameters loaded from YAML files for some reason.
+# TODO: ROS is not setting these parameters for some reason
 
 /**:
   ros__parameters:
@@ -33,20 +32,13 @@
     ground_altitude: 1387  #Default in Provo, UT (4551 ft)
 
     # Sensor Noise Parameters (These are empirically-determined)
-    # gyro_stdev: 0.25
-    # gyro_bias_range:  0.25
-    # gyro_bias_walk_stdev: 0.00001
-    gyro_stdev: 0.0
-    gyro_bias_range: 0.0
-    gyro_bias_walk_stdev: 0.00000
+    gyro_stdev: 0.25
+    gyro_bias_range:  0.25
+    gyro_bias_walk_stdev: 0.00001
 
-    # acc_stdev: 0.561
-    # acc_bias_range: 0.6
-    # acc_bias_walk_stdev: 0.00001
-
-    acc_stdev: 0.0
-    acc_bias_range: 0.0
-    acc_bias_walk_stdev: 0.00000
+    acc_stdev: 0.561
+    acc_bias_range: 0.6
+    acc_bias_walk_stdev: 0.00001
 
     baro_stdev: 4.0
     baro_bias_range: 500

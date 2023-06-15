@@ -47,74 +47,133 @@ ROSflightSIL::ROSflightSIL() :
   comm_(board_),
   firmware_(board_, comm_)
 {
-  // TODO: YAML parameters refuse to be loaded into rosflight_sil, currently are set here. Figure out how to set them
-  //  from YAML.
+  // Declare multirotor parameters
+  this->declare_parameter("mass", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("linear_mu", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("angular_mu", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("ground_effect", rclcpp::PARAMETER_DOUBLE_ARRAY);
 
-  // Common Global Physical Parameters
-  this->declare_parameter<double>("mass", 2.0);
-  this->declare_parameter<double>("linear_mu", 0.05);
-  this->declare_parameter<double>("angular_mu", 0.0005);
-  this->declare_parameter<std::vector<double>>(
-    "ground_effect", {-55.3516, 181.8265, -203.9874, 85.3735, -7.6619});
+  this->declare_parameter("num_rotors", rclcpp::PARAMETER_INTEGER);
+  this->declare_parameter("rotor_positions", rclcpp::PARAMETER_DOUBLE_ARRAY);
+  this->declare_parameter("rotor_vector_normal", rclcpp::PARAMETER_DOUBLE_ARRAY);
 
-  // Dynamics
-  this->declare_parameter<int>("num_rotors", 4);
-  this->declare_parameter<std::vector<double>>("rotor_positions", {
-     0.1926,  0.230, -0.0762,
-    -0.1907,  0.205, -0.0762,
-    -0.1907, -0.205, -0.0762,
-     0.1926, -0.230, -0.0762
-  });
-  this->declare_parameter<std::vector<double>>("rotor_vector_normal", {
-    -0.02674078,  0.0223925,  -0.99939157,
-     0.02553726,  0.02375588, -0.99939157,
-     0.02553726, -0.02375588, -0.99939157,
-    -0.02674078, -0.0223925,  -0.99939157
-  });
+  this->declare_parameter("rotor_rotation_directions", rclcpp::PARAMETER_INTEGER_ARRAY);
+  this->declare_parameter("rotor_max_thrust", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("rotor_F", rclcpp::PARAMETER_DOUBLE_ARRAY);
+  this->declare_parameter("rotor_T", rclcpp::PARAMETER_DOUBLE_ARRAY);
+  this->declare_parameter("rotor_tau_up", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("rotor_tau_down", rclcpp::PARAMETER_DOUBLE);
 
-  this->declare_parameter<std::vector<int>>("rotor_rotation_directions", {-1, 1, -1, 1});
-  this->declare_parameter<double>("rotor_max_thrust", 14.961);
-  this->declare_parameter<std::vector<double>>("rotor_F", {1.5e-5, -0.024451, 9.00225});
-  this->declare_parameter<std::vector<double>>("rotor_T", {2.22e-7, -3.51e-4, 0.12531});
-  this->declare_parameter<double>("rotor_tau_up", 0.2164);
-  this->declare_parameter<double>("rotor_tau_down", 0.1644);
+  this->declare_parameter("ground_altitude", rclcpp::PARAMETER_DOUBLE);
 
-  this->declare_parameter<double>("ground_altitude", 1387);
+  this->declare_parameter("gyro_stdev", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("gyro_bias_range", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("gyro_bias_walk_stdev", rclcpp::PARAMETER_DOUBLE);
 
-  // Sensor Noise Parameters (These are empirically-determined)
-  // gyro_stdev: 0.25
-  // gyro_bias_range: 0.25
-  // gyro_bias_walk_stdev: 0.00001
-  this->declare_parameter<double>("gyro_stdev", 0.0);
-  this->declare_parameter<double>("gyro_bias_range", 0.0);
-  this->declare_parameter<double>("gyro_bias_walk_stdev", 0.00000);
+  this->declare_parameter("acc_stdev", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("acc_bias_range", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("acc_bias_walk_stdev", rclcpp::PARAMETER_DOUBLE);
 
-  // acc_stdev: 0.561
-  // acc_bias_range: 0.6
-  // acc_bias_walk_stdev: 0.00001
-  this->declare_parameter<double>("acc_stdev", 0.0);
-  this->declare_parameter<double>("acc_bias_range", 0.0);
-  this->declare_parameter<double>("acc_bias_walk_stdev", 0.00000);
+  this->declare_parameter("baro_stdev", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("baro_bias_range", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("baro_bias_walk_stdev", rclcpp::PARAMETER_DOUBLE);
 
-  this->declare_parameter<double>("baro_stdev", 4.0);
-  this->declare_parameter<double>("baro_bias_range", 500);
-  this->declare_parameter<double>("baro_bias_walk_stdev", 0.1);
+  this->declare_parameter("sonar_stdev", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("sonar_min_range", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("sonar_max_range", rclcpp::PARAMETER_DOUBLE);
 
-  this->declare_parameter<double>("sonar_stdev", 0.03);
-  this->declare_parameter<double>("sonar_min_range", 0.25);
-  this->declare_parameter<double>("sonar_max_range", 8.0);
+  this->declare_parameter("airspeed_stdev", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("airspeed_bias_range", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("airspeed_bias_walk_stdev", rclcpp::PARAMETER_DOUBLE);
 
-  this->declare_parameter<double>("airspeed_stdev", 1.15);
-  this->declare_parameter<double>("airspeed_bias_range", 0.15);
-  this->declare_parameter<double>("airspeed_bias_walk_stdev", 0.001);
+  this->declare_parameter("mag_stdev", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("mag_bias_range", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("mag_bias_walk_stdev", rclcpp::PARAMETER_DOUBLE);
 
-  this->declare_parameter<double>("mag_stdev", 1.15);
-  this->declare_parameter<double>("mag_bias_range", 0.15);
-  this->declare_parameter<double>("mag_bias_walk_stdev", 0.001);
+  this->declare_parameter("inclination", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("declination", rclcpp::PARAMETER_DOUBLE);
 
-  this->declare_parameter<double>("inclination", 1.14316156541);
-  this->declare_parameter<double>("declination", 0.198584539676);
+  // Declare fixedwing parameters
+  this->declare_parameter("Jx", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("Jy", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("Jz", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("Jxz", rclcpp::PARAMETER_DOUBLE);
 
+  this->declare_parameter("rho", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("wing_s", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("wing_b", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("wing_c", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("wing_M", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("wing_epsilon", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("wing_alpha0", rclcpp::PARAMETER_DOUBLE);
+
+  this->declare_parameter("k_motor", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("k_T_P", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("k_Omega", rclcpp::PARAMETER_DOUBLE);
+
+  this->declare_parameter("prop_e", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("prop_S", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("prop_C", rclcpp::PARAMETER_DOUBLE);
+
+  this->declare_parameter("C_L_O", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_L_alpha", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_L_beta", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_L_p", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_L_q", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_L_r", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_L_delta_a", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_L_delta_e", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_L_delta_r", rclcpp::PARAMETER_DOUBLE);
+
+  this->declare_parameter("C_D_O", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_D_alpha", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_D_beta", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_D_p", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_D_q", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_D_r", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_D_delta_a", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_D_delta_e", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_D_delta_r", rclcpp::PARAMETER_DOUBLE);
+
+  this->declare_parameter("C_ell_O", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_ell_alpha", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_ell_beta", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_ell_p", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_ell_q", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_ell_r", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_ell_delta_a", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_ell_delta_e", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_ell_delta_r", rclcpp::PARAMETER_DOUBLE);
+
+  this->declare_parameter("C_m_O", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_m_alpha", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_m_beta", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_m_p", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_m_q", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_m_r", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_m_delta_a", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_m_delta_e", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_m_delta_r", rclcpp::PARAMETER_DOUBLE);
+
+  this->declare_parameter("C_n_O", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_n_alpha", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_n_beta", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_n_p", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_n_q", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_n_r", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_n_delta_a", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_n_delta_e", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_n_delta_r", rclcpp::PARAMETER_DOUBLE);
+
+  this->declare_parameter("C_Y_O", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_Y_alpha", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_Y_beta", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_Y_p", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_Y_q", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_Y_r", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_Y_delta_a", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_Y_delta_e", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_Y_delta_r", rclcpp::PARAMETER_DOUBLE);
 }
 
 ROSflightSIL::~ROSflightSIL()

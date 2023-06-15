@@ -11,7 +11,7 @@ Author: Gary Ellingson
   <!-- Properties -->
   <xacro:property name="namespace" value="fixedwing"/>
   <xacro:property name="use_mesh_file" value="true" />
-  <xacro:property name="mesh_file" value="model://zephyr_delta_wing/meshes/wing.dae"/>
+  <xacro:property name="mesh_file" value="$(arg mesh_file_location)" />
   <xacro:property name="body_width" value="1.4"/>
   <xacro:property name="body_height" value="0.3" />
   <xacro:property name="body_length" value="1.6"/>

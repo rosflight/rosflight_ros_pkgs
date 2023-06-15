@@ -36,94 +36,94 @@ namespace rosflight_sim
 Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node) : node_(std::move(node))
 {
   // physical parameters
-  mass_ = node_->get_parameter_or("mass", 13.5);
-  Jx_ = node_->get_parameter_or("Jx", 0.8244);
-  Jy_ = node_->get_parameter_or("Jy", 1.135);
-  Jz_ = node_->get_parameter_or("Jz", 1.759);
-  Jxz_ = node_->get_parameter_or("Jxz", .1204);
+  mass_ = node_->get_parameter_or("mass", 3.92);
+  Jx_ = node_->get_parameter_or("Jx", 0.213);
+  Jy_ = node_->get_parameter_or("Jy", 0.171);
+  Jz_ = node_->get_parameter_or("Jz", 0.35);
+  Jxz_ = node_->get_parameter_or("Jxz", 0.04);
   rho_ = node_->get_parameter_or("rho", 1.2682);
 
   // Wing Geometry
-  wing_.S = node_->get_parameter_or("wing_s", 0.55);
-  wing_.b = node_->get_parameter_or("wing_b", 2.8956);
-  wing_.c = node_->get_parameter_or("wing_c", 0.18994);
-  wing_.M = node_->get_parameter_or("wing_M", 0.55);
-  wing_.epsilon = node_->get_parameter_or("wing_epsilon", 2.8956);
-  wing_.alpha0 = node_->get_parameter_or("wing_alpha0", 0.18994);
+  wing_.S = node_->get_parameter_or("wing_s", 0.468);
+  wing_.b = node_->get_parameter_or("wing_b", 1.8);
+  wing_.c = node_->get_parameter_or("wing_c", 0.26);
+  wing_.M = node_->get_parameter_or("wing_M", 50);
+  wing_.epsilon = node_->get_parameter_or("wing_epsilon", 0.1592);
+  wing_.alpha0 = node_->get_parameter_or("wing_alpha0", 0.3040363557);
 
   // Propeller Coefficients
-  prop_.k_motor = node_->get_parameter_or("k_motor", 80.0);
+  prop_.k_motor = node_->get_parameter_or("k_motor", 40.0);
   prop_.k_T_P = node_->get_parameter_or("k_T_P", 0.0);
   prop_.k_Omega = node_->get_parameter_or("k_Omega", 0.0);
-  prop_.e = node_->get_parameter_or("prop_e", 0.9);
-  prop_.S = node_->get_parameter_or("prop_S", 0.202);
+  prop_.e = node_->get_parameter_or("prop_e", 0.8);
+  prop_.S = node_->get_parameter_or("prop_S", 0.0314);
   prop_.C = node_->get_parameter_or("prop_C", 1.0);
 
   // Lift Params
-  CL_.O = node_->get_parameter_or("C_L_O", 0.28);
-  CL_.alpha = node_->get_parameter_or("C_L_alpha", 3.45);
+  CL_.O = node_->get_parameter_or("C_L_O", 0.2869);
+  CL_.alpha = node_->get_parameter_or("C_L_alpha", 5.1378);
   CL_.beta = node_->get_parameter_or("C_L_beta", 0.0);
   CL_.p = node_->get_parameter_or("C_L_p", 0.0);
-  CL_.q = node_->get_parameter_or("C_L_q", 0.0);
+  CL_.q = node_->get_parameter_or("C_L_q", 1.7102);
   CL_.r = node_->get_parameter_or("C_L_r", 0.0);
   CL_.delta_a = node_->get_parameter_or("C_L_delta_a", 0.0);
-  CL_.delta_e = node_->get_parameter_or("C_L_delta_e", -0.36);
+  CL_.delta_e = node_->get_parameter_or("C_L_delta_e", 0.5202);
   CL_.delta_r = node_->get_parameter_or("C_L_delta_r", 0.0);
 
   // Drag Params
-  CD_.O = node_->get_parameter_or("C_D_O", 0.03);
-  CD_.alpha = node_->get_parameter_or("C_D_alpha", 0.30);
+  CD_.O = node_->get_parameter_or("C_D_O", 0.03087);
+  CD_.alpha = node_->get_parameter_or("C_D_alpha", 0.0043021);
   CD_.beta = node_->get_parameter_or("C_D_beta", 0.0);
-  CD_.p = node_->get_parameter_or("C_D_p", 0.0437);
-  CD_.q = node_->get_parameter_or("C_D_q", 0.0);
+  CD_.p = node_->get_parameter_or("C_D_p", 0.02815);
+  CD_.q = node_->get_parameter_or("C_D_q", 0.2514);
   CD_.r = node_->get_parameter_or("C_D_r", 0.0);
   CD_.delta_a = node_->get_parameter_or("C_D_delta_a", 0.0);
-  CD_.delta_e = node_->get_parameter_or("C_D_delta_e", 0.0);
+  CD_.delta_e = node_->get_parameter_or("C_D_delta_e", 0.01879);
   CD_.delta_r = node_->get_parameter_or("C_D_delta_r", 0.0);
 
   // ell Params (x axis moment)
   Cell_.O = node_->get_parameter_or("C_ell_O", 0.0);
-  Cell_.alpha = node_->get_parameter_or("C_ell_alpha", 0.00);
-  Cell_.beta = node_->get_parameter_or("C_ell_beta", -0.12);
-  Cell_.p = node_->get_parameter_or("C_ell_p", -0.26);
+  Cell_.alpha = node_->get_parameter_or("C_ell_alpha", 0.0);
+  Cell_.beta = node_->get_parameter_or("C_ell_beta", 0.0193);
+  Cell_.p = node_->get_parameter_or("C_ell_p", -0.5406);
   Cell_.q = node_->get_parameter_or("C_ell_q", 0.0);
-  Cell_.r = node_->get_parameter_or("C_ell_r", 0.14);
-  Cell_.delta_a = node_->get_parameter_or("C_ell_delta_a", 0.08);
+  Cell_.r = node_->get_parameter_or("C_ell_r", 0.1929);
+  Cell_.delta_a = node_->get_parameter_or("C_ell_delta_a", 0.2818);
   Cell_.delta_e = node_->get_parameter_or("C_ell_delta_e", 0.0);
-  Cell_.delta_r = node_->get_parameter_or("C_ell_delta_r", 0.105);
+  Cell_.delta_r = node_->get_parameter_or("C_ell_delta_r", 0.00096);
 
   // m Params (y axis moment)
-  Cm_.O = node_->get_parameter_or("C_m_O", -0.02338);
-  Cm_.alpha = node_->get_parameter_or("C_m_alpha", -0.38);
+  Cm_.O = node_->get_parameter_or("C_m_O", 0.0362);
+  Cm_.alpha = node_->get_parameter_or("C_m_alpha", -0.2627);
   Cm_.beta = node_->get_parameter_or("C_m_beta", 0.0);
   Cm_.p = node_->get_parameter_or("C_m_p", 0.0);
-  Cm_.q = node_->get_parameter_or("C_m_q", -3.6);
+  Cm_.q = node_->get_parameter_or("C_m_q", -9.7213);
   Cm_.r = node_->get_parameter_or("C_m_r", 0.0);
   Cm_.delta_a = node_->get_parameter_or("C_m_delta_a", 0.0);
-  Cm_.delta_e = node_->get_parameter_or("C_m_delta_e", -0.5);
+  Cm_.delta_e = node_->get_parameter_or("C_m_delta_e", -1.2392);
   Cm_.delta_r = node_->get_parameter_or("C_m_delta_r", 0.0);
 
   // n Params (z axis moment)
   Cn_.O = node_->get_parameter_or("C_n_O", 0.0);
   Cn_.alpha = node_->get_parameter_or("C_n_alpha", 0.0);
-  Cn_.beta = node_->get_parameter_or("C_n_beta", 0.25);
-  Cn_.p = node_->get_parameter_or("C_n_p", 0.022);
+  Cn_.beta = node_->get_parameter_or("C_n_beta", 0.08557);
+  Cn_.p = node_->get_parameter_or("C_n_p", -0.0498);
   Cn_.q = node_->get_parameter_or("C_n_q", 0.0);
-  Cn_.r = node_->get_parameter_or("C_n_r", -0.35);
-  Cn_.delta_a = node_->get_parameter_or("C_n_delta_a", 0.06);
+  Cn_.r = node_->get_parameter_or("C_n_r", -0.0572);
+  Cn_.delta_a = node_->get_parameter_or("C_n_delta_a", 0.0095);
   Cn_.delta_e = node_->get_parameter_or("C_n_delta_e", 0.0);
-  Cn_.delta_r = node_->get_parameter_or("C_n_delta_r", -0.032);
+  Cn_.delta_r = node_->get_parameter_or("C_n_delta_r", -0.06);
 
   // Y Params (Sideslip Forces)
   CY_.O = node_->get_parameter_or("C_Y_O", 0.0);
-  CY_.alpha = node_->get_parameter_or("C_Y_alpha", 0.00);
-  CY_.beta = node_->get_parameter_or("C_Y_beta", -0.98);
-  CY_.p = node_->get_parameter_or("C_Y_p", 0.0);
+  CY_.alpha = node_->get_parameter_or("C_Y_alpha", 0.0);
+  CY_.beta = node_->get_parameter_or("C_Y_beta", -0.2471);
+  CY_.p = node_->get_parameter_or("C_Y_p", -0.07278);
   CY_.q = node_->get_parameter_or("C_Y_q", 0.0);
-  CY_.r = node_->get_parameter_or("C_Y_r", 0.0);
-  CY_.delta_a = node_->get_parameter_or("C_Y_delta_a", 0.0);
+  CY_.r = node_->get_parameter_or("C_Y_r", 0.1849);
+  CY_.delta_a = node_->get_parameter_or("C_Y_delta_a", -0.02344);
   CY_.delta_e = node_->get_parameter_or("C_Y_delta_e", 0.0);
-  CY_.delta_r = node_->get_parameter_or("C_Y_delta_r", -0.017);
+  CY_.delta_r = node_->get_parameter_or("C_Y_delta_r", 0.1591);
 
   wind_ = Eigen::Vector3d::Zero();
 }
