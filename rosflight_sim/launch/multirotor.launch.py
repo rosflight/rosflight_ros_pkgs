@@ -15,10 +15,6 @@ def generate_launch_description():
     """Launches a multirotor SIL vehicle in Gazebo"""
 
     # Launch Arguments
-    color = LaunchConfiguration('color')
-    color_launch_arg = DeclareLaunchArgument(
-        'color', default_value=TextSubstitution(text='White')
-    )
     x = LaunchConfiguration('x')
     x_launch_arg = DeclareLaunchArgument(
         'x', default_value=TextSubstitution(text='0')
@@ -47,7 +43,7 @@ def generate_launch_description():
     verbose_launch_arg = DeclareLaunchArgument(
         'verbose', default_value=TextSubstitution(text='false')
     )
-    debug = LaunchConfiguration('verbose')
+    debug = LaunchConfiguration('debug')
     debug_launch_arg = DeclareLaunchArgument(
         'debug', default_value=TextSubstitution(text='false')
     )
@@ -58,22 +54,6 @@ def generate_launch_description():
     tf_prefix = LaunchConfiguration('tf_prefix')
     tf_prefix_launch_argument = DeclareLaunchArgument(
         'tf_prefix', default_value=TextSubstitution(text="")
-    )
-    enable_logging = LaunchConfiguration('enable_logging')
-    enable_logging_launch_argument = DeclareLaunchArgument(
-        'enable_logging', default_value=TextSubstitution(text="false")
-    )
-    enable_ground_truth = LaunchConfiguration('enable_ground_truth')
-    enable_ground_truth_launch_argument = DeclareLaunchArgument(
-        'enable_ground_truth', default_value=TextSubstitution(text="true")
-    )
-    log_file = LaunchConfiguration('log_file')
-    log_file_launch_argument = DeclareLaunchArgument(
-        'log_file', default_value=TextSubstitution(text="multirotor")
-    )
-    enable_wind = LaunchConfiguration('enable_wind')
-    enable_wind_launch_argument = DeclareLaunchArgument(
-        'enable_wind', default_value=TextSubstitution(text="true")
     )
     robot_namespace = LaunchConfiguration('robot_namespace')
     robot_namespace_launch_argument = DeclareLaunchArgument(
@@ -128,16 +108,15 @@ def generate_launch_description():
             '-file', urdf_filepath_string,
             '-entity', 'multirotor',
             '-robot_namespace', robot_namespace,
+            '-gazebo_namespace', gazebo_namespace,
             '-x', x,
             '-y', y,
             '-z', z,
             '-Y', yaw,
-            '--ros-args', '--log-level', 'debug'
         ]
     )
 
     return LaunchDescription([
-        color_launch_arg,
         x_launch_arg,
         y_launch_arg,
         z_launch_arg,
@@ -148,10 +127,6 @@ def generate_launch_description():
         debug_launch_arg,
         world_file_launch_arg,
         tf_prefix_launch_argument,
-        enable_logging_launch_argument,
-        enable_ground_truth_launch_argument,
-        log_file_launch_argument,
-        enable_wind_launch_argument,
         robot_namespace_launch_argument,
         gazebo_namespace_launch_argument,
         gazebo_launch_include,
