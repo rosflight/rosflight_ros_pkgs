@@ -32,10 +32,10 @@
 #ifndef ROSFLIGHT_COMMON_JOY_JOY_H
 #define ROSFLIGHT_COMMON_JOY_JOY_H
 
-#include <gazebo_msgs/ModelState.h>
-#include <ros/ros.h>
-#include <rosflight_msgs/Command.h>
-#include <sensor_msgs/Joy.h>
+#include <gazebo_msgs/msg/model_state.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <rosflight_msgs/msg/command.hpp>
+#include <sensor_msgs/msg/joy.hpp>
 
 struct Axes
 {
@@ -82,15 +82,14 @@ struct Buttons
   Button override;
 };
 
-class Joy
+class Joy : public rclcpp::Node
 {
-  typedef sensor_msgs::Joy::_buttons_type ButtonType;
+  typedef sensor_msgs::msg::Joy::_buttons_type ButtonType;
 
 private:
-  ros::NodeHandle nh_;
-  ros::Publisher command_pub_;
-  ros::Subscriber autopilot_command_sub_;
-  ros::Subscriber joy_sub_;
+  rclcpp::Publisher<rosflight_msgs::msg::Command>::SharedPtr command_pub_;
+  rclcpp::Subscription<rosflight_msgs::msg::Command>::SharedPtr autopilot_command_sub_;
+  rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_sub_;
 
   std::string namespace_;
   std::string command_topic_;
@@ -105,14 +104,14 @@ private:
   bool paused = true;
   double equilibrium_thrust_;
 
-  rosflight_msgs::Command command_msg_;
-  rosflight_msgs::Command autopilot_command_;
-  sensor_msgs::Joy current_joy_;
+  rosflight_msgs::msg::Command command_msg_;
+  rosflight_msgs::msg::Command autopilot_command_;
+  sensor_msgs::msg::Joy current_joy_;
 
   Max max_;
   Buttons buttons_;
-  geometry_msgs::Pose reset_pose_;
-  geometry_msgs::Twist reset_twist_;
+  geometry_msgs::msg::Pose reset_pose_;
+  geometry_msgs::msg::Twist reset_twist_;
 
   double current_altitude_setpoint_;
   double current_x_setpoint_;
@@ -129,8 +128,8 @@ private:
   void PauseSimulation();
   void ResumeSimulation();
 
-  void JoyCallback(const sensor_msgs::JoyConstPtr &msg);
-  void APCommandCallback(const rosflight_msgs::CommandConstPtr &msg);
+  void JoyCallback(sensor_msgs::msg::Joy::ConstSharedPtr msg);
+  void APCommandCallback(rosflight_msgs::msg::Command::ConstSharedPtr msg);
   void Publish();
 
 public:

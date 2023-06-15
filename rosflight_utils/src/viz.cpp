@@ -1,8 +1,10 @@
 #include <rosflight_utils/viz.h>
 
+using std::placeholders::_1;
+
 namespace rosflight_utils
 {
-Viz::Viz() : nh_private_("~")
+Viz::Viz() : Node("viz_node")
 {
   // retrieve params
 
@@ -13,16 +15,18 @@ Viz::Viz() : nh_private_("~")
   mag_throttle_ = 0;
 
   // Magnetometer visualization
-  mag_sub_ = nh_.subscribe("/magnetometer", 1, &Viz::magCallback, this);
-  mag_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("viz/magnetometer", 1);
-  pts_pub_ = nh_.advertise<visualization_msgs::Marker>("viz/cloud", 1);
+  mag_sub_ = this->create_subscription<sensor_msgs::msg::MagneticField>(
+    "/magnetometer", 1, std::bind(&Viz::magCallback, this, _1));
+  mag_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("viz/magnetometer", 1);
+  pts_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("viz/cloud", 1);
 
   // Attitude visualization
-  att_sub_ = nh_.subscribe("/attitude", 1, &Viz::attCallback, this);
-  pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("viz/attitude", 1);
+  att_sub_ = this->create_subscription<rosflight_msgs::msg::Attitude>(
+    "/attitude", 1, std::bind(&Viz::attCallback, this, _1));
+  pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("viz/attitude", 1);
 }
 
-void Viz::magCallback(const sensor_msgs::MagneticFieldConstPtr &msg)
+void Viz::magCallback(sensor_msgs::msg::MagneticField::ConstSharedPtr msg)
 {
   if (mag_throttle_ > mag_skip_)
   {
@@ -36,35 +40,36 @@ void Viz::magCallback(const sensor_msgs::MagneticFieldConstPtr &msg)
     double pitch = atan2(-z, sqrt(x * x + y * y));
 
     // convert to body quaternion and rotation into the vehicle frame
-    tf::Quaternion q_v = tf::createQuaternionFromRPY(0, pitch, yaw);
+    tf2::Quaternion q_v;
+    q_v.setRPY(0, pitch, yaw);
 
     // pack data into pose message
-    geometry_msgs::PoseStamped pose_msg;
+    geometry_msgs::msg::PoseStamped pose_msg;
     pose_msg.header = msg->header;
     pose_msg.header.frame_id = fixed_frame_;
     pose_msg.pose.position.x = 0;
     pose_msg.pose.position.y = 0;
     pose_msg.pose.position.z = 0;
-    tf::quaternionTFToMsg(q_v, pose_msg.pose.orientation);
+    pose_msg.pose.orientation = tf2::toMsg(q_v);
 
     // Publish the messages
-    mag_pub_.publish(pose_msg);
+    mag_pub_->publish(pose_msg);
 
     // MEASUREMENT CLOUD //
 
     // store the current measurement
-    geometry_msgs::Point p;
+    geometry_msgs::msg::Point p;
     p.x = x;
     p.y = y;
     p.z = z;
     pts_list_.push_back(p);
 
     // begin packing marker message
-    visualization_msgs::Marker pts_msg;
+    visualization_msgs::msg::Marker pts_msg;
     pts_msg.header.frame_id = fixed_frame_;
     pts_msg.header.stamp = msg->header.stamp;
-    pts_msg.type = visualization_msgs::Marker::POINTS;
-    pts_msg.action = visualization_msgs::Marker::ADD;
+    pts_msg.type = visualization_msgs::msg::Marker::POINTS;
+    pts_msg.action = visualization_msgs::msg::Marker::ADD;
 
     // set points style
     pts_msg.scale.x = 0.1;
@@ -81,27 +86,27 @@ void Viz::magCallback(const sensor_msgs::MagneticFieldConstPtr &msg)
     }
 
     // publish point cloud
-    pts_pub_.publish(pts_msg);
+    pts_pub_->publish(pts_msg);
   }
   mag_throttle_++;
 }
 
-void Viz::attCallback(const rosflight_msgs::AttitudeConstPtr &msg)
+void Viz::attCallback(rosflight_msgs::msg::Attitude::ConstSharedPtr msg)
 {
-  geometry_msgs::PoseStamped pose;
+  geometry_msgs::msg::PoseStamped pose;
   pose.header = msg->header;
   pose.header.frame_id = fixed_frame_;
   pose.pose.orientation = msg->attitude;
 
-  pose_pub_.publish(pose);
+  pose_pub_->publish(pose);
 }
 
 } // namespace rosflight_utils
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "viz_node");
-  rosflight_utils::Viz viz;
-  ros::spin();
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<rosflight_utils::Viz>());
+  rclcpp::shutdown();
   return 0;
 }

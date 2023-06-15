@@ -10,12 +10,13 @@
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/TransformStamped.h>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
-#include <rosflight_msgs/Command.h>
-#include <sensor_msgs/Imu.h>
+#include <rclcpp/rclcpp.hpp>
+#include <rosflight_msgs/msg/command.hpp>
+#include <sensor_msgs/msg/imu.hpp>
 #include <yaml-cpp/yaml.h>
 #include <boost/foreach.hpp>
 #include <experimental/filesystem>
@@ -145,8 +146,8 @@ int main(int argc, char *argv[])
   }
 
   // Get some time variables
-  ros::Time bag_start = view.getBeginTime() + ros::Duration(start_time);
-  ros::Time bag_end = view.getBeginTime() + ros::Duration(end_time);
+  rclcpp::Time bag_start = view.getBeginTime() + ros::Duration(start_time);
+  rclcpp::Time bag_end = view.getBeginTime() + ros::Duration(end_time);
 
   // Prepare the output file
   fstream est_log, truth_log, imu_log, filtered_imu_log, cmd_log;
@@ -180,7 +181,7 @@ int main(int argc, char *argv[])
 
     if (datatype.compare("sensor_msgs/Imu") == 0)
     {
-      const sensor_msgs::ImuConstPtr imu(m.instantiate<sensor_msgs::Imu>());
+      const sensor_msgs::msg::Imu::ConstPtr imu(m.instantiate<sensor_msgs::msg::Imu>());
 
       if (!time_initialized)
       {
@@ -224,7 +225,7 @@ int main(int argc, char *argv[])
 
     else if (datatype.compare("geometry_msgs/PoseStamped") == 0)
     {
-      const geometry_msgs::PoseStampedConstPtr pose(m.instantiate<geometry_msgs::PoseStamped>());
+      geometry_msgs::msg::PoseStamped::ConstSharedPtr pose(m.instantiate<geometry_msgs::msg::PoseStamped>());
       double t = (pose->header.stamp - bag_start).toSec();
       double truth[5] = {t, pose->pose.orientation.w, pose->pose.orientation.x, pose->pose.orientation.y,
                          pose->pose.orientation.z};
@@ -233,7 +234,7 @@ int main(int argc, char *argv[])
 
     else if (datatype.compare("geometry_msgs/TransformStamped") == 0)
     {
-      const geometry_msgs::TransformStampedConstPtr trans(m.instantiate<geometry_msgs::TransformStamped>());
+      geometry_msgs::msg::TransformStamped::ConstSharedPtr trans(m.instantiate<geometry_msgs::msg::TransformStamped>());
       double t = (trans->header.stamp - bag_start).toSec();
       double truth[5] = {t, trans->transform.rotation.w, trans->transform.rotation.x, trans->transform.rotation.y,
                          trans->transform.rotation.z};
@@ -242,9 +243,9 @@ int main(int argc, char *argv[])
 
     else if (datatype.compare("rosflight_msgs/Command") == 0)
     {
-      const rosflight_msgs::CommandConstPtr cmd(m.instantiate<rosflight_msgs::Command>());
+      rosflight_msgs::msg::Command::ConstSharedPtr cmd(m.instantiate<rosflight_msgs::msg::Command>());
       double t = (cmd->header.stamp - bag_start).toSec();
-      double cmdarr[5] = {t, cmd->x, cmd->y, cmd->z, cmd->F};
+      double cmdarr[5] = {t, cmd->x, cmd->y, cmd->z, cmd->f};
       cmd_log.write((char *)cmdarr, sizeof(cmdarr));
     }
   }

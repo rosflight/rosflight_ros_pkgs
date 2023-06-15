@@ -38,8 +38,8 @@
 #ifndef ROTOR_CONTROLLER_SIMPLE_PID_H
 #define ROTOR_CONTROLLER_SIMPLE_PID_H
 
-#include <ros/ros.h> // included temporarily for debug statements
 #include <cmath>
+#include <cfloat>
 
 namespace rosflight_utils
 {

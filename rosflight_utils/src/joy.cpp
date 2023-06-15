@@ -29,87 +29,88 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <gazebo_msgs/SetModelState.h>
+#include <gazebo_msgs/srv/set_model_state.hpp>
 #include <rosflight_utils/joy.h>
-#include <std_srvs/Empty.h>
+#include <std_srvs/srv/empty.hpp>
 
-Joy::Joy()
+using std::placeholders::_1;
+
+Joy::Joy() : Node("rosflight_utils_joy")
 {
-  ros::NodeHandle pnh("~");
-  ros::NodeHandle namespace_nh(ros::this_node::getNamespace());
-
-  pnh.param<std::string>("command_topic", command_topic_, "command");
-  pnh.param<std::string>("autopilot_command_topic", autopilot_command_topic_, "autopilot_command");
+  command_topic_ = this->get_parameter_or<std::string>("command_topic", "command");
+  autopilot_command_topic_ = this->get_parameter_or<std::string>("autopilot_command_topic", "autopilot_command");
 
   // Get global parameters
-  double max_thrust;
-  namespace_nh.param<double>("mass", mass_, 3.61);
-  namespace_nh.param<double>("max_F", max_thrust, 64.50);
-  namespace_nh.param<std::string>("mav_name", mav_name_, "shredder");
+  mass_ = this->get_parameter_or<double>("mass", 3.61);
+  double max_thrust = this->get_parameter_or<double>("max_F", 64.50);
+  mav_name_ = this->get_parameter_or<std::string>("mav_name", "shredder");
   equilibrium_thrust_ = (mass_ * 9.80665) / max_thrust;
 
   // Get Parameters from joystick configuration yaml
-  pnh.param<std::string>("gazebo_namespace", gazebo_ns_, "");
-  pnh.param<int>("x_axis", axes_.x, 1);
-  pnh.param<int>("y_axis", axes_.y, 2);
-  pnh.param<int>("F_axis", axes_.F, 0);
-  pnh.param<int>("z_axis", axes_.z, 4);
+  gazebo_ns_ = this->get_parameter_or<std::string>("gazebo_namespace", "");
+  axes_.x = this->get_parameter_or<int>("x_axis", 1);
+  axes_.y = this->get_parameter_or<int>("y_axis", 2);
+  axes_.F = this->get_parameter_or<int>("F_axis", 0);
+  axes_.z = this->get_parameter_or<int>("z_axis", 4);
 
-  pnh.param<int>("x_sign", axes_.x_direction, 1);
-  pnh.param<int>("y_sign", axes_.y_direction, 1);
-  pnh.param<int>("F_sign", axes_.F_direction, -1);
-  pnh.param<int>("z_sign", axes_.z_direction, 1);
+  axes_.x_direction = this->get_parameter_or<int>("x_sign", 1);
+  axes_.y_direction = this->get_parameter_or<int>("y_sign", 1);
+  axes_.F_direction = this->get_parameter_or<int>("F_sign", -1);
+  axes_.z_direction = this->get_parameter_or<int>("z_sign", 1);
 
-  pnh.param<double>("max_aileron", max_.aileron, 15.0 * M_PI / 180.0);
-  pnh.param<double>("max_elevator", max_.elevator, 25.0 * M_PI / 180.0);
-  pnh.param<double>("max_rudder", max_.rudder, 15.0 * M_PI / 180.0);
+  max_.aileron = this->get_parameter_or<double>("max_aileron", 15.0 * M_PI / 180.0);
+  max_.elevator = this->get_parameter_or<double>("max_elevator", 25.0 * M_PI / 180.0);
+  max_.rudder = this->get_parameter_or<double>("max_rudder", 15.0 * M_PI / 180.0);
 
-  pnh.param<double>("max_roll_rate", max_.roll_rate, 360.0 * M_PI / 180.0);
-  pnh.param<double>("max_pitch_rate", max_.pitch_rate, 360.0 * M_PI / 180.0);
-  pnh.param<double>("max_yaw_rate", max_.yaw_rate, 360.0 * M_PI / 180.0);
+  max_.roll_rate = this->get_parameter_or<double>("max_roll_rate", 360.0 * M_PI / 180.0);
+  max_.pitch_rate = this->get_parameter_or<double>("max_pitch_rate", 360.0 * M_PI / 180.0);
+  max_.yaw_rate = this->get_parameter_or<double>("max_yaw_rate", 360.0 * M_PI / 180.0);
 
-  pnh.param<double>("max_roll_angle", max_.roll, 45.0 * M_PI / 180.0);
-  pnh.param<double>("max_pitch_angle", max_.pitch, 45.0 * M_PI / 180.0);
+  max_.roll = this->get_parameter_or<double>("max_roll_angle", 45.0 * M_PI / 180.0);
+  max_.pitch = this->get_parameter_or<double>("max_pitch_angle", 45.0 * M_PI / 180.0);
 
-  pnh.param<double>("max_xvel", max_.xvel, 1.5);
-  pnh.param<double>("max_yvel", max_.yvel, 1.5);
-  pnh.param<double>("max_zvel", max_.zvel, 1.5);
-  command_msg_.mode = pnh.param<int>("control_mode", (int)rosflight_msgs::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE);
+  max_.xvel = this->get_parameter_or<double>("max_xvel", 1.5);
+  max_.yvel = this->get_parameter_or<double>("max_yvel", 1.5);
+  max_.zvel = this->get_parameter_or<double>("max_zvel", 1.5);
+  command_msg_.mode = this->get_parameter_or<int>(
+    "control_mode", (int)rosflight_msgs::msg::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE);
 
-  pnh.param<double>("reset_pos_x", reset_pose_.position.x, 0.0);
-  pnh.param<double>("reset_pos_y", reset_pose_.position.y, 0.0);
-  pnh.param<double>("reset_pos_z", reset_pose_.position.z, 0.0);
-  pnh.param<double>("reset_orient_x", reset_pose_.orientation.x, 0.0);
-  pnh.param<double>("reset_orient_x", reset_pose_.orientation.y, 0.0);
-  pnh.param<double>("reset_orient_x", reset_pose_.orientation.z, 0.0);
-  pnh.param<double>("reset_orient_x", reset_pose_.orientation.w, 0.0);
-  pnh.param<double>("reset_linear_twist_x", reset_twist_.linear.x, 0.0);
-  pnh.param<double>("reset_linear_twist_y", reset_twist_.linear.y, 0.0);
-  pnh.param<double>("reset_linear_twist_z", reset_twist_.linear.z, 0.0);
-  pnh.param<double>("reset_angular_twist_x", reset_twist_.angular.x, 0.0);
-  pnh.param<double>("reset_angular_twist_x", reset_twist_.angular.y, 0.0);
-  pnh.param<double>("reset_angular_twist_x", reset_twist_.angular.z, 0.0);
+  reset_pose_.position.x = this->get_parameter_or<double>("reset_pos_x", 0.0);
+  reset_pose_.position.y = this->get_parameter_or<double>("reset_pos_y", 0.0);
+  reset_pose_.position.z = this->get_parameter_or<double>("reset_pos_z", 0.0);
+  reset_pose_.orientation.x = this->get_parameter_or<double>("reset_orient_x", 0.0);
+  reset_pose_.orientation.y = this->get_parameter_or<double>("reset_orient_y", 0.0);
+  reset_pose_.orientation.z = this->get_parameter_or<double>("reset_orient_z", 0.0);
+  reset_pose_.orientation.w = this->get_parameter_or<double>("reset_orient_w", 0.0);
+  reset_twist_.linear.x = this->get_parameter_or<double>("reset_linear_twist_x", 0.0);
+  reset_twist_.linear.y = this->get_parameter_or<double>("reset_linear_twist_y", 0.0);
+  reset_twist_.linear.z = this->get_parameter_or<double>("reset_linear_twist_z", 0.0);
+  reset_twist_.angular.x = this->get_parameter_or<double>("reset_angular_twist_x", 0.0);
+  reset_twist_.angular.y = this->get_parameter_or<double>("reset_angular_twist_y", 0.0);
+  reset_twist_.angular.z = this->get_parameter_or<double>("reset_angular_twist_z", 0.0);
 
   // Sets which buttons are tied to which commands
-  pnh.param<int>("button_takeoff", buttons_.fly.index, 0);
-  pnh.param<int>("button_mode", buttons_.mode.index, 1);
-  pnh.param<int>("button_reset", buttons_.reset.index, 9);
-  pnh.param<int>("button_pause", buttons_.pause.index, 8);
-  pnh.param<int>("button_override", buttons_.override.index, 8);
+  buttons_.fly.index = this->get_parameter_or<int>("button_takeoff", 0);
+  buttons_.mode.index = this->get_parameter_or<int>("button_mode", 1);
+  buttons_.reset.index = this->get_parameter_or<int>("button_reset", 9);
+  buttons_.pause.index = this->get_parameter_or<int>("button_pause", 8);
+  buttons_.override.index = this->get_parameter_or<int>("button_override", 8);
 
-  command_pub_ = nh_.advertise<rosflight_msgs::Command>(command_topic_, 10);
+  command_pub_ = this->create_publisher<rosflight_msgs::msg::Command>(command_topic_, 10);
 
   command_msg_.x = 0;
   command_msg_.y = 0;
   command_msg_.z = 0;
-  command_msg_.F = 0;
+  command_msg_.f = 0;
   command_msg_.ignore = 0xFF;
 
   current_yaw_vel_ = 0;
 
-  namespace_ = nh_.getNamespace();
-  autopilot_command_sub_ = nh_.subscribe(autopilot_command_topic_, 10, &Joy::APCommandCallback, this);
-  joy_sub_ = nh_.subscribe("joy", 10, &Joy::JoyCallback, this);
+  namespace_ = this->get_namespace();
+  autopilot_command_sub_ = this->create_subscription<rosflight_msgs::msg::Command>(
+    autopilot_command_topic_, 10, std::bind(&Joy::APCommandCallback, this, _1));
+  joy_sub_ = this->create_subscription<sensor_msgs::msg::Joy>(
+    "joy", 10, std::bind(&Joy::JoyCallback, this, _1));
   buttons_.mode.prev_value = 0;
   buttons_.reset.prev_value = 0;
 
@@ -121,59 +122,61 @@ void Joy::StopMav()
   command_msg_.x = 0;
   command_msg_.y = 0;
   command_msg_.z = 0;
-  command_msg_.F = 0;
+  command_msg_.f = 0;
 }
 
 /* Resets the mav back to origin */
 void Joy::ResetMav()
 {
-  ROS_INFO("Mav position reset.");
-  ros::NodeHandle n;
+  RCLCPP_INFO(this->get_logger(), "Mav position reset.");
 
-  gazebo_msgs::ModelState modelstate;
+  gazebo_msgs::msg::ModelState modelstate;
   modelstate.model_name = (std::string)mav_name_;
   modelstate.reference_frame = (std::string) "world";
   modelstate.pose = reset_pose_;
   modelstate.twist = reset_twist_;
 
-  ros::ServiceClient client = n.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
-  gazebo_msgs::SetModelState setmodelstate;
-  setmodelstate.request.model_state = modelstate;
-  client.call(setmodelstate);
+  auto client = this->create_client<gazebo_msgs::srv::SetModelState>("/gazebo/set_model_state");
+  auto setModelStateRequest = std::make_shared<gazebo_msgs::srv::SetModelState::Request>();
+  setModelStateRequest->model_state = modelstate;
+  rclcpp::spin_until_future_complete(rclcpp::Node::SharedPtr(this),
+                                     client->async_send_request(setModelStateRequest));
 }
 
 // Pauses the gazebo physics and time
 void Joy::PauseSimulation()
 {
-  ROS_INFO("Simulation paused.");
-  ros::NodeHandle n;
+  RCLCPP_INFO(this->get_logger(), "Simulation paused.");
 
-  ros::ServiceClient client = n.serviceClient<std_srvs::Empty>("/gazebo/pause_physics");
-  std_srvs::Empty pauseSim;
-  client.call(pauseSim);
+  auto client = this->create_client<std_srvs::srv::Empty>("/gazebo/pause_physics");
+  auto request = std::make_shared<std_srvs::srv::Empty::Request>();
+  auto result = client->async_send_request(request);
+  auto node_ptr = rclcpp::Node::SharedPtr(this);
+  rclcpp::spin_until_future_complete(node_ptr, result);
 }
 
 // Resumes the gazebo physics and time
 void Joy::ResumeSimulation()
 {
-  ROS_INFO("Simulation resumed.");
-  ros::NodeHandle n;
+  RCLCPP_INFO(this->get_logger(), "Simulation resumed.");
 
-  ros::ServiceClient client = n.serviceClient<std_srvs::Empty>("/gazebo/unpause_physics");
-  std_srvs::Empty resumeSim;
-  client.call(resumeSim);
-  last_time_ = ros::Time::now().toSec();
+  auto client = this->create_client<std_srvs::srv::Empty>("/gazebo/unpause_physics");
+  auto request = std::make_shared<std_srvs::srv::Empty::Request>();
+  auto result = client->async_send_request(request);
+  auto node_ptr = rclcpp::Node::SharedPtr(this);
+  rclcpp::spin_until_future_complete(node_ptr, result);
+  last_time_ = this->get_clock()->now().seconds();
 }
 
-void Joy::APCommandCallback(const rosflight_msgs::CommandConstPtr &msg)
+void Joy::APCommandCallback(rosflight_msgs::msg::Command::ConstSharedPtr msg)
 {
   autopilot_command_ = *msg;
 }
 
-void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
+void Joy::JoyCallback(sensor_msgs::msg::Joy::ConstSharedPtr msg)
 {
-  double dt = ros::Time::now().toSec() - last_time_;
-  last_time_ = ros::Time::now().toSec();
+  double dt = this->get_clock()->now().seconds() - last_time_;
+  last_time_ = this->get_clock()->now().seconds();
 
   current_joy_ = *msg;
 
@@ -210,29 +213,17 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
   if (msg->buttons[buttons_.mode.index] == 0 && buttons_.mode.prev_value == 1)
   {
     command_msg_.mode = (command_msg_.mode + 1) % 6;
-    if (command_msg_.mode == rosflight_msgs::Command::MODE_PASS_THROUGH)
+if (command_msg_.mode == rosflight_msgs::msg::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE)
     {
-      ROS_INFO("Passthrough");
+      RCLCPP_INFO(this->get_logger(), "Rate Mode");
     }
-    else if (command_msg_.mode == rosflight_msgs::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE)
+    else if (command_msg_.mode == rosflight_msgs::msg::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE)
     {
-      ROS_INFO("Angle Mode");
-    }
-    else if (command_msg_.mode == rosflight_msgs::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE)
-    {
-      ROS_INFO("Altitude Mode");
-    }
-    else if (command_msg_.mode == rosflight_msgs::Command::MODE_XVEL_YVEL_YAWRATE_ALTITUDE)
-    {
-      ROS_INFO("Velocity Mode");
-    }
-    else if (command_msg_.mode == rosflight_msgs::Command::MODE_XPOS_YPOS_YAW_ALTITUDE)
-    {
-      ROS_INFO("Position Mode");
+      RCLCPP_INFO(this->get_logger(), "Angle Mode");
     }
     else
     {
-      ROS_INFO("Passthrough");
+      RCLCPP_INFO(this->get_logger(), "Passthrough");
     }
   }
   buttons_.mode.prev_value = msg->buttons[buttons_.mode.index];
@@ -240,77 +231,39 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
   // calculate the output command from the joysticks
   if (override_autopilot_)
   {
-    command_msg_.F = msg->axes[axes_.F] * axes_.F_direction;
+    command_msg_.f = msg->axes[axes_.F] * axes_.F_direction;
     command_msg_.x = msg->axes[axes_.x] * axes_.x_direction;
     command_msg_.y = msg->axes[axes_.y] * axes_.y_direction;
     command_msg_.z = msg->axes[axes_.z] * axes_.z_direction;
 
     switch (command_msg_.mode)
     {
-    case rosflight_msgs::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
+    case rosflight_msgs::msg::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
       command_msg_.x *= max_.roll_rate;
       command_msg_.y *= max_.pitch_rate;
       command_msg_.z *= max_.yaw_rate;
-      if (command_msg_.F > 0.0)
+      if (command_msg_.f > 0.0)
       {
-        command_msg_.F = equilibrium_thrust_ + (1.0 - equilibrium_thrust_) * command_msg_.F;
+        command_msg_.f = equilibrium_thrust_ + (1.0 - equilibrium_thrust_) * command_msg_.f;
       }
       else
       {
-        command_msg_.F = equilibrium_thrust_ + (equilibrium_thrust_)*command_msg_.F;
+        command_msg_.f = equilibrium_thrust_ + (equilibrium_thrust_)*command_msg_.f;
       }
       break;
 
-    case rosflight_msgs::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE:
+    case rosflight_msgs::msg::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE:
       command_msg_.x *= max_.roll;
       command_msg_.y *= max_.pitch;
       command_msg_.z *= max_.yaw_rate;
-      if (command_msg_.F > 0.0)
+      if (command_msg_.f > 0.0)
       {
-        command_msg_.F = equilibrium_thrust_ + (1.0 - equilibrium_thrust_) * command_msg_.F;
+        command_msg_.f = equilibrium_thrust_ + (1.0 - equilibrium_thrust_) * command_msg_.f;
       }
       else
       {
-        command_msg_.F = equilibrium_thrust_ + (equilibrium_thrust_)*command_msg_.F;
+        command_msg_.f = equilibrium_thrust_ + (equilibrium_thrust_)*command_msg_.f;
       }
-      break;
-
-    case rosflight_msgs::Command::MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
-      command_msg_.x *= max_.roll;
-      command_msg_.y *= max_.pitch;
-      command_msg_.z *= max_.yaw_rate;
-      // Integrate altitude
-      current_altitude_setpoint_ -= dt * max_.zvel * command_msg_.F;
-      command_msg_.F = current_altitude_setpoint_;
-      break;
-
-    case rosflight_msgs::Command::MODE_XVEL_YVEL_YAWRATE_ALTITUDE:
-    {
-      // Remember that roll affects y velocity and pitch affects -x velocity
-      double original_x = command_msg_.x;
-      command_msg_.x = max_.xvel * -1.0 * command_msg_.y;
-      command_msg_.y = max_.yvel * original_x;
-      command_msg_.z *= max_.yaw_rate;
-      // Integrate altitude
-      current_altitude_setpoint_ -= dt * max_.zvel * command_msg_.F;
-      command_msg_.F = current_altitude_setpoint_;
-      break;
-    }
-
-    case rosflight_msgs::Command::MODE_XPOS_YPOS_YAW_ALTITUDE:
-      // Integrate all axes
-      // (Remember that roll affects y velocity and pitch affects -x velocity)
-      current_x_setpoint_ -= dt * max_.xvel * command_msg_.y;
-      command_msg_.x = current_x_setpoint_;
-
-      current_y_setpoint_ += dt * max_.yvel * command_msg_.x;
-      command_msg_.y = current_y_setpoint_;
-
-      current_yaw_setpoint_ += dt * max_.yaw_rate * command_msg_.z;
-      current_yaw_setpoint_ = fmod(current_yaw_setpoint_, (2.0 * M_PI));
-
-      current_altitude_setpoint_ -= dt * max_.zvel * command_msg_.z;
-      command_msg_.z = current_altitude_setpoint_;
       break;
     }
   }
@@ -324,15 +277,13 @@ void Joy::JoyCallback(const sensor_msgs::JoyConstPtr &msg)
 
 void Joy::Publish()
 {
-  command_pub_.publish(command_msg_);
+  command_pub_->publish(command_msg_);
 }
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "rosflight_utils_joy");
-  Joy joy;
-
-  ros::spin();
-
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<Joy>());
+  rclcpp::shutdown();
   return 0;
 }

@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(rosflight_sim)
 
-find_package(gazebo_dev)
-IF(gazebo_dev_FOUND)
-
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
 endif()
@@ -20,6 +17,7 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(gazebo_dev)
 find_package(gazebo_plugins REQUIRED)
 find_package(gazebo_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
@@ -100,5 +98,3 @@ install(
 )
 
 ament_package()
-
-ENDIF()
