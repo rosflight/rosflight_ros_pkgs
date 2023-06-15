@@ -50,6 +50,8 @@ CalibrateMag::CalibrateMag() :
   ransac_iters_ = 100;
   inlier_thresh_ = 200;
 
+  this->declare_parameter("calibration_time", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("measurement_skip", rclcpp::PARAMETER_INTEGER);
   calibration_time_ = this->get_parameter_or("calibration_time", 60.0);
   measurement_skip_ = this->get_parameter_or("measurement_skip", 20);
 
@@ -60,9 +62,10 @@ CalibrateMag::CalibrateMag() :
 void CalibrateMag::run()
 {
   // Subscribe to /magnetometer topic
+  auto node_ptr = rclcpp::Node::SharedPtr(this);
   rmw_qos_profile_t qos_profile = rmw_qos_profile_default;
   qos_profile.depth = 1;
-  mag_subscriber_.subscribe(shared_from_this(), "/magnetometer", qos_profile);
+  mag_subscriber_.subscribe(node_ptr, "/magnetometer", qos_profile);
 
   // reset calibration parameters
   bool success = true;
@@ -95,7 +98,7 @@ void CalibrateMag::run()
   rclcpp::Time start = this->get_clock()->now();
   while (this->get_clock()->now() - start < timeout && first_time_ && rclcpp::ok())
   {
-    rclcpp::spin_some(shared_from_this());
+    rclcpp::spin_some(node_ptr);
   }
 
   if (first_time_)
@@ -106,7 +109,7 @@ void CalibrateMag::run()
 
   while (calibrating_ && rclcpp::ok())
   {
-    rclcpp::spin_some(shared_from_this());
+    rclcpp::spin_some(node_ptr);
   }
 
   if (!calibrating_)
@@ -515,7 +518,8 @@ bool CalibrateMag::set_param(std::string name, double value)
 
   auto result = param_set_client_->async_send_request(req);
 
-  if (rclcpp::spin_until_future_complete(shared_from_this(), result) == rclcpp::FutureReturnCode::SUCCESS)
+  auto node_ptr = rclcpp::Node::SharedPtr(this);
+  if (rclcpp::spin_until_future_complete(node_ptr, result) == rclcpp::FutureReturnCode::SUCCESS)
   {
     return result.get()->exists;
   }

@@ -92,12 +92,21 @@ rosflightIO::rosflightIO() : Node("rosflight_io"), logger_(this->get_logger(), *
   reboot_bootloader_srv_ = this->create_service<std_srvs::srv::Trigger>(
       "reboot_to_bootloader", std::bind(&rosflightIO::rebootToBootloaderSrvCallback, this, _1, _2));
 
+  this->declare_parameter("udp", rclcpp::PARAMETER_BOOL);
+  this->declare_parameter("bind_host", rclcpp::PARAMETER_STRING);
+  this->declare_parameter("bind_port", rclcpp::PARAMETER_INTEGER);
+  this->declare_parameter("remote_host", rclcpp::PARAMETER_STRING);
+  this->declare_parameter("remote_port", rclcpp::PARAMETER_INTEGER);
+  this->declare_parameter("port", rclcpp::PARAMETER_STRING);
+  this->declare_parameter("baud_rate", rclcpp::PARAMETER_INTEGER);
+  this->declare_parameter("frame_id", rclcpp::PARAMETER_STRING);
+
   if (this->get_parameter_or("udp", false))
   {
-    std::string bind_host = this->get_parameter_or("bind_host", std::string("localhost"));
-    uint16_t bind_port = (uint16_t)this->get_parameter_or("bind_port", 14520);
-    std::string remote_host = this->get_parameter_or("remote_host", bind_host);
-    uint16_t remote_port = (uint16_t)this->get_parameter_or("remote_port", 14525);
+    auto bind_host = this->get_parameter_or<std::string>("bind_host", "localhost");
+    auto bind_port = this->get_parameter_or<uint16_t>("bind_port", 14520);
+    auto remote_host = this->get_parameter_or<std::string>("remote_host", bind_host);
+    auto remote_port = this->get_parameter_or<uint16_t>("remote_port", 14525);
 
     RCLCPP_INFO(this->get_logger(), "Connecting over UDP to \"%s:%d\", from \"%s:%d\"", remote_host.c_str(),
                 remote_port, bind_host.c_str(), bind_port);
@@ -106,8 +115,8 @@ rosflightIO::rosflightIO() : Node("rosflight_io"), logger_(this->get_logger(), *
   }
   else
   {
-    std::string port = this->get_parameter_or("port", std::string("/dev/ttyACM0"));
-    int baud_rate = this->get_parameter_or("baud_rate", 921600);
+    auto port = this->get_parameter_or<std::string>("port", "/dev/ttyACM0");
+    int baud_rate = this->get_parameter_or<int>("baud_rate", 921600);
 
     RCLCPP_INFO(this->get_logger(), "Connecting to serial port \"%s\", at %d baud", port.c_str(), baud_rate);
 
@@ -147,7 +156,7 @@ rosflightIO::rosflightIO() : Node("rosflight_io"), logger_(this->get_logger(), *
   unsaved_params_pub_->publish(unsaved_msg);
 
   // Set up a few other random things
-  frame_id_ = this->get_parameter_or("frame_id", std::string("world"));
+  frame_id_ = this->get_parameter_or<std::string>("frame_id", "world");
 
   prev_status_.armed = false;
   prev_status_.failsafe = false;
