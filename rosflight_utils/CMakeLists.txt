@@ -57,6 +57,7 @@ target_link_libraries(joy
   ${ament_LIBRARIES}
   )
 ament_target_dependencies(joy
+  rclcpp
   gazebo_msgs
   rosflight_msgs
   sensor_msgs
