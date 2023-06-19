@@ -20,12 +20,12 @@ pygame.joystick.init()
 joy = pygame.joystick.Joystick(0)
 joy.init()
 
-print "joystick:", joy.get_name()
+print("joystick:", joy.get_name())
 
 mapping = dict()
 
 if 'Taranis' in joy.get_name():
-    print "found Taranis"
+    print("found Taranis")
     mapping['x'] = 0
     mapping['y'] = 1
     mapping['z'] = 3
@@ -35,7 +35,7 @@ if 'Taranis' in joy.get_name():
     mapping['zsign'] = 1
     mapping['Fsign'] = 1
 elif 'Xbox' in joy.get_name() or 'X-Box' in joy.get_name():
-    print "found xbox"
+    print("found xbox")
     mapping['x'] = 3
     mapping['y'] = 4
     mapping['z'] = 0
@@ -45,7 +45,7 @@ elif 'Xbox' in joy.get_name() or 'X-Box' in joy.get_name():
     mapping['zsign'] = 1
     mapping['Fsign'] = -1
 else:
-    print "using realflght mapping"
+    print("using realflght mapping")
     mapping['x'] = 1
     mapping['y'] = 2
     mapping['z'] = 4

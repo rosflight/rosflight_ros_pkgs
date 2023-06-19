@@ -36,11 +36,11 @@ class DummyRC(Node):
         response.message = 'Armed!'
         return response
 
-    def disarm_callback(self, request, responce):
+    def disarm_callback(self, request, response):
         self.rc_message.values[self.ARM_SWITCH_CHANNEL] = self.CHANNEL_MIN
-        responce.success = True
-        responce.message = 'Disarmed!'
-        return responce
+        response.success = True
+        response.message = 'Disarmed!'
+        return response
 
     def timer_callback(self):
         self.rc_message.header.stamp = self.get_clock().now().to_msg()
