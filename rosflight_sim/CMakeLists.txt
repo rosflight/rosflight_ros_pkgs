@@ -52,6 +52,7 @@ ament_target_dependencies(rosflight_sil_plugin
   nav_msgs
   rosflight_firmware
   rosflight_msgs
+  gazebo_ros
 )
 ament_export_targets(rosflight_sil_pluginTargets HAS_LIBRARY_TARGET)
 ament_export_dependencies(
@@ -60,6 +61,7 @@ ament_export_dependencies(
   nav_msgs
   rosflight_firmware
   rosflight_msgs
+  gazebo_ros
 )
 
 install(

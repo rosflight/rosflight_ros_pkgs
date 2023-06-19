@@ -39,6 +39,7 @@
 #include <gazebo/common/common.hh>
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
+#include <gazebo_ros/node.hpp>
 
 #include <mavlink/mavlink.h>
 #include <rosflight.h>
@@ -52,7 +53,7 @@
 
 namespace rosflight_sim
 {
-class ROSflightSIL : public rclcpp::Node, public gazebo::ModelPlugin
+class ROSflightSIL : public gazebo::ModelPlugin
 {
 public:
   ROSflightSIL();
@@ -66,6 +67,8 @@ protected:
 private:
   void windCallback(const geometry_msgs::msg::Vector3& msg);
   void publishTruth();
+
+  rclcpp::Node::SharedPtr node_;
 
   SIL_Board board_;
   rosflight_firmware::Mavlink comm_;
@@ -100,6 +103,8 @@ private:
   Eigen::Vector3d vec3_to_eigen_from_gazebo(GazeboVector vec);
   GazeboVector vec3_to_gazebo_from_eigen(Eigen::Vector3d vec);
   Eigen::Matrix3d rotation_to_eigen_from_gazebo(GazeboQuaternion vec);
+
+  void DeclareROSParams();
 };
 
 } // namespace rosflight_sim
