@@ -47,7 +47,8 @@ Authors: James Jackson, Daniel Koch
 """
 
 import pygame
-import rospy
+import rclpy
+from rclpy.node import Node
 from rosflight_msgs.msg import RCRaw
 
 from enum import Enum
@@ -104,54 +105,73 @@ config['RealFlight'][Channel.SW2] = lambda j: 2*j.get_button(0)-1
 config['RealFlight'][Channel.SW3] = lambda j: 2*j.get_button(1)-1
 config['RealFlight'][Channel.SW4] = lambda j: 2*j.get_button(2)-1
 
+config['TX16S'] = {}
+config['TX16S']['keys'] = ['OpenTX RM TX16S Joystick']
+config['TX16S'][Channel.AIL] = lambda j: j.get_axis(0)
+config['TX16S'][Channel.ELV] = lambda j: j.get_axis(1)
+config['TX16S'][Channel.THR] = lambda j: j.get_axis(2)
+config['TX16S'][Channel.RUD] = lambda j: j.get_axis(3)
+config['TX16S'][Channel.SW1] = lambda j: j.get_axis(4)
+config['TX16S'][Channel.SW2] = lambda j: j.get_axis(5)
+config['TX16S'][Channel.SW3] = lambda j: j.get_axis(6)
+config['TX16S'][Channel.SW4] = lambda j: 0
 
-if __name__ == '__main__':
 
-    # initialize
-    rospy.init_node('rc_joy')
-    rc_pub = rospy.Publisher('RC', RCRaw, queue_size=10)
+class RCJoy(Node):
+    def __init__(self):
+        update_freq = 50  # hz
 
-    pygame.display.init()
-    pygame.joystick.init()
+        super().__init__('rc_joy')
+        self.rc_publisher = self.create_publisher(RCRaw, 'RC', 10)
+        self.timer = self.create_timer(1/update_freq, self.timer_callback)
 
-    try:
-        joy = pygame.joystick.Joystick(0)
-    except:
-        rospy.logfatal("Failed to open joystick device")
-        rospy.signal_shutdown("Failed to open joystick device")
-        quit()
+        pygame.display.init()
+        pygame.joystick.init()
 
-    joy.init()
+        try:
+            self.joy = pygame.joystick.Joystick(0)
+        except:
+            self.get_logger().fatal('Failed to open joystick device')
+            quit()
 
-    # detect joystick/controller type
-    rospy.loginfo("Joystick: %s" % joy.get_name())
+        self.joy.init()
 
-    joy_type = None
-    for k in config.keys():
-        for key in config[k]['keys']:
-            if key in joy.get_name():
-                joy_type = k
-                break
+        TEMP = self.joy.get_numaxes()
 
-    if joy_type is None:
-        rospy.logfatal('Unsupported joystick device')
-        rospy.signal_shutdown('Unsupported joystick device')
-        quit()
+        # detect joystick/controller type
+        self.get_logger().info('Joystick: %s' % self.joy.get_name())
 
-    rospy.loginfo("Using %s config" % joy_type)
+        self.joy_type = None
+        for k in config.keys():
+            for key in config[k]['keys']:
+                if key in self.joy.get_name():
+                    self.joy_type = k
+                    break
 
-    # main loop
-    update_freq = 50 # Hz
-    rate = rospy.Rate(update_freq)
-    while not rospy.is_shutdown():
+        if self.joy_type is None:
+            self.get_logger().fatal('Unsupported joystick device')
+            quit()
+
+        self.get_logger().info('Using %s config' % self.joy_type)
+
+    def timer_callback(self):
         pygame.event.pump()
 
         msg = RCRaw()
-        msg.header.stamp = rospy.Time.now()
+        msg.header.stamp = self.get_clock().now().to_msg()
 
         for chan in Channel:
-            msg.values[chan.value] = round(config[joy_type][chan](joy) * 500 + 1500)
+            msg.values[chan.value] = round(config[self.joy_type][chan](self.joy) * 500 + 1500)
 
-        rc_pub.publish(msg)
+        self.rc_publisher.publish(msg)
 
-        rate.sleep()
+
+def main(args=None):
+    rclpy.init(args=args)
+    rc_joy = RCJoy()
+    rclpy.spin(rc_joy)
+    rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()
