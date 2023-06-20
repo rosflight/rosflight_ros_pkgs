@@ -38,7 +38,7 @@
 #ifndef MAVROSFLIGHT_LOGGER_ADAPTER_H
 #define MAVROSFLIGHT_LOGGER_ADAPTER_H
 
-#if defined(USE_ROS)
+#if defined(USE_ROS_LOGGER)
 #include <rosflight/ros_logger.h>
 namespace mavrosflight
 {
@@ -51,7 +51,7 @@ namespace mavrosflight
 using DerivedLoggerType = mavrosflight::DefaultLogger;
 }
 #else
-#error "Unknown logging backend supplied for mavrosflight. Define USE_ROS or STANDALONE."
+#error "Unknown logging backend supplied for mavrosflight. Define USE_ROS_LOGGER or STANDALONE."
 #endif
 
 #endif // MAVROSFLIGHT_LOGGER_ADAPTER_H

@@ -70,7 +70,7 @@ add_library(mavrosflight
   src/mavrosflight/param.cpp
   src/mavrosflight/time_manager.cpp
 )
-target_compile_definitions(mavrosflight PRIVATE USE_ROS)
+target_compile_definitions(mavrosflight PRIVATE USE_ROS_LOGGER)
 target_link_libraries(mavrosflight
   ${ament_LIBRARIES}
   ${rclcpp_LIBRARIES}

@@ -46,6 +46,8 @@
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
 #include <rosflight/mavrosflight/param_listener_interface.h>
 
+#include <rclcpp/rclcpp.hpp>
+
 #include <boost/function.hpp>
 
 #include <cstdint>
@@ -64,8 +66,7 @@ public:
    */
   MavROSflight(MavlinkComm& mavlink_comm,
                LoggerInterface<DerivedLogger>& logger,
-               const TimeInterface& time_interface,
-               TimerProviderInterface& timer_provider,
+               rclcpp::Node::SharedPtr node,
                uint8_t sysid = 1,
                uint8_t compid = 50);
 

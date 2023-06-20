@@ -43,7 +43,8 @@
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
 #include <rosflight/mavrosflight/param.h>
 #include <rosflight/mavrosflight/param_listener_interface.h>
-#include <rosflight/mavrosflight/timer_interface.h>
+
+#include <rclcpp/rclcpp.hpp>
 
 #include <deque>
 #include <map>
@@ -57,7 +58,7 @@ template <typename DerivedLogger>
 class ParamManager : public MavlinkListenerInterface
 {
 public:
-  ParamManager(MavlinkComm *const comm, LoggerInterface<DerivedLogger> &logger, TimerProviderInterface &timer_provider);
+  ParamManager(MavlinkComm *const comm, LoggerInterface<DerivedLogger> &logger, rclcpp::Node::SharedPtr node);
   ~ParamManager();
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
@@ -91,6 +92,7 @@ private:
 
   std::vector<ParamListenerInterface *> listeners_;
 
+  rclcpp::Node::SharedPtr node_;
   MavlinkComm *comm_;
   std::map<std::string, Param> params_;
 
@@ -104,12 +106,11 @@ private:
   bool got_all_params_;
 
   std::deque<mavlink_message_t> param_set_queue_;
-  std::shared_ptr<TimerInterface> param_set_timer_;
+  rclcpp::TimerBase::SharedPtr param_set_timer_;
   bool param_set_in_progress_;
   void param_set_timer_callback();
 
   LoggerInterface<DerivedLogger> &logger_;
-  TimerProviderInterface &timer_provider_;
 };
 
 } // namespace mavrosflight

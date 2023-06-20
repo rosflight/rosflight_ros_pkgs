@@ -45,13 +45,12 @@ using boost::asio::serial_port_base;
 template <typename DerivedLogger>
 MavROSflight<DerivedLogger>::MavROSflight(MavlinkComm &mavlink_comm,
                                           LoggerInterface<DerivedLogger> &logger,
-                                          const TimeInterface &time_interface,
-                                          TimerProviderInterface &timer_provider,
+                                          rclcpp::Node::SharedPtr node,
                                           uint8_t sysid /* = 1 */,
                                           uint8_t compid /* = 50 */) :
   comm(mavlink_comm),
-  param(&comm, logger, timer_provider),
-  time(&comm, logger, time_interface, timer_provider),
+  param(&comm, logger, node),
+  time(&comm, logger, node),
   sysid_(sysid),
   compid_(compid)
 {

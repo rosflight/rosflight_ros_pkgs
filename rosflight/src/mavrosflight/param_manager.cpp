@@ -47,7 +47,7 @@ namespace mavrosflight
 template <typename DerivedLogger>
 ParamManager<DerivedLogger>::ParamManager(MavlinkComm *const comm,
                                           LoggerInterface<DerivedLogger> &logger,
-                                          TimerProviderInterface &timer_provider) :
+                                          rclcpp::Node::SharedPtr node) :
   comm_(comm),
   unsaved_changes_(false),
   write_request_in_progress_(false),
@@ -56,13 +56,12 @@ ParamManager<DerivedLogger>::ParamManager(MavlinkComm *const comm,
   got_all_params_(false),
   param_set_in_progress_(false),
   logger_(logger),
-  timer_provider_(timer_provider)
+  node_(node)
 {
   comm_->register_mavlink_listener(this);
 
-  std::function<void()> bound_callback = std::bind(&ParamManager<DerivedLogger>::param_set_timer_callback, this);
-  param_set_timer_ =
-      timer_provider_.create_timer(std::chrono::milliseconds(10), bound_callback, false /* not autostart */);
+  param_set_timer_ = node_->create_wall_timer(
+    std::chrono::milliseconds(10), std::bind(&ParamManager<DerivedLogger>::param_set_timer_callback, this), nullptr);
 }
 
 template <typename DerivedLogger>
@@ -120,7 +119,7 @@ bool ParamManager<DerivedLogger>::set_param_value(std::string name, double value
     param_set_queue_.push_back(msg);
     if (!param_set_in_progress_)
     {
-      param_set_timer_->start();
+      param_set_timer_->reset();
       param_set_in_progress_ = true;
     }
 
@@ -405,7 +404,7 @@ void ParamManager<DerivedLogger>::param_set_timer_callback()
 {
   if (param_set_queue_.empty())
   {
-    param_set_timer_->stop();
+    param_set_timer_->cancel();
     param_set_in_progress_ = false;
   }
   else

@@ -41,8 +41,7 @@
 #include <rosflight/mavrosflight/mavlink_bridge.h>
 #include <rosflight/mavrosflight/mavlink_comm.h>
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
-#include <rosflight/mavrosflight/time_interface.h>
-#include <rosflight/mavrosflight/timer_interface.h>
+#include <rclcpp/rclcpp.hpp>
 
 #include <chrono>
 #include <memory>
@@ -55,8 +54,7 @@ class TimeManager : MavlinkListenerInterface
 public:
   TimeManager(MavlinkComm *comm,
               LoggerInterface<DerivedLogger> &logger,
-              const TimeInterface &time_interface,
-              TimerProviderInterface &timer_provider);
+              rclcpp::Node::SharedPtr node);
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
 
@@ -64,8 +62,9 @@ public:
 
 private:
   MavlinkComm *comm_;
+  rclcpp::Node::SharedPtr node_;
 
-  std::shared_ptr<TimerInterface> time_sync_timer_;
+  rclcpp::TimerBase::SharedPtr time_sync_timer_;
   void timer_callback();
 
   double offset_alpha_;
@@ -74,8 +73,6 @@ private:
   bool initialized_;
 
   LoggerInterface<DerivedLogger> &logger_;
-  const TimeInterface &time_interface_;
-  TimerProviderInterface &timer_provider_;
 };
 
 } // namespace mavrosflight
