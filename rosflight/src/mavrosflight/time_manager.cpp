@@ -78,9 +78,10 @@ void TimeManager<DerivedLogger>::handle_mavlink_message(const mavlink_message_t 
       if (!initialized_ || (offset_ns_ - offset_ns) > std::chrono::milliseconds(10)
           || (offset_ns_ - offset_ns) < std::chrono::milliseconds(-10))
       {
-        offset_ns_ = offset_ns;
-        logger_.info("Detected time offset of %0.3f s.", std::chrono::duration<double>(offset_ns).count());
+        logger_.info("Detected time offset of %0.3f s.",
+                     abs(std::chrono::duration<double>(offset_ns_ - offset_ns).count()));
         logger_.debug("FCU time: %0.3f, System time: %0.3f", tsync.tc1 * 1e-9, tsync.ts1 * 1e-9);
+        offset_ns_ = offset_ns;
         initialized_ = true;
       }
       else // otherwise low-pass filter the offset
