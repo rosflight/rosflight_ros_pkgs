@@ -1000,6 +1000,7 @@ bool rosflightIO::paramGetSrvCallback(rosflight_msgs::srv::ParamGet::Request::Sh
                                       rosflight_msgs::srv::ParamGet::Response::SharedPtr res)
 {
   res->exists = mavrosflight_->param.get_param_value(req->name, &res->value);
+  return true;
 }
 
 bool rosflightIO::paramSetSrvCallback(rosflight_msgs::srv::ParamSet::Request::SharedPtr req,
