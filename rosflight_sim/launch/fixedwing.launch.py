@@ -103,7 +103,7 @@ def generate_launch_description():
         ],
         arguments=[
             '-file', urdf_filepath_string,
-            '-entity', 'fixedwing',
+            '-entity', 'robot',
             '-robot_namespace', robot_namespace,
             '-gazebo_namespace', gazebo_namespace,
             '-x', x,

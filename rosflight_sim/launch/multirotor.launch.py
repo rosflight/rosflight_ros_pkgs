@@ -43,13 +43,11 @@ def generate_launch_description():
     verbose_launch_arg = DeclareLaunchArgument(
         'verbose', default_value=TextSubstitution(text='false')
     )
-    debug = LaunchConfiguration('debug')
-    debug_launch_arg = DeclareLaunchArgument(
-        'debug', default_value=TextSubstitution(text='false')
-    )
     world_file = LaunchConfiguration('world_file')
     world_file_launch_arg = DeclareLaunchArgument(
-        'world_file', default_value=TextSubstitution(text='worlds/empty.world')
+        'world_file', default_value=TextSubstitution(text=os.path.join(
+            get_package_share_directory('rosflight_sim'), 'resources/runway.world'
+        ))
     )
     tf_prefix = LaunchConfiguration('tf_prefix')
     tf_prefix_launch_argument = DeclareLaunchArgument(
@@ -76,8 +74,7 @@ def generate_launch_description():
             'paused': paused,
             'gui': gui,
             'verbose': verbose,
-            'debug': debug,
-            'world_name': world_file
+            'world': world_file
         }.items()
     )
 
@@ -106,7 +103,7 @@ def generate_launch_description():
         ],
         arguments=[
             '-file', urdf_filepath_string,
-            '-entity', 'multirotor',
+            '-entity', 'robot',
             '-robot_namespace', robot_namespace,
             '-gazebo_namespace', gazebo_namespace,
             '-x', x,
@@ -124,7 +121,6 @@ def generate_launch_description():
         paused_launch_arg,
         gui_launch_arg,
         verbose_launch_arg,
-        debug_launch_arg,
         world_file_launch_arg,
         tf_prefix_launch_argument,
         robot_namespace_launch_argument,

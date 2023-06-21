@@ -4,7 +4,9 @@
   <world name="default">
     <gui>
       <camera name="user_camera">
-        <pose>0 5 1 0 0.2 -1.5707</pose>
+        <track_visual>
+          <name>robot</name>
+        </track_visual>
       </camera>
       <plugin name="keyboard" filename="libKeyboardGUIPlugin.so"/>
     </gui>
