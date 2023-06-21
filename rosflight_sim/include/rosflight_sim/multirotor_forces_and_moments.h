@@ -71,8 +71,6 @@ private:
   double angular_mu_;
   std::vector<double> ground_effect_;
 
-  double mass_;
-
   // Container for an Actuator
   struct Actuator
   {

@@ -35,8 +35,6 @@ namespace rosflight_sim
 {
 Multirotor::Multirotor(rclcpp::Node::SharedPtr node) : node_(std::move(node))
 {
-  if (!node_->get_parameter("mass", mass_))
-    RCLCPP_ERROR(node_->get_logger(), "Param 'mass' not defined");
   if (!node_->get_parameter("linear_mu", linear_mu_))
     RCLCPP_ERROR(node_->get_logger(), "Param 'linear_mu' not defined");
   if (!node_->get_parameter("angular_mu", angular_mu_))

@@ -14,7 +14,7 @@ Author: James Jackson
   <xacro:property name="namespace" value="$(arg mav_name)" />
   <xacro:property name="use_mesh_file" value="true" />
   <xacro:property name="mesh_file" value="$(arg mesh_file_location)" />
-  <xacro:property name="mass" value="2.856" />
+  <xacro:property name="mass" value="2.0" />
   <xacro:property name="body_width" value="0.505" />
   <xacro:property name="body_height" value="0.1" />
   <xacro:property name="body_inertia">

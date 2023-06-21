@@ -1,15 +1,11 @@
-# Based on My Twin Dream parameters
+# Parameters for ROSflight software-in-the-loop simulation.
+# Mass and inertia parameters are defined in fixedwing.urdf.xacro.
+# Based on My Twin Dream parameters.
 
 /fixedwing/rosflight_sil:
   ros__parameters:
-    mass: 3.92
-
-    Jx: 0.213
-    Jy: 0.171
-    Jz: 0.350
-    Jxz: 0.04
-
     rho: 1.2682
+
     wing_s: 0.468
     wing_b: 1.8
     wing_c: 0.26

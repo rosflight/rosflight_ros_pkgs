@@ -35,17 +35,6 @@ namespace rosflight_sim
 {
 Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node) : node_(std::move(node))
 {
-  // physical parameters
-  if (!node_->get_parameter("mass", mass_))
-    RCLCPP_ERROR(node_->get_logger(), "Param 'mass' not defined");
-  if (!node_->get_parameter("Jx", Jx_))
-    RCLCPP_ERROR(node_->get_logger(), "Param 'Jx' not defined");
-  if (!node_->get_parameter("Jy", Jy_))
-    RCLCPP_ERROR(node_->get_logger(), "Param 'Jy' not defined");
-  if (!node_->get_parameter("Jz", Jz_))
-    RCLCPP_ERROR(node_->get_logger(), "Param 'Jz' not defined");
-  if (!node_->get_parameter("Jxz", Jxz_))
-    RCLCPP_ERROR(node_->get_logger(), "Param 'Jxz' not defined");
   if (!node_->get_parameter("rho", rho_))
     RCLCPP_ERROR(node_->get_logger(), "Param 'rho' not defined");
 

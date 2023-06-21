@@ -121,13 +121,8 @@ void ROSflightSIL::DeclareMultirotorParams() {
 }
 
 void ROSflightSIL::DeclareFixedwingParams() {
-  node_->declare_parameter("mass", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("Jx", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("Jy", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("Jz", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("Jxz", rclcpp::PARAMETER_DOUBLE);
-
   node_->declare_parameter("rho", rclcpp::PARAMETER_DOUBLE);
+
   node_->declare_parameter("wing_s", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("wing_b", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("wing_c", rclcpp::PARAMETER_DOUBLE);

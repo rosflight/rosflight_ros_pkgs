@@ -44,11 +44,6 @@ private:
   rclcpp::Node::SharedPtr node_;
 
   // physical parameters
-  double mass_;
-  double Jx_;
-  double Jy_;
-  double Jz_;
-  double Jxz_;
   double rho_;
 
   // aerodynamic coefficients
