@@ -118,35 +118,6 @@ void ROSflightSIL::DeclareMultirotorParams() {
   node_->declare_parameter("rotor_T", rclcpp::PARAMETER_DOUBLE_ARRAY);
   node_->declare_parameter("rotor_tau_up", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("rotor_tau_down", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("ground_altitude", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("gyro_stdev", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("gyro_bias_range", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("gyro_bias_walk_stdev", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("acc_stdev", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("acc_bias_range", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("acc_bias_walk_stdev", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("baro_stdev", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("baro_bias_range", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("baro_bias_walk_stdev", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("sonar_stdev", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("sonar_min_range", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("sonar_max_range", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("airspeed_stdev", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("airspeed_bias_range", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("airspeed_bias_walk_stdev", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("mag_stdev", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("mag_bias_range", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("mag_bias_walk_stdev", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("inclination", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("declination", rclcpp::PARAMETER_DOUBLE);
 }
 
 void ROSflightSIL::DeclareFixedwingParams() {

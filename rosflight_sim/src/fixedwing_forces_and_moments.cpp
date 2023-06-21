@@ -36,94 +36,167 @@ namespace rosflight_sim
 Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node) : node_(std::move(node))
 {
   // physical parameters
-  mass_ = node_->get_parameter_or("mass", 3.92);
-  Jx_ = node_->get_parameter_or("Jx", 0.213);
-  Jy_ = node_->get_parameter_or("Jy", 0.171);
-  Jz_ = node_->get_parameter_or("Jz", 0.35);
-  Jxz_ = node_->get_parameter_or("Jxz", 0.04);
-  rho_ = node_->get_parameter_or("rho", 1.2682);
+  if (!node_->get_parameter("mass", mass_))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'mass' not defined");
+  if (!node_->get_parameter("Jx", Jx_))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'Jx' not defined");
+  if (!node_->get_parameter("Jy", Jy_))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'Jy' not defined");
+  if (!node_->get_parameter("Jz", Jz_))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'Jz' not defined");
+  if (!node_->get_parameter("Jxz", Jxz_))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'Jxz' not defined");
+  if (!node_->get_parameter("rho", rho_))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'rho' not defined");
 
   // Wing Geometry
-  wing_.S = node_->get_parameter_or("wing_s", 0.468);
-  wing_.b = node_->get_parameter_or("wing_b", 1.8);
-  wing_.c = node_->get_parameter_or("wing_c", 0.26);
-  wing_.M = node_->get_parameter_or("wing_M", 50.0);
-  wing_.epsilon = node_->get_parameter_or("wing_epsilon", 0.1592);
-  wing_.alpha0 = node_->get_parameter_or("wing_alpha0", 0.3040363557);
+  if (!node_->get_parameter("wing_s", wing_.S))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'wing_s' not defined");
+  if (!node_->get_parameter("wing_b", wing_.b))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'wing_b' not defined");
+  if (!node_->get_parameter("wing_c", wing_.c))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'wing_c' not defined");
+  if (!node_->get_parameter("wing_M", wing_.M))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'wing_M' not defined");
+  if (!node_->get_parameter("wing_epsilon", wing_.epsilon))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'wing_epsilon' not defined");
+  if (!node_->get_parameter("wing_alpha0", wing_.alpha0))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'wing_alpha0' not defined");
 
   // Propeller Coefficients
-  prop_.k_motor = node_->get_parameter_or("k_motor", 40.0);
-  prop_.k_T_P = node_->get_parameter_or("k_T_P", 0.0);
-  prop_.k_Omega = node_->get_parameter_or("k_Omega", 0.0);
-  prop_.e = node_->get_parameter_or("prop_e", 0.8);
-  prop_.S = node_->get_parameter_or("prop_S", 0.0314);
-  prop_.C = node_->get_parameter_or("prop_C", 1.0);
+  if (!node_->get_parameter("k_motor", prop_.k_motor))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'k_motor' not defined");
+  if (!node_->get_parameter("k_T_P", prop_.k_T_P))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'k_T_P' not defined");
+  if (!node_->get_parameter("k_Omega", prop_.k_Omega))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'k_Omega' not defined");
+  if (!node_->get_parameter("prop_e", prop_.e))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'prop_e' not defined");
+  if (!node_->get_parameter("prop_S", prop_.S))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'prop_S' not defined");
+  if (!node_->get_parameter("prop_C", prop_.C))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'prop_C' not defined");
 
   // Lift Params
-  CL_.O = node_->get_parameter_or("C_L_O", 0.2869);
-  CL_.alpha = node_->get_parameter_or("C_L_alpha", 5.1378);
-  CL_.beta = node_->get_parameter_or("C_L_beta", 0.0);
-  CL_.p = node_->get_parameter_or("C_L_p", 0.0);
-  CL_.q = node_->get_parameter_or("C_L_q", 1.7102);
-  CL_.r = node_->get_parameter_or("C_L_r", 0.0);
-  CL_.delta_a = node_->get_parameter_or("C_L_delta_a", 0.0);
-  CL_.delta_e = node_->get_parameter_or("C_L_delta_e", 0.5202);
-  CL_.delta_r = node_->get_parameter_or("C_L_delta_r", 0.0);
+  if (!node_->get_parameter("C_L_O", CL_.O))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_L_O' not defined");
+  if (!node_->get_parameter("C_L_alpha", CL_.alpha))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_L_alpha' not defined");
+  if (!node_->get_parameter("C_L_beta", CL_.beta))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_L_beta' not defined");
+  if (!node_->get_parameter("C_L_p", CL_.p))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_L_p' not defined");
+  if (!node_->get_parameter("C_L_q", CL_.q))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_L_q' not defined");
+  if (!node_->get_parameter("C_L_r", CL_.r))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_L_r' not defined");
+  if (!node_->get_parameter("C_L_delta_a", CL_.delta_a))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_L_delta_a' not defined");
+  if (!node_->get_parameter("C_L_delta_e", CL_.delta_e))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_L_delta_e' not defined");
+  if (!node_->get_parameter("C_L_delta_r", CL_.delta_r))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_L_delta_r' not defined");
 
   // Drag Params
-  CD_.O = node_->get_parameter_or("C_D_O", 0.03087);
-  CD_.alpha = node_->get_parameter_or("C_D_alpha", 0.0043021);
-  CD_.beta = node_->get_parameter_or("C_D_beta", 0.0);
-  CD_.p = node_->get_parameter_or("C_D_p", 0.02815);
-  CD_.q = node_->get_parameter_or("C_D_q", 0.2514);
-  CD_.r = node_->get_parameter_or("C_D_r", 0.0);
-  CD_.delta_a = node_->get_parameter_or("C_D_delta_a", 0.0);
-  CD_.delta_e = node_->get_parameter_or("C_D_delta_e", 0.01879);
-  CD_.delta_r = node_->get_parameter_or("C_D_delta_r", 0.0);
+  if (!node_->get_parameter("C_D_O", CD_.O))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_D_O' not defined");
+  if (!node_->get_parameter("C_D_alpha", CD_.alpha))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_D_alpha' not defined");
+  if (!node_->get_parameter("C_D_beta", CD_.beta))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_D_beta' not defined");
+  if (!node_->get_parameter("C_D_p", CD_.p))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_D_p' not defined");
+  if (!node_->get_parameter("C_D_q", CD_.q))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_D_q' not defined");
+  if (!node_->get_parameter("C_D_r", CD_.r))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_D_r' not defined");
+  if (!node_->get_parameter("C_D_delta_a", CD_.delta_a))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_D_delta_a' not defined");
+  if (!node_->get_parameter("C_D_delta_e", CD_.delta_e))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_D_delta_e' not defined");
+  if (!node_->get_parameter("C_D_delta_r", CD_.delta_r))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_D_delta_r' not defined");
 
   // ell Params (x axis moment)
-  Cell_.O = node_->get_parameter_or("C_ell_O", 0.0);
-  Cell_.alpha = node_->get_parameter_or("C_ell_alpha", 0.0);
-  Cell_.beta = node_->get_parameter_or("C_ell_beta", 0.0193);
-  Cell_.p = node_->get_parameter_or("C_ell_p", -0.5406);
-  Cell_.q = node_->get_parameter_or("C_ell_q", 0.0);
-  Cell_.r = node_->get_parameter_or("C_ell_r", 0.1929);
-  Cell_.delta_a = node_->get_parameter_or("C_ell_delta_a", 0.2818);
-  Cell_.delta_e = node_->get_parameter_or("C_ell_delta_e", 0.0);
-  Cell_.delta_r = node_->get_parameter_or("C_ell_delta_r", 0.00096);
+  if (!node_->get_parameter("C_ell_O", Cell_.O))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_ell_O' not defined");
+  if (!node_->get_parameter("C_ell_alpha", Cell_.alpha))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_ell_alpha' not defined");
+  if (!node_->get_parameter("C_ell_beta", Cell_.beta))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_ell_beta' not defined");
+  if (!node_->get_parameter("C_ell_p", Cell_.p))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_ell_p' not defined");
+  if (!node_->get_parameter("C_ell_q", Cell_.q))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_ell_q' not defined");
+  if (!node_->get_parameter("C_ell_r", Cell_.r))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_ell_r' not defined");
+  if (!node_->get_parameter("C_ell_delta_a", Cell_.delta_a))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_ell_delta_a' not defined");
+  if (!node_->get_parameter("C_ell_delta_e", Cell_.delta_e))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_ell_delta_e' not defined");
+  if (!node_->get_parameter("C_ell_delta_r", Cell_.delta_r))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_ell_delta_r' not defined");
 
   // m Params (y axis moment)
-  Cm_.O = node_->get_parameter_or("C_m_O", 0.0362);
-  Cm_.alpha = node_->get_parameter_or("C_m_alpha", -0.2627);
-  Cm_.beta = node_->get_parameter_or("C_m_beta", 0.0);
-  Cm_.p = node_->get_parameter_or("C_m_p", 0.0);
-  Cm_.q = node_->get_parameter_or("C_m_q", -9.7213);
-  Cm_.r = node_->get_parameter_or("C_m_r", 0.0);
-  Cm_.delta_a = node_->get_parameter_or("C_m_delta_a", 0.0);
-  Cm_.delta_e = node_->get_parameter_or("C_m_delta_e", -1.2392);
-  Cm_.delta_r = node_->get_parameter_or("C_m_delta_r", 0.0);
+  if (!node_->get_parameter("C_m_O", Cm_.O))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_m_O' not defined");
+  if (!node_->get_parameter("C_m_alpha", Cm_.alpha))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_m_alpha' not defined");
+  if (!node_->get_parameter("C_m_beta", Cm_.beta))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_m_beta' not defined");
+  if (!node_->get_parameter("C_m_p", Cm_.p))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_m_p' not defined");
+  if (!node_->get_parameter("C_m_q", Cm_.q))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_m_q' not defined");
+  if (!node_->get_parameter("C_m_r", Cm_.r))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_m_r' not defined");
+  if (!node_->get_parameter("C_m_delta_a", Cm_.delta_a))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_m_delta_a' not defined");
+  if (!node_->get_parameter("C_m_delta_e", Cm_.delta_e))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_m_delta_e' not defined");
+  if (!node_->get_parameter("C_m_delta_r", Cm_.delta_r))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_m_delta_r' not defined");
 
   // n Params (z axis moment)
-  Cn_.O = node_->get_parameter_or("C_n_O", 0.0);
-  Cn_.alpha = node_->get_parameter_or("C_n_alpha", 0.0);
-  Cn_.beta = node_->get_parameter_or("C_n_beta", 0.08557);
-  Cn_.p = node_->get_parameter_or("C_n_p", -0.0498);
-  Cn_.q = node_->get_parameter_or("C_n_q", 0.0);
-  Cn_.r = node_->get_parameter_or("C_n_r", -0.0572);
-  Cn_.delta_a = node_->get_parameter_or("C_n_delta_a", 0.0095);
-  Cn_.delta_e = node_->get_parameter_or("C_n_delta_e", 0.0);
-  Cn_.delta_r = node_->get_parameter_or("C_n_delta_r", -0.06);
+  if (!node_->get_parameter("C_n_O", Cn_.O))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_O' not defined");
+  if (!node_->get_parameter("C_n_alpha", Cn_.alpha))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_alpha' not defined");
+  if (!node_->get_parameter("C_n_beta", Cn_.beta))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_beta' not defined");
+  if (!node_->get_parameter("C_n_p", Cn_.p))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_p' not defined");
+  if (!node_->get_parameter("C_n_q", Cn_.q))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_q' not defined");
+  if (!node_->get_parameter("C_n_r", Cn_.r))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_r' not defined");
+  if (!node_->get_parameter("C_n_delta_a", Cn_.delta_a))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_delta_a' not defined");
+  if (!node_->get_parameter("C_n_delta_e", Cn_.delta_e))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_delta_e' not defined");
+  if (!node_->get_parameter("C_n_delta_r", Cn_.delta_r))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_delta_r' not defined");
+
 
   // Y Params (Sideslip Forces)
-  CY_.O = node_->get_parameter_or("C_Y_O", 0.0);
-  CY_.alpha = node_->get_parameter_or("C_Y_alpha", 0.0);
-  CY_.beta = node_->get_parameter_or("C_Y_beta", -0.2471);
-  CY_.p = node_->get_parameter_or("C_Y_p", -0.07278);
-  CY_.q = node_->get_parameter_or("C_Y_q", 0.0);
-  CY_.r = node_->get_parameter_or("C_Y_r", 0.1849);
-  CY_.delta_a = node_->get_parameter_or("C_Y_delta_a", -0.02344);
-  CY_.delta_e = node_->get_parameter_or("C_Y_delta_e", 0.0);
-  CY_.delta_r = node_->get_parameter_or("C_Y_delta_r", 0.1591);
+  if (!node_->get_parameter("C_Y_O", CY_.O))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_O' not defined");
+  if (!node_->get_parameter("C_Y_alpha", CY_.alpha))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_alpha' not defined");
+  if (!node_->get_parameter("C_Y_beta", CY_.beta))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_beta' not defined");
+  if (!node_->get_parameter("C_Y_p", CY_.p))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_p' not defined");
+  if (!node_->get_parameter("C_Y_q", CY_.q))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_q' not defined");
+  if (!node_->get_parameter("C_Y_r", CY_.r))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_r' not defined");
+  if (!node_->get_parameter("C_Y_delta_a", CY_.delta_a))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_delta_a' not defined");
+  if (!node_->get_parameter("C_Y_delta_e", CY_.delta_e))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_delta_e' not defined");
+  if (!node_->get_parameter("C_Y_delta_r", CY_.delta_r))
+    RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_delta_r' not defined");
 
   wind_ = Eigen::Vector3d::Zero();
 }
