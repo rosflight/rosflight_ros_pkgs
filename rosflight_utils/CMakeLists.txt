@@ -117,6 +117,7 @@ install(
 install(
   DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
+  FILES_MATCHING PATTERN "*.xml"
 )
 
 # TODO: Update remaining python scripts to ROS2

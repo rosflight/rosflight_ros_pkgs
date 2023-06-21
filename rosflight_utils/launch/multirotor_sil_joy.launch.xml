@@ -1,0 +1,17 @@
+<!-- This is a launch file that runs the bare minimum requirements fly a multirotor in gazebo.   -->
+
+<launch>
+  <!-- Start Simulator -->
+  <include file="$(find-pkg-share rosflight_sim)/launch/multirotor.launch.py"/>
+
+  <!-- ROS interface rosflight_io -->
+  <node name="rosflight_io" pkg="rosflight" exec="rosflight_io">
+    <param name="udp" value="true"/>
+  </node>
+
+  <!-- Node for RC from a joystick to implement safety pilot override -->
+  <node name="safety_pilot" pkg="rosflight_utils" exec="rc_joy.py">
+    <remap from="/RC" to="/multirotor/RC"/>
+  </node>
+
+</launch>
