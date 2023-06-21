@@ -61,6 +61,10 @@ def generate_launch_description():
     gazebo_namespace_launch_argument = DeclareLaunchArgument(
         'gazebo_namespace', default_value=TextSubstitution(text="")
     )
+    log_level = LaunchConfiguration('ros_log_level')
+    log_level_launch_argument = DeclareLaunchArgument(
+        'ros_log_level', default_value=TextSubstitution(text='info')
+    )
 
     # Start simulator
     gazebo_launch_include = IncludeLaunchDescription(
@@ -110,6 +114,7 @@ def generate_launch_description():
             '-y', y,
             '-z', z,
             '-Y', yaw,
+            '--ros-args', '--log-level', log_level
         ]
     )
 
@@ -125,6 +130,7 @@ def generate_launch_description():
         tf_prefix_launch_argument,
         robot_namespace_launch_argument,
         gazebo_namespace_launch_argument,
+        log_level_launch_argument,
         gazebo_launch_include,
         spawn_vehicle_node
     ])
