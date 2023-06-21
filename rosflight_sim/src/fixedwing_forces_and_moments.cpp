@@ -47,7 +47,7 @@ Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node) : node_(std::move(node))
   wing_.S = node_->get_parameter_or("wing_s", 0.468);
   wing_.b = node_->get_parameter_or("wing_b", 1.8);
   wing_.c = node_->get_parameter_or("wing_c", 0.26);
-  wing_.M = node_->get_parameter_or("wing_M", 50);
+  wing_.M = node_->get_parameter_or("wing_M", 50.0);
   wing_.epsilon = node_->get_parameter_or("wing_epsilon", 0.1592);
   wing_.alpha0 = node_->get_parameter_or("wing_alpha0", 0.3040363557);
 

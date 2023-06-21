@@ -35,20 +35,17 @@ namespace rosflight_sim
 {
 Multirotor::Multirotor(rclcpp::Node::SharedPtr node) : node_(std::move(node))
 {
-  ground_effect_ = node_->get_parameter_or<std::vector<double>>("ground_effect",
-    {-55.3516, 181.8265, -203.9874, 85.3735, -7.6619});
   mass_ = node_->get_parameter_or<double>("mass", 2.0);
   linear_mu_ = node_->get_parameter_or<double>("linear_mu", 0.05);
   angular_mu_ = node_->get_parameter_or<double>("angular_mu", 0.0005);
-  num_rotors_ = node_->get_parameter_or<int>("num_rotors", 4);
+  ground_effect_ = node_->get_parameter_or<std::vector<double>>("ground_effect",
+    {-55.3516, 181.8265, -203.9874, 85.3735, -7.6619});
 
+  num_rotors_ = node_->get_parameter_or<int>("num_rotors", 4);
   std::vector<double> rotor_positions(3 * num_rotors_);
   std::vector<double> rotor_vector_normal(3 * num_rotors_);
   std::vector<long> rotor_rotation_directions(num_rotors_);
-
-  // For now, just assume all rotors are the same
   Rotor rotor;
-
   rotor_positions = node_->get_parameter_or<std::vector<double>>("rotor_positions", {
      0.1926,  0.230, -0.0762,
     -0.1907,  0.205, -0.0762,
@@ -61,6 +58,7 @@ Multirotor::Multirotor(rclcpp::Node::SharedPtr node) : node_(std::move(node))
      0.02553726, -0.02375588, -0.99939157,
     -0.02674078, -0.0223925,  -0.99939157
   });
+
   rotor_rotation_directions = node_->get_parameter_or<std::vector<long>>("rotor_rotation_directions",
     {-1, 1, -1, 1});
   rotor.max = node_->get_parameter_or<double>("rotor_max_thrust", 14.961);

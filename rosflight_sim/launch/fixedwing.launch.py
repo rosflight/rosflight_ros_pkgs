@@ -78,7 +78,8 @@ def generate_launch_description():
             'paused': paused,
             'gui': gui,
             'verbose': verbose,
-            'world': world_file
+            'world': world_file,
+            'params_file': os.path.join(get_package_share_directory('rosflight_sim'), 'params/fixedwing.yaml'),
         }.items()
     )
 
@@ -102,7 +103,6 @@ def generate_launch_description():
         respawn=False,
         output='screen',
         parameters=[
-            os.path.join(get_package_share_directory('rosflight_sim'), 'params/fixedwing.yaml'),
             {'tf_prefix': tf_prefix}
         ],
         arguments=[

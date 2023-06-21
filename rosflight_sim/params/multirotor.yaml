@@ -1,8 +1,6 @@
 # Parameters for ROSflight software-in-the-loop simulation
 
-# TODO: ROS is not setting these parameters for some reason
-
-/**:
+/multirotor/rosflight_sil:
   ros__parameters:
     # Common Global Physical Parameters
     mass: 2.0
@@ -29,7 +27,7 @@
     rotor_tau_up: 0.2164
     rotor_tau_down: 0.1644
 
-    ground_altitude: 1387  #Default in Provo, UT (4551 ft)
+    ground_altitude: 1387.0  #Default in Provo, UT (4551 ft)
 
     # Sensor Noise Parameters (These are empirically-determined)
     gyro_stdev: 0.25
@@ -41,7 +39,7 @@
     acc_bias_walk_stdev: 0.00001
 
     baro_stdev: 4.0
-    baro_bias_range: 500
+    baro_bias_range: 500.0
     baro_bias_walk_stdev: 0.1
 
     sonar_stdev: 0.03

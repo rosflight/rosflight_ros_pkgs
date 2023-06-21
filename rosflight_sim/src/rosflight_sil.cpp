@@ -54,8 +54,6 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   model_ = _model;
   world_ = model_->GetWorld();
 
-  DeclareROSParams();
-
   /*
    * Connect the Plugin to the Robot and Save pointers to the various elements in the simulation
    */
@@ -79,11 +77,17 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   }
 
   if (mav_type_ == "multirotor")
+  {
+    DeclareMultirotorParams();
     mav_dynamics_ = new Multirotor(node_);
-  else if (mav_type_ == "fixedwing")
+  } else if (mav_type_ == "fixedwing")
+  {
+    DeclareFixedwingParams();
     mav_dynamics_ = new Fixedwing(node_);
-  else
+  } else
+  {
     gzthrow("unknown or unsupported mav type\n");
+  }
 
   // Initialize the Firmware
   board_.gazebo_setup(link_, world_, model_, node_, mav_type_);
@@ -98,8 +102,7 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   truth_NWU_pub_ = node_->create_publisher<nav_msgs::msg::Odometry>("truth/NWU", 1);
 }
 
-void ROSflightSIL::DeclareROSParams() {
-  // Declare multirotor parameters
+void ROSflightSIL::DeclareMultirotorParams() {
   node_->declare_parameter("mass", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("linear_mu", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("angular_mu", rclcpp::PARAMETER_DOUBLE);
@@ -144,8 +147,10 @@ void ROSflightSIL::DeclareROSParams() {
 
   node_->declare_parameter("inclination", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("declination", rclcpp::PARAMETER_DOUBLE);
+}
 
-  // Declare fixedwing parameters
+void ROSflightSIL::DeclareFixedwingParams() {
+  node_->declare_parameter("mass", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("Jx", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("Jy", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("Jz", rclcpp::PARAMETER_DOUBLE);

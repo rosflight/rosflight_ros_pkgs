@@ -1,8 +1,6 @@
 # Based on My Twin Dream parameters
 
-# TODO: ROS is not setting these parameters for some reason
-
-/**:
+/fixedwing/rosflight_sil:
   ros__parameters:
     mass: 3.92
 
@@ -15,7 +13,7 @@
     wing_s: 0.468
     wing_b: 1.8
     wing_c: 0.26
-    wing_M: 50
+    wing_M: 50.0
     wing_epsilon: 0.1592
     wing_alpha0: 0.3040363557
 
