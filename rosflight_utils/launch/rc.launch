@@ -1,3 +1,5 @@
+<!-- TODO: Update to ROS2 -->
+
 <!-- This is a launch file that runs the bare minimum requirements to get -->
 <!-- gazebo running.  It requires a relative_nav::Command on /command -->
 <!-- to move the hex, and outputs imu, altimeter, laserscan and RGBD images -->

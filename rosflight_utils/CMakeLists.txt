@@ -11,7 +11,9 @@ endif()
 add_compile_options(-Wall)
 
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(geometry_msgs REQUIRED)
 find_package(rosflight_msgs REQUIRED)
@@ -49,21 +51,23 @@ install(
   INCLUDES DESTINATION include
 )
 
+# TODO: Update to ROS2. Compiles with ROS2 but is untested.
 # joy executable
-add_executable(joy src/joy.cpp)
-target_link_libraries(joy
-  rosflight_utils
-  ${rclcpp_LIBRARIES}
-  ${ament_LIBRARIES}
-  )
-ament_target_dependencies(joy
-  rclcpp
-  gazebo_msgs
-  rosflight_msgs
-  sensor_msgs
-  std_srvs
-)
+#add_executable(joy src/joy.cpp)
+#target_link_libraries(joy
+#  rosflight_utils
+#  ${rclcpp_LIBRARIES}
+#  ${ament_LIBRARIES}
+#  )
+#ament_target_dependencies(joy
+#  rclcpp
+#  gazebo_msgs
+#  rosflight_msgs
+#  sensor_msgs
+#  std_srvs
+#)
 
+# TODO: Update to ROS2
 # rosflight_postprocess executable
 #add_executable(rosflight_postprocess src/rosflight_postprocess.cpp)
 #target_link_libraries(rosflight_postprocess
@@ -79,20 +83,21 @@ ament_target_dependencies(joy
 #  rosbag2_cpp
 #)
 
+# TODO: Update to ROS2. Compiles with ROS2 but is untested.
 # viz executable
-add_executable(viz src/viz.cpp)
-target_link_libraries(viz
-  ${rclcpp_LIBRARIES}
-  ${ament_LIBRARIES}
-)
-ament_target_dependencies(viz
-  geometry_msgs
-  rosflight_msgs
-  sensor_msgs
-  tf2
-  tf2_geometry_msgs
-  visualization_msgs
-)
+#add_executable(viz src/viz.cpp)
+#target_link_libraries(viz
+#  ${rclcpp_LIBRARIES}
+#  ${ament_LIBRARIES}
+#)
+#ament_target_dependencies(viz
+#  geometry_msgs
+#  rosflight_msgs
+#  sensor_msgs
+#  tf2
+#  tf2_geometry_msgs
+#  visualization_msgs
+#)
 
 # Install header files
 install(
@@ -101,17 +106,25 @@ install(
 )
 
 # Install executables
-install(
-  TARGETS joy viz #rosflight_postprocess
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
+#install(
+#  TARGETS joy viz rosflight_postprocess
+#  LIBRARY DESTINATION lib
+#  ARCHIVE DESTINATION lib
+#  RUNTIME DESTINATION lib/${PROJECT_NAME}
+#)
 
 # Install launch files.
 install(
   DIRECTORY launch
-  DESTINATION share/${PROJECT_NAME}/
+  DESTINATION share/${PROJECT_NAME}
+)
+
+# TODO: Update remaining python scripts to ROS2
+# Install python scripts
+install(PROGRAMS
+  src/rc_joy.py
+  src/rc_sim.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_package()
