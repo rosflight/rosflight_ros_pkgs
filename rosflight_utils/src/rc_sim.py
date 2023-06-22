@@ -36,19 +36,19 @@ class DummyRC(Node):
     def arm_callback(self, request, response):
         self.rc_message.values[self.ARM_SWITCH_CHANNEL] = self.CHANNEL_MAX
         response.success = True
-        response.message = 'Armed!'
+        response.message = 'Arm switch enabled!'
         return response
 
     def disarm_callback(self, request, response):
         self.rc_message.values[self.ARM_SWITCH_CHANNEL] = self.CHANNEL_MIN
         response.success = True
-        response.message = 'Disarmed!'
+        response.message = 'Arm switch disabled!'
         return response
 
     def disable_override_callback(self, request, response):
         self.rc_message.values[self.OVERRIDE_CHANNEL] = self.CHANNEL_MIN
         response.success = True
-        response.message = 'Override Disabled!'
+        response.message = 'Override switch disabled!'
         return response
 
     def timer_callback(self):

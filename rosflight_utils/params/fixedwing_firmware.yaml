@@ -1,0 +1,10 @@
+- {name: MOTOR_PWM_UPDATE, type: 6, value: 50}
+- {name: ARM_SPIN_MOTORS, type: 6, value: 0}
+- {name: MOTOR_IDLE_THR, type: 9, value: 0.1}
+- {name: ARM_CHANNEL, type: 6, value: 4}
+- {name: FIXED_WING, type: 6, value: 1}
+- {name: MIXER, type: 6, value: 10}
+- {name: ELEVATOR_REV, type: 6, value: 0}
+- {name: AIL_REV, type: 6, value: 0}
+- {name: RUDDER_REV, type: 6, value: 0}
+- {name: CAL_GYRO_ARM, type: 6, value: 0}

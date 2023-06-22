@@ -113,6 +113,14 @@ install(
 #  RUNTIME DESTINATION lib/${PROJECT_NAME}
 #)
 
+# TODO: Update remaining python scripts to ROS2
+# Install python scripts
+install(PROGRAMS
+  src/rc_joy.py
+  src/rc_sim.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 # Install launch files.
 install(
   DIRECTORY launch
@@ -120,12 +128,10 @@ install(
   FILES_MATCHING PATTERN "*.py"
 )
 
-# TODO: Update remaining python scripts to ROS2
-# Install python scripts
-install(PROGRAMS
-  src/rc_joy.py
-  src/rc_sim.py
-  DESTINATION lib/${PROJECT_NAME}
+# Install params files
+install(
+  DIRECTORY params
+  DESTINATION share/${PROJECT_NAME}
 )
 
 ament_package()
