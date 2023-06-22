@@ -12,6 +12,7 @@ class DummyRC(Node):
     def __init__(self):
         self.THROTTLE_CHANNEL = 2
         self.ARM_SWITCH_CHANNEL = 4
+        self.OVERRIDE_CHANNEL = 5
         self.CHANNEL_MIN = 1000
         self.CHANNEL_MID = 1500
         self.CHANNEL_MAX = 2000
@@ -22,11 +23,13 @@ class DummyRC(Node):
             self.rc_message.values[i] = self.CHANNEL_MID
         self.rc_message.values[self.THROTTLE_CHANNEL] = self.CHANNEL_MIN
         self.rc_message.values[self.ARM_SWITCH_CHANNEL] = self.CHANNEL_MIN
+        self.rc_message.values[self.OVERRIDE_CHANNEL] = self.CHANNEL_MAX
 
         # Initialize ROS components
         super().__init__('dummy_rc')
         self.arm_service = self.create_service(Trigger, 'arm', self.arm_callback)
         self.disarm_service = self.create_service(Trigger, 'disarm', self.disarm_callback)
+        self.disable_override_service = self.create_service(Trigger, 'disable_override', self.disable_override_callback)
         self.rc_publisher = self.create_publisher(RCRaw, 'RC', 10)
         self.timer = self.create_timer(1/50, self.timer_callback)
 
@@ -40,6 +43,12 @@ class DummyRC(Node):
         self.rc_message.values[self.ARM_SWITCH_CHANNEL] = self.CHANNEL_MIN
         response.success = True
         response.message = 'Disarmed!'
+        return response
+
+    def disable_override_callback(self, request, response):
+        self.rc_message.values[self.OVERRIDE_CHANNEL] = self.CHANNEL_MIN
+        response.success = True
+        response.message = 'Override Disabled!'
         return response
 
     def timer_callback(self):
