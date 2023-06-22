@@ -8,7 +8,7 @@ from launch.actions import ExecuteProcess
 
 
 def generate_launch_description():
-    """Initialized rosflight firmware for flying a fixedwing UAV in the sim"""
+    """Initialized rosflight firmware for flying a multirotor UAV in the sim"""
 
     # Call load parameter file service
     param_load_service_exec = ExecuteProcess(
@@ -18,7 +18,7 @@ def generate_launch_description():
             '/param_load_from_file ',
             'rosflight_msgs/srv/ParamFile ',
             '"{filename: "' + os.path.join(
-                get_package_share_directory('rosflight_utils'), 'params/fixedwing_firmware.yaml"}'
+                get_package_share_directory('rosflight_utils'), 'params/multirotor_firmware.yaml"}'
             ) + '"'
         ]],
         shell=True
@@ -35,19 +35,7 @@ def generate_launch_description():
         shell=True
     )
 
-    # Call calibrate airspeed service
-    airspeed_cal_service_exec = ExecuteProcess(
-        cmd=[[
-            FindExecutable(name='ros2'),
-            ' service call ',
-            '/calibrate_airspeed ',
-            'std_srvs/srv/Trigger'
-        ]],
-        shell=True
-    )
-
     return LaunchDescription([
         param_load_service_exec,
-        imu_cal_service_exec,
-        airspeed_cal_service_exec
+        imu_cal_service_exec
     ])
