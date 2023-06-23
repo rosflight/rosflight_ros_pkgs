@@ -104,8 +104,6 @@ public:
 private:
   bool set_param(std::string name, double value);
 
-  rclcpp::Node::SharedPtr node_private_;
-
   message_filters::Subscriber<sensor_msgs::msg::MagneticField> mag_subscriber_;
 
   rclcpp::Client<rosflight_msgs::srv::ParamSet>::SharedPtr param_set_client_;

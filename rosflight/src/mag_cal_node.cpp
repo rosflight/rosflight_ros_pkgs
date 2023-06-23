@@ -41,8 +41,8 @@ int main(int argc, char **argv)
 {
   rclcpp::init(argc, argv);
 
-  rosflight::CalibrateMag calibrate;
-  calibrate.run();
+  auto calibrate_node = std::make_shared<rosflight::CalibrateMag>();
+  calibrate_node->run();
 
   rclcpp::shutdown();
   return 0;
