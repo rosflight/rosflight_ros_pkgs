@@ -3,6 +3,7 @@
 *.bak
 *.user
 .vscode/
+.idea/
 .DS_Store
 .cproject
 .project
