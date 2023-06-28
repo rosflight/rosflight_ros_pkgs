@@ -25,7 +25,7 @@ def generate_launch_description():
     )
     z = LaunchConfiguration('z')
     z_launch_arg = DeclareLaunchArgument(
-        'z', default_value=TextSubstitution(text='0.1')
+        'z', default_value=TextSubstitution(text='0.2')
     )
     yaw = LaunchConfiguration('yaw')
     yaw_launch_arg = DeclareLaunchArgument(

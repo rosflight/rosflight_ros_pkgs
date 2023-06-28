@@ -15,12 +15,11 @@
           <name>robot</name>
         </track_visual>
       </camera>
-      <plugin name="keyboard" filename="libKeyboardGUIPlugin.so"/>
     </gui>
     <physics type="ode">
       <ode>
         <solver>
-          <type>quick</type>
+          <type>world</type>
           <iters>100</iters>
           <sor>1.0</sor>
         </solver>
