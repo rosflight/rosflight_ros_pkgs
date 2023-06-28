@@ -32,41 +32,6 @@ include_directories(include
   ${rclcpp_INCLUDE_DIRS}
 )
 
-# rosflight_utils library
-add_library(rosflight_utils
-  src/simple_pid.cpp
-  src/turbomath.cpp
-)
-target_link_libraries(rosflight_utils
-  ${ament_LIBRARIES}
-  ${rclcpp_LIBRARIES}
-  )
-ament_export_targets(rosflight_utilsTargets HAS_LIBRARY_TARGET)
-install(
-  TARGETS rosflight_utils
-  EXPORT rosflight_utilsTargets
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
-# TODO: Update to ROS2. Compiles with ROS2 but is untested.
-# joy executable
-#add_executable(joy src/joy.cpp)
-#target_link_libraries(joy
-#  rosflight_utils
-#  ${rclcpp_LIBRARIES}
-#  ${ament_LIBRARIES}
-#  )
-#ament_target_dependencies(joy
-#  rclcpp
-#  gazebo_msgs
-#  rosflight_msgs
-#  sensor_msgs
-#  std_srvs
-#)
-
 # TODO: Update to ROS2
 # rosflight_postprocess executable
 #add_executable(rosflight_postprocess src/rosflight_postprocess.cpp)
@@ -107,7 +72,7 @@ install(
 
 # Install executables
 #install(
-#  TARGETS joy viz rosflight_postprocess
+#  TARGETS viz rosflight_postprocess
 #  LIBRARY DESTINATION lib
 #  ARCHIVE DESTINATION lib
 #  RUNTIME DESTINATION lib/${PROJECT_NAME}
