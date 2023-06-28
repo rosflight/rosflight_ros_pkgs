@@ -82,15 +82,15 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link,
   acc_bias_range_ = node_->get_parameter_or<double>("acc_bias_range", 0.6);
   acc_bias_walk_stdev_ = node_->get_parameter_or<double>("acc_bias_walk_stdev", 0.00001);
 
-  mag_stdev_ = node_->get_parameter_or<double>("mag_stdev", 1.15);
-  mag_bias_range_ = node_->get_parameter_or<double>("mag_bias_range", 0.15);
+  // TODO: Update airspeed and mag values with empirically-derived data
+  mag_stdev_ = node_->get_parameter_or<double>("mag_stdev", 0.10);
+  mag_bias_range_ = node_->get_parameter_or<double>("mag_bias_range", 0.10);
   mag_bias_walk_stdev_ = node_->get_parameter_or<double>("mag_bias_walk_stdev", 0.001);
 
   baro_stdev_ = node_->get_parameter_or<double>("baro_stdev", 4.0);
   baro_bias_range_ = node_->get_parameter_or<double>("baro_bias_range", 500);
   baro_bias_walk_stdev_ = node_->get_parameter_or<double>("baro_bias_walk_stdev", 0.1);
 
-  // TODO: Update airspeed and mag values with empirically-derived data
   airspeed_stdev_ = node_->get_parameter_or<double>("airspeed_stdev", 1.15);
   airspeed_bias_range_ = node_->get_parameter_or<double>("airspeed_bias_range", 0.15);
   airspeed_bias_walk_stdev_ = node_->get_parameter_or<double>("airspeed_bias_walk_stdev", 0.001);
