@@ -136,8 +136,6 @@ class RCJoy(Node):
 
         self.joy.init()
 
-        TEMP = self.joy.get_numaxes()
-
         # detect joystick/controller type
         self.get_logger().info('Joystick: %s' % self.joy.get_name())
 

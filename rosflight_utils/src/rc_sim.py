@@ -10,6 +10,8 @@ from std_srvs.srv import Trigger
 
 class DummyRC(Node):
     def __init__(self):
+        update_freq = 50  # hz
+
         self.THROTTLE_CHANNEL = 2
         self.ARM_SWITCH_CHANNEL = 4
         self.OVERRIDE_CHANNEL = 5
@@ -31,7 +33,7 @@ class DummyRC(Node):
         self.disarm_service = self.create_service(Trigger, 'disarm', self.disarm_callback)
         self.disable_override_service = self.create_service(Trigger, 'disable_override', self.disable_override_callback)
         self.rc_publisher = self.create_publisher(RCRaw, 'RC', 10)
-        self.timer = self.create_timer(1/50, self.timer_callback)
+        self.timer = self.create_timer(1/update_freq, self.timer_callback)
 
     def arm_callback(self, request, response):
         self.rc_message.values[self.ARM_SWITCH_CHANNEL] = self.CHANNEL_MAX
@@ -43,6 +45,12 @@ class DummyRC(Node):
         self.rc_message.values[self.ARM_SWITCH_CHANNEL] = self.CHANNEL_MIN
         response.success = True
         response.message = 'Arm switch disabled!'
+        return response
+
+    def enable_override_callback(self, request, response):
+        self.rc_message.values[self.OVERRIDE_CHANNEL] = self.CHANNEL_MAX
+        response.success = True
+        response.message = 'Override switch enabled!'
         return response
 
     def disable_override_callback(self, request, response):
