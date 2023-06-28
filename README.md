@@ -31,7 +31,7 @@ Currently, this repo has only been tested with Ubuntu 22.04 LTS and ROS2 Humble.
 3. Before ROS can be used, the setup file will need to be sourced in every terminal that you want to use ROS in. This can be done with `source /opt/ros/humble/setup.bash`, or you can set bash to source it automatically when opened with `echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc`. You'll need to re-open your terminal for the echo command to take effect.
 4. Install Gazebo for ROS with the following packages: `ros-humble-ros-gz`, `ros-humble-gazebo-plugins`. These packages will not be available until after you've added the ROS apt repositories to your system as instructed in the ROS installation guide. Once installed, set the gazebo setup file to be sourced automatically with `echo "source /usr/share/gazebo/setup.sh" >> ~/.bashrc`.
 5. Install the packages `libeigen-stl-containers-dev` and `python3-pygame`.
-6. Clone the ROSflight repository and it's submodules with `git clone --recursive https://github.com/bsutherland333/rosflight2.git`. Enter that directory with `cd rosflight2`.
+6. Clone the ROSflight repository and it's submodules with `git clone --recursive https://github.com/byu-magicc/rosflight2.git`. Enter that directory with `cd rosflight2`.
 7. Build the repository with `colcon build`. Once built, set the rosflight setup file to be sourced automatically with `echo "source ~/rosflight2/install/setup.bash" >> ~/.bashrc`. If you cloned the repository in a different location than your home directory, updated the path in the command to reflect its location.
 
 ## Building the rosflight_io node only
@@ -39,7 +39,7 @@ Currently, this repo has only been tested with Ubuntu 22.04 LTS and ROS2 Humble.
 1. Before installing any new packages, update your system with `sudo apt update` and`sudo apt upgrade`.
 2. Install ROS2 Humble. Follow the directions on the [ROS2 documentation](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html), installing only the `ros-humble-ros-base` package.
 3. Before ROS can be used, the setup file will need to be sourced in every terminal that you want to use ROS in. This can be done with `source /opt/ros/humble/setup.bash`, or you can set bash to source it automatically when opened with `echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc`. You'll need to re-open your terminal for the echo command to take effect.
-4. Clone the ROSflight repository and it's submodules with `git clone --recursive https://github.com/bsutherland333/rosflight2.git`. Enter that directory with `cd rosflight2`.
+4. Clone the ROSflight repository and it's submodules with `git clone --recursive https://github.com/byu-magicc/rosflight2.git`. Enter that directory with `cd rosflight2`.
 5. Build the repository with `colcon build --packages-select rosflight rosflight_msgs`. Once built, set the rosflight setup file to be sourced automatically with `echo "source ~/rosflight2/install/setup.bash" >> ~/.bashrc`. If you cloned the repository in a different location other than your home directory, updated the path in the command to reflect its location.
 
 ## Running the rosflight_io node
