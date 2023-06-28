@@ -46,7 +46,7 @@ def generate_launch_description():
     world_file = LaunchConfiguration('world_file')
     world_file_launch_arg = DeclareLaunchArgument(
         'world_file', default_value=TextSubstitution(text=os.path.join(
-            get_package_share_directory('rosflight_sim'), 'resources/runway.world'
+            get_package_share_directory('rosflight_sim'), 'resources/empty-asphalt.world'
         ))
     )
     tf_prefix = LaunchConfiguration('tf_prefix')

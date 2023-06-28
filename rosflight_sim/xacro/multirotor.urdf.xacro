@@ -44,7 +44,12 @@ Author: James Jackson
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <cylinder length="${body_height}" radius="${body_width}"/>
+        <xacro:if value="${use_mesh_file}">
+          <mesh filename="${mesh_file}" scale="1 1 1" />
+        </xacro:if>
+        <xacro:unless value="${use_mesh_file}">
+          <cylinder length="${body_height}" radius="${body_width}"/>
+        </xacro:unless>
       </geometry>
     </collision>
   </link>
