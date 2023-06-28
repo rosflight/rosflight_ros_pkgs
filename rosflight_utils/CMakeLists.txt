@@ -81,6 +81,7 @@ install(
 # TODO: Update remaining python scripts to ROS2
 # Install python scripts
 install(PROGRAMS
+  src/command_joy.py
   src/rc_joy.py
   src/rc_sim.py
   DESTINATION lib/${PROJECT_NAME}
