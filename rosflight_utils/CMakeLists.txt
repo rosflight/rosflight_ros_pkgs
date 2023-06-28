@@ -50,19 +50,19 @@ include_directories(include
 
 # TODO: Update to ROS2. Compiles with ROS2 but is untested.
 # viz executable
-#add_executable(viz src/viz.cpp)
-#target_link_libraries(viz
-#  ${rclcpp_LIBRARIES}
-#  ${ament_LIBRARIES}
-#)
-#ament_target_dependencies(viz
-#  geometry_msgs
-#  rosflight_msgs
-#  sensor_msgs
-#  tf2
-#  tf2_geometry_msgs
-#  visualization_msgs
-#)
+add_executable(viz src/viz.cpp)
+target_link_libraries(viz
+  ${rclcpp_LIBRARIES}
+  ${ament_LIBRARIES}
+)
+ament_target_dependencies(viz
+  geometry_msgs
+  rosflight_msgs
+  sensor_msgs
+  tf2
+  tf2_geometry_msgs
+  visualization_msgs
+)
 
 # Install header files
 install(
@@ -71,12 +71,12 @@ install(
 )
 
 # Install executables
-#install(
-#  TARGETS viz rosflight_postprocess
-#  LIBRARY DESTINATION lib
-#  ARCHIVE DESTINATION lib
-#  RUNTIME DESTINATION lib/${PROJECT_NAME}
-#)
+install(
+  TARGETS viz #rosflight_postprocess
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
 
 # TODO: Update remaining python scripts to ROS2
 # Install python scripts
@@ -86,11 +86,17 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
 
-# Install launch files.
+# Install launch files
 install(
   DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
   FILES_MATCHING PATTERN "*.py"
+)
+
+# Install rviz files
+install(
+  DIRECTORY rviz
+  DESTINATION share/${PROJECT_NAME}
 )
 
 # Install params files
