@@ -35,19 +35,7 @@ def generate_launch_description():
         shell=True
     )
 
-    # Call calibrate airspeed service
-    airspeed_cal_service_exec = ExecuteProcess(
-        cmd=[[
-            FindExecutable(name='ros2'),
-            ' service call ',
-            '/calibrate_airspeed ',
-            'std_srvs/srv/Trigger'
-        ]],
-        shell=True
-    )
-
     return LaunchDescription([
         param_load_service_exec,
-        imu_cal_service_exec,
-        airspeed_cal_service_exec
+        imu_cal_service_exec
     ])

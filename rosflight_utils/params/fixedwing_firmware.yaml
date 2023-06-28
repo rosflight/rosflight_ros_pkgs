@@ -8,3 +8,5 @@
 - {name: AIL_REV, type: 6, value: 0}
 - {name: RUDDER_REV, type: 6, value: 0}
 - {name: CAL_GYRO_ARM, type: 6, value: 0}
+- {name: RC_THR_OVRD_CHN, type: 6, value: 4}
+- {name: RC_ATT_OVRD_CHN, type: 6, value: 4}
