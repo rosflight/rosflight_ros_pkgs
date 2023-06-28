@@ -1,6 +1,6 @@
 # ROSflight2
 
-This repository contains the ROS2 stack for interfacing with an autopilot running the ROSflight firmware. For more information on the ROSflight autopilot firmware stack, visit http://rosflight.org. Please note that the documentation currently is written for ROS1 and while most of it is still relevant, some of the details for building and using the ROS2 companion-computer stack (not the ROSflight firmware) has changed. See below for updated instructions.
+This repository contains an in-development ROS2 stack for interfacing with an autopilot running the ROSflight firmware. For more information on the ROSflight autopilot firmware stack, visit http://rosflight.org. Please note that the documentation currently is written for ROS1 and while most of it is still relevant, some of the details for building and using the ROS2 companion-computer stack (not the ROSflight firmware) has changed. See below for updated instructions.
 
 The following sections describe each of the packages contained in this stack.
 
@@ -18,39 +18,39 @@ This package contains the `rosflight_io` node, which provides the core functiona
 
 ## rosflight_utils
 
-This package contains additional supporting scripts and libraries that are not part of the core ROSflight package functionality, including visualization tools for the attitude estimate and magnetometer. This package also helps support the [ROSplane](https://github.com/byu-magicc/rosplane) and [ROScopter](https://github.com/byu-magicc/roscopter) projects.
+This package contains additional supporting scripts and libraries that are not part of the core ROSflight package functionality, including visualization tools for the attitude estimate and magnetometer.
 
 # Updated ROS2 Instructions
 
-Currently, this repo has only been tested with Ubuntu 22.04 LTS and ROS2 Humble, so we recommend you use the same.
+Currently, this repo has only been tested with Ubuntu 22.04 LTS and ROS2 Humble.
 
-## Building a Development Workspace
+## Building the full development workspace
 
 1. Before installing any new packages, update your system with `sudo apt update` and`sudo apt upgrade`.
-2. Install ROS2 Humble. Follow the directions on the ROS2 documentation, making sure to install both the`ros-humble-desktop` and the `ros-dev-tools` packages. (https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html)
+2. Install ROS2 Humble. Follow the directions on the [ROS2 documentation](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html), making sure to install both the`ros-humble-desktop` and the `ros-dev-tools` packages.
 3. Before ROS can be used, the setup file will need to be sourced in every terminal that you want to use ROS in. This can be done with `source /opt/ros/humble/setup.bash`, or you can set bash to source it automatically when opened with `echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc`. You'll need to re-open your terminal for the echo command to take effect.
 4. Install Gazebo for ROS with the following packages: `ros-humble-ros-gz`, `ros-humble-gazebo-plugins`. These packages will not be available until after you've added the ROS apt repositories to your system as instructed in the ROS installation guide. Once installed, set the gazebo setup file to be sourced automatically with `echo "source /usr/share/gazebo/setup.sh" >> ~/.bashrc`.
 5. Install the packages `libeigen-stl-containers-dev` and `python3-pygame`.
 6. Clone the ROSflight repository and it's submodules with `git clone --recursive https://github.com/bsutherland333/rosflight2.git`. Enter that directory with `cd rosflight2`.
 7. Build the repository with `colcon build`. Once built, set the rosflight setup file to be sourced automatically with `echo "source ~/rosflight2/install/setup.bash" >> ~/.bashrc`. If you cloned the repository in a different location than your home directory, updated the path in the command to reflect its location.
 
-## Building a Headless Production Workspace
+## Building the rosflight_io node only
 
 1. Before installing any new packages, update your system with `sudo apt update` and`sudo apt upgrade`.
-2. Install ROS2 Humble. Follow the directions on the ROS2 documentation, installing only the `ros-humble-ros-base` package. (https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html)
+2. Install ROS2 Humble. Follow the directions on the [ROS2 documentation](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html), installing only the `ros-humble-ros-base` package.
 3. Before ROS can be used, the setup file will need to be sourced in every terminal that you want to use ROS in. This can be done with `source /opt/ros/humble/setup.bash`, or you can set bash to source it automatically when opened with `echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc`. You'll need to re-open your terminal for the echo command to take effect.
 4. Clone the ROSflight repository and it's submodules with `git clone --recursive https://github.com/bsutherland333/rosflight2.git`. Enter that directory with `cd rosflight2`.
 5. Build the repository with `colcon build --packages-select rosflight rosflight_msgs`. Once built, set the rosflight setup file to be sourced automatically with `echo "source ~/rosflight2/install/setup.bash" >> ~/.bashrc`. If you cloned the repository in a different location other than your home directory, updated the path in the command to reflect its location.
 
-## Running the rosflight_io Node
+## Running the rosflight_io node
 
 To run the rosflight_io node when connected to real hardware, use the command `ros2 run rosflight rosflight_io --ros-args -p port:/dev/ttyACM0`, replacing `/dev/ttyACM0` with the location of serial port connected to the flight controller. This will launch a ROS2 node on your computer that will publish all sensor topics and create all command subscriptions needed to communicated with the firmware.
 
-## Running the Firmware SIL Simulation
+## Running the Gazebo simulation
 
 All instructions in this section are for a fixedwing simulation, but a multirotor simulation can be launched by replacing all occurrences of `fixedwing` with `multirotor`.
 
-### Launch Gazebo with SIL
+### Launch gazebo with SIL
 
 To run the ROSflight firmware in the Gazebo simulator, launch Gazebo and the rosflight_sil node with `ros2 launch rosflight_sim fixedwing.launch.py`. This will launch a rosflight_sil node that contains the full ROSflight firmware as if it was running on an actual flight computer, the only difference being that instead of calling real sensors it calls Gazebo sensors.
 
