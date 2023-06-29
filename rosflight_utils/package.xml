@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="3">
   <name>rosflight_utils</name>
-  <version>1.3.1</version>
+  <version>2.0.0</version>
   <description>Supporting utilities for ROSflight packages</description>
 
   <maintainer email="gary.ellingson@byu.edu">gary</maintainer>
@@ -19,17 +19,17 @@
 
   <depend>rclcpp</depend>
   <depend>rclpy</depend>
-  <depend>gazebo_msgs</depend>
   <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>python3-pygame</depend>
+
   <depend>rosflight_msgs</depend>
   <depend>rosflight_sim</depend>
   <depend>rosflight_firmware</depend>
   <depend>rosflight</depend>
-  <depend>rosbag</depend>
-  <depend>rosgraph_msgs</depend>
-  <depend>sensor_msgs</depend>
-  <depend>std_srvs</depend>
-  <depend>visualization_msgs</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
