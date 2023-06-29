@@ -68,4 +68,4 @@ To launch the rosflight_sil, rosflight_io node, and rc_joy nodes all at once rat
 
 ### Setup firmware parameters for flying in simulation
 
-Note that in order to actually arm and fly the UAV in the simulator, you still need to set the proper parameters on the flight controller. To do so, launch both the rosflight_sil and rosflight_io nodes. Set all necessary parameters with `ros2 launch rosflight_utils fixedwing_sim_init_firmware.launch.py`. Wait for all the calibration procedures to complete and then save those parameters with `ros2 service call /param_write std_srvs/srv/Trigger`.
+Note that in order to actually arm and fly the UAV in the simulator, you still need to set the proper parameters on the flight controller. To do so, launch both the rosflight_sil and rosflight_io nodes. Set all necessary parameters with `ros2 launch rosflight_utils fixedwing_sim_init_firmware.launch.py`. Wait until launch file completes.

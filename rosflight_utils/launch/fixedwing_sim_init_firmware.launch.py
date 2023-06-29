@@ -35,7 +35,20 @@ def generate_launch_description():
         shell=True
     )
 
+    # Save params
+    write_params_service_exec = ExecuteProcess(
+        cmd=[[
+            'sleep 10 ; ',
+            FindExecutable(name='ros2'),
+            ' service call ',
+            '/param_write ',
+            'std_srvs/srv/Trigger '
+        ]],
+        shell=True
+    )
+
     return LaunchDescription([
         param_load_service_exec,
-        imu_cal_service_exec
+        imu_cal_service_exec,
+        write_params_service_exec
     ])
