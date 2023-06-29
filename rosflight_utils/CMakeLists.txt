@@ -14,41 +14,18 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(geometry_msgs REQUIRED)
 find_package(rosflight_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(std_srvs REQUIRED)
-find_package(rosflight REQUIRED)
-find_package(rosflight_firmware REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
-find_package(rosbag2_cpp REQUIRED)
-find_package(gazebo_msgs REQUIRED)
 
 include_directories(include
   ${ament_INCLUDE_DIRS}
   ${rclcpp_INCLUDE_DIRS}
 )
 
-# TODO: Update to ROS2
-# rosflight_postprocess executable
-#add_executable(rosflight_postprocess src/rosflight_postprocess.cpp)
-#target_link_libraries(rosflight_postprocess
-#  ${rclcpp_LIBRARIES}
-#  ${ament_LIBRARIES}
-#  stdc++fs
-#)
-#ament_target_dependencies(rosflight_postprocess
-#  geometry_msgs
-#  rosflight_msgs
-#  sensor_msgs
-#  rosflight_firmware
-#  rosbag2_cpp
-#)
-
-# TODO: Update to ROS2. Compiles with ROS2 but is untested.
 # viz executable
 add_executable(viz src/viz.cpp)
 target_link_libraries(viz
@@ -72,7 +49,7 @@ install(
 
 # Install executables
 install(
-  TARGETS viz #rosflight_postprocess
+  TARGETS viz
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
