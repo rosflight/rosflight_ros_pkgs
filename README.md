@@ -44,7 +44,7 @@ Currently, this repo has only been tested with Ubuntu 22.04 LTS and ROS2 Humble.
 
 ## Running the rosflight_io node
 
-To run the rosflight_io node when connected to real hardware, use the command `ros2 run rosflight rosflight_io --ros-args -p port:/dev/ttyACM0`, replacing `/dev/ttyACM0` with the location of serial port connected to the flight controller. This will launch a ROS2 node on your computer that will publish all sensor topics and create all command subscriptions needed to communicated with the firmware.
+To run the rosflight_io node when connected to real hardware, use the command `ros2 run rosflight rosflight_io --ros-args -p port:=/dev/ttyACM0`, replacing `/dev/ttyACM0` with the location of serial port connected to the flight controller. This will launch a ROS2 node on your computer that will publish all sensor topics and create all command subscriptions needed to communicated with the firmware.
 
 ## Running the Gazebo simulation
 
