@@ -2,6 +2,21 @@
 Changelog for package rosflight
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.0.0 (pre-release)
+------------------
+* Updated mavrosflight, mag_cal, rosflight_io to ROS2 Humble
+* Removed time and timer abstraction from mavrosflight due to ROS2 difficulties
+* Improved firmware to rosflight_io time offset error message
+* Contributors: Brandon Sutherland, Ian Reid, Brady Anderson
+
+1.4.0 (2020-10-06)
+------------------
+* Decoupled mavrosflight from ROS, enabling it to run standalone
+* Added USE_ROS or STANDALONE flag in mavrosflight
+* Abstracted use of ROS time, timer, and logging functions in mavrosflight
+* GNSS improvements
+* Contributors: BillThePlatypus, Jacob Willis
+
 1.3.1 (2020-03-27)
 ------------------
 

@@ -2,6 +2,19 @@
 Changelog for package rosflight_utils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.0.0 (pre-release)
+------------------
+* Updated viz files, rc_joy.py, rc_sim.py, and command_joy.py to ROS2
+* Rewrote launch files using ROS2 python launch api
+* Added launch and param files to initialize firmware for simulation flying
+* Removed unused simple_pid, turbomath, WaypointConvert utils
+* Removed postprocess utils due to lack of required functionality in ROS2
+* Removed joy c++ node in favor of similar command_joy python node
+* Contributors: Brandon Sutherland, Ian Reid, Brady Anderson
+
+1.4.0 (2020-10-06)
+------------------
+
 1.3.1 (2020-03-27)
 ------------------
 

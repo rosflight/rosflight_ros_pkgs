@@ -2,6 +2,25 @@
 Changelog for package rosflight_sim
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.0.0 (pre-release)
+------------------
+* Updated package to ROS2 and Gazebo 11
+* Removed unused parameters from forces and moments c++ code and yaml param files
+* Updated mass and inertia params in xacro files to match aerodynamic params
+* Removed broken color param from xacro files
+* Changed multirotor to use mesh file (rather than a cylinder) for collision when available
+* Rewrote launch files using ROS2 python launch api
+* Added UAV model files to resources folder
+* Created worlds for fixedwing and multirotor simulations
+* Added error message for missing UAV params
+* Removed sensor noise and bias params from multirotor param file and updated defaults in sil_board
+* Contributors: Brandon Sutherland, Ian Reid, Brady Anderson
+
+1.4.0 (2020-10-06)
+------------------
+* GNSS improvements
+* Contributors: BillThePlatypus
+
 1.3.1 (2020-03-27)
 ------------------
 

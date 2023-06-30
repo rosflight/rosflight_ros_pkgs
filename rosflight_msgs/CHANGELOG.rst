@@ -2,6 +2,16 @@
 Changelog for package rosflight_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.0.0 (pre-release)
+------------------
+* Updated package to ROS2
+* Contributors: Brady Anderson, Brandon Sutherland
+
+1.4.0 (2020-10-06)
+------------------
+* GNSS improvements
+* Contributors: BillThePlatypus
+
 1.3.1 (2020-03-27)
 ------------------
 
