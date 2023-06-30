@@ -29,6 +29,7 @@
 
   <depend>eigen</depend>
   <depend>gazebo</depend>
+  <depend>xacro</depend>
 
   <export>
     <gazebo_ros plugin_path="${prefix}/lib" gazebo_media_path="${prefix}" />
