@@ -37,7 +37,6 @@
 #ifndef MAVROSFLIGHT_MAVROSFLIGHT_H
 #define MAVROSFLIGHT_MAVROSFLIGHT_H
 
-#include <rosflight/mavrosflight/logger_interface.h>
 #include <rosflight/mavrosflight/mavlink_bridge.h>
 #include <rosflight/mavrosflight/mavlink_comm.h>
 #include <rosflight/mavrosflight/param_manager.h>
@@ -55,7 +54,6 @@
 
 namespace mavrosflight
 {
-template <typename DerivedLogger>
 class MavROSflight
 {
 public:
@@ -65,7 +63,6 @@ public:
    * \param baud_rate Serial communication baud rate
    */
   MavROSflight(MavlinkComm& mavlink_comm,
-               LoggerInterface<DerivedLogger>& logger,
                rclcpp::Node::SharedPtr node,
                uint8_t sysid = 1,
                uint8_t compid = 50);
@@ -77,8 +74,8 @@ public:
 
   // public member objects
   MavlinkComm& comm;
-  ParamManager<DerivedLogger> param;
-  TimeManager<DerivedLogger> time;
+  ParamManager param;
+  TimeManager time;
 
 private:
   // member variables

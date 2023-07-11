@@ -81,7 +81,6 @@
 #include <rosflight/mavrosflight/mavlink_listener_interface.h>
 #include <rosflight/mavrosflight/mavrosflight.h>
 #include <rosflight/mavrosflight/param_listener_interface.h>
-#include <rosflight/ros_logger.h>
 
 namespace rosflight_io
 {
@@ -224,9 +223,7 @@ private:
   std::string frame_id_;
 
   mavrosflight::MavlinkComm *mavlink_comm_;
-  mavrosflight::MavROSflight<rosflight::ROSLogger> *mavrosflight_;
-
-  rosflight::ROSLogger logger_;
+  mavrosflight::MavROSflight *mavrosflight_;
 };
 
 } // namespace rosflight_io

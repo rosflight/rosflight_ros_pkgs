@@ -35,30 +35,24 @@
  */
 #include <functional>
 
-#include <rosflight/mavrosflight/interface_adapter.h>
-#include <rosflight/mavrosflight/logger_interface.h>
 #include <rosflight/mavrosflight/time_manager.h>
 
 namespace mavrosflight
 {
-template <typename DerivedLogger>
-TimeManager<DerivedLogger>::TimeManager(MavlinkComm *comm,
-                                        LoggerInterface<DerivedLogger> &logger,
-                                        rclcpp::Node::SharedPtr node) :
+TimeManager::TimeManager(MavlinkComm *comm,
+                         rclcpp::Node::SharedPtr node) :
   comm_(comm),
   offset_alpha_(0.95),
   offset_ns_(0),
   initialized_(false),
-  logger_(logger),
   node_(node)
 {
   comm_->register_mavlink_listener(this);
   time_sync_timer_ = node_->create_wall_timer(
-    std::chrono::milliseconds(100), std::bind(&TimeManager<DerivedLogger>::timer_callback, this), nullptr);
+    std::chrono::milliseconds(100), std::bind(&TimeManager::timer_callback, this), nullptr);
 }
 
-template <typename DerivedLogger>
-void TimeManager<DerivedLogger>::handle_mavlink_message(const mavlink_message_t &msg)
+void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
 {
   std::chrono::nanoseconds now(node_->get_clock()->now().nanoseconds());
 
@@ -78,9 +72,9 @@ void TimeManager<DerivedLogger>::handle_mavlink_message(const mavlink_message_t 
       if (!initialized_ || (offset_ns_ - offset_ns) > std::chrono::milliseconds(10)
           || (offset_ns_ - offset_ns) < std::chrono::milliseconds(-10))
       {
-        logger_.info("Detected time offset of %0.3f s.",
+        RCLCPP_INFO(node_->get_logger(), "Detected time offset of %0.3f s.",
                      abs(std::chrono::duration<double>(offset_ns_ - offset_ns).count()));
-        logger_.debug("FCU time: %0.3f, System time: %0.3f", tsync.tc1 * 1e-9, tsync.ts1 * 1e-9);
+        RCLCPP_DEBUG(node_->get_logger(), "FCU time: %0.3f, System time: %0.3f", tsync.tc1 * 1e-9, tsync.ts1 * 1e-9);
         offset_ns_ = offset_ns;
         initialized_ = true;
       }
@@ -93,8 +87,7 @@ void TimeManager<DerivedLogger>::handle_mavlink_message(const mavlink_message_t 
   }
 }
 
-template <typename DerivedLogger>
-std::chrono::nanoseconds TimeManager<DerivedLogger>::fcu_time_to_system_time(std::chrono::nanoseconds fcu_time)
+std::chrono::nanoseconds TimeManager::fcu_time_to_system_time(std::chrono::nanoseconds fcu_time)
 {
   if (!initialized_)
     return std::chrono::nanoseconds(node_->get_clock()->now().nanoseconds());
@@ -102,21 +95,19 @@ std::chrono::nanoseconds TimeManager<DerivedLogger>::fcu_time_to_system_time(std
   std::chrono::nanoseconds ns = fcu_time + offset_ns_;
   if (ns < std::chrono::nanoseconds::zero())
   {
-    logger_.error_throttle(1, "negative time calculated from FCU: fcu_time=%ld, offset_ns=%ld.  Using system time",
-                           fcu_time, offset_ns_);
+    RCLCPP_ERROR_THROTTLE(node_->get_logger(), *node_->get_clock(), 1,
+                          "negative time calculated from FCU: fcu_time=%ld, offset_ns=%ld.  Using system time",
+                          fcu_time, offset_ns_);
     return std::chrono::nanoseconds(node_->get_clock()->now().nanoseconds());;
   }
   return ns;
 }
 
-template <typename DerivedLogger>
-void TimeManager<DerivedLogger>::timer_callback()
+void TimeManager::timer_callback()
 {
   mavlink_message_t msg;
   mavlink_msg_timesync_pack(1, 50, &msg, 0, node_->get_clock()->now().nanoseconds());
   comm_->send_message(msg);
 }
-
-template class TimeManager<DerivedLoggerType>;
 
 } // namespace mavrosflight

@@ -42,7 +42,6 @@
 #include <rosflight/mavrosflight/mavlink_serial.h>
 #include <rosflight/mavrosflight/mavlink_udp.h>
 #include <rosflight/mavrosflight/serial_exception.h>
-#include <rosflight/ros_logger.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
@@ -56,7 +55,7 @@ using std::placeholders::_2;
 
 namespace rosflight_io
 {
-rosflightIO::rosflightIO() : Node("rosflight_io"), logger_(this->get_logger(), *this->get_clock())
+rosflightIO::rosflightIO() : Node("rosflight_io")
 {
   command_sub_ = this->create_subscription<rosflight_msgs::msg::Command>(
       "command", 1, std::bind(&rosflightIO::commandCallback, this, _1));
@@ -127,7 +126,7 @@ rosflightIO::rosflightIO() : Node("rosflight_io"), logger_(this->get_logger(), *
     mavlink_comm_->open(); //! \todo move this into the MavROSflight constructor
     auto node_ptr = rclcpp::Node::SharedPtr(this);
     mavrosflight_ =
-        new mavrosflight::MavROSflight<rosflight::ROSLogger>(*mavlink_comm_, logger_, node_ptr);
+        new mavrosflight::MavROSflight(*mavlink_comm_, node_ptr);
   }
   catch (mavrosflight::SerialException e)
   {

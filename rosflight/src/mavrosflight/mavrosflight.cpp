@@ -34,23 +34,19 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#include <rosflight/mavrosflight/interface_adapter.h>
-#include <rosflight/mavrosflight/logger_interface.h>
 #include <rosflight/mavrosflight/mavrosflight.h>
 
 namespace mavrosflight
 {
 using boost::asio::serial_port_base;
 
-template <typename DerivedLogger>
-MavROSflight<DerivedLogger>::MavROSflight(MavlinkComm &mavlink_comm,
-                                          LoggerInterface<DerivedLogger> &logger,
-                                          rclcpp::Node::SharedPtr node,
-                                          uint8_t sysid /* = 1 */,
-                                          uint8_t compid /* = 50 */) :
+MavROSflight::MavROSflight(MavlinkComm &mavlink_comm,
+                           rclcpp::Node::SharedPtr node,
+                           uint8_t sysid /* = 1 */,
+                           uint8_t compid /* = 50 */) :
   comm(mavlink_comm),
-  param(&comm, logger, node),
-  time(&comm, logger, node),
+  param(&comm, node),
+  time(&comm, node),
   sysid_(sysid),
   compid_(compid)
 {
@@ -58,12 +54,9 @@ MavROSflight<DerivedLogger>::MavROSflight(MavlinkComm &mavlink_comm,
   // comm.open();
 }
 
-template <typename DerivedLogger>
-MavROSflight<DerivedLogger>::~MavROSflight()
+MavROSflight::~MavROSflight()
 {
   comm.close();
 }
-
-template class MavROSflight<DerivedLoggerType>;
 
 } // namespace mavrosflight
