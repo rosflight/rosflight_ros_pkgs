@@ -123,9 +123,7 @@ rosflightIO::rosflightIO() : Node("rosflight_io")
 
   try
   {
-    auto node_ptr = rclcpp::Node::SharedPtr(this);
-    mavrosflight_ =
-        new mavrosflight::MavROSflight(*mavlink_comm_, node_ptr);
+    mavrosflight_ = new mavrosflight::MavROSflight(*mavlink_comm_, this);
   }
   catch (mavrosflight::SerialException e)
   {

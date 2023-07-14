@@ -63,7 +63,7 @@ public:
    * \param baud_rate Serial communication baud rate
    */
   MavROSflight(MavlinkComm& mavlink_comm,
-               rclcpp::Node::SharedPtr node,
+               rclcpp::Node *const node,
                uint8_t sysid = 1,
                uint8_t compid = 50);
 

@@ -41,7 +41,7 @@ namespace mavrosflight
 using boost::asio::serial_port_base;
 
 MavROSflight::MavROSflight(MavlinkComm &mavlink_comm,
-                           rclcpp::Node::SharedPtr node,
+                           rclcpp::Node *const node,
                            uint8_t sysid /* = 1 */,
                            uint8_t compid /* = 50 */) :
   comm(mavlink_comm),

@@ -39,8 +39,8 @@
 
 namespace mavrosflight
 {
-TimeManager::TimeManager(MavlinkComm *comm,
-                         rclcpp::Node::SharedPtr node) :
+TimeManager::TimeManager(MavlinkComm *const comm,
+                         rclcpp::Node *const node) :
   comm_(comm),
   offset_alpha_(0.95),
   offset_ns_(0),

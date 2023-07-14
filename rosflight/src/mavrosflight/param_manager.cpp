@@ -42,7 +42,7 @@
 
 namespace mavrosflight
 {
-ParamManager::ParamManager(MavlinkComm *const comm, rclcpp::Node::SharedPtr node) :
+ParamManager::ParamManager(MavlinkComm *const comm, rclcpp::Node *const node) :
   comm_(comm),
   unsaved_changes_(false),
   write_request_in_progress_(false),

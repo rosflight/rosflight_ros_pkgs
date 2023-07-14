@@ -56,7 +56,7 @@ namespace mavrosflight
 class ParamManager : public MavlinkListenerInterface
 {
 public:
-  ParamManager(MavlinkComm *const comm, rclcpp::Node::SharedPtr node);
+  ParamManager(MavlinkComm *const comm, rclcpp::Node *const node);
   ~ParamManager();
 
   virtual void handle_mavlink_message(const mavlink_message_t &msg);
@@ -90,8 +90,8 @@ private:
 
   std::vector<ParamListenerInterface *> listeners_;
 
-  rclcpp::Node::SharedPtr node_;
-  MavlinkComm *comm_;
+  rclcpp::Node *const node_;
+  MavlinkComm *const comm_;
   std::map<std::string, Param> params_;
 
   bool unsaved_changes_;
