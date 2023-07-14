@@ -50,8 +50,7 @@ MavROSflight::MavROSflight(MavlinkComm &mavlink_comm,
   sysid_(sysid),
   compid_(compid)
 {
-  //! \todo Fix constructors so that we can open the port in here
-  // comm.open();
+   comm.open();
 }
 
 MavROSflight::~MavROSflight()

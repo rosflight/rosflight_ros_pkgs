@@ -123,7 +123,6 @@ rosflightIO::rosflightIO() : Node("rosflight_io")
 
   try
   {
-    mavlink_comm_->open(); //! \todo move this into the MavROSflight constructor
     auto node_ptr = rclcpp::Node::SharedPtr(this);
     mavrosflight_ =
         new mavrosflight::MavROSflight(*mavlink_comm_, node_ptr);
