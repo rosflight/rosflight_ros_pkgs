@@ -74,11 +74,11 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link,
         << bind_port << "\n";
 
   // Get Sensor Parameters
-  gyro_stdev_ = node_->get_parameter_or<double>("gyro_stdev", 0.25);
+  gyro_stdev_ = node_->get_parameter_or<double>("gyro_stdev", 0.00226);
   gyro_bias_range_ = node_->get_parameter_or<double>("gyro_bias_range", 0.25);
   gyro_bias_walk_stdev_ = node_->get_parameter_or<double>("gyro_bias_walk_stdev", 0.00001);
 
-  acc_stdev_ = node_->get_parameter_or<double>("acc_stdev", 0.561);
+  acc_stdev_ = node_->get_parameter_or<double>("acc_stdev", 0.025);
   acc_bias_range_ = node_->get_parameter_or<double>("acc_bias_range", 0.6);
   acc_bias_walk_stdev_ = node_->get_parameter_or<double>("acc_bias_walk_stdev", 0.00001);
 
