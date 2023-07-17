@@ -266,7 +266,7 @@ void ParamManager::request_param_list()
 void ParamManager::request_param(int index)
 {
   mavlink_message_t param_request_msg;
-  char empty[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
+  char empty[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN] = {0};
   mavlink_msg_param_request_read_pack(1, 50, &param_request_msg, 1, MAV_COMP_ID_ALL, empty, (int16_t)index);
   comm_->send_message(param_request_msg);
 }
