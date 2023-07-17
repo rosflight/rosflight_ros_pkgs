@@ -63,24 +63,16 @@ public:
    * \param baud_rate Serial communication baud rate
    */
   MavROSflight(MavlinkComm& mavlink_comm,
-               rclcpp::Node *const node,
-               uint8_t sysid = 1,
-               uint8_t compid = 50);
+               rclcpp::Node *node);
 
   /**
    * \brief Stops communication and closes the serial port before the object is destroyed
    */
   ~MavROSflight();
 
-  // public member objects
   MavlinkComm& comm;
   ParamManager param;
   TimeManager time;
-
-private:
-  // member variables
-  uint8_t sysid_;
-  uint8_t compid_;
 };
 
 } // namespace mavrosflight

@@ -48,14 +48,8 @@ class Param
 {
 public:
   Param();
-  Param(mavlink_param_value_t msg);
+  explicit Param(mavlink_param_value_t msg);
   Param(std::string name, int index, MAV_PARAM_TYPE type, float raw_value);
-
-  uint16_t pack_param_set_msg(uint8_t system,
-                              uint8_t component,
-                              mavlink_message_t *msg,
-                              uint8_t target_system,
-                              uint8_t target_component);
 
   std::string getName() const;
   int getIndex() const;
@@ -95,8 +89,6 @@ private:
   {
     return static_cast<double>(static_cast<T>(value));
   }
-
-  MavlinkSerial *serial_;
 
   std::string name_;
   int index_;

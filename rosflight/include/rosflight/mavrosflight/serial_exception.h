@@ -59,9 +59,9 @@ public:
 
   SerialException(const SerialException &other) : what_(other.what_) {}
 
-  ~SerialException() throw() {}
+  ~SerialException() noexcept override = default;
 
-  virtual const char *what() const throw() { return what_.c_str(); }
+  const char *what() const noexcept override { return what_.c_str(); }
 
 private:
   std::string what_;

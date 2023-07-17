@@ -56,26 +56,26 @@ namespace mavrosflight
 class ParamManager : public MavlinkListenerInterface
 {
 public:
-  ParamManager(MavlinkComm *const comm, rclcpp::Node *const node);
+  ParamManager(MavlinkComm *comm, rclcpp::Node *node);
   ~ParamManager();
 
-  virtual void handle_mavlink_message(const mavlink_message_t &msg);
+  void handle_mavlink_message(const mavlink_message_t &msg) override;
 
-  bool unsaved_changes();
+  bool unsaved_changes() const;
 
-  bool get_param_value(std::string name, double *value);
-  bool set_param_value(std::string name, double value);
+  bool get_param_value(const std::string& name, double *value);
+  bool set_param_value(const std::string& name, double value);
   bool write_params();
 
   void register_param_listener(ParamListenerInterface *listener);
   void unregister_param_listener(ParamListenerInterface *listener);
 
-  bool save_to_file(std::string filename);
-  bool load_from_file(std::string filename);
+  bool save_to_file(const std::string& filename);
+  bool load_from_file(const std::string& filename);
 
-  int get_num_params();
-  int get_params_received();
-  bool got_all_params();
+  int get_num_params() const;
+  int get_params_received() const;
+  bool got_all_params() const;
 
   void request_params();
 
@@ -86,7 +86,7 @@ private:
   void handle_param_value_msg(const mavlink_message_t &msg);
   void handle_command_ack_msg(const mavlink_message_t &msg);
 
-  bool is_param_id(std::string name);
+  bool is_param_id(const std::string& name);
 
   std::vector<ParamListenerInterface *> listeners_;
 
@@ -98,8 +98,8 @@ private:
   bool write_request_in_progress_;
 
   bool first_param_received_;
-  size_t num_params_;
-  size_t received_count_;
+  int num_params_;
+  int received_count_;
   bool *received_;
   bool got_all_params_;
 

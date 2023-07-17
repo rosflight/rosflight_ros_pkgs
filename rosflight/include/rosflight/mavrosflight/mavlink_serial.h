@@ -59,29 +59,29 @@ public:
   /**
    * \brief Stops communication and closes the serial port before the object is destroyed
    */
-  ~MavlinkSerial();
+  ~MavlinkSerial() override;
 
 private:
   //===========================================================================
   // methods
   //===========================================================================
 
-  virtual bool is_open();
-  virtual void do_open();
-  virtual void do_close();
+  bool is_open() override;
+  void do_open() override;
+  void do_close() override;
 
   /**
    * \brief Initiate an asynchronous read operation
    */
-  virtual void do_async_read(const boost::asio::mutable_buffers_1 &buffer,
-                             boost::function<void(const boost::system::error_code &, size_t)> handler);
+  void do_async_read(const boost::asio::mutable_buffers_1 &buffer,
+                     boost::function<void(const boost::system::error_code &, size_t)> handler) override;
 
   /**
    * \brief Initialize an asynchronous write operation
    * \param check_write_state If true, only start another write operation if a write sequence is not already running
    */
-  virtual void do_async_write(const boost::asio::const_buffers_1 &buffer,
-                              boost::function<void(const boost::system::error_code &, size_t)> handler);
+  void do_async_write(const boost::asio::const_buffers_1 &buffer,
+                      boost::function<void(const boost::system::error_code &, size_t)> handler) override;
 
   //===========================================================================
   // member variables

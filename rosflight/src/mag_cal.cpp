@@ -43,7 +43,10 @@ namespace rosflight
 CalibrateMag::CalibrateMag() :
     Node("calibrate_accel_temp"),
     reference_field_strength_(1.0),
-    calibrating_(false)
+    calibrating_(false),
+    first_time_(true),
+    start_time_(0),
+    measurement_throttle_(0)
 {
   A_ = Eigen::MatrixXd::Zero(3, 3);
   b_ = Eigen::MatrixXd::Zero(3, 1);
@@ -162,7 +165,7 @@ void CalibrateMag::do_mag_calibration()
   magCal(u, A_, b_);
 }
 
-bool CalibrateMag::mag_callback(sensor_msgs::msg::MagneticField::ConstSharedPtr mag)
+bool CalibrateMag::mag_callback(const sensor_msgs::msg::MagneticField::ConstSharedPtr& mag)
 {
   if (calibrating_)
   {
@@ -266,13 +269,13 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, in
     // count inliers and store inliers
     int inlier_count = 0;
     EigenSTL::vector_Vector3d inliers;
-    for (unsigned j = 0; j < meas.size(); j++)
+    for (auto & item : meas)
     {
       // compute the vector from ellipsoid center to surface along
       // measurement vector and a one from the perturbed measurement
       Eigen::Vector3d perturb = Eigen::Vector3d::Ones() * 0.1;
-      Eigen::Vector3d r_int = intersect(meas[j], r_e, Q, ub, k);
-      Eigen::Vector3d r_int_prime = intersect(meas[j] + perturb, r_e, Q, ub, k);
+      Eigen::Vector3d r_int = intersect(item, r_e, Q, ub, k);
+      Eigen::Vector3d r_int_prime = intersect(item + perturb, r_e, Q, ub, k);
 
       // now compute the vector normal to the surface
       Eigen::Vector3d r_align = r_int_prime - r_int;
@@ -281,7 +284,7 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, in
 
       // get vector from surface to measurement and take dot product
       // with surface normal vector to find distance from ellipsoid fit
-      Eigen::Vector3d r_sm = meas[j] - r_e - r_int;
+      Eigen::Vector3d r_sm = item - r_e - r_int;
       double dist = r_sm.dot(i_normal);
       dist_sum += dist;
       dist_count++;
@@ -289,7 +292,7 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, in
       // check measurement distance against inlier threshold
       if (fabs(dist) < inlier_thresh)
       {
-        inliers.push_back(meas[j]);
+        inliers.push_back(item);
         inlier_count++;
       }
     }
@@ -298,9 +301,9 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, in
     if (inlier_count > inlier_count_best)
     {
       inliers_best.clear();
-      for (unsigned j = 0; j < inliers.size(); j++)
+      for (const auto & item : inliers)
       {
-        inliers_best.push_back(inliers[j]);
+        inliers_best.push_back(item);
       }
       inlier_count_best = inlier_count;
     }
@@ -320,11 +323,11 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, in
   return u_final;
 }
 
-Eigen::Vector3d CalibrateMag::intersect(Eigen::Vector3d r_m,
-                                        Eigen::Vector3d r_e,
-                                        Eigen::MatrixXd Q,
-                                        Eigen::MatrixXd ub,
-                                        double k)
+Eigen::Vector3d CalibrateMag::intersect(const Eigen::Vector3d& r_m,
+                                        const Eigen::Vector3d& r_e,
+                                        const Eigen::MatrixXd& Q,
+                                        const Eigen::MatrixXd& ub,
+                                        const double k)
 {
   // form unit vector from ellipsoid center (r_e) pointing to measurement
   Eigen::Vector3d r_em = r_m - r_e;
@@ -347,7 +350,7 @@ void CalibrateMag::eigSort(Eigen::MatrixXd &w, Eigen::MatrixXd &v)
 {
   // create index array
   int idx[w.cols()];
-  for (unsigned i = 0; i < w.cols(); i++)
+  for (int i = 0; i < w.cols(); i++)
   {
     idx[i] = i;
   }
@@ -363,14 +366,14 @@ void CalibrateMag::eigSort(Eigen::MatrixXd &w, Eigen::MatrixXd &v)
       if (w_sort(i) < w_sort(i + 1))
       {
         // switch values
-        double tmp = w_sort(i);
+        double temp_d = w_sort(i);
         w_sort(i) = w_sort(i + 1);
-        w_sort(i + 1) = tmp;
+        w_sort(i + 1) = temp_d;
 
         // switch indices
-        tmp = idx[i];
+        int temp_i = idx[i];
         idx[i] = idx[i + 1];
-        idx[i + 1] = tmp;
+        idx[i + 1] = temp_i;
 
         has_changed = 1; // true
       }
@@ -468,7 +471,7 @@ Eigen::MatrixXd CalibrateMag::ellipsoidLS(EigenSTL::vector_Vector3d meas)
 paper: Renaudin, Valérie, Muhammad Haris Afzal, and Gérard Lachapelle. "Complete triaxis
 magnetometer calibration in the magnetic domain." Journal of sensors 2010 (2010).
 */
-void CalibrateMag::magCal(Eigen::MatrixXd u, Eigen::MatrixXd &A, Eigen::MatrixXd &bb)
+void CalibrateMag::magCal(Eigen::MatrixXd u, Eigen::MatrixXd &A, Eigen::MatrixXd &bb) const
 {
   // unpack coefficients
   double a = u(0);
@@ -514,7 +517,7 @@ void CalibrateMag::magCal(Eigen::MatrixXd u, Eigen::MatrixXd &A, Eigen::MatrixXd
 bool CalibrateMag::set_param(std::string name, double value)
 {
   auto req = std::make_shared<rosflight_msgs::srv::ParamSet::Request>();
-  req->name = name;
+  req->name = std::move(name);
   req->value = value;
 
   auto result = param_set_client_->async_send_request(req);

@@ -83,13 +83,13 @@ public:
    * \brief Register a listener for mavlink messages
    * \param listener Pointer to an object that implements the MavlinkListenerInterface interface
    */
-  void register_mavlink_listener(MavlinkListenerInterface *const listener);
+  void register_mavlink_listener(MavlinkListenerInterface *listener);
 
   /**
    * \brief Unregister a listener for mavlink messages
    * \param listener Pointer to an object that implements the MavlinkListenerInterface interface
    */
-  void unregister_mavlink_listener(MavlinkListenerInterface *const listener);
+  void unregister_mavlink_listener(MavlinkListenerInterface *listener);
 
   /**
    * \brief Send a mavlink message
@@ -118,7 +118,7 @@ private:
    */
   struct WriteBuffer
   {
-    uint8_t data[MAVLINK_MAX_PACKET_LEN];
+    uint8_t data[MAVLINK_MAX_PACKET_LEN] = {0};
     size_t len;
     size_t pos;
 
@@ -177,9 +177,6 @@ private:
 
   boost::thread io_thread_;      //!< thread on which the io service runs
   boost::recursive_mutex mutex_; //!< mutex for threadsafe operation
-
-  uint8_t sysid_;
-  uint8_t compid_;
 
   uint8_t read_buf_raw_[MAVLINK_SERIAL_READ_BUF_SIZE];
 

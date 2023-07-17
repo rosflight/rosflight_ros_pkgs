@@ -98,7 +98,7 @@ std::chrono::nanoseconds TimeManager::fcu_time_to_system_time(std::chrono::nanos
     RCLCPP_ERROR_THROTTLE(node_->get_logger(), *node_->get_clock(), 1,
                           "negative time calculated from FCU: fcu_time=%ld, offset_ns=%ld.  Using system time",
                           fcu_time.count(), offset_ns_.count());
-    return std::chrono::nanoseconds(node_->get_clock()->now().nanoseconds());;
+    return std::chrono::nanoseconds(node_->get_clock()->now().nanoseconds());
   }
   return ns;
 }

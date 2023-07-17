@@ -35,8 +35,8 @@
  * \author Devon Morris <devonmorris1992@gmail.com>
  */
 
-#ifndef ROSFLIGHT_SENSORS_CALBRATE_MAG_H
-#define ROSFLIGHT_SENSORS_CALBRATE_MAG_H
+#ifndef ROSFLIGHT_SENSORS_CALIBRATE_MAG_H
+#define ROSFLIGHT_SENSORS_CALIBRATE_MAG_H
 
 #include <rclcpp/rclcpp.hpp>
 #include <message_filters/subscriber.h>
@@ -75,7 +75,7 @@ public:
    * @brief set_refence_magnetic_field_strength
    * @param reference_magnetic_field
    */
-  bool mag_callback(sensor_msgs::msg::MagneticField::ConstSharedPtr mag);
+  bool mag_callback(const sensor_msgs::msg::MagneticField::ConstSharedPtr& mag);
 
   void set_reference_magnetic_field_strength(double reference_magnetic_field);
 
@@ -83,21 +83,21 @@ public:
    * \brief Check if a calibration is in progress
    * \return True if a calibration is currently in progress
    */
-  bool is_calibrating() { return calibrating_; }
+  bool is_calibrating() const { return calibrating_; }
 
   /// The const stuff is to make it read-only
-  const double a11() const { return A_(0, 0); }
-  const double a12() const { return A_(0, 1); }
-  const double a13() const { return A_(0, 2); }
-  const double a21() const { return A_(1, 0); }
-  const double a22() const { return A_(1, 1); }
-  const double a23() const { return A_(1, 2); }
-  const double a31() const { return A_(2, 0); }
-  const double a32() const { return A_(2, 1); }
-  const double a33() const { return A_(2, 2); }
-  const double bx() const { return b_(0, 0); }
-  const double by() const { return b_(1, 0); }
-  const double bz() const { return b_(2, 0); }
+  double a11() const { return A_(0, 0); }
+  double a12() const { return A_(0, 1); }
+  double a13() const { return A_(0, 2); }
+  double a21() const { return A_(1, 0); }
+  double a22() const { return A_(1, 1); }
+  double a23() const { return A_(1, 2); }
+  double a31() const { return A_(2, 0); }
+  double a32() const { return A_(2, 1); }
+  double a33() const { return A_(2, 2); }
+  double bx() const { return b_(0, 0); }
+  double by() const { return b_(1, 0); }
+  double bz() const { return b_(2, 0); }
 
 private:
   bool set_param(std::string name, double value);
@@ -125,28 +125,32 @@ private:
   Eigen::MatrixXd ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, int iters, double inlier_thresh);
 
   // function to vector from ellipsoid center to surface along input vector
-  Eigen::Vector3d intersect(Eigen::Vector3d r_m, Eigen::Vector3d r_e, Eigen::MatrixXd Q, Eigen::MatrixXd ub, double k);
+  static Eigen::Vector3d intersect(const Eigen::Vector3d& r_m,
+                                   const Eigen::Vector3d& r_e,
+                                   const Eigen::MatrixXd& Q,
+                                   const Eigen::MatrixXd& ub,
+                                   double k);
 
   /*
       sort eigenvalues and eigenvectors output from Eigen library
   */
-  void eigSort(Eigen::MatrixXd &w, Eigen::MatrixXd &v);
+  static void eigSort(Eigen::MatrixXd &w, Eigen::MatrixXd &v);
 
   /*
       This function gets ellipsoid parameters via least squares on ellipsoidal data
       according to the paper: Li, Qingde, and John G. Griffiths. "Least squares ellipsoid
       specific fitting." Geometric modeling and processing, 2004. proceedings. IEEE, 2004.
   */
-  Eigen::MatrixXd ellipsoidLS(EigenSTL::vector_Vector3d meas);
+  static Eigen::MatrixXd ellipsoidLS(EigenSTL::vector_Vector3d meas);
 
   /*
       This function compute magnetometer calibration parameters according to Section 5.3 of the
       paper: Renaudin, Valérie, Muhammad Haris Afzal, and Gérard Lachapelle. "Complete triaxis
       magnetometer calibration in the magnetic domain." Journal of sensors 2010 (2010).
   */
-  void magCal(Eigen::MatrixXd u, Eigen::MatrixXd &A, Eigen::MatrixXd &bb);
+  void magCal(Eigen::MatrixXd u, Eigen::MatrixXd &A, Eigen::MatrixXd &bb) const;
 };
 
 } // namespace rosflight
 
-#endif // MAVROSFLIGHT_SENSORS_MAG_H
+#endif // ROSFLIGHT_SENSORS_CALIBRATE_MAG_H

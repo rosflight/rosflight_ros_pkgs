@@ -61,20 +61,20 @@ public:
   /**
    * \brief Stops communication and closes the serial port before the object is destroyed
    */
-  ~MavlinkUDP();
+  ~MavlinkUDP() override;
 
 private:
   //===========================================================================
   // methods
   //===========================================================================
 
-  virtual bool is_open();
-  virtual void do_open();
-  virtual void do_close();
-  virtual void do_async_read(const boost::asio::mutable_buffers_1 &buffer,
-                             boost::function<void(const boost::system::error_code &, size_t)> handler);
-  virtual void do_async_write(const boost::asio::const_buffers_1 &buffer,
-                              boost::function<void(const boost::system::error_code &, size_t)> handler);
+  bool is_open() override;
+  void do_open() override;
+  void do_close() override;
+  void do_async_read(const boost::asio::mutable_buffers_1 &buffer,
+                     boost::function<void(const boost::system::error_code &, size_t)> handler) override;
+  void do_async_write(const boost::asio::const_buffers_1 &buffer,
+                      boost::function<void(const boost::system::error_code &, size_t)> handler) override;
 
   //===========================================================================
   // member variables

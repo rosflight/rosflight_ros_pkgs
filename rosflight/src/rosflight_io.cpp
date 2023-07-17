@@ -50,19 +50,19 @@
 
 #include <rosflight/rosflight_io.h>
 
-using std::placeholders::_1;
-using std::placeholders::_2;
-
 namespace rosflight_io
 {
-rosflightIO::rosflightIO() : Node("rosflight_io")
+rosflightIO::rosflightIO() : Node("rosflight_io"), prev_status_()
 {
   command_sub_ = this->create_subscription<rosflight_msgs::msg::Command>(
-      "command", 1, std::bind(&rosflightIO::commandCallback, this, _1));
+      "command", 1,
+      std::bind(&rosflightIO::commandCallback, this, std::placeholders::_1));
   aux_command_sub_ = this->create_subscription<rosflight_msgs::msg::AuxCommand>(
-      "aux_command", 1, std::bind(&rosflightIO::auxCommandCallback, this, _1));
+      "aux_command", 1,
+      std::bind(&rosflightIO::auxCommandCallback, this, std::placeholders::_1));
   extatt_sub_ = this->create_subscription<rosflight_msgs::msg::Attitude>(
-      "external_attitude", 1, std::bind(&rosflightIO::externalAttitudeCallback, this, _1));
+      "external_attitude", 1,
+      std::bind(&rosflightIO::externalAttitudeCallback, this, std::placeholders::_1));
 
   rclcpp::QoS qos_transient_local_1_(1);
   qos_transient_local_1_.transient_local();
@@ -72,23 +72,32 @@ rosflightIO::rosflightIO() : Node("rosflight_io")
   error_pub_ = this->create_publisher<rosflight_msgs::msg::Error>("rosflight_errors", qos_transient_local_5_);
 
   param_get_srv_ = this->create_service<rosflight_msgs::srv::ParamGet>(
-      "param_get", std::bind(&rosflightIO::paramGetSrvCallback, this, _1, _2));
+      "param_get",
+      std::bind(&rosflightIO::paramGetSrvCallback, this, std::placeholders::_1, std::placeholders::_2));
   param_set_srv_ = this->create_service<rosflight_msgs::srv::ParamSet>(
-      "param_set", std::bind(&rosflightIO::paramSetSrvCallback, this, _1, _2));
+      "param_set",
+      std::bind(&rosflightIO::paramSetSrvCallback, this, std::placeholders::_1, std::placeholders::_2));
   param_write_srv_ = this->create_service<std_srvs::srv::Trigger>(
-      "param_write", std::bind(&rosflightIO::paramWriteSrvCallback, this, _1, _2));
+      "param_write",
+      std::bind(&rosflightIO::paramWriteSrvCallback, this, std::placeholders::_1, std::placeholders::_2));
   param_save_to_file_srv_ = this->create_service<rosflight_msgs::srv::ParamFile>(
-      "param_save_to_file", std::bind(&rosflightIO::paramSaveToFileCallback, this, _1, _2));
+      "param_save_to_file",
+      std::bind(&rosflightIO::paramSaveToFileCallback, this, std::placeholders::_1, std::placeholders::_2));
   param_load_from_file_srv_ = this->create_service<rosflight_msgs::srv::ParamFile>(
-      "param_load_from_file", std::bind(&rosflightIO::paramLoadFromFileCallback, this, _1, _2));
+      "param_load_from_file",
+      std::bind(&rosflightIO::paramLoadFromFileCallback, this, std::placeholders::_1, std::placeholders::_2));
   imu_calibrate_bias_srv_ = this->create_service<std_srvs::srv::Trigger>(
-      "calibrate_imu", std::bind(&rosflightIO::calibrateImuBiasSrvCallback, this, _1, _2));
+      "calibrate_imu",
+      std::bind(&rosflightIO::calibrateImuBiasSrvCallback, this, std::placeholders::_1, std::placeholders::_2));
   calibrate_rc_srv_ = this->create_service<std_srvs::srv::Trigger>(
-      "calibrate_rc_trim", std::bind(&rosflightIO::calibrateRCTrimSrvCallback, this, _1, _2));
+      "calibrate_rc_trim",
+      std::bind(&rosflightIO::calibrateRCTrimSrvCallback, this, std::placeholders::_1, std::placeholders::_2));
   reboot_srv_ = this->create_service<std_srvs::srv::Trigger>(
-      "reboot", std::bind(&rosflightIO::rebootSrvCallback, this, _1, _2));
+      "reboot",
+      std::bind(&rosflightIO::rebootSrvCallback, this, std::placeholders::_1, std::placeholders::_2));
   reboot_bootloader_srv_ = this->create_service<std_srvs::srv::Trigger>(
-      "reboot_to_bootloader", std::bind(&rosflightIO::rebootToBootloaderSrvCallback, this, _1, _2));
+      "reboot_to_bootloader",
+      std::bind(&rosflightIO::rebootToBootloaderSrvCallback, this, std::placeholders::_1, std::placeholders::_2));
 
   this->declare_parameter("udp", rclcpp::PARAMETER_BOOL);
   this->declare_parameter("bind_host", rclcpp::PARAMETER_STRING);
@@ -549,7 +558,8 @@ void rosflightIO::handle_diff_pressure_msg(const mavlink_message_t &msg)
   if (calibrate_airspeed_srv_ == nullptr)
   {
     calibrate_airspeed_srv_ = this->create_service<std_srvs::srv::Trigger>(
-        "calibrate_airspeed", std::bind(&rosflightIO::calibrateAirspeedSrvCallback, this, _1, _2));
+        "calibrate_airspeed",
+        std::bind(&rosflightIO::calibrateAirspeedSrvCallback, this, std::placeholders::_1, std::placeholders::_2));
   }
 
   if (diff_pressure_pub_ == nullptr)
@@ -616,7 +626,8 @@ void rosflightIO::handle_named_command_struct_msg(const mavlink_message_t &msg)
 
   if (named_command_struct_pubs_.find(name) == named_command_struct_pubs_.end())
   {
-    named_command_struct_pubs_[name] = this->create_publisher<rosflight_msgs::msg::Command>("named_value/command_struct/" + name, 1);
+    named_command_struct_pubs_[name] =
+      this->create_publisher<rosflight_msgs::msg::Command>("named_value/command_struct/" + name, 1);
   }
 
   rosflight_msgs::msg::Command command_msg;
@@ -650,7 +661,8 @@ void rosflightIO::handle_small_baro_msg(const mavlink_message_t &msg)
   if (calibrate_baro_srv_ == nullptr)
   {
     calibrate_baro_srv_ = this->create_service<std_srvs::srv::Trigger>(
-        "calibrate_baro", std::bind(&rosflightIO::calibrateBaroSrvCallback, this, _1, _2));
+        "calibrate_baro",
+        std::bind(&rosflightIO::calibrateBaroSrvCallback, this, std::placeholders::_1, std::placeholders::_2));
   }
 
   if (baro_pub_ == nullptr)
@@ -777,13 +789,18 @@ void rosflightIO::handle_hard_error_msg(const mavlink_message_t &msg)
 {
   mavlink_rosflight_hard_error_t error;
   mavlink_msg_rosflight_hard_error_decode(&msg, &error);
-  RCLCPP_ERROR(this->get_logger(), "Hard fault detected, with error code %u. The flight controller has rebooted.", error.error_code);
+  RCLCPP_ERROR(this->get_logger(),
+               "Hard fault detected, with error code %u. The flight controller has rebooted.",
+               error.error_code);
   RCLCPP_ERROR(this->get_logger(), "Hard fault was at: 0x%x", error.pc);
   if (error.doRearm)
   {
     RCLCPP_ERROR(this->get_logger(), "The firmware has rearmed itself.");
   }
-  RCLCPP_ERROR(this->get_logger(), "The flight controller has rebooted %u time%s.", error.reset_count, error.reset_count > 1 ? "s" : "");
+  RCLCPP_ERROR(this->get_logger(),
+               "The flight controller has rebooted %u time%s.",
+               error.reset_count,
+               error.reset_count > 1 ? "s" : "");
   rosflight_msgs::msg::Error error_msg;
   error_msg.error_message = "A firmware error has caused the flight controller to reboot.";
   error_msg.error_code = error.error_code;
@@ -819,7 +836,7 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
   gnss_msg.header.stamp = stamp;
   gnss_msg.header.frame_id = "ECEF";
   gnss_msg.fix = gnss.fix_type;
-  gnss_msg.time = rclcpp::Time(gnss.time, gnss.nanos);
+  gnss_msg.time = rclcpp::Time((int32_t) gnss.time, gnss.nanos);
   gnss_msg.position[0] = .01 * gnss.ecef_x; //.01 for conversion from cm to m
   gnss_msg.position[1] = .01 * gnss.ecef_y;
   gnss_msg.position[2] = .01 * gnss.ecef_z;
@@ -887,7 +904,7 @@ void rosflightIO::handle_rosflight_gnss_msg(const mavlink_message_t &msg)
   sensor_msgs::msg::TimeReference time_ref;
   time_ref.header.stamp = stamp;
   time_ref.source = "GNSS";
-  time_ref.time_ref = rclcpp::Time(gnss.time, gnss.nanos);
+  time_ref.time_ref = rclcpp::Time((int32_t) gnss.time, gnss.nanos);
 
   if (time_reference_pub_ == nullptr)
     time_reference_pub_ = this->create_publisher<sensor_msgs::msg::TimeReference>("navsat_compat/time_reference", 1);
@@ -934,11 +951,11 @@ void rosflightIO::handle_rosflight_gnss_full_msg(const mavlink_message_t &msg)
   gnss_full_pub_->publish(msg_out);
 }
 
-void rosflightIO::commandCallback(rosflight_msgs::msg::Command::ConstSharedPtr msg)
+void rosflightIO::commandCallback(const rosflight_msgs::msg::Command::ConstSharedPtr& msg)
 {
   //! \todo these are hard-coded to match right now; may want to replace with something more robust
-  OFFBOARD_CONTROL_MODE mode = (OFFBOARD_CONTROL_MODE)msg->mode;
-  OFFBOARD_CONTROL_IGNORE ignore = (OFFBOARD_CONTROL_IGNORE)msg->ignore;
+  auto mode = (OFFBOARD_CONTROL_MODE)msg->mode;
+  auto ignore = (OFFBOARD_CONTROL_IGNORE)msg->ignore;
 
   float x = msg->x;
   float y = msg->y;
@@ -965,7 +982,7 @@ void rosflightIO::commandCallback(rosflight_msgs::msg::Command::ConstSharedPtr m
   mavrosflight_->comm.send_message(mavlink_msg);
 }
 
-void rosflightIO::auxCommandCallback(rosflight_msgs::msg::AuxCommand::ConstSharedPtr msg)
+void rosflightIO::auxCommandCallback(const rosflight_msgs::msg::AuxCommand::ConstSharedPtr& msg)
 {
   uint8_t types[14];
   float values[14];
@@ -979,32 +996,33 @@ void rosflightIO::auxCommandCallback(rosflight_msgs::msg::AuxCommand::ConstShare
   mavrosflight_->comm.send_message(mavlink_msg);
 }
 
-void rosflightIO::externalAttitudeCallback(rosflight_msgs::msg::Attitude::ConstSharedPtr msg)
+void rosflightIO::externalAttitudeCallback(const rosflight_msgs::msg::Attitude::ConstSharedPtr& msg)
 {
   geometry_msgs::msg::Quaternion attitude = msg->attitude;
 //  geometry_msgs::msg::Vector3 angular_velocity = msg->angular_velocity;
 
   mavlink_message_t mavlink_msg;
-  mavlink_msg_external_attitude_pack(1, 50, &mavlink_msg, attitude.w, attitude.x, attitude.y, attitude.z);
+  mavlink_msg_external_attitude_pack(1, 50, &mavlink_msg, (float) attitude.w,
+                                     (float) attitude.x, (float) attitude.y, (float) attitude.z);
   mavrosflight_->comm.send_message(mavlink_msg);
 }
 
-bool rosflightIO::paramGetSrvCallback(rosflight_msgs::srv::ParamGet::Request::SharedPtr req,
-                                      rosflight_msgs::srv::ParamGet::Response::SharedPtr res)
+bool rosflightIO::paramGetSrvCallback(const rosflight_msgs::srv::ParamGet::Request::SharedPtr& req,
+                                      const rosflight_msgs::srv::ParamGet::Response::SharedPtr& res)
 {
   res->exists = mavrosflight_->param.get_param_value(req->name, &res->value);
   return true;
 }
 
-bool rosflightIO::paramSetSrvCallback(rosflight_msgs::srv::ParamSet::Request::SharedPtr req,
-                                      rosflight_msgs::srv::ParamSet::Response::SharedPtr res)
+bool rosflightIO::paramSetSrvCallback(const rosflight_msgs::srv::ParamSet::Request::SharedPtr& req,
+                                      const rosflight_msgs::srv::ParamSet::Response::SharedPtr& res)
 {
   res->exists = mavrosflight_->param.set_param_value(req->name, req->value);
   return true;
 }
 
-bool rosflightIO::paramWriteSrvCallback(std_srvs::srv::Trigger::Request::SharedPtr req,
-                                        std_srvs::srv::Trigger::Response::SharedPtr res)
+bool rosflightIO::paramWriteSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr& req,
+                                        const std_srvs::srv::Trigger::Response::SharedPtr& res)
 {
   res->success = mavrosflight_->param.write_params();
   if (!res->success)
@@ -1015,22 +1033,22 @@ bool rosflightIO::paramWriteSrvCallback(std_srvs::srv::Trigger::Request::SharedP
   return true;
 }
 
-bool rosflightIO::paramSaveToFileCallback(rosflight_msgs::srv::ParamFile::Request::SharedPtr req,
-                                          rosflight_msgs::srv::ParamFile::Response::SharedPtr res)
+bool rosflightIO::paramSaveToFileCallback(const rosflight_msgs::srv::ParamFile::Request::SharedPtr& req,
+                                          const rosflight_msgs::srv::ParamFile::Response::SharedPtr& res)
 {
   res->success = mavrosflight_->param.save_to_file(req->filename);
   return true;
 }
 
-bool rosflightIO::paramLoadFromFileCallback(rosflight_msgs::srv::ParamFile::Request::SharedPtr req,
-                                            rosflight_msgs::srv::ParamFile::Response::SharedPtr res)
+bool rosflightIO::paramLoadFromFileCallback(const rosflight_msgs::srv::ParamFile::Request::SharedPtr& req,
+                                            const rosflight_msgs::srv::ParamFile::Response::SharedPtr& res)
 {
   res->success = mavrosflight_->param.load_from_file(req->filename);
   return true;
 }
 
-bool rosflightIO::calibrateImuBiasSrvCallback(std_srvs::srv::Trigger::Request::SharedPtr req,
-                                              std_srvs::srv::Trigger::Response::SharedPtr res)
+bool rosflightIO::calibrateImuBiasSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr& req,
+                                              const std_srvs::srv::Trigger::Response::SharedPtr& res)
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_ACCEL_CALIBRATION);
@@ -1040,8 +1058,8 @@ bool rosflightIO::calibrateImuBiasSrvCallback(std_srvs::srv::Trigger::Request::S
   return true;
 }
 
-bool rosflightIO::calibrateRCTrimSrvCallback(std_srvs::srv::Trigger::Request::SharedPtr req,
-                                             std_srvs::srv::Trigger::Response::SharedPtr res)
+bool rosflightIO::calibrateRCTrimSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr& req,
+                                             const std_srvs::srv::Trigger::Response::SharedPtr& res)
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_RC_CALIBRATION);
@@ -1088,7 +1106,7 @@ void rosflightIO::send_heartbeat()
   mavrosflight_->comm.send_message(msg);
 }
 
-void rosflightIO::check_error_code(uint8_t current, uint8_t previous, ROSFLIGHT_ERROR_CODE code, std::string name)
+void rosflightIO::check_error_code(uint8_t current, uint8_t previous, ROSFLIGHT_ERROR_CODE code, const std::string& name)
 {
   if ((current & code) != (previous & code))
   {
@@ -1099,8 +1117,8 @@ void rosflightIO::check_error_code(uint8_t current, uint8_t previous, ROSFLIGHT_
   }
 }
 
-bool rosflightIO::calibrateAirspeedSrvCallback(std_srvs::srv::Trigger::Request::SharedPtr req,
-                                               std_srvs::srv::Trigger::Response::SharedPtr res)
+bool rosflightIO::calibrateAirspeedSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr& req,
+                                               const std_srvs::srv::Trigger::Response::SharedPtr& res)
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_AIRSPEED_CALIBRATION);
@@ -1109,8 +1127,8 @@ bool rosflightIO::calibrateAirspeedSrvCallback(std_srvs::srv::Trigger::Request::
   return true;
 }
 
-bool rosflightIO::calibrateBaroSrvCallback(std_srvs::srv::Trigger::Request::SharedPtr req,
-                                           std_srvs::srv::Trigger::Response::SharedPtr res)
+bool rosflightIO::calibrateBaroSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr& req,
+                                           const std_srvs::srv::Trigger::Response::SharedPtr& res)
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_BARO_CALIBRATION);
@@ -1119,8 +1137,8 @@ bool rosflightIO::calibrateBaroSrvCallback(std_srvs::srv::Trigger::Request::Shar
   return true;
 }
 
-bool rosflightIO::rebootSrvCallback(std_srvs::srv::Trigger::Request::SharedPtr req,
-                                    std_srvs::srv::Trigger::Response::SharedPtr res)
+bool rosflightIO::rebootSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr& req,
+                                    const std_srvs::srv::Trigger::Response::SharedPtr& res)
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_REBOOT);
@@ -1129,8 +1147,8 @@ bool rosflightIO::rebootSrvCallback(std_srvs::srv::Trigger::Request::SharedPtr r
   return true;
 }
 
-bool rosflightIO::rebootToBootloaderSrvCallback(std_srvs::srv::Trigger::Request::SharedPtr req,
-                                                std_srvs::srv::Trigger::Response::SharedPtr res)
+bool rosflightIO::rebootToBootloaderSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr& req,
+                                                const std_srvs::srv::Trigger::Response::SharedPtr& res)
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_REBOOT_TO_BOOTLOADER);

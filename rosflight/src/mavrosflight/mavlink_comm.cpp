@@ -40,9 +40,9 @@ namespace mavrosflight
 {
 using boost::asio::serial_port_base;
 
-MavlinkComm::MavlinkComm() : io_service_(), write_in_progress_(false) {}
+MavlinkComm::MavlinkComm() : io_service_(), read_buf_raw_(), msg_in_(), status_in_(), write_in_progress_(false) {}
 
-MavlinkComm::~MavlinkComm() {}
+MavlinkComm::~MavlinkComm() = default;
 
 void MavlinkComm::open()
 {
@@ -69,13 +69,13 @@ void MavlinkComm::close()
 
 void MavlinkComm::register_mavlink_listener(MavlinkListenerInterface *const listener)
 {
-  if (listener == NULL)
+  if (listener == nullptr)
     return;
 
   bool already_registered = false;
-  for (size_t i = 0; i < listeners_.size(); i++)
+  for (auto & item : listeners_)
   {
-    if (listener == listeners_[i])
+    if (listener == item)
     {
       already_registered = true;
       break;
@@ -88,14 +88,14 @@ void MavlinkComm::register_mavlink_listener(MavlinkListenerInterface *const list
 
 void MavlinkComm::unregister_mavlink_listener(MavlinkListenerInterface *const listener)
 {
-  if (listener == NULL)
+  if (listener == nullptr)
     return;
 
-  for (size_t i = 0; i < listeners_.size(); i++)
+  for (int i = 0; i < (int) listeners_.size(); i++)
   {
     if (listener == listeners_[i])
     {
-      listeners_.erase(listeners_.begin() + (int) i);
+      listeners_.erase(listeners_.begin() + i);
       i--;
     }
   }
@@ -122,13 +122,13 @@ void MavlinkComm::async_read_end(const boost::system::error_code &error, size_t 
     return;
   }
 
-  for (size_t i = 0; i < bytes_transferred; i++)
+  for (int i = 0; i < (int) bytes_transferred; i++)
   {
     if (mavlink_parse_char(MAVLINK_COMM_0, read_buf_raw_[i], &msg_in_, &status_in_))
     {
-      for (size_t i = 0; i < listeners_.size(); i++)
+      for (auto & listener : listeners_)
       {
-        listeners_[i]->handle_mavlink_message(msg_in_);
+        listener->handle_mavlink_message(msg_in_);
       }
     }
   }
@@ -138,7 +138,7 @@ void MavlinkComm::async_read_end(const boost::system::error_code &error, size_t 
 
 void MavlinkComm::send_message(const mavlink_message_t &msg)
 {
-  WriteBuffer *buffer = new WriteBuffer();
+  auto *buffer = new WriteBuffer();
   buffer->len = mavlink_msg_to_send_buffer(buffer->data, &msg);
   assert(buffer->len <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
 

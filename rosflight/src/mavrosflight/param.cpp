@@ -38,12 +38,12 @@
 
 namespace mavrosflight
 {
-Param::Param()
+Param::Param() : value_(0), new_value_(0), expected_raw_value_(0)
 {
   init("", -1, MAV_PARAM_TYPE_ENUM_END, 0.0f);
 }
 
-Param::Param(mavlink_param_value_t msg)
+Param::Param(mavlink_param_value_t msg) : value_(0), new_value_(0), expected_raw_value_(0)
 {
   char name[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN + 1];
   memcpy(name, msg.param_id, MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN);
@@ -52,9 +52,10 @@ Param::Param(mavlink_param_value_t msg)
   init(std::string(name), msg.param_index, (MAV_PARAM_TYPE)msg.param_type, msg.param_value);
 }
 
-Param::Param(std::string name, int index, MAV_PARAM_TYPE type, float raw_value)
+Param::Param(std::string name, int index, MAV_PARAM_TYPE type, float raw_value) :
+  value_(0), new_value_(0), expected_raw_value_(0)
 {
-  init(name, index, type, raw_value);
+  init(std::move(name), index, type, raw_value);
 }
 
 std::string Param::getName() const
@@ -112,7 +113,7 @@ bool Param::handleUpdate(const mavlink_param_value_t &msg)
 
 void Param::init(std::string name, int index, MAV_PARAM_TYPE type, float raw_value)
 {
-  name_ = name;
+  name_ = std::move(name);
   index_ = index;
   type_ = type;
   setFromRawValue(raw_value);

@@ -50,10 +50,10 @@ namespace mavrosflight
 class TimeManager : MavlinkListenerInterface
 {
 public:
-  TimeManager(MavlinkComm *const comm,
-              rclcpp::Node *const node);
+  TimeManager(MavlinkComm *comm,
+              rclcpp::Node *node);
 
-  virtual void handle_mavlink_message(const mavlink_message_t &msg);
+  void handle_mavlink_message(const mavlink_message_t &msg) override;
 
   std::chrono::nanoseconds fcu_time_to_system_time(std::chrono::nanoseconds fcu_time);
 
