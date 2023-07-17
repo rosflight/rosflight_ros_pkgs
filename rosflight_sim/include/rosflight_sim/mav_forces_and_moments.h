@@ -39,7 +39,7 @@ namespace rosflight_sim
 class MAVForcesAndMoments
 {
 protected:
-  double sat(double x, double max, double min)
+  static double sat(double x, double max, double min)
   {
     if (x > max)
       return max;
@@ -49,7 +49,7 @@ protected:
       return x;
   }
 
-  double max(double x, double y) { return (x > y) ? x : y; }
+  static double max(double x, double y) { return (x > y) ? x : y; }
 
 public:
   struct Current_State

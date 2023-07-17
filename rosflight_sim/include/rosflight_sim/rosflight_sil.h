@@ -57,7 +57,7 @@ class ROSflightSIL : public gazebo::ModelPlugin
 {
 public:
   ROSflightSIL();
-  ~ROSflightSIL();
+  ~ROSflightSIL() override;
 
 protected:
   void Reset() override;
@@ -93,16 +93,13 @@ private:
   // container for forces
   Eigen::Matrix<double, 6, 1> forces_, applied_forces_;
 
-  // Time Counters
-  uint64_t start_time_us_;
-
   // For reset handlin
   GazeboPose initial_pose_;
 
   // helper functions for converting to and from eigen
-  Eigen::Vector3d vec3_to_eigen_from_gazebo(GazeboVector vec);
-  GazeboVector vec3_to_gazebo_from_eigen(Eigen::Vector3d vec);
-  Eigen::Matrix3d rotation_to_eigen_from_gazebo(GazeboQuaternion vec);
+  static Eigen::Vector3d vec3_to_eigen_from_gazebo(GazeboVector vec);
+  static GazeboVector vec3_to_gazebo_from_eigen(Eigen::Vector3d vec);
+  static Eigen::Matrix3d rotation_to_eigen_from_gazebo(GazeboQuaternion vec);
 
   void DeclareMultirotorParams();
   void DeclareFixedwingParams();

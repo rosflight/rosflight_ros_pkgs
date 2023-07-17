@@ -36,9 +36,12 @@
 
 namespace rosflight_sim
 {
-SIL_Board::SIL_Board() : rosflight_firmware::UDPBoard() {}
+SIL_Board::SIL_Board() :
+  rosflight_firmware::UDPBoard(),
+  random_generator_(std::chrono::system_clock::now().time_since_epoch().count())
+{}
 
-void SIL_Board::init_board(void)
+void SIL_Board::init_board()
 {
   boot_time_ = GZ_COMPAT_GET_SIM_TIME(world_);
 }
@@ -62,11 +65,11 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link,
   world_ = world;
   model_ = model;
   node_ = node;
-  mav_type_ = mav_type;
+  mav_type_ = std::move(mav_type);
 
-  std::string bind_host = node_->get_parameter_or<std::string>("gazebo_host", "localhost");
+  auto bind_host = node_->get_parameter_or<std::string>("gazebo_host", "localhost");
   int bind_port = node_->get_parameter_or<int>("gazebo_port", 14525);
-  std::string remote_host = node_->get_parameter_or<std::string>("ROS_host", "localhost");
+  auto remote_host = node_->get_parameter_or<std::string>("ROS_host", "localhost");
   int remote_port = node_->get_parameter_or<int>("ROS_port", 14520);
 
   set_ports(bind_host, bind_port, remote_host, remote_port);
@@ -103,8 +106,8 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link,
   imu_update_period_us_ = (uint64_t)(1e6 / imu_update_rate_);
 
   // Calculate Magnetic Field Vector (for mag simulation)
-  double inclination = node_->get_parameter_or<double>("inclination", 1.14316156541);
-  double declination = node_->get_parameter_or<double>("declination", 0.198584539676);
+  auto inclination = node_->get_parameter_or<double>("inclination", 1.14316156541);
+  auto declination = node_->get_parameter_or<double>("declination", 0.198584539676);
   GZ_COMPAT_SET_Z(inertial_magnetic_field_, sin(-inclination));
   GZ_COMPAT_SET_X(inertial_magnetic_field_, cos(-inclination) * cos(-declination));
   GZ_COMPAT_SET_Y(inertial_magnetic_field_, cos(-inclination) * sin(-declination));
@@ -120,7 +123,6 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link,
   gps_velocity_stdev_ = node_->get_parameter_or<double>("gps_velocity_stdev", 0.1);
 
   // Configure Noise
-  random_generator_ = std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
   normal_distribution_ = std::normal_distribution<double>(0.0, 1.0);
   uniform_distribution_ = std::uniform_real_distribution<double>(-1.0, 1.0);
 
@@ -196,7 +198,7 @@ void SIL_Board::sensors_init()
 #endif
 }
 
-uint16_t SIL_Board::num_sensor_errors(void)
+uint16_t SIL_Board::num_sensor_errors()
 {
   return 0;
 }
@@ -250,8 +252,8 @@ bool SIL_Board::imu_read(float accel[3], float *temperature, float gyro[3], uint
 
   // Convert to NED for output
   accel[0] = GZ_COMPAT_GET_X(y_acc);
-  accel[1] = -GZ_COMPAT_GET_Y(y_acc);
-  accel[2] = -GZ_COMPAT_GET_Z(y_acc);
+  accel[1] = (float) -GZ_COMPAT_GET_Y(y_acc);
+  accel[2] = (float) -GZ_COMPAT_GET_Z(y_acc);
 
   GazeboVector y_gyro = GZ_COMPAT_GET_RELATIVE_ANGULAR_VEL(link_);
 
@@ -278,15 +280,15 @@ bool SIL_Board::imu_read(float accel[3], float *temperature, float gyro[3], uint
 
   // Convert to NED for output
   gyro[0] = GZ_COMPAT_GET_X(y_gyro);
-  gyro[1] = -GZ_COMPAT_GET_Y(y_gyro);
-  gyro[2] = -GZ_COMPAT_GET_Z(y_gyro);
+  gyro[1] = (float) -GZ_COMPAT_GET_Y(y_gyro);
+  gyro[2] = (float) -GZ_COMPAT_GET_Z(y_gyro);
 
   (*temperature) = 27.0;
   (*time_us) = clock_micros();
   return true;
 }
 
-void SIL_Board::imu_not_responding_error(void)
+void SIL_Board::imu_not_responding_error()
 {
   RCLCPP_ERROR(node_->get_logger(), "[gazebo_rosflight_sil] imu not responding");
 }
@@ -312,11 +314,11 @@ void SIL_Board::mag_read(float mag[3])
 
   // Convert measurement to NED
   mag[0] = GZ_COMPAT_GET_X(y_mag);
-  mag[1] = -GZ_COMPAT_GET_Y(y_mag);
-  mag[2] = -GZ_COMPAT_GET_Z(y_mag);
+  mag[1] = (float) -GZ_COMPAT_GET_Y(y_mag);
+  mag[2] = (float) -GZ_COMPAT_GET_Z(y_mag);
 }
 
-bool SIL_Board::mag_present(void)
+bool SIL_Board::mag_present()
 {
   return true;
 }
@@ -350,7 +352,7 @@ void SIL_Board::baro_read(float *pressure, float *temperature)
   (*temperature) = 27.0f;
 }
 
-bool SIL_Board::diff_pressure_present(void)
+bool SIL_Board::diff_pressure_present()
 {
   if (mav_type_ == "fixedwing")
     return true;
@@ -374,30 +376,30 @@ void SIL_Board::diff_pressure_read(float *diff_pressure, float *temperature)
   airspeed_bias_ += airspeed_bias_walk_stdev_ * normal_distribution_(random_generator_);
   y_as += airspeed_bias_;
 
-  *diff_pressure = y_as;
+  *diff_pressure = (float) y_as;
   *temperature = 27.0;
 }
 
-bool SIL_Board::sonar_present(void)
+bool SIL_Board::sonar_present()
 {
   return true;
 }
 
-float SIL_Board::sonar_read(void)
+float SIL_Board::sonar_read()
 {
   GazeboPose current_state_NWU = GZ_COMPAT_GET_WORLD_POSE(link_);
   double alt = GZ_COMPAT_GET_Z(GZ_COMPAT_GET_POS(current_state_NWU));
 
   if (alt < sonar_min_range_)
   {
-    return sonar_min_range_;
+    return (float) sonar_min_range_;
   }
   else if (alt > sonar_max_range_)
   {
-    return sonar_max_range_;
+    return (float) sonar_max_range_;
   }
   else
-    return alt + sonar_stdev_ * normal_distribution_(random_generator_);
+    return (float) (alt + sonar_stdev_ * normal_distribution_(random_generator_));
 }
 
 bool SIL_Board::battery_voltage_present() const
@@ -412,7 +414,7 @@ float SIL_Board::battery_voltage_read() const
 
 void SIL_Board::battery_voltage_set_multiplier(double multiplier)
 {
-  battery_voltage_multiplier = multiplier;
+  battery_voltage_multiplier = (float) multiplier;
 }
 
 bool SIL_Board::battery_current_present() const
@@ -427,7 +429,7 @@ float SIL_Board::battery_current_read() const
 
 void SIL_Board::battery_current_set_multiplier(double multiplier)
 {
-  battery_current_multiplier = multiplier;
+  battery_current_multiplier = (float) multiplier;
 }
 
 // PWM
@@ -441,7 +443,7 @@ void SIL_Board::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
   latestRC_.values[4] = 1000; // attitude override
   latestRC_.values[5] = 1000; // arm
 
-  for (size_t i = 0; i < 14; i++) pwm_outputs_[i] = 1000;
+  for (int & pwm_output : pwm_outputs_) pwm_output = 1000;
 
   rc_sub_ = node_->create_subscription<rosflight_msgs::msg::RCRaw>(
       "RC", 1, std::bind(&SIL_Board::RCCallback, this, std::placeholders::_1));
@@ -451,7 +453,7 @@ float SIL_Board::rc_read(uint8_t channel)
 {
   if (rc_sub_->get_publisher_count() > 0)
   {
-    return static_cast<float>(latestRC_.values[channel] - 1000) / 1000.0;
+    return static_cast<float>(latestRC_.values[channel] - 1000) / 1000.0f;
   }
 
   // no publishers, set throttle low and center everything else
@@ -470,7 +472,7 @@ void SIL_Board::pwm_disable()
   for (int i = 0; i < 14; i++) pwm_write(i, 0);
 }
 
-bool SIL_Board::rc_lost(void)
+bool SIL_Board::rc_lost()
 {
   return !rc_received_;
 }
@@ -478,7 +480,7 @@ bool SIL_Board::rc_lost(void)
 void SIL_Board::rc_init(rc_type_t rc_type) {}
 
 // non-volatile memory
-void SIL_Board::memory_init(void) {}
+void SIL_Board::memory_init() {}
 
 bool SIL_Board::memory_read(void *dest, size_t len)
 {
@@ -492,7 +494,7 @@ bool SIL_Board::memory_read(void *dest, size_t len)
     return false;
   }
 
-  memory_file.read((char *)dest, len);
+  memory_file.read((char *)dest, (long) len);
   memory_file.close();
   return true;
 }
@@ -511,7 +513,7 @@ bool SIL_Board::memory_write(const void *src, size_t len)
 
   std::ofstream memory_file;
   memory_file.open(directory + "/mem.bin", std::ios::binary);
-  memory_file.write((char *)src, len);
+  memory_file.write((char *)src, (long) len);
   memory_file.close();
   return true;
 }
@@ -526,13 +528,13 @@ bool SIL_Board::motors_spinning()
 
 // LED
 
-void SIL_Board::led0_on(void) {}
-void SIL_Board::led0_off(void) {}
-void SIL_Board::led0_toggle(void) {}
+void SIL_Board::led0_on() {}
+void SIL_Board::led0_off() {}
+void SIL_Board::led0_toggle() {}
 
-void SIL_Board::led1_on(void) {}
-void SIL_Board::led1_off(void) {}
-void SIL_Board::led1_toggle(void) {}
+void SIL_Board::led1_on() {}
+void SIL_Board::led1_off() {}
+void SIL_Board::led1_toggle() {}
 
 void SIL_Board::backup_memory_init() {}
 
@@ -595,32 +597,32 @@ rosflight_firmware::GNSSData SIL_Board::gnss_read()
   Vec3 ecef_vel = sph_coord_.VelocityTransform(local_vel, Coord::LOCAL, Coord::ECEF);
   Vec3 lla = sph_coord_.PositionTransform(local_pos, Coord::LOCAL, Coord::SPHERICAL);
 
-  out.lat = std::round(rad2Deg(lla.X()) * 1e7);
-  out.lon = std::round(rad2Deg(lla.Y()) * 1e7);
-  out.height = std::round(rad2Deg(lla.Z()) * 1e3);
+  out.lat = (int) std::round(rad2Deg(lla.X()) * 1e7);
+  out.lon = (int) std::round(rad2Deg(lla.Y()) * 1e7);
+  out.height = (int) std::round(rad2Deg(lla.Z()) * 1e3);
 
   // For now, we have defined the Gazebo Local Frame as NWU.  This should be fixed in a future
   // commit
-  out.vel_n = std::round(local_vel.X() * 1e3);
-  out.vel_e = std::round(-local_vel.Y() * 1e3);
-  out.vel_d = std::round(-local_vel.Z() * 1e3);
+  out.vel_n = (int) std::round(local_vel.X() * 1e3);
+  out.vel_e = (int) std::round(-local_vel.Y() * 1e3);
+  out.vel_d = (int) std::round(-local_vel.Z() * 1e3);
 
   out.fix_type = rosflight_firmware::GNSSFixType::GNSS_FIX_TYPE_FIX;
   out.time_of_week = GZ_COMPAT_GET_SIM_TIME(world_).Double() * 1000;
   out.time = GZ_COMPAT_GET_SIM_TIME(world_).Double();
-  out.nanos = (GZ_COMPAT_GET_SIM_TIME(world_).Double() - out.time) * 1e9;
+  out.nanos = (uint64_t) std::round((GZ_COMPAT_GET_SIM_TIME(world_).Double() - (double) out.time) * 1e9);
 
-  out.h_acc = std::round(horizontal_gps_stdev_ * 1000.0);
-  out.v_acc = std::round(vertical_gps_stdev_ * 1000.0);
+  out.h_acc = (int) std::round(horizontal_gps_stdev_ * 1000.0);
+  out.v_acc = (int) std::round(vertical_gps_stdev_ * 1000.0);
 
-  out.ecef.x = std::round(ecef_pos.X() * 100);
-  out.ecef.y = std::round(ecef_pos.Y() * 100);
-  out.ecef.z = std::round(ecef_pos.Z() * 100);
-  out.ecef.p_acc = std::round(out.h_acc / 10.0);
-  out.ecef.vx = std::round(ecef_vel.X() * 100);
-  out.ecef.vy = std::round(ecef_vel.Y() * 100);
-  out.ecef.vz = std::round(ecef_vel.Z() * 100);
-  out.ecef.s_acc = std::round(gps_velocity_stdev_ * 100);
+  out.ecef.x = (int) std::round(ecef_pos.X() * 100);
+  out.ecef.y = (int) std::round(ecef_pos.Y() * 100);
+  out.ecef.z = (int) std::round(ecef_pos.Z() * 100);
+  out.ecef.p_acc = (int) std::round(out.h_acc / 10.0);
+  out.ecef.vx = (int) std::round(ecef_vel.X() * 100);
+  out.ecef.vy = (int) std::round(ecef_vel.Y() * 100);
+  out.ecef.vz = (int) std::round(ecef_vel.Z() * 100);
+  out.ecef.s_acc = (int) std::round(gps_velocity_stdev_ * 100);
 
   out.rosflight_timestamp = clock_micros();
 
@@ -658,16 +660,16 @@ rosflight_firmware::GNSSFull SIL_Board::gnss_full_read()
   Vec3 ecef_vel = sph_coord_.VelocityTransform(local_vel, Coord::LOCAL, Coord::ECEF);
   Vec3 lla = sph_coord_.PositionTransform(local_pos, Coord::LOCAL, Coord::SPHERICAL);
 
-  out.lat = std::round(rad2Deg(lla.X()) * 1e7);
-  out.lon = std::round(rad2Deg(lla.Y()) * 1e7);
-  out.height = std::round(rad2Deg(lla.Z()) * 1e3);
+  out.lat = (int) std::round(rad2Deg(lla.X()) * 1e7);
+  out.lon = (int) std::round(rad2Deg(lla.Y()) * 1e7);
+  out.height = (int) std::round(rad2Deg(lla.Z()) * 1e3);
   out.height_msl = out.height; // TODO
 
   // For now, we have defined the Gazebo Local Frame as NWU.  This should be
   // fixed in a future commit
-  out.vel_n = std::round(local_vel.X() * 1e3);
-  out.vel_e = std::round(-local_vel.Y() * 1e3);
-  out.vel_d = std::round(-local_vel.Z() * 1e3);
+  out.vel_n = (int) std::round(local_vel.X() * 1e3);
+  out.vel_e = (int) std::round(-local_vel.Y() * 1e3);
+  out.vel_d = (int) std::round(-local_vel.Z() * 1e3);
 
   out.fix_type = rosflight_firmware::GNSSFixType::GNSS_FIX_TYPE_FIX;
   out.time_of_week = GZ_COMPAT_GET_SIM_TIME(world_).Double() * 1000;
@@ -683,17 +685,17 @@ rosflight_firmware::GNSSFull SIL_Board::gnss_full_read()
   out.t_acc = 0;
   out.nano = 0;
 
-  out.h_acc = std::round(horizontal_gps_stdev_ * 1000.0);
-  out.v_acc = std::round(vertical_gps_stdev_ * 1000.0);
+  out.h_acc = (int) std::round(horizontal_gps_stdev_ * 1000.0);
+  out.v_acc = (int) std::round(vertical_gps_stdev_ * 1000.0);
 
   // Again, TODO switch to using ENU convention per REP
   double vn = local_vel.X();
   double ve = -local_vel.Y();
   double ground_speed = std::sqrt(vn * vn + ve * ve);
-  out.g_speed = std::round(ground_speed * 1000);
+  out.g_speed = (int) std::round(ground_speed * 1000);
 
   double head_mot = std::atan2(ve, vn);
-  out.head_mot = std::round(rad2Deg(head_mot) * 1e5);
+  out.head_mot = (int) std::round(rad2Deg(head_mot) * 1e5);
   out.p_dop = 0.0; // TODO
   out.rosflight_timestamp = clock_micros();
 

@@ -103,11 +103,11 @@ private:
   Eigen::Vector3d wind_;
 
 public:
-  Fixedwing(rclcpp::Node::SharedPtr  node);
+  explicit Fixedwing(rclcpp::Node::SharedPtr  node);
   ~Fixedwing();
 
-  Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x, const int act_cmds[]);
-  void set_wind(Eigen::Vector3d wind);
+  Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x, const int act_cmds[]) override;
+  void set_wind(Eigen::Vector3d wind) override;
 };
 
 } // namespace rosflight_sim

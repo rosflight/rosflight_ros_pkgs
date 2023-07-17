@@ -71,24 +71,6 @@ private:
   double angular_mu_;
   std::vector<double> ground_effect_;
 
-  // Container for an Actuator
-  struct Actuator
-  {
-    double max;
-    double tau_up;
-    double tau_down;
-  };
-
-  // Struct of Actuators
-  // This organizes the physical limitations of the abstract torques and Force
-  struct Actuators
-  {
-    Actuator l;
-    Actuator m;
-    Actuator n;
-    Actuator F;
-  } actuators_;
-
   Eigen::MatrixXd rotor_position_;
   Eigen::MatrixXd rotor_plane_normal_;
   Eigen::VectorXd rotor_rotation_direction_;
@@ -101,11 +83,11 @@ private:
   Eigen::VectorXd actual_torques_;
 
 public:
-  Multirotor(rclcpp::Node::SharedPtr node);
+  explicit Multirotor(rclcpp::Node::SharedPtr node);
   ~Multirotor();
 
-  Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x, const int act_cmds[]);
-  void set_wind(Eigen::Vector3d wind);
+  Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x, const int act_cmds[]) override;
+  void set_wind(Eigen::Vector3d wind) override;
 };
 
 } // namespace rosflight_sim

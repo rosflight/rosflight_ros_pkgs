@@ -31,8 +31,6 @@
 
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
-#include <cstdint>
-#include <cstdio>
 #include <sstream>
 
 #include <eigen3/Eigen/Core>
@@ -41,7 +39,12 @@
 
 namespace rosflight_sim
 {
-ROSflightSIL::ROSflightSIL() : gazebo::ModelPlugin(), comm_(board_), firmware_(board_, comm_) {}
+ROSflightSIL::ROSflightSIL() :
+  gazebo::ModelPlugin(),
+  comm_(board_),
+  firmware_(board_, comm_),
+  mav_dynamics_()
+{}
 
 ROSflightSIL::~ROSflightSIL()
 {
@@ -62,8 +65,8 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   else
     gzerr << "[ROSflight_SIL] Please specify a linkName of the forces and moments plugin.\n";
   link_ = model_->GetLink(link_name_);
-  if (link_ == NULL)
-    gzthrow("[ROSflight_SIL] Couldn't find specified link \"" << link_name_ << "\".");
+  if (link_ == nullptr)
+    gzthrow("[ROSflight_SIL] Couldn't find specified link \"" << link_name_ << "\".")
 
   /* Load Params from Gazebo Server */
   if (_sdf->HasElement("mavType"))
@@ -86,7 +89,7 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
     mav_dynamics_ = new Fixedwing(node_);
   } else
   {
-    gzthrow("unknown or unsupported mav type\n");
+    gzthrow("unknown or unsupported mav type\n")
   }
 
   // Initialize the Firmware
@@ -236,8 +239,6 @@ void ROSflightSIL::Reset()
 {
   link_->SetWorldPose(initial_pose_);
   link_->ResetPhysicsStates();
-  //  start_time_us_ = (uint64_t)(world_->GetSimTime().Double() * 1e3);
-  //  rosflight_init();
 }
 
 void ROSflightSIL::windCallback(const geometry_msgs::msg::Vector3& msg)

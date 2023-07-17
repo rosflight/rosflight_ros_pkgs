@@ -33,7 +33,18 @@
 
 namespace rosflight_sim
 {
-Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node) : node_(std::move(node))
+Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node) :
+  node_(std::move(node)),
+  rho_(0),
+  wing_(),
+  prop_(),
+  CL_(),
+  CD_(),
+  Cm_(),
+  CY_(),
+  Cell_(),
+  Cn_(),
+  delta_()
 {
   if (!node_->get_parameter("rho", rho_))
     RCLCPP_ERROR(node_->get_logger(), "Param 'rho' not defined");
@@ -189,6 +200,8 @@ Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node) : node_(std::move(node))
 
   wind_ = Eigen::Vector3d::Zero();
 }
+
+Fixedwing::~Fixedwing() = default;
 
 Eigen::Matrix<double, 6, 1> Fixedwing::updateForcesAndTorques(Current_State x, const int act_cmds[])
 {

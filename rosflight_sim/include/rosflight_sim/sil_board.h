@@ -56,50 +56,50 @@ class SIL_Board : public rosflight_firmware::UDPBoard
 private:
   GazeboVector inertial_magnetic_field_;
 
-  double imu_update_rate_;
+  double imu_update_rate_ = 0;
 
-  double gyro_stdev_;
-  double gyro_bias_walk_stdev_;
-  double gyro_bias_range_;
+  double gyro_stdev_ = 0;
+  double gyro_bias_walk_stdev_ = 0;
+  double gyro_bias_range_ = 0;
 
-  double acc_stdev_;
-  double acc_bias_range_;
-  double acc_bias_walk_stdev_;
+  double acc_stdev_ = 0;
+  double acc_bias_range_ = 0;
+  double acc_bias_walk_stdev_ = 0;
 
-  double baro_bias_walk_stdev_;
-  double baro_stdev_;
-  double baro_bias_range_;
+  double baro_bias_walk_stdev_ = 0;
+  double baro_stdev_ = 0;
+  double baro_bias_range_ = 0;
 
-  double mag_bias_walk_stdev_;
-  double mag_stdev_;
-  double mag_bias_range_;
+  double mag_bias_walk_stdev_ = 0;
+  double mag_stdev_ = 0;
+  double mag_bias_range_ = 0;
 
-  double airspeed_bias_walk_stdev_;
-  double airspeed_stdev_;
-  double airspeed_bias_range_;
+  double airspeed_bias_walk_stdev_ = 0;
+  double airspeed_stdev_ = 0;
+  double airspeed_bias_range_ = 0;
 
-  double sonar_stdev_;
-  double sonar_max_range_;
-  double sonar_min_range_;
+  double sonar_stdev_ = 0;
+  double sonar_max_range_ = 0;
+  double sonar_min_range_ = 0;
 
-  double horizontal_gps_stdev_;
-  double vertical_gps_stdev_;
-  double gps_velocity_stdev_;
+  double horizontal_gps_stdev_ = 0;
+  double vertical_gps_stdev_ = 0;
+  double gps_velocity_stdev_ = 0;
 
   GazeboVector gyro_bias_;
   GazeboVector acc_bias_;
   GazeboVector mag_bias_;
-  double baro_bias_;
-  double airspeed_bias_;
+  double baro_bias_ = 0;
+  double airspeed_bias_ = 0;
 
   std::default_random_engine random_generator_;
   std::normal_distribution<double> normal_distribution_;
   std::uniform_real_distribution<double> uniform_distribution_;
 
   GazeboVector gravity_;
-  double origin_latitude_;
-  double origin_longitude_;
-  double origin_altitude_;
+  double origin_latitude_ = 0;
+  double origin_longitude_ = 0;
+  double origin_altitude_ = 0;
 
   gazebo::physics::WorldPtr world_;
   gazebo::physics::ModelPtr model_;
@@ -108,16 +108,16 @@ private:
   rclcpp::Node::SharedPtr node_;
   rclcpp::Subscription<rosflight_msgs::msg::RCRaw>::SharedPtr rc_sub_;
   rosflight_msgs::msg::RCRaw latestRC_;
-  bool rc_received_;
+  bool rc_received_ = false;
   rclcpp::Time last_rc_message_;
 
   std::string mav_type_;
-  int pwm_outputs_[14]; // assumes maximum of 14 channels
+  int pwm_outputs_[14] = {0}; // assumes maximum of 14 channels
 
   // Time variables
   gazebo::common::Time boot_time_;
-  uint64_t next_imu_update_time_us_;
-  uint64_t imu_update_period_us_;
+  uint64_t next_imu_update_time_us_ = 0;
+  uint64_t imu_update_period_us_ = 0;
 
   void RCCallback(const rosflight_msgs::msg::RCRaw& msg);
   bool motors_spinning();
@@ -130,13 +130,13 @@ private:
   float battery_voltage_multiplier{1.0};
   float battery_current_multiplier{1.0};
   static constexpr size_t BACKUP_SRAM_SIZE{1024};
-  uint8_t backup_memory_[BACKUP_SRAM_SIZE];
+  uint8_t backup_memory_[BACKUP_SRAM_SIZE] = {0};
 
 public:
   SIL_Board();
 
   // setup
-  void init_board(void) override;
+  void init_board() override;
   void board_reset(bool bootloader) override;
 
   // clock
@@ -146,52 +146,52 @@ public:
 
   // sensors
   void sensors_init() override;
-  uint16_t num_sensor_errors(void) override;
+  uint16_t num_sensor_errors() override;
 
   bool new_imu_data() override;
   bool imu_read(float accel[3], float* temperature, float gyro[3], uint64_t* time_us) override;
   void imu_not_responding_error() override;
 
-  bool mag_present(void) override;
+  bool mag_present() override;
   void mag_read(float mag[3]) override;
-  void mag_update(void) override{};
+  void mag_update() override{};
 
-  bool baro_present(void) override;
+  bool baro_present() override;
   void baro_read(float* pressure, float* temperature) override;
-  void baro_update(void) override{};
+  void baro_update() override{};
 
-  bool diff_pressure_present(void) override;
+  bool diff_pressure_present() override;
   void diff_pressure_read(float* diff_pressure, float* temperature) override;
-  void diff_pressure_update(void) override{};
+  void diff_pressure_update() override{};
 
-  bool sonar_present(void) override;
-  float sonar_read(void) override;
-  void sonar_update(void) override{};
+  bool sonar_present() override;
+  float sonar_read() override;
+  void sonar_update() override{};
 
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)
   void pwm_init(uint32_t refresh_rate, uint16_t idle_pwm) override;
   void pwm_write(uint8_t channel, float value) override;
-  void pwm_disable(void) override;
+  void pwm_disable() override;
 
   // RC
   float rc_read(uint8_t channel) override;
   void rc_init(rc_type_t rc_type) override;
-  bool rc_lost(void) override;
+  bool rc_lost() override;
 
   // non-volatile memory
-  void memory_init(void) override;
+  void memory_init() override;
   bool memory_read(void* dest, size_t len) override;
   bool memory_write(const void* src, size_t len) override;
 
   // LEDs
-  void led0_on(void) override;
-  void led0_off(void) override;
-  void led0_toggle(void) override;
+  void led0_on() override;
+  void led0_off() override;
+  void led0_toggle() override;
 
-  void led1_on(void) override;
-  void led1_off(void) override;
-  void led1_toggle(void) override;
+  void led1_on() override;
+  void led1_off() override;
+  void led1_toggle() override;
 
   // Backup Memory
   void backup_memory_init() override;

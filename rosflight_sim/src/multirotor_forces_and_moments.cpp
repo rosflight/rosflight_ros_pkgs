@@ -33,7 +33,11 @@
 
 namespace rosflight_sim
 {
-Multirotor::Multirotor(rclcpp::Node::SharedPtr node) : node_(std::move(node))
+Multirotor::Multirotor(rclcpp::Node::SharedPtr node) :
+  node_(std::move(node)),
+  num_rotors_(0),
+  linear_mu_(0),
+  angular_mu_(0)
 {
   if (!node_->get_parameter("linear_mu", linear_mu_))
     RCLCPP_ERROR(node_->get_logger(), "Param 'linear_mu' not defined");
@@ -85,7 +89,7 @@ Multirotor::Multirotor(rclcpp::Node::SharedPtr node) : node_(std::move(node))
       motors_[i].normal(j) = rotor_vector_normal[3 * i + j];
     }
     motors_[i].normal.normalize();
-    motors_[i].direction = rotor_rotation_directions[i];
+    motors_[i].direction = (int) rotor_rotation_directions[i];
 
     Eigen::Vector3d moment_from_thrust = motors_[i].position.cross(motors_[i].normal);
     Eigen::Vector3d moment_from_torque = motors_[i].direction * motors_[i].normal;
@@ -122,6 +126,8 @@ Multirotor::Multirotor(rclcpp::Node::SharedPtr node) : node_(std::move(node))
   wind_ = Eigen::Vector3d::Zero();
   prev_time_ = -1;
 }
+
+Multirotor::~Multirotor() = default;
 
 Eigen::Matrix<double, 6, 1> Multirotor::updateForcesAndTorques(Current_State x, const int act_cmds[])
 {
