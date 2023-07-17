@@ -70,7 +70,7 @@ add_library(mavrosflight
   src/mavrosflight/param.cpp
   src/mavrosflight/time_manager.cpp
 )
-target_compile_definitions(mavrosflight PRIVATE USE_ROS_LOGGER)
+target_compile_options(mavrosflight PRIVATE -Wno-address-of-packed-member)
 target_link_libraries(mavrosflight
   ${ament_LIBRARIES}
   ${rclcpp_LIBRARIES}
@@ -84,6 +84,7 @@ add_executable(rosflight_io
   src/rosflight_io_node.cpp
   src/rosflight_io.cpp
 )
+target_compile_options(rosflight_io PRIVATE -Wno-address-of-packed-member)
 target_link_libraries(rosflight_io
   mavrosflight
   ${rclcpp_LIBRARIES}

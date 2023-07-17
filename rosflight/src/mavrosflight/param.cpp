@@ -132,6 +132,8 @@ void Param::setFromRawValue(float raw_value)
   case MAV_PARAM_TYPE_INT32:
     value_ = fromRawValue<int32_t>(raw_value);
     break;
+  case MAV_PARAM_TYPE_INT64:
+    throw std::invalid_argument("64-bit data types are not supported for mavrosflight params.");
   case MAV_PARAM_TYPE_UINT8:
     value_ = fromRawValue<uint8_t>(raw_value);
     break;
@@ -141,8 +143,14 @@ void Param::setFromRawValue(float raw_value)
   case MAV_PARAM_TYPE_UINT32:
     value_ = fromRawValue<uint32_t>(raw_value);
     break;
+  case MAV_PARAM_TYPE_UINT64:
+    throw std::invalid_argument("64-bit data types are not supported for mavrosflight params.");
   case MAV_PARAM_TYPE_REAL32:
     value_ = fromRawValue<float>(raw_value);
+    break;
+  case MAV_PARAM_TYPE_REAL64:
+    throw std::invalid_argument("64-bit data types are not supported for mavrosflight params.");
+  case MAV_PARAM_TYPE_ENUM_END:
     break;
   }
 }
@@ -154,7 +162,7 @@ float Param::getRawValue()
 
 float Param::getRawValue(double value)
 {
-  float raw_value;
+  float raw_value = 0.0f;
 
   switch (type_)
   {
@@ -167,6 +175,8 @@ float Param::getRawValue(double value)
   case MAV_PARAM_TYPE_INT32:
     raw_value = toRawValue<int32_t>(value);
     break;
+  case MAV_PARAM_TYPE_INT64:
+    throw std::invalid_argument("64-bit data types are not supported for mavrosflight params.");
   case MAV_PARAM_TYPE_UINT8:
     raw_value = toRawValue<uint8_t>(value);
     break;
@@ -176,8 +186,14 @@ float Param::getRawValue(double value)
   case MAV_PARAM_TYPE_UINT32:
     raw_value = toRawValue<uint32_t>(value);
     break;
+  case MAV_PARAM_TYPE_UINT64:
+    throw std::invalid_argument("64-bit data types are not supported for mavrosflight params.");
   case MAV_PARAM_TYPE_REAL32:
     raw_value = toRawValue<float>(value);
+    break;
+  case MAV_PARAM_TYPE_REAL64:
+    throw std::invalid_argument("64-bit data types are not supported for mavrosflight params.");
+  case MAV_PARAM_TYPE_ENUM_END:
     break;
   }
 
@@ -186,7 +202,7 @@ float Param::getRawValue(double value)
 
 double Param::getCastValue(double value)
 {
-  double cast_value;
+  double cast_value = 0.0f;
 
   switch (type_)
   {
@@ -199,6 +215,8 @@ double Param::getCastValue(double value)
   case MAV_PARAM_TYPE_INT32:
     cast_value = toCastValue<int32_t>(value);
     break;
+  case MAV_PARAM_TYPE_INT64:
+    throw std::invalid_argument("64-bit data types are not supported for mavrosflight params.");
   case MAV_PARAM_TYPE_UINT8:
     cast_value = toCastValue<uint8_t>(value);
     break;
@@ -208,8 +226,14 @@ double Param::getCastValue(double value)
   case MAV_PARAM_TYPE_UINT32:
     cast_value = toCastValue<uint32_t>(value);
     break;
+  case MAV_PARAM_TYPE_UINT64:
+    throw std::invalid_argument("64-bit data types are not supported for mavrosflight params.");
   case MAV_PARAM_TYPE_REAL32:
     cast_value = toCastValue<float>(value);
+    break;
+  case MAV_PARAM_TYPE_REAL64:
+    throw std::invalid_argument("64-bit data types are not supported for mavrosflight params.");
+  case MAV_PARAM_TYPE_ENUM_END:
     break;
   }
 

@@ -125,7 +125,7 @@ rosflightIO::rosflightIO() : Node("rosflight_io")
   {
     mavrosflight_ = new mavrosflight::MavROSflight(*mavlink_comm_, this);
   }
-  catch (mavrosflight::SerialException e)
+  catch (const mavrosflight::SerialException &e)
   {
     RCLCPP_FATAL(this->get_logger(), "%s", e.what());
     rclcpp::shutdown();
@@ -953,11 +953,10 @@ void rosflightIO::commandCallback(rosflight_msgs::msg::Command::ConstSharedPtr m
     z = saturate(z, -1.0f, 1.0f);
     F = saturate(F, 0.0f, 1.0f);
     break;
-  case MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
   case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
     F = saturate(F, 0.0f, 1.0f);
     break;
-  case MODE_ROLL_PITCH_YAWRATE_ALTITUDE:
+  default:
     break;
   }
 

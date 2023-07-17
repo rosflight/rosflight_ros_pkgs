@@ -73,7 +73,7 @@ void MavlinkComm::register_mavlink_listener(MavlinkListenerInterface *const list
     return;
 
   bool already_registered = false;
-  for (int i = 0; i < listeners_.size(); i++)
+  for (size_t i = 0; i < listeners_.size(); i++)
   {
     if (listener == listeners_[i])
     {
@@ -91,11 +91,11 @@ void MavlinkComm::unregister_mavlink_listener(MavlinkListenerInterface *const li
   if (listener == NULL)
     return;
 
-  for (int i = 0; i < listeners_.size(); i++)
+  for (size_t i = 0; i < listeners_.size(); i++)
   {
     if (listener == listeners_[i])
     {
-      listeners_.erase(listeners_.begin() + i);
+      listeners_.erase(listeners_.begin() + (int) i);
       i--;
     }
   }
@@ -122,11 +122,11 @@ void MavlinkComm::async_read_end(const boost::system::error_code &error, size_t 
     return;
   }
 
-  for (int i = 0; i < bytes_transferred; i++)
+  for (size_t i = 0; i < bytes_transferred; i++)
   {
     if (mavlink_parse_char(MAVLINK_COMM_0, read_buf_raw_[i], &msg_in_, &status_in_))
     {
-      for (int i = 0; i < listeners_.size(); i++)
+      for (size_t i = 0; i < listeners_.size(); i++)
       {
         listeners_[i]->handle_mavlink_message(msg_in_);
       }

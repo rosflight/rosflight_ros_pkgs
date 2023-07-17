@@ -67,7 +67,7 @@ public:
   /**
    * \brief Stops communication and closes the serial port before the object is destroyed
    */
-  ~MavlinkComm();
+  virtual ~MavlinkComm();
 
   /**
    * \brief Opens the port and begins communication

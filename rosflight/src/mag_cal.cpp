@@ -42,8 +42,8 @@ namespace rosflight
 {
 CalibrateMag::CalibrateMag() :
     Node("calibrate_accel_temp"),
-    calibrating_(false),
-    reference_field_strength_(1.0)
+    reference_field_strength_(1.0),
+    calibrating_(false)
 {
   A_ = Eigen::MatrixXd::Zero(3, 3);
   b_ = Eigen::MatrixXd::Zero(3, 1);
@@ -56,7 +56,7 @@ CalibrateMag::CalibrateMag() :
   measurement_skip_ = this->get_parameter_or("measurement_skip", 20);
 
   param_set_client_ = this->create_client<rosflight_msgs::srv::ParamSet>("param_set");
-  mag_subscriber_.registerCallback(boost::bind(&CalibrateMag::mag_callback, this, _1));
+  mag_subscriber_.registerCallback(std::bind(&CalibrateMag::mag_callback, this, std::placeholders::_1));
 }
 
 void CalibrateMag::run()
@@ -214,7 +214,7 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, in
   EigenSTL::vector_Vector3d inliers_best; // container for inliers to best fit
   double dist_sum = 0;                    // sum distances of all measurements from ellipsoid surface
   int dist_count = 0;                     // count number distances of all measurements from ellipsoid surface
-  for (unsigned i = 0; i < iters; i++)
+  for (unsigned i = 0; i < (unsigned) iters; i++)
   {
     // pick 9 random, unique measurements by shuffling measurements
     // and grabbing the first 9

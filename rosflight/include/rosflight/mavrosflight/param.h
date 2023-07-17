@@ -76,21 +76,24 @@ private:
   template <typename T>
   double fromRawValue(float value)
   {
-    T t_value = *(T *)&value;
-    return (double)t_value;
+    T t_value;
+    std::memcpy(&t_value, &value, sizeof(T));
+    return static_cast<double>(t_value);
   }
 
   template <typename T>
   float toRawValue(double value)
   {
-    T t_value = (T)value;
-    return *(float *)&t_value;
+    T t_value = static_cast<T>(value);
+    float result = 0.0f;
+    std::memcpy(&result, &t_value, sizeof(T));
+    return result;
   }
 
   template <typename T>
   double toCastValue(double value)
   {
-    return (double)((T)value);
+    return static_cast<double>(static_cast<T>(value));
   }
 
   MavlinkSerial *serial_;

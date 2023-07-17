@@ -45,11 +45,11 @@ using boost::asio::serial_port_base;
 
 MavlinkUDP::MavlinkUDP(std::string bind_host, uint16_t bind_port, std::string remote_host, uint16_t remote_port) :
   MavlinkComm(),
-  socket_(io_service_),
   bind_host_(bind_host),
   bind_port_(bind_port),
   remote_host_(remote_host),
-  remote_port_(remote_port)
+  remote_port_(remote_port),
+  socket_(io_service_)
 {
 }
 
@@ -82,7 +82,7 @@ void MavlinkUDP::do_open()
     socket_.set_option(udp::socket::send_buffer_size(1000 * MAVLINK_MAX_PACKET_LEN));
     socket_.set_option(udp::socket::receive_buffer_size(1000 * MAVLINK_SERIAL_READ_BUF_SIZE));
   }
-  catch (boost::system::system_error e)
+  catch (const boost::system::system_error &e)
   {
     throw SerialException(e);
   }

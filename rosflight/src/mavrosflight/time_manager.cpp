@@ -42,10 +42,10 @@ namespace mavrosflight
 TimeManager::TimeManager(MavlinkComm *const comm,
                          rclcpp::Node *const node) :
   comm_(comm),
+  node_(node),
   offset_alpha_(0.95),
   offset_ns_(0),
-  initialized_(false),
-  node_(node)
+  initialized_(false)
 {
   comm_->register_mavlink_listener(this);
   time_sync_timer_ = node_->create_wall_timer(
@@ -97,7 +97,7 @@ std::chrono::nanoseconds TimeManager::fcu_time_to_system_time(std::chrono::nanos
   {
     RCLCPP_ERROR_THROTTLE(node_->get_logger(), *node_->get_clock(), 1,
                           "negative time calculated from FCU: fcu_time=%ld, offset_ns=%ld.  Using system time",
-                          fcu_time, offset_ns_);
+                          fcu_time.count(), offset_ns_.count());
     return std::chrono::nanoseconds(node_->get_clock()->now().nanoseconds());;
   }
   return ns;

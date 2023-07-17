@@ -43,14 +43,14 @@
 namespace mavrosflight
 {
 ParamManager::ParamManager(MavlinkComm *const comm, rclcpp::Node *const node) :
+  node_(node),
   comm_(comm),
   unsaved_changes_(false),
   write_request_in_progress_(false),
   first_param_received_(false),
   received_count_(0),
   got_all_params_(false),
-  param_set_in_progress_(false),
-  node_(node)
+  param_set_in_progress_(false)
 {
   comm_->register_mavlink_listener(this);
 
@@ -145,7 +145,7 @@ void ParamManager::register_param_listener(ParamListenerInterface *listener)
     return;
 
   bool already_registered = false;
-  for (int i = 0; i < listeners_.size(); i++)
+  for (size_t i = 0; i < listeners_.size(); i++)
   {
     if (listener == listeners_[i])
     {
@@ -163,11 +163,11 @@ void ParamManager::unregister_param_listener(ParamListenerInterface *listener)
   if (listener == NULL)
     return;
 
-  for (int i = 0; i < listeners_.size(); i++)
+  for (size_t i = 0; i < listeners_.size(); i++)
   {
     if (listener == listeners_[i])
     {
-      listeners_.erase(listeners_.begin() + i);
+      listeners_.erase(listeners_.begin() + (int) i);
       i--;
     }
   }
@@ -213,7 +213,7 @@ bool ParamManager::load_from_file(std::string filename)
     YAML::Node root = YAML::LoadFile(filename);
     assert(root.IsSequence());
 
-    for (int i = 0; i < root.size(); i++)
+    for (size_t i = 0; i < root.size(); i++)
     {
       if (root[i].IsMap() && root[i]["name"] && root[i]["type"] && root[i]["value"])
       {
@@ -279,7 +279,7 @@ void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
     first_param_received_ = true;
     num_params_ = param.param_count;
     received_ = new bool[num_params_];
-    for (int i = 0; i < num_params_; i++)
+    for (size_t i = 0; i < num_params_; i++)
     {
       received_[i] = false;
     }
@@ -304,14 +304,14 @@ void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
       got_all_params_ = true;
     }
 
-    for (int i = 0; i < listeners_.size(); i++) listeners_[i]->on_new_param_received(name, params_[name].getValue());
+    for (size_t i = 0; i < listeners_.size(); i++) listeners_[i]->on_new_param_received(name, params_[name].getValue());
   }
   else // otherwise check if we have new unsaved changes as a result of a param set request
   {
     if (params_[name].handleUpdate(param))
     {
       unsaved_changes_ = true;
-      for (int i = 0; i < listeners_.size(); i++)
+      for (size_t i = 0; i < listeners_.size(); i++)
       {
         listeners_[i]->on_param_value_updated(name, params_[name].getValue());
         listeners_[i]->on_params_saved_change(unsaved_changes_);
@@ -335,7 +335,7 @@ void ParamManager::handle_command_ack_msg(const mavlink_message_t &msg)
         RCLCPP_INFO(node_->get_logger(), "Param write succeeded");
         unsaved_changes_ = false;
 
-        for (int i = 0; i < listeners_.size(); i++) listeners_[i]->on_params_saved_change(unsaved_changes_);
+        for (size_t i = 0; i < listeners_.size(); i++) listeners_[i]->on_params_saved_change(unsaved_changes_);
       }
       else
       {

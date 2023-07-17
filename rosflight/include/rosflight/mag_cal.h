@@ -49,8 +49,6 @@
 #include <eigen3/Eigen/Eigen>
 #include <random>
 
-#include <boost/bind.hpp>
-
 #include <eigen_stl_containers/eigen_stl_vector_container.h>
 #include <vector>
 

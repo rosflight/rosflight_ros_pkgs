@@ -70,7 +70,7 @@ void MavlinkSerial::do_open()
     serial_port_.set_option(serial_port_base::stop_bits(serial_port_base::stop_bits::one));
     serial_port_.set_option(serial_port_base::flow_control(serial_port_base::flow_control::none));
   }
-  catch (boost::system::system_error e)
+  catch (const boost::system::system_error &e)
   {
     throw SerialException(e);
   }
