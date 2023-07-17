@@ -35,18 +35,18 @@
  * \author Devon Morris <devonmorris1992@gmail.com>
  */
 
-#include <rosflight/mag_cal.h>
+#include <rosflight/mag_cal.hpp>
 #include <cstdio>
 
 namespace rosflight
 {
 CalibrateMag::CalibrateMag() :
-    Node("calibrate_accel_temp"),
-    reference_field_strength_(1.0),
-    calibrating_(false),
-    first_time_(true),
-    start_time_(0),
-    measurement_throttle_(0)
+  Node("calibrate_accel_temp"),
+  reference_field_strength_(1.0),
+  calibrating_(false),
+  first_time_(true),
+  start_time_(0),
+  measurement_throttle_(0)
 {
   A_ = Eigen::MatrixXd::Zero(3, 3);
   b_ = Eigen::MatrixXd::Zero(3, 1);
@@ -59,7 +59,9 @@ CalibrateMag::CalibrateMag() :
   measurement_skip_ = this->get_parameter_or("measurement_skip", 20);
 
   param_set_client_ = this->create_client<rosflight_msgs::srv::ParamSet>("param_set");
-  mag_subscriber_.registerCallback(std::bind(&CalibrateMag::mag_callback, this, std::placeholders::_1));
+  mag_subscriber_.registerCallback(std::bind(&CalibrateMag::mag_callback,
+                                             this,
+                                             std::placeholders::_1));
 }
 
 void CalibrateMag::run()
@@ -87,8 +89,7 @@ void CalibrateMag::run()
   success = success && set_param("MAG_Y_BIAS", 0.0f);
   success = success && set_param("MAG_Z_BIAS", 0.0f);
 
-  if (!success)
-  {
+  if (!success) {
     RCLCPP_FATAL(this->get_logger(), "Failed to reset calibration parameters");
     return;
   }
@@ -98,24 +99,20 @@ void CalibrateMag::run()
   // wait for data to arrive
   rclcpp::Duration timeout(3, 0);
   rclcpp::Time start = this->get_clock()->now();
-  while (((this->get_clock()->now() - start) < timeout) && first_time_ && rclcpp::ok())
-  {
+  while (((this->get_clock()->now() - start) < timeout) && first_time_ && rclcpp::ok()) {
     rclcpp::spin_some(shared_from_this());
   }
 
-  if (first_time_)
-  {
+  if (first_time_) {
     RCLCPP_FATAL(this->get_logger(), "No messages on magnetometer topic, unable to calibrate");
     return;
   }
 
-  while (calibrating_ && rclcpp::ok())
-  {
+  while (calibrating_ && rclcpp::ok()) {
     rclcpp::spin_some(shared_from_this());
   }
 
-  if (!calibrating_)
-  {
+  if (!calibrating_) {
     // compute calibration
     do_mag_calibration();
 
@@ -157,7 +154,9 @@ void CalibrateMag::start_mag_calibration()
 void CalibrateMag::do_mag_calibration()
 {
   // fit ellipsoid to measurements according to Li paper but in RANSAC form
-  RCLCPP_INFO(this->get_logger(), "Collected %u measurements. Fitting ellipsoid.", (uint32_t)measurements_.size());
+  RCLCPP_INFO(this->get_logger(),
+              "Collected %u measurements. Fitting ellipsoid.",
+              (uint32_t) measurements_.size());
   Eigen::MatrixXd u = ellipsoidRANSAC(measurements_, ransac_iters_, inlier_thresh_);
 
   // magnetometer calibration parameters according to Renaudin paper
@@ -165,14 +164,14 @@ void CalibrateMag::do_mag_calibration()
   magCal(u, A_, b_);
 }
 
-bool CalibrateMag::mag_callback(const sensor_msgs::msg::MagneticField::ConstSharedPtr& mag)
+bool CalibrateMag::mag_callback(const sensor_msgs::msg::MagneticField::ConstSharedPtr &mag)
 {
-  if (calibrating_)
-  {
-    if (first_time_)
-    {
+  if (calibrating_) {
+    if (first_time_) {
       first_time_ = false;
-      RCLCPP_WARN_ONCE(this->get_logger(), "Calibrating Mag, do the mag dance for %g seconds!", calibration_time_);
+      RCLCPP_WARN_ONCE(this->get_logger(),
+                       "Calibrating Mag, do the mag dance for %g seconds!",
+                       calibration_time_);
       start_time_ = this->get_clock()->now().seconds();
     }
 
@@ -181,23 +180,18 @@ bool CalibrateMag::mag_callback(const sensor_msgs::msg::MagneticField::ConstShar
     printf("\r%.1f seconds remaining", calibration_time_ - elapsed);
 
     // if still in calibration mode
-    if (elapsed < calibration_time_)
-    {
-      if (measurement_throttle_ > measurement_skip_)
-      {
+    if (elapsed < calibration_time_) {
+      if (measurement_throttle_ > measurement_skip_) {
         Eigen::Vector3d measurement;
         measurement << mag->magnetic_field.x, mag->magnetic_field.y, mag->magnetic_field.z;
 
-        if (measurement != measurement_prev_)
-        {
+        if (measurement != measurement_prev_) {
           measurements_.push_back(measurement);
         }
         measurement_prev_ = measurement;
       }
       measurement_throttle_++;
-    }
-    else
-    {
+    } else {
       RCLCPP_WARN(this->get_logger(), "\rdone!");
       calibrating_ = false;
     }
@@ -206,7 +200,9 @@ bool CalibrateMag::mag_callback(const sensor_msgs::msg::MagneticField::ConstShar
   return true;
 }
 
-Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, int iters, double inlier_thresh)
+Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas,
+                                              int iters,
+                                              double inlier_thresh)
 {
   // initialize random number generator
   std::random_device random_dev;
@@ -215,16 +211,14 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, in
   // RANSAC to find a good ellipsoid fit
   int inlier_count_best = 0;              // number of inliers for best fit
   EigenSTL::vector_Vector3d inliers_best; // container for inliers to best fit
-  double dist_sum = 0;                    // sum distances of all measurements from ellipsoid surface
-  int dist_count = 0;                     // count number distances of all measurements from ellipsoid surface
-  for (unsigned i = 0; i < (unsigned) iters; i++)
-  {
+  double dist_sum = 0; // sum distances of all measurements from ellipsoid surface
+  int dist_count = 0;  // count number distances of all measurements from ellipsoid surface
+  for (unsigned i = 0; i < (unsigned) iters; i++) {
     // pick 9 random, unique measurements by shuffling measurements
     // and grabbing the first 9
     std::shuffle(meas.begin(), meas.end(), generator);
     EigenSTL::vector_Vector3d meas_sample;
-    for (unsigned j = 0; j < 9; j++)
-    {
+    for (unsigned j = 0; j < 9; j++) {
       meas_sample.push_back(meas[j]);
     }
 
@@ -247,8 +241,7 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, in
     double I = a + b + c;
     double J = a * b + b * c + a * c - f * f - g * g - h * h;
 
-    if (4 * J - I * I <= 0)
-    {
+    if (4 * J - I * I <= 0) {
       continue;
     }
 
@@ -269,8 +262,7 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, in
     // count inliers and store inliers
     int inlier_count = 0;
     EigenSTL::vector_Vector3d inliers;
-    for (auto & item : meas)
-    {
+    for (auto &item : meas) {
       // compute the vector from ellipsoid center to surface along
       // measurement vector and a one from the perturbed measurement
       Eigen::Vector3d perturb = Eigen::Vector3d::Ones() * 0.1;
@@ -290,19 +282,16 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, in
       dist_count++;
 
       // check measurement distance against inlier threshold
-      if (fabs(dist) < inlier_thresh)
-      {
+      if (fabs(dist) < inlier_thresh) {
         inliers.push_back(item);
         inlier_count++;
       }
     }
 
     // save best inliers and their count
-    if (inlier_count > inlier_count_best)
-    {
+    if (inlier_count > inlier_count_best) {
       inliers_best.clear();
-      for (const auto & item : inliers)
-      {
+      for (const auto &item : inliers) {
         inliers_best.push_back(item);
       }
       inlier_count_best = inlier_count;
@@ -311,10 +300,13 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, in
 
   // check average measurement distance from surface
   double dist_avg = dist_sum / dist_count;
-  if (inlier_thresh > fabs(dist_avg))
-  {
-    RCLCPP_WARN(this->get_logger(), "Inlier threshold is greater than average measurement distance from surface. Reduce inlier threshold.");
-    RCLCPP_INFO(this->get_logger(), "Inlier threshold = %7.1f, Average measurement distance = %7.1f", inlier_thresh_, dist_avg);
+  if (inlier_thresh > fabs(dist_avg)) {
+    RCLCPP_WARN(this->get_logger(),
+                "Inlier threshold is greater than average measurement distance from surface. Reduce inlier threshold.");
+    RCLCPP_INFO(this->get_logger(),
+                "Inlier threshold = %7.1f, Average measurement distance = %7.1f",
+                inlier_thresh_,
+                dist_avg);
   }
 
   // perform LS on set of best inliers
@@ -323,10 +315,10 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, in
   return u_final;
 }
 
-Eigen::Vector3d CalibrateMag::intersect(const Eigen::Vector3d& r_m,
-                                        const Eigen::Vector3d& r_e,
-                                        const Eigen::MatrixXd& Q,
-                                        const Eigen::MatrixXd& ub,
+Eigen::Vector3d CalibrateMag::intersect(const Eigen::Vector3d &r_m,
+                                        const Eigen::Vector3d &r_e,
+                                        const Eigen::MatrixXd &Q,
+                                        const Eigen::MatrixXd &ub,
                                         const double k)
 {
   // form unit vector from ellipsoid center (r_e) pointing to measurement
@@ -350,21 +342,17 @@ void CalibrateMag::eigSort(Eigen::MatrixXd &w, Eigen::MatrixXd &v)
 {
   // create index array
   int idx[w.cols()];
-  for (int i = 0; i < w.cols(); i++)
-  {
+  for (int i = 0; i < w.cols(); i++) {
     idx[i] = i;
   }
 
   // do a bubble sort and keep track of where values go with the index array
   int has_changed = 1; // true
   Eigen::MatrixXd w_sort = w;
-  while (has_changed == 1)
-  {
+  while (has_changed == 1) {
     has_changed = 0; // false
-    for (unsigned i = 0; i < w.cols() - 1; i++)
-    {
-      if (w_sort(i) < w_sort(i + 1))
-      {
+    for (unsigned i = 0; i < w.cols() - 1; i++) {
+      if (w_sort(i) < w_sort(i + 1)) {
         // switch values
         double temp_d = w_sort(i);
         w_sort(i) = w_sort(i + 1);
@@ -383,8 +371,7 @@ void CalibrateMag::eigSort(Eigen::MatrixXd &w, Eigen::MatrixXd &v)
   // add sorted eigenvalues/eigenvectors to output
   Eigen::MatrixXd w1 = w;
   Eigen::MatrixXd v1 = v;
-  for (unsigned i = 0; i < w.cols(); i++)
-  {
+  for (unsigned i = 0; i < w.cols(); i++) {
     w1(i) = w(idx[i]);
     v1.col(i) = v.col(idx[i]);
   }
@@ -401,8 +388,7 @@ Eigen::MatrixXd CalibrateMag::ellipsoidLS(EigenSTL::vector_Vector3d meas)
 {
   // form D matrix from eq. 6
   Eigen::MatrixXd D(10, meas.size());
-  for (unsigned i = 0; i < D.cols(); i++)
-  {
+  for (unsigned i = 0; i < D.cols(); i++) {
     // unpack measurement components
     double x = meas[i](0);
     double y = meas[i](1);
@@ -446,8 +432,7 @@ Eigen::MatrixXd CalibrateMag::ellipsoidLS(EigenSTL::vector_Vector3d meas)
   // solve eigensystem in eq. 15
   Eigen::MatrixXd ES = C1.inverse() * (S11 - S12 * S22.inverse() * S12.transpose());
   Eigen::EigenSolver<Eigen::MatrixXd> eigensolver(ES);
-  if (eigensolver.info() != Eigen::Success)
-  {
+  if (eigensolver.info() != Eigen::Success) {
     abort();
   }
   Eigen::MatrixXd w = eigensolver.eigenvalues().real().transpose();
@@ -498,8 +483,7 @@ void CalibrateMag::magCal(Eigen::MatrixXd u, Eigen::MatrixXd &A, Eigen::MatrixXd
 
   // eigendecomposition of Q according to eq. 22 of Renaudin
   Eigen::EigenSolver<Eigen::MatrixXd> eigensolver(Q);
-  if (eigensolver.info() != Eigen::Success)
-  {
+  if (eigensolver.info() != Eigen::Success) {
     abort();
   }
   Eigen::MatrixXd D = eigensolver.eigenvalues().real().asDiagonal();
@@ -522,11 +506,10 @@ bool CalibrateMag::set_param(std::string name, double value)
 
   auto result = param_set_client_->async_send_request(req);
 
-  if (rclcpp::spin_until_future_complete(shared_from_this(), result) == rclcpp::FutureReturnCode::SUCCESS)
-  {
+  if (rclcpp::spin_until_future_complete(shared_from_this(), result)
+    == rclcpp::FutureReturnCode::SUCCESS) {
     return result.get()->exists;
-  } else
-  {
+  } else {
     return false;
   }
 }

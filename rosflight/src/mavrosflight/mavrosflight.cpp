@@ -34,19 +34,19 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#include <rosflight/mavrosflight/mavrosflight.h>
+#include <rosflight/mavrosflight/mavrosflight.hpp>
 
 namespace mavrosflight
 {
 using boost::asio::serial_port_base;
 
 MavROSflight::MavROSflight(MavlinkComm &mavlink_comm,
-                           rclcpp::Node *const node) :
+                           rclcpp::Node * const node) :
   comm(mavlink_comm),
   param(&comm, node),
   time(&comm, node)
 {
-   comm.open();
+  comm.open();
 }
 
 MavROSflight::~MavROSflight()

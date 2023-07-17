@@ -20,7 +20,7 @@
 
   <!-- Macro to add a rosflight_sil plugin. -->
   <xacro:macro name="rosflight_sil_plugin"
-    params="namespace parent_link mav_type parent_frame_id">
+               params="namespace parent_link mav_type parent_frame_id">
     <gazebo>
       <plugin filename="librosflight_sil_plugin.so" name="rosflight_sil">
         <linkName>${parent_link}</linkName>

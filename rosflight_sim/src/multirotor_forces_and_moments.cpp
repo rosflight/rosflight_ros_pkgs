@@ -29,7 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <rosflight_sim/multirotor_forces_and_moments.h>
+#include <rosflight_sim/multirotor_forces_and_moments.hpp>
 
 namespace rosflight_sim
 {
@@ -39,52 +39,61 @@ Multirotor::Multirotor(rclcpp::Node::SharedPtr node) :
   linear_mu_(0),
   angular_mu_(0)
 {
-  if (!node_->get_parameter("linear_mu", linear_mu_))
+  if (!node_->get_parameter("linear_mu", linear_mu_)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'linear_mu' not defined");
-  if (!node_->get_parameter("angular_mu", angular_mu_))
+  }
+  if (!node_->get_parameter("angular_mu", angular_mu_)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'angular_mu' not defined");
-  if (!node_->get_parameter("ground_effect", ground_effect_))
+  }
+  if (!node_->get_parameter("ground_effect", ground_effect_)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'ground_effect' not defined");
+  }
 
-  if (!node_->get_parameter("num_rotors", num_rotors_))
+  if (!node_->get_parameter("num_rotors", num_rotors_)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'num_rotors' not defined");
+  }
 
   std::vector<double> rotor_positions(3 * num_rotors_);
   std::vector<double> rotor_vector_normal(3 * num_rotors_);
   std::vector<long> rotor_rotation_directions(num_rotors_);
 
   Rotor rotor;
-  if (!node_->get_parameter("rotor_positions", rotor_positions))
+  if (!node_->get_parameter("rotor_positions", rotor_positions)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'rotor_positions' not defined");
-  if (!node_->get_parameter("rotor_vector_normal", rotor_vector_normal))
+  }
+  if (!node_->get_parameter("rotor_vector_normal", rotor_vector_normal)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'rotor_vector_normal' not defined");
+  }
 
-
-  if (!node_->get_parameter("rotor_rotation_directions", rotor_rotation_directions))
+  if (!node_->get_parameter("rotor_rotation_directions", rotor_rotation_directions)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'rotor_rotation_directions' not defined");
-  if (!node_->get_parameter("rotor_max_thrust", rotor.max))
+  }
+  if (!node_->get_parameter("rotor_max_thrust", rotor.max)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'rotor_max_thrust' not defined");
-  if (!node_->get_parameter("rotor_F", rotor.F_poly))
+  }
+  if (!node_->get_parameter("rotor_F", rotor.F_poly)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'rotor_F' not defined");
-  if (!node_->get_parameter("rotor_T", rotor.T_poly))
+  }
+  if (!node_->get_parameter("rotor_T", rotor.T_poly)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'rotor_T' not defined");
-  if (!node_->get_parameter("rotor_tau_up", rotor.tau_up))
+  }
+  if (!node_->get_parameter("rotor_tau_up", rotor.tau_up)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'rotor_tau_up' not defined");
-  if (!node_->get_parameter("rotor_tau_down", rotor.tau_down))
+  }
+  if (!node_->get_parameter("rotor_tau_down", rotor.tau_down)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'rotor_tau_down' not defined");
+  }
 
   /* Load Rotor Configuration */
   motors_.resize(num_rotors_);
 
   force_allocation_matrix_.resize(4, num_rotors_);
   torque_allocation_matrix_.resize(4, num_rotors_);
-  for (int i = 0; i < num_rotors_; i++)
-  {
+  for (int i = 0; i < num_rotors_; i++) {
     motors_[i].rotor = rotor;
     motors_[i].position.resize(3);
     motors_[i].normal.resize(3);
-    for (int j = 0; j < 3; j++)
-    {
+    for (int j = 0; j < 3; j++) {
       motors_[i].position(j) = rotor_positions[3 * i + j];
       motors_[i].normal(j) = rotor_vector_normal[3 * i + j];
     }
@@ -106,8 +115,9 @@ Multirotor::Multirotor(rclcpp::Node::SharedPtr node) :
     torque_allocation_matrix_(3, i) = 0.0;                   // F
   }
 
-  RCLCPP_INFO_STREAM(node_->get_logger(), "allocation matrices:\nFORCE \n" << force_allocation_matrix_ << "\nTORQUE\n"
-                     << torque_allocation_matrix_ << "\n");
+  RCLCPP_INFO_STREAM(node_->get_logger(),
+                     "allocation matrices:\nFORCE \n" << force_allocation_matrix_ << "\nTORQUE\n"
+                                                      << torque_allocation_matrix_ << "\n");
 
   // Initialize size of dynamic force and torque matrices
   desired_forces_.resize(num_rotors_);
@@ -115,8 +125,7 @@ Multirotor::Multirotor(rclcpp::Node::SharedPtr node) :
   actual_forces_.resize(num_rotors_);
   actual_torques_.resize(num_rotors_);
 
-  for (int i = 0; i < num_rotors_; i++)
-  {
+  for (int i = 0; i < num_rotors_; i++) {
     desired_forces_(i) = 0.0;
     desired_torques_(i) = 0.0;
     actual_forces_(i) = 0.0;
@@ -129,10 +138,10 @@ Multirotor::Multirotor(rclcpp::Node::SharedPtr node) :
 
 Multirotor::~Multirotor() = default;
 
-Eigen::Matrix<double, 6, 1> Multirotor::updateForcesAndTorques(Current_State x, const int act_cmds[])
+Eigen::Matrix<double, 6, 1> Multirotor::updateForcesAndTorques(Current_State x,
+                                                               const int act_cmds[])
 {
-  if (prev_time_ < 0)
-  {
+  if (prev_time_ < 0) {
     prev_time_ = x.t;
     return Eigen::Matrix<double, 6, 1>::Zero();
   }
@@ -144,21 +153,26 @@ Eigen::Matrix<double, 6, 1> Multirotor::updateForcesAndTorques(Current_State x, 
   Eigen::Vector3d Va = x.vel + x.rot.inverse() * wind_;
 
   // Calculate Forces
-  for (int i = 0; i < num_rotors_; i++)
-  {
+  for (int i = 0; i < num_rotors_; i++) {
     // First, figure out the desired force output from passing the signal into the quadratic approximation
     double signal = act_cmds[i];
     desired_forces_(i, 0) =
-        motors_[i].rotor.F_poly[0] * signal * signal + motors_[i].rotor.F_poly[1] * signal + motors_[i].rotor.F_poly[2];
+      motors_[i].rotor.F_poly[0] * signal * signal + motors_[i].rotor.F_poly[1] * signal
+        + motors_[i].rotor.F_poly[2];
     desired_torques_(i, 0) =
-        motors_[i].rotor.T_poly[0] * signal * signal + motors_[i].rotor.T_poly[1] * signal + motors_[i].rotor.T_poly[2];
+      motors_[i].rotor.T_poly[0] * signal * signal + motors_[i].rotor.T_poly[1] * signal
+        + motors_[i].rotor.T_poly[2];
 
     // Then, Calculate Actual force and torque for each rotor using first-order dynamics
-    double tau = (desired_forces_(i, 0) > actual_forces_(i, 0)) ? motors_[i].rotor.tau_up : motors_[i].rotor.tau_down;
+    double tau = (desired_forces_(i, 0) > actual_forces_(i, 0)) ? motors_[i].rotor.tau_up
+                                                                : motors_[i].rotor.tau_down;
     double alpha = dt / (tau + dt);
-    actual_forces_(i, 0) = sat((1 - alpha) * actual_forces_(i) + alpha * desired_forces_(i), motors_[i].rotor.max, 0.0);
+    actual_forces_(i, 0) =
+      sat((1 - alpha) * actual_forces_(i) + alpha * desired_forces_(i), motors_[i].rotor.max, 0.0);
     actual_torques_(i, 0) =
-        sat((1 - alpha) * actual_torques_(i) + alpha * desired_torques_(i), motors_[i].rotor.max, 0.0);
+      sat((1 - alpha) * actual_torques_(i) + alpha * desired_torques_(i),
+          motors_[i].rotor.max,
+          0.0);
   }
 
   // Use the allocation matrix to calculate the body-fixed force and torques
@@ -169,7 +183,8 @@ Eigen::Matrix<double, 6, 1> Multirotor::updateForcesAndTorques(Current_State x, 
   // Calculate Ground Effect
   double z = -pd;
   double ground_effect = max(ground_effect_[0] * z * z * z * z + ground_effect_[1] * z * z * z
-                                 + ground_effect_[2] * z * z + ground_effect_[3] * z + ground_effect_[4],
+                               + ground_effect_[2] * z * z + ground_effect_[3] * z
+                               + ground_effect_[4],
                              0);
 
   Eigen::Matrix<double, 6, 1> forces;

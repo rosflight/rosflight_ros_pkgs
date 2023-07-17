@@ -30,85 +30,46 @@
  */
 
 /**
- * \file param_manager.h
+ * \file time_manager.h
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#ifndef MAVROSFLIGHT_PARAM_MANAGER_H
-#define MAVROSFLIGHT_PARAM_MANAGER_H
+#ifndef MAVROSFLIGHT_TIME_MANAGER_H
+#define MAVROSFLIGHT_TIME_MANAGER_H
 
-#include <rosflight/mavrosflight/mavlink_bridge.h>
-#include <rosflight/mavrosflight/mavlink_comm.h>
-#include <rosflight/mavrosflight/mavlink_listener_interface.h>
-#include <rosflight/mavrosflight/param.h>
-#include <rosflight/mavrosflight/param_listener_interface.h>
-
+#include <rosflight/mavrosflight/mavlink_bridge.hpp>
+#include <rosflight/mavrosflight/mavlink_comm.hpp>
+#include <rosflight/mavrosflight/mavlink_listener_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include <deque>
-#include <map>
+#include <chrono>
 #include <memory>
-#include <string>
-#include <vector>
 
 namespace mavrosflight
 {
-class ParamManager : public MavlinkListenerInterface
+class TimeManager : MavlinkListenerInterface
 {
 public:
-  ParamManager(MavlinkComm *comm, rclcpp::Node *node);
-  ~ParamManager();
+  TimeManager(MavlinkComm * comm,
+              rclcpp::Node * node);
 
   void handle_mavlink_message(const mavlink_message_t &msg) override;
 
-  bool unsaved_changes() const;
-
-  bool get_param_value(const std::string& name, double *value);
-  bool set_param_value(const std::string& name, double value);
-  bool write_params();
-
-  void register_param_listener(ParamListenerInterface *listener);
-  void unregister_param_listener(ParamListenerInterface *listener);
-
-  bool save_to_file(const std::string& filename);
-  bool load_from_file(const std::string& filename);
-
-  int get_num_params() const;
-  int get_params_received() const;
-  bool got_all_params() const;
-
-  void request_params();
+  std::chrono::nanoseconds fcu_time_to_system_time(std::chrono::nanoseconds fcu_time);
 
 private:
-  void request_param_list();
-  void request_param(int index);
+  MavlinkComm * const comm_;
+  rclcpp::Node * const node_;
 
-  void handle_param_value_msg(const mavlink_message_t &msg);
-  void handle_command_ack_msg(const mavlink_message_t &msg);
+  rclcpp::TimerBase::SharedPtr time_sync_timer_;
+  void timer_callback();
 
-  bool is_param_id(const std::string& name);
+  double offset_alpha_;
+  std::chrono::nanoseconds offset_ns_;
 
-  std::vector<ParamListenerInterface *> listeners_;
-
-  rclcpp::Node *const node_;
-  MavlinkComm *const comm_;
-  std::map<std::string, Param> params_;
-
-  bool unsaved_changes_;
-  bool write_request_in_progress_;
-
-  bool first_param_received_;
-  int num_params_;
-  int received_count_;
-  bool *received_;
-  bool got_all_params_;
-
-  std::deque<mavlink_message_t> param_set_queue_;
-  rclcpp::TimerBase::SharedPtr param_set_timer_;
-  bool param_set_in_progress_;
-  void param_set_timer_callback();
+  bool initialized_;
 };
 
 } // namespace mavrosflight
 
-#endif // MAVROSFLIGHT_PARAM_MANAGER_H
+#endif // MAVROSFLIGHT_TIME_MANAGER_H

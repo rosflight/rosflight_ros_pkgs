@@ -35,7 +35,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <eigen3/Eigen/Dense>
 
-#include <rosflight_sim/mav_forces_and_moments.h>
+#include <rosflight_sim/mav_forces_and_moments.hpp>
 
 namespace rosflight_sim
 {
@@ -86,7 +86,8 @@ public:
   explicit Multirotor(rclcpp::Node::SharedPtr node);
   ~Multirotor();
 
-  Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x, const int act_cmds[]) override;
+  Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x,
+                                                     const int act_cmds[]) override;
   void set_wind(Eigen::Vector3d wind) override;
 };
 

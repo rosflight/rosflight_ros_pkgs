@@ -29,7 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <rosflight_sim/sil_board.h>
+#include <rosflight_sim/sil_board.hpp>
 #include <fstream>
 
 #include <iostream>
@@ -38,8 +38,7 @@ namespace rosflight_sim
 {
 SIL_Board::SIL_Board() :
   rosflight_firmware::UDPBoard(),
-  random_generator_(std::chrono::system_clock::now().time_since_epoch().count())
-{}
+  random_generator_(std::chrono::system_clock::now().time_since_epoch().count()) {}
 
 void SIL_Board::init_board()
 {
@@ -73,7 +72,8 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link,
   int remote_port = node_->get_parameter_or<int>("ROS_port", 14520);
 
   set_ports(bind_host, bind_port, remote_host, remote_port);
-  gzmsg << "ROSflight SIL Conneced to " << remote_host << ":" << remote_port << " from " << bind_host << ":"
+  gzmsg << "ROSflight SIL Conneced to " << remote_host << ":" << remote_port << " from "
+        << bind_host << ":"
         << bind_port << "\n";
 
   // Get Sensor Parameters
@@ -103,7 +103,7 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link,
   sonar_max_range_ = node_->get_parameter_or<double>("sonar_max_range", 8.0);
 
   imu_update_rate_ = node_->get_parameter_or<double>("imu_update_rate", 1000.0);
-  imu_update_period_us_ = (uint64_t)(1e6 / imu_update_rate_);
+  imu_update_period_us_ = (uint64_t) (1e6 / imu_update_rate_);
 
   // Calculate Magnetic Field Vector (for mag simulation)
   auto inclination = node_->get_parameter_or<double>("inclination", 1.14316156541);
@@ -154,13 +154,13 @@ void SIL_Board::board_reset(bool bootloader) {}
 
 uint32_t SIL_Board::clock_millis()
 {
-  uint32_t millis = (uint32_t)((GZ_COMPAT_GET_SIM_TIME(world_) - boot_time_).Double() * 1e3);
+  uint32_t millis = (uint32_t) ((GZ_COMPAT_GET_SIM_TIME(world_) - boot_time_).Double() * 1e3);
   return millis;
 }
 
 uint64_t SIL_Board::clock_micros()
 {
-  uint64_t micros = (uint64_t)((GZ_COMPAT_GET_SIM_TIME(world_) - boot_time_).Double() * 1e6);
+  uint64_t micros = (uint64_t) ((GZ_COMPAT_GET_SIM_TIME(world_) - boot_time_).Double() * 1e6);
   return micros;
 }
 
@@ -206,44 +206,47 @@ uint16_t SIL_Board::num_sensor_errors()
 bool SIL_Board::new_imu_data()
 {
   uint64_t now_us = clock_micros();
-  if (now_us >= next_imu_update_time_us_)
-  {
+  if (now_us >= next_imu_update_time_us_) {
     next_imu_update_time_us_ = now_us + imu_update_period_us_;
     return true;
-  }
-  else
-  {
+  } else {
     return false;
   }
 }
 
-bool SIL_Board::imu_read(float accel[3], float *temperature, float gyro[3], uint64_t *time_us)
+bool SIL_Board::imu_read(float accel[3], float * temperature, float gyro[3], uint64_t * time_us)
 {
   GazeboQuaternion q_I_NWU = GZ_COMPAT_GET_ROT(GZ_COMPAT_GET_WORLD_POSE(link_));
   GazeboVector current_vel = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);
   GazeboVector y_acc;
 
   // this is James' egregious hack to overcome wild imu while sitting on the ground
-  if (GZ_COMPAT_GET_LENGTH(current_vel) < 0.05)
+  if (GZ_COMPAT_GET_LENGTH(current_vel) < 0.05) {
     y_acc = q_I_NWU.RotateVectorReverse(-gravity_);
-  else
+  } else {
     y_acc = q_I_NWU.RotateVectorReverse(GZ_COMPAT_GET_WORLD_LINEAR_ACCEL(link_) - gravity_);
+  }
 
   // Apply normal noise (only if armed, because most of the noise comes from motors
-  if (motors_spinning())
-  {
-    GZ_COMPAT_SET_X(y_acc, GZ_COMPAT_GET_X(y_acc) + acc_stdev_ * normal_distribution_(random_generator_));
-    GZ_COMPAT_SET_Y(y_acc, GZ_COMPAT_GET_Y(y_acc) + acc_stdev_ * normal_distribution_(random_generator_));
-    GZ_COMPAT_SET_Z(y_acc, GZ_COMPAT_GET_Z(y_acc) + acc_stdev_ * normal_distribution_(random_generator_));
+  if (motors_spinning()) {
+    GZ_COMPAT_SET_X(y_acc,
+                    GZ_COMPAT_GET_X(y_acc) + acc_stdev_ * normal_distribution_(random_generator_));
+    GZ_COMPAT_SET_Y(y_acc,
+                    GZ_COMPAT_GET_Y(y_acc) + acc_stdev_ * normal_distribution_(random_generator_));
+    GZ_COMPAT_SET_Z(y_acc,
+                    GZ_COMPAT_GET_Z(y_acc) + acc_stdev_ * normal_distribution_(random_generator_));
   }
 
   // Perform Random Walk for biases
   GZ_COMPAT_SET_X(acc_bias_,
-                  GZ_COMPAT_GET_X(acc_bias_) + acc_bias_walk_stdev_ * normal_distribution_(random_generator_));
+                  GZ_COMPAT_GET_X(acc_bias_)
+                    + acc_bias_walk_stdev_ * normal_distribution_(random_generator_));
   GZ_COMPAT_SET_Y(acc_bias_,
-                  GZ_COMPAT_GET_Y(acc_bias_) + acc_bias_walk_stdev_ * normal_distribution_(random_generator_));
+                  GZ_COMPAT_GET_Y(acc_bias_)
+                    + acc_bias_walk_stdev_ * normal_distribution_(random_generator_));
   GZ_COMPAT_SET_Z(acc_bias_,
-                  GZ_COMPAT_GET_Z(acc_bias_) + acc_bias_walk_stdev_ * normal_distribution_(random_generator_));
+                  GZ_COMPAT_GET_Z(acc_bias_)
+                    + acc_bias_walk_stdev_ * normal_distribution_(random_generator_));
 
   // Add constant Bias to measurement
   GZ_COMPAT_SET_X(y_acc, GZ_COMPAT_GET_X(y_acc) + GZ_COMPAT_GET_X(acc_bias_));
@@ -258,20 +261,28 @@ bool SIL_Board::imu_read(float accel[3], float *temperature, float gyro[3], uint
   GazeboVector y_gyro = GZ_COMPAT_GET_RELATIVE_ANGULAR_VEL(link_);
 
   // Normal Noise from motors
-  if (motors_spinning())
-  {
-    GZ_COMPAT_SET_X(y_gyro, GZ_COMPAT_GET_X(y_gyro) + gyro_stdev_ * normal_distribution_(random_generator_));
-    GZ_COMPAT_SET_Y(y_gyro, GZ_COMPAT_GET_Y(y_gyro) + gyro_stdev_ * normal_distribution_(random_generator_));
-    GZ_COMPAT_SET_Z(y_gyro, GZ_COMPAT_GET_Z(y_gyro) + gyro_stdev_ * normal_distribution_(random_generator_));
+  if (motors_spinning()) {
+    GZ_COMPAT_SET_X(y_gyro,
+                    GZ_COMPAT_GET_X(y_gyro)
+                      + gyro_stdev_ * normal_distribution_(random_generator_));
+    GZ_COMPAT_SET_Y(y_gyro,
+                    GZ_COMPAT_GET_Y(y_gyro)
+                      + gyro_stdev_ * normal_distribution_(random_generator_));
+    GZ_COMPAT_SET_Z(y_gyro,
+                    GZ_COMPAT_GET_Z(y_gyro)
+                      + gyro_stdev_ * normal_distribution_(random_generator_));
   }
 
   // Random Walk for bias
   GZ_COMPAT_SET_X(gyro_bias_,
-                  GZ_COMPAT_GET_X(gyro_bias_) + gyro_bias_walk_stdev_ * normal_distribution_(random_generator_));
+                  GZ_COMPAT_GET_X(gyro_bias_)
+                    + gyro_bias_walk_stdev_ * normal_distribution_(random_generator_));
   GZ_COMPAT_SET_Y(gyro_bias_,
-                  GZ_COMPAT_GET_Y(gyro_bias_) + gyro_bias_walk_stdev_ * normal_distribution_(random_generator_));
+                  GZ_COMPAT_GET_Y(gyro_bias_)
+                    + gyro_bias_walk_stdev_ * normal_distribution_(random_generator_));
   GZ_COMPAT_SET_Z(gyro_bias_,
-                  GZ_COMPAT_GET_Z(gyro_bias_) + gyro_bias_walk_stdev_ * normal_distribution_(random_generator_));
+                  GZ_COMPAT_GET_Z(gyro_bias_)
+                    + gyro_bias_walk_stdev_ * normal_distribution_(random_generator_));
 
   // Apply Constant Bias
   GZ_COMPAT_SET_X(y_gyro, GZ_COMPAT_GET_X(y_gyro) + GZ_COMPAT_GET_X(gyro_bias_));
@@ -303,14 +314,18 @@ void SIL_Board::mag_read(float mag[3])
 
   // Random Walk for bias
   GZ_COMPAT_SET_X(mag_bias_,
-                  GZ_COMPAT_GET_X(mag_bias_) + mag_bias_walk_stdev_ * normal_distribution_(random_generator_));
+                  GZ_COMPAT_GET_X(mag_bias_)
+                    + mag_bias_walk_stdev_ * normal_distribution_(random_generator_));
   GZ_COMPAT_SET_Y(mag_bias_,
-                  GZ_COMPAT_GET_Y(mag_bias_) + mag_bias_walk_stdev_ * normal_distribution_(random_generator_));
+                  GZ_COMPAT_GET_Y(mag_bias_)
+                    + mag_bias_walk_stdev_ * normal_distribution_(random_generator_));
   GZ_COMPAT_SET_Z(mag_bias_,
-                  GZ_COMPAT_GET_Z(mag_bias_) + mag_bias_walk_stdev_ * normal_distribution_(random_generator_));
+                  GZ_COMPAT_GET_Z(mag_bias_)
+                    + mag_bias_walk_stdev_ * normal_distribution_(random_generator_));
 
   // combine parts to create a measurement
-  GazeboVector y_mag = GZ_COMPAT_GET_ROT(I_to_B).RotateVectorReverse(inertial_magnetic_field_) + mag_bias_ + noise;
+  GazeboVector y_mag =
+    GZ_COMPAT_GET_ROT(I_to_B).RotateVectorReverse(inertial_magnetic_field_) + mag_bias_ + noise;
 
   // Convert measurement to NED
   mag[0] = GZ_COMPAT_GET_X(y_mag);
@@ -328,7 +343,7 @@ bool SIL_Board::baro_present()
   return true;
 }
 
-void SIL_Board::baro_read(float *pressure, float *temperature)
+void SIL_Board::baro_read(float * pressure, float * temperature)
 {
   // pull z measurement out of Gazebo
   GazeboPose current_state_NWU = GZ_COMPAT_GET_WORLD_POSE(link_);
@@ -337,7 +352,7 @@ void SIL_Board::baro_read(float *pressure, float *temperature)
   double alt = GZ_COMPAT_GET_Z(GZ_COMPAT_GET_POS(current_state_NWU)) + origin_altitude_;
 
   // Convert to the true pressure reading
-  double y_baro = 101325.0f * (float)pow((1 - 2.25694e-5 * alt), 5.2553);
+  double y_baro = 101325.0f * (float) pow((1 - 2.25694e-5 * alt), 5.2553);
 
   // Add noise
   y_baro += baro_stdev_ * normal_distribution_(random_generator_);
@@ -348,19 +363,20 @@ void SIL_Board::baro_read(float *pressure, float *temperature)
   // Add random walk
   y_baro += baro_bias_;
 
-  (*pressure) = (float)y_baro;
+  (*pressure) = (float) y_baro;
   (*temperature) = 27.0f;
 }
 
 bool SIL_Board::diff_pressure_present()
 {
-  if (mav_type_ == "fixedwing")
+  if (mav_type_ == "fixedwing") {
     return true;
-  else
+  } else {
     return false;
+  }
 }
 
-void SIL_Board::diff_pressure_read(float *diff_pressure, float *temperature)
+void SIL_Board::diff_pressure_read(float * diff_pressure, float * temperature)
 {
   static double rho_ = 1.225;
   // Calculate Airspeed
@@ -390,16 +406,13 @@ float SIL_Board::sonar_read()
   GazeboPose current_state_NWU = GZ_COMPAT_GET_WORLD_POSE(link_);
   double alt = GZ_COMPAT_GET_Z(GZ_COMPAT_GET_POS(current_state_NWU));
 
-  if (alt < sonar_min_range_)
-  {
+  if (alt < sonar_min_range_) {
     return (float) sonar_min_range_;
-  }
-  else if (alt > sonar_max_range_)
-  {
+  } else if (alt > sonar_max_range_) {
     return (float) sonar_max_range_;
-  }
-  else
+  } else {
     return (float) (alt + sonar_stdev_ * normal_distribution_(random_generator_));
+  }
 }
 
 bool SIL_Board::battery_voltage_present() const
@@ -443,33 +456,33 @@ void SIL_Board::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
   latestRC_.values[4] = 1000; // attitude override
   latestRC_.values[5] = 1000; // arm
 
-  for (int & pwm_output : pwm_outputs_) pwm_output = 1000;
+  for (int &pwm_output : pwm_outputs_) { pwm_output = 1000; }
 
   rc_sub_ = node_->create_subscription<rosflight_msgs::msg::RCRaw>(
-      "RC", 1, std::bind(&SIL_Board::RCCallback, this, std::placeholders::_1));
+    "RC", 1, std::bind(&SIL_Board::RCCallback, this, std::placeholders::_1));
 }
 
 float SIL_Board::rc_read(uint8_t channel)
 {
-  if (rc_sub_->get_publisher_count() > 0)
-  {
+  if (rc_sub_->get_publisher_count() > 0) {
     return static_cast<float>(latestRC_.values[channel] - 1000) / 1000.0f;
   }
 
   // no publishers, set throttle low and center everything else
-  if (channel == 2)
+  if (channel == 2) {
     return 0.0;
+  }
 
   return 0.5;
 }
 
 void SIL_Board::pwm_write(uint8_t channel, float value)
 {
-  pwm_outputs_[channel] = 1000 + (uint16_t)(1000 * value);
+  pwm_outputs_[channel] = 1000 + (uint16_t) (1000 * value);
 }
 void SIL_Board::pwm_disable()
 {
-  for (int i = 0; i < 14; i++) pwm_write(i, 0);
+  for (int i = 0; i < 14; i++) { pwm_write(i, 0); }
 }
 
 bool SIL_Board::rc_lost()
@@ -482,48 +495,51 @@ void SIL_Board::rc_init(rc_type_t rc_type) {}
 // non-volatile memory
 void SIL_Board::memory_init() {}
 
-bool SIL_Board::memory_read(void *dest, size_t len)
+bool SIL_Board::memory_read(void * dest, size_t len)
 {
   std::string directory = "rosflight_memory" + std::string(node_->get_namespace());
   std::ifstream memory_file;
   memory_file.open(directory + "/mem.bin", std::ios::binary);
 
-  if (!memory_file.is_open())
-  {
-    RCLCPP_ERROR(node_->get_logger(), "Unable to load rosflight memory file %s/mem.bin", directory.c_str());
+  if (!memory_file.is_open()) {
+    RCLCPP_ERROR(node_->get_logger(),
+                 "Unable to load rosflight memory file %s/mem.bin",
+                 directory.c_str());
     return false;
   }
 
-  memory_file.read((char *)dest, (long) len);
+  memory_file.read((char *) dest, (long) len);
   memory_file.close();
   return true;
 }
 
-bool SIL_Board::memory_write(const void *src, size_t len)
+bool SIL_Board::memory_write(const void * src, size_t len)
 {
   std::string directory = "rosflight_memory" + std::string(node_->get_namespace());
   std::string mkdir_command = "mkdir -p " + directory;
   const int dir_err = system(mkdir_command.c_str());
 
-  if (dir_err == -1)
-  {
-    RCLCPP_ERROR(node_->get_logger(), "Unable to write rosflight memory file %s/mem.bin", directory.c_str());
+  if (dir_err == -1) {
+    RCLCPP_ERROR(node_->get_logger(),
+                 "Unable to write rosflight memory file %s/mem.bin",
+                 directory.c_str());
     return false;
   }
 
   std::ofstream memory_file;
   memory_file.open(directory + "/mem.bin", std::ios::binary);
-  memory_file.write((char *)src, (long) len);
+  memory_file.write((char *) src, (long) len);
   memory_file.close();
   return true;
 }
 
 bool SIL_Board::motors_spinning()
 {
-  if (pwm_outputs_[2] > 1100)
+  if (pwm_outputs_[2] > 1100) {
     return true;
-  else
+  } else {
     return false;
+  }
 }
 
 // LED
@@ -538,27 +554,28 @@ void SIL_Board::led1_toggle() {}
 
 void SIL_Board::backup_memory_init() {}
 
-bool SIL_Board::backup_memory_read(void *dest, size_t len)
+bool SIL_Board::backup_memory_read(void * dest, size_t len)
 {
-  if (len <= BACKUP_SRAM_SIZE)
-  {
+  if (len <= BACKUP_SRAM_SIZE) {
     memcpy(dest, backup_memory_, len);
     return true;
-  }
-  else
+  } else {
     return false;
+  }
 }
 
-void SIL_Board::backup_memory_write(const void *src, size_t len)
+void SIL_Board::backup_memory_write(const void * src, size_t len)
 {
-  if (len < BACKUP_SRAM_SIZE)
+  if (len < BACKUP_SRAM_SIZE) {
     memcpy(backup_memory_, src, len);
+  }
 }
 
 void SIL_Board::backup_memory_clear(size_t len)
 {
-  if (len < BACKUP_SRAM_SIZE)
+  if (len < BACKUP_SRAM_SIZE) {
     memset(backup_memory_, 0, len);
+  }
 }
 
 void SIL_Board::RCCallback(const rosflight_msgs::msg::RCRaw &msg)
@@ -610,7 +627,8 @@ rosflight_firmware::GNSSData SIL_Board::gnss_read()
   out.fix_type = rosflight_firmware::GNSSFixType::GNSS_FIX_TYPE_FIX;
   out.time_of_week = GZ_COMPAT_GET_SIM_TIME(world_).Double() * 1000;
   out.time = GZ_COMPAT_GET_SIM_TIME(world_).Double();
-  out.nanos = (uint64_t) std::round((GZ_COMPAT_GET_SIM_TIME(world_).Double() - (double) out.time) * 1e9);
+  out.nanos =
+    (uint64_t) std::round((GZ_COMPAT_GET_SIM_TIME(world_).Double() - (double) out.time) * 1e9);
 
   out.h_acc = (int) std::round(horizontal_gps_stdev_ * 1000.0);
   out.v_acc = (int) std::round(vertical_gps_stdev_ * 1000.0);

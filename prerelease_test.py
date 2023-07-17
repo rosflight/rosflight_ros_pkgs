@@ -1,23 +1,30 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
 import subprocess
-import sys
-
 import urllib.request
+
 import yaml
-
-import argparse
-
 from termcolor import cprint
 
 
-def print_blue(x): return cprint(x, 'blue',    attrs=['bold'])
-def print_cyan(x): return cprint(x, 'cyan',    attrs=['bold'])
-def print_green(x): return cprint(x, 'green',   attrs=['bold'])
+def print_blue(x): return cprint(x, 'blue', attrs=['bold'])
+
+
+def print_cyan(x): return cprint(x, 'cyan', attrs=['bold'])
+
+
+def print_green(x): return cprint(x, 'green', attrs=['bold'])
+
+
 def print_magenta(x): return cprint(x, 'magenta', attrs=['bold'])
-def print_red(x): return cprint(x, 'red',     attrs=['bold'])
-def print_yellow(x): return cprint(x, 'yellow',  attrs=['bold'])
+
+
+def print_red(x): return cprint(x, 'red', attrs=['bold'])
+
+
+def print_yellow(x): return cprint(x, 'yellow', attrs=['bold'])
 
 
 REPO_URL = 'https://raw.githubusercontent.com/ros-infrastructure/ros_buildfarm_config'
@@ -104,7 +111,7 @@ def filter_prerelease_targets(targets, os_distro, os_release, arch):
     filtered_targets = []
     for target in targets:
         if check_attribute(target['os_distro'], os_distro) \
-            and check_attribute(target['os_release'], os_release) \
+                and check_attribute(target['os_release'], os_release) \
                 and check_attribute(target['arch'], arch):
             filtered_targets.append(target)
 
@@ -112,7 +119,6 @@ def filter_prerelease_targets(targets, os_distro, os_release, arch):
 
 
 def run_prerelease_tests(args):
-
     print_magenta("Running all tests for the \"%s\" branch" % (args.branch))
 
     print()

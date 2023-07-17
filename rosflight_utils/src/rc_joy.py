@@ -46,12 +46,13 @@ the config dictionary.
 Authors: James Jackson, Daniel Koch
 """
 
+from enum import Enum
+
 import pygame
 import rclpy
 from rclpy.node import Node
-from rosflight_msgs.msg import RCRaw
 
-from enum import Enum
+from rosflight_msgs.msg import RCRaw
 
 
 # define output RC channels
@@ -101,10 +102,10 @@ config['RealFlight'][Channel.AIL] = lambda j: j.get_axis(0)
 config['RealFlight'][Channel.ELV] = lambda j: j.get_axis(1)
 config['RealFlight'][Channel.THR] = lambda j: -j.get_axis(2)
 config['RealFlight'][Channel.RUD] = lambda j: j.get_axis(4)
-config['RealFlight'][Channel.SW1] = lambda j: 2*j.get_button(4)-1
-config['RealFlight'][Channel.SW2] = lambda j: 2*j.get_button(0)-1
-config['RealFlight'][Channel.SW3] = lambda j: 2*j.get_button(1)-1
-config['RealFlight'][Channel.SW4] = lambda j: 2*j.get_button(2)-1
+config['RealFlight'][Channel.SW1] = lambda j: 2 * j.get_button(4) - 1
+config['RealFlight'][Channel.SW2] = lambda j: 2 * j.get_button(0) - 1
+config['RealFlight'][Channel.SW3] = lambda j: 2 * j.get_button(1) - 1
+config['RealFlight'][Channel.SW4] = lambda j: 2 * j.get_button(2) - 1
 
 config['TX16S'] = {}
 config['TX16S']['keys'] = ['OpenTX RM TX16S Joystick']
@@ -124,7 +125,7 @@ class RCJoy(Node):
 
         super().__init__('rc_joy')
         self.rc_publisher = self.create_publisher(RCRaw, 'RC', 10)
-        self.timer = self.create_timer(1/update_freq, self.timer_callback)
+        self.timer = self.create_timer(1 / update_freq, self.timer_callback)
 
         pygame.display.init()
         pygame.joystick.init()

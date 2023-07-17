@@ -77,16 +77,16 @@
 #include <rosflight_msgs/srv/param_get.hpp>
 #include <rosflight_msgs/srv/param_set.hpp>
 
-#include <rosflight/mavrosflight/mavlink_comm.h>
-#include <rosflight/mavrosflight/mavlink_listener_interface.h>
-#include <rosflight/mavrosflight/mavrosflight.h>
-#include <rosflight/mavrosflight/param_listener_interface.h>
+#include <rosflight/mavrosflight/mavlink_comm.hpp>
+#include <rosflight/mavrosflight/mavlink_listener_interface.hpp>
+#include <rosflight/mavrosflight/mavrosflight.hpp>
+#include <rosflight/mavrosflight/param_listener_interface.hpp>
 
 namespace rosflight_io
 {
 class rosflightIO : public rclcpp::Node,
-    public mavrosflight::MavlinkListenerInterface,
-    public mavrosflight::ParamListenerInterface
+                    public mavrosflight::MavlinkListenerInterface,
+                    public mavrosflight::ParamListenerInterface
 {
 public:
   rosflightIO();
@@ -127,33 +127,33 @@ private:
   void handle_battery_status_msg(const mavlink_message_t &msg);
 
   // ROS message callbacks
-  void commandCallback(const rosflight_msgs::msg::Command::ConstSharedPtr& msg);
-  void auxCommandCallback(const rosflight_msgs::msg::AuxCommand::ConstSharedPtr& msg);
-  void externalAttitudeCallback(const rosflight_msgs::msg::Attitude::ConstSharedPtr& msg);
+  void commandCallback(const rosflight_msgs::msg::Command::ConstSharedPtr &msg);
+  void auxCommandCallback(const rosflight_msgs::msg::AuxCommand::ConstSharedPtr &msg);
+  void externalAttitudeCallback(const rosflight_msgs::msg::Attitude::ConstSharedPtr &msg);
 
   // ROS service callbacks
-  bool paramGetSrvCallback(const rosflight_msgs::srv::ParamGet::Request::SharedPtr& req,
-                           const rosflight_msgs::srv::ParamGet::Response::SharedPtr& res);
-  bool paramSetSrvCallback(const rosflight_msgs::srv::ParamSet::Request::SharedPtr& req,
-                           const rosflight_msgs::srv::ParamSet::Response::SharedPtr& res);
-  bool paramWriteSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr& req,
-                             const std_srvs::srv::Trigger::Response::SharedPtr& res);
-  bool paramSaveToFileCallback(const rosflight_msgs::srv::ParamFile::Request::SharedPtr& req,
-                               const rosflight_msgs::srv::ParamFile::Response::SharedPtr& res);
-  bool paramLoadFromFileCallback(const rosflight_msgs::srv::ParamFile::Request::SharedPtr& req,
-                                 const rosflight_msgs::srv::ParamFile::Response::SharedPtr& res);
-  bool calibrateImuBiasSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr& req,
-                                   const std_srvs::srv::Trigger::Response::SharedPtr& res);
-  bool calibrateRCTrimSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr& req,
-                                  const std_srvs::srv::Trigger::Response::SharedPtr& res);
-  bool calibrateBaroSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr& req,
-                                const std_srvs::srv::Trigger::Response::SharedPtr& res);
-  bool calibrateAirspeedSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr& req,
-                                    const std_srvs::srv::Trigger::Response::SharedPtr& res);
-  bool rebootSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr& req,
-                         const std_srvs::srv::Trigger::Response::SharedPtr& res);
-  bool rebootToBootloaderSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr& req,
-                                     const std_srvs::srv::Trigger::Response::SharedPtr& res);
+  bool paramGetSrvCallback(const rosflight_msgs::srv::ParamGet::Request::SharedPtr &req,
+                           const rosflight_msgs::srv::ParamGet::Response::SharedPtr &res);
+  bool paramSetSrvCallback(const rosflight_msgs::srv::ParamSet::Request::SharedPtr &req,
+                           const rosflight_msgs::srv::ParamSet::Response::SharedPtr &res);
+  bool paramWriteSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr &req,
+                             const std_srvs::srv::Trigger::Response::SharedPtr &res);
+  bool paramSaveToFileCallback(const rosflight_msgs::srv::ParamFile::Request::SharedPtr &req,
+                               const rosflight_msgs::srv::ParamFile::Response::SharedPtr &res);
+  bool paramLoadFromFileCallback(const rosflight_msgs::srv::ParamFile::Request::SharedPtr &req,
+                                 const rosflight_msgs::srv::ParamFile::Response::SharedPtr &res);
+  bool calibrateImuBiasSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr &req,
+                                   const std_srvs::srv::Trigger::Response::SharedPtr &res);
+  bool calibrateRCTrimSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr &req,
+                                  const std_srvs::srv::Trigger::Response::SharedPtr &res);
+  bool calibrateBaroSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr &req,
+                                const std_srvs::srv::Trigger::Response::SharedPtr &res);
+  bool calibrateAirspeedSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr &req,
+                                    const std_srvs::srv::Trigger::Response::SharedPtr &res);
+  bool rebootSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr &req,
+                         const std_srvs::srv::Trigger::Response::SharedPtr &res);
+  bool rebootToBootloaderSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr &req,
+                                     const std_srvs::srv::Trigger::Response::SharedPtr &res);
 
   // timer callbacks
   void paramTimerCallback();
@@ -163,10 +163,13 @@ private:
   // helpers
   void request_version();
   void send_heartbeat();
-  void check_error_code(uint8_t current, uint8_t previous, ROSFLIGHT_ERROR_CODE code, const std::string& name);
+  void check_error_code(uint8_t current,
+                        uint8_t previous,
+                        ROSFLIGHT_ERROR_CODE code,
+                        const std::string &name);
   rclcpp::Time fcu_time_to_ros_time(std::chrono::nanoseconds fcu_time);
 
-  template <class T>
+  template<class T>
   inline T saturate(T value, T min, T max)
   {
     return value < min ? min : (value > max ? max : value);
@@ -198,8 +201,10 @@ private:
   rclcpp::Publisher<rosflight_msgs::msg::Error>::SharedPtr error_pub_;
   rclcpp::Publisher<rosflight_msgs::msg::BatteryStatus>::SharedPtr battery_status_pub_;
   std::map<std::string, rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr> named_value_int_pubs_;
-  std::map<std::string, rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr> named_value_float_pubs_;
-  std::map<std::string, rclcpp::Publisher<rosflight_msgs::msg::Command>::SharedPtr> named_command_struct_pubs_;
+  std::map<std::string, rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr>
+    named_value_float_pubs_;
+  std::map<std::string, rclcpp::Publisher<rosflight_msgs::msg::Command>::SharedPtr>
+    named_command_struct_pubs_;
 
   rclcpp::Service<rosflight_msgs::srv::ParamGet>::SharedPtr param_get_srv_;
   rclcpp::Service<rosflight_msgs::srv::ParamSet>::SharedPtr param_set_srv_;
@@ -222,8 +227,8 @@ private:
 
   std::string frame_id_;
 
-  mavrosflight::MavlinkComm *mavlink_comm_;
-  mavrosflight::MavROSflight *mavrosflight_;
+  mavrosflight::MavlinkComm * mavlink_comm_;
+  mavrosflight::MavROSflight * mavrosflight_;
 };
 
 } // namespace rosflight_io

@@ -35,7 +35,7 @@
 
 #include <eigen3/Eigen/Core>
 
-#include <rosflight_sim/rosflight_sil.h>
+#include <rosflight_sim/rosflight_sil.hpp>
 
 namespace rosflight_sim
 {
@@ -43,8 +43,7 @@ ROSflightSIL::ROSflightSIL() :
   gazebo::ModelPlugin(),
   comm_(board_),
   firmware_(board_, comm_),
-  mav_dynamics_()
-{}
+  mav_dynamics_() {}
 
 ROSflightSIL::~ROSflightSIL()
 {
@@ -60,35 +59,31 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   /*
    * Connect the Plugin to the Robot and Save pointers to the various elements in the simulation
    */
-  if (_sdf->HasElement("linkName"))
+  if (_sdf->HasElement("linkName")) {
     link_name_ = _sdf->GetElement("linkName")->Get<std::string>();
-  else
+  } else {
     gzerr << "[ROSflight_SIL] Please specify a linkName of the forces and moments plugin.\n";
+  }
   link_ = model_->GetLink(link_name_);
-  if (link_ == nullptr)
+  if (link_ == nullptr) {
     gzthrow("[ROSflight_SIL] Couldn't find specified link \"" << link_name_ << "\".")
+  }
 
   /* Load Params from Gazebo Server */
-  if (_sdf->HasElement("mavType"))
-  {
+  if (_sdf->HasElement("mavType")) {
     mav_type_ = _sdf->GetElement("mavType")->Get<std::string>();
-  }
-  else
-  {
+  } else {
     mav_type_ = "multirotor";
     gzerr << "[rosflight_sim] Please specify a value for parameter \"mavType\".\n";
   }
 
-  if (mav_type_ == "multirotor")
-  {
+  if (mav_type_ == "multirotor") {
     DeclareMultirotorParams();
     mav_dynamics_ = new Multirotor(node_);
-  } else if (mav_type_ == "fixedwing")
-  {
+  } else if (mav_type_ == "fixedwing") {
     DeclareFixedwingParams();
     mav_dynamics_ = new Fixedwing(node_);
-  } else
-  {
+  } else {
     gzthrow("unknown or unsupported mav type\n")
   }
 
@@ -97,7 +92,8 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   firmware_.init();
 
   // Connect the update function to the simulation
-  updateConnection_ = gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&ROSflightSIL::OnUpdate, this, _1));
+  updateConnection_ =
+    gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&ROSflightSIL::OnUpdate, this, _1));
 
   initial_pose_ = GZ_COMPAT_GET_WORLD_COG_POSE(link_);
 
@@ -105,7 +101,8 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   truth_NWU_pub_ = node_->create_publisher<nav_msgs::msg::Odometry>("truth/NWU", 1);
 }
 
-void ROSflightSIL::DeclareMultirotorParams() {
+void ROSflightSIL::DeclareMultirotorParams()
+{
   node_->declare_parameter("mass", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("linear_mu", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("angular_mu", rclcpp::PARAMETER_DOUBLE);
@@ -123,7 +120,8 @@ void ROSflightSIL::DeclareMultirotorParams() {
   node_->declare_parameter("rotor_tau_down", rclcpp::PARAMETER_DOUBLE);
 }
 
-void ROSflightSIL::DeclareFixedwingParams() {
+void ROSflightSIL::DeclareFixedwingParams()
+{
   node_->declare_parameter("rho", rclcpp::PARAMETER_DOUBLE);
 
   node_->declare_parameter("wing_s", rclcpp::PARAMETER_DOUBLE);
@@ -203,7 +201,7 @@ void ROSflightSIL::DeclareFixedwingParams() {
 }
 
 // This gets called by the world update event.
-void ROSflightSIL::OnUpdate(const gazebo::common::UpdateInfo& _info)
+void ROSflightSIL::OnUpdate(const gazebo::common::UpdateInfo &_info)
 {
   // We run twice so that that functions that take place when we don't have new IMU data get run
   firmware_.run();
@@ -241,7 +239,7 @@ void ROSflightSIL::Reset()
   link_->ResetPhysicsStates();
 }
 
-void ROSflightSIL::windCallback(const geometry_msgs::msg::Vector3& msg)
+void ROSflightSIL::windCallback(const geometry_msgs::msg::Vector3 &msg)
 {
   Eigen::Vector3d wind;
   wind << msg.x, msg.y, msg.z;

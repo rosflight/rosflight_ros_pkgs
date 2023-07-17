@@ -37,9 +37,9 @@
  */
 
 #include <rclcpp/rclcpp.hpp>
-#include <rosflight/rosflight_io.h>
+#include <rosflight/rosflight_io.hpp>
 
-int main(int argc, char **argv)
+int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<rosflight_io::rosflightIO>());

@@ -60,7 +60,7 @@ include_directories(include
   ${Boost_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
   ${YAML_CPP_INCLUDEDIR}
-)
+  )
 
 # mavrosflight library
 add_library(mavrosflight
@@ -71,28 +71,28 @@ add_library(mavrosflight
   src/mavrosflight/param_manager.cpp
   src/mavrosflight/param.cpp
   src/mavrosflight/time_manager.cpp
-)
+  )
 target_compile_options(mavrosflight PRIVATE -Wno-address-of-packed-member)
 target_link_libraries(mavrosflight
   ${ament_LIBRARIES}
   ${rclcpp_LIBRARIES}
   ${Boost_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
-)
+  )
 ament_target_dependencies(mavrosflight rclcpp)
 
 # rosflight_io_node
 add_executable(rosflight_io
   src/rosflight_io_node.cpp
   src/rosflight_io.cpp
-)
+  )
 target_compile_options(rosflight_io PRIVATE -Wno-address-of-packed-member)
 target_link_libraries(rosflight_io
   mavrosflight
   ${rclcpp_LIBRARIES}
   ${ament_LIBRARIES}
   ${Boost_LIBRARES}
-)
+  )
 ament_target_dependencies(rosflight_io
   geometry_msgs
   rosflight_msgs
@@ -101,24 +101,24 @@ ament_target_dependencies(rosflight_io
   std_srvs
   tf2
   tf2_geometry_msgs
-)
+  )
 
 # calibrate mag node
 add_executable(calibrate_mag
   src/mag_cal_node.cpp
   src/mag_cal.cpp
-)
+  )
 target_link_libraries(calibrate_mag
   ${rclcpp_LIBRARIES}
   ${ament_LIBRARIES}
   ${Boost_LIBRARIES}
-)
+  )
 ament_target_dependencies(calibrate_mag
   rosflight_msgs
   sensor_msgs
   eigen_stl_containers
   message_filters
-)
+  )
 
 
 #############
@@ -130,14 +130,14 @@ install(TARGETS mavrosflight rosflight_io calibrate_mag
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
+  )
 
 # Mark cpp header files for installation
 install(DIRECTORY include/rosflight/mavrosflight/
   DESTINATION include/${PROJECT_NAME}
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
-)
+  )
 
 
 ament_package()

@@ -32,14 +32,14 @@ set(msg_files
   "msg/OutputRaw.msg"
   "msg/RCRaw.msg"
   "msg/Status.msg"
-)
+  )
 
 # declare the service files to generate code for
 set(srv_files
   "srv/ParamFile.srv"
   "srv/ParamGet.srv"
   "srv/ParamSet.srv"
-)
+  )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}
@@ -48,7 +48,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   builtin_interfaces
   geometry_msgs
   std_msgs
-)
+  )
 
 ament_export_dependencies(rosidl_default_runtime)
 

@@ -75,7 +75,7 @@ public:
    * @brief set_refence_magnetic_field_strength
    * @param reference_magnetic_field
    */
-  bool mag_callback(const sensor_msgs::msg::MagneticField::ConstSharedPtr& mag);
+  bool mag_callback(const sensor_msgs::msg::MagneticField::ConstSharedPtr &mag);
 
   void set_reference_magnetic_field_strength(double reference_magnetic_field);
 
@@ -125,10 +125,10 @@ private:
   Eigen::MatrixXd ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, int iters, double inlier_thresh);
 
   // function to vector from ellipsoid center to surface along input vector
-  static Eigen::Vector3d intersect(const Eigen::Vector3d& r_m,
-                                   const Eigen::Vector3d& r_e,
-                                   const Eigen::MatrixXd& Q,
-                                   const Eigen::MatrixXd& ub,
+  static Eigen::Vector3d intersect(const Eigen::Vector3d &r_m,
+                                   const Eigen::Vector3d &r_e,
+                                   const Eigen::MatrixXd &Q,
+                                   const Eigen::MatrixXd &ub,
                                    double k);
 
   /*

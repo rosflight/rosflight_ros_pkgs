@@ -2,12 +2,13 @@
 
 # author: James Jackson
 
+from enum import Enum
+
 import pygame
 import rclpy
 from rclpy.node import Node
-from rosflight_msgs.msg import Command
 
-from enum import Enum
+from rosflight_msgs.msg import Command
 
 
 # define output RC channels
@@ -80,7 +81,7 @@ class CommandJoy(Node):
 
         super().__init__('command_joy')
         self.rc_publisher = self.create_publisher(Command, 'command', 10)
-        self.timer = self.create_timer(1/update_freq, self.timer_callback)
+        self.timer = self.create_timer(1 / update_freq, self.timer_callback)
 
         pygame.display.init()
         pygame.joystick.init()

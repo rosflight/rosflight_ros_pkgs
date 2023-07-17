@@ -30,14 +30,14 @@ endif()
 
 # Git information
 execute_process(COMMAND git rev-parse --short=8 HEAD
-    OUTPUT_VARIABLE GIT_VERSION_HASH
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/firmware)
+  OUTPUT_VARIABLE GIT_VERSION_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/firmware)
 
 execute_process(COMMAND git describe --tags --abbrev=8 --always --dirty --long
-    OUTPUT_VARIABLE GIT_VERSION_STRING
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/firmware)
+  OUTPUT_VARIABLE GIT_VERSION_STRING
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/firmware)
 
 if("${GIT_VERSION_STRING}" STREQUAL "")
   set(GIT_VERSION_STRING "undefined")
@@ -57,12 +57,12 @@ set(FIRMWARE_INCLUDE_DIRS
   firmware/lib/
   firmware/comms/
   firmware/test/
-)
+  )
 
 include_directories(include
   ${FIRMWARE_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
-)
+  )
 
 # rosflight_firmware
 add_library(rosflight_firmware
@@ -81,11 +81,11 @@ add_library(rosflight_firmware
   firmware/comms/mavlink/mavlink.cpp
 
   firmware/lib/turbomath/turbomath.cpp
-)
+  )
 target_compile_definitions(rosflight_firmware PUBLIC
-    GIT_VERSION_HASH=0x${GIT_VERSION_HASH}
-    GIT_VERSION_STRING=\"${GIT_VERSION_STRING}\"
-)
+  GIT_VERSION_HASH=0x${GIT_VERSION_HASH}
+  GIT_VERSION_STRING=\"${GIT_VERSION_STRING}\"
+  )
 ament_export_targets(rosflight_firmwareTargets HAS_LIBRARY_TARGET)
 install(
   TARGETS rosflight_firmware
@@ -99,13 +99,13 @@ install(
 # rosflight_udp_board
 add_library(rosflight_udp_board
   src/udp_board.cpp
-)
+  )
 target_link_libraries(rosflight_udp_board
   rosflight_firmware
   ${rclcpp_LIBRARIES}
   ${ament_LIBRARIES}
   ${Boost_LIBRARIES}
-)
+  )
 ament_export_targets(rosflight_udp_boardTargets HAS_LIBRARY_TARGET)
 install(
   TARGETS rosflight_udp_board
@@ -118,11 +118,11 @@ install(
 
 # rosflight_test
 add_library(rosflight_test
-    firmware/test/test_board.cpp
-)
+  firmware/test/test_board.cpp
+  )
 target_link_libraries(rosflight_test
   rosflight_firmware
-)
+  )
 ament_export_targets(rosflight_testTargets HAS_LIBRARY_TARGET)
 install(
   TARGETS rosflight_test

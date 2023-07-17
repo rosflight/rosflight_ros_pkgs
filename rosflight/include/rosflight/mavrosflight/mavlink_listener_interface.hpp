@@ -30,51 +30,30 @@
  */
 
 /**
- * \file mavrosflight.h
+ * \file mavlink_listener_interface.h
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#ifndef MAVROSFLIGHT_MAVROSFLIGHT_H
-#define MAVROSFLIGHT_MAVROSFLIGHT_H
+#ifndef MAVROSFLIGHT_MAVLINK_LISTENER_INTERFACE_H
+#define MAVROSFLIGHT_MAVLINK_LISTENER_INTERFACE_H
 
-#include <rosflight/mavrosflight/mavlink_bridge.h>
-#include <rosflight/mavrosflight/mavlink_comm.h>
-#include <rosflight/mavrosflight/param_manager.h>
-#include <rosflight/mavrosflight/time_manager.h>
-
-#include <rosflight/mavrosflight/mavlink_listener_interface.h>
-#include <rosflight/mavrosflight/param_listener_interface.h>
-
-#include <rclcpp/rclcpp.hpp>
-
-#include <boost/function.hpp>
-
-#include <cstdint>
-#include <string>
+#include <rosflight/mavrosflight/mavlink_bridge.hpp>
 
 namespace mavrosflight
 {
-class MavROSflight
+/**
+ * \brief Describes an interface classes can implement to receive and handle mavlink messages
+ */
+class MavlinkListenerInterface
 {
 public:
   /**
-   * \brief Instantiates the class and begins communication on the specified serial port
-   * \param mavlink_comm Reference to a MavlinkComm object (serial or UDP)
-   * \param baud_rate Serial communication baud rate
+   * \brief The handler function for mavlink messages to be implemented by derived classes
+   * \param msg The mavlink message to handle
    */
-  MavROSflight(MavlinkComm& mavlink_comm,
-               rclcpp::Node *node);
-
-  /**
-   * \brief Stops communication and closes the serial port before the object is destroyed
-   */
-  ~MavROSflight();
-
-  MavlinkComm& comm;
-  ParamManager param;
-  TimeManager time;
+  virtual void handle_mavlink_message(const mavlink_message_t &msg) = 0;
 };
 
 } // namespace mavrosflight
 
-#endif // MAVROSFLIGHT_MAVROSFLIGHT_H
+#endif // MAVROSFLIGHT_MAVLINK_LISTENER_INTERFACE_H

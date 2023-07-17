@@ -32,17 +32,16 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import serial
-
 import rospy
+import serial
 
 import libnmea_navsat_driver.driver
 
 if __name__ == '__main__':
     rospy.init_node('gps')
 
-    serial_port = rospy.get_param('~port','/dev/ttyUSB0')
-    serial_baud = rospy.get_param('~baud',115200)
+    serial_port = rospy.get_param('~port', '/dev/ttyUSB0')
+    serial_baud = rospy.get_param('~baud', 115200)
     frame_id = libnmea_navsat_driver.driver.RosNMEADriver.get_frame_id()
 
     try:
@@ -53,7 +52,8 @@ if __name__ == '__main__':
             try:
                 driver.add_sentence(data, frame_id)
             except ValueError as e:
-                rospy.logwarn("Value error, likely due to missing fields in the NMEA message. Error was: %s. Please report this issue at github.com/ros-drivers/nmea_navsat_driver, including a bag file with the NMEA sentences that caused it." % e)
+                rospy.logwarn(
+                    "Value error, likely due to missing fields in the NMEA message. Error was: %s. Please report this issue at github.com/ros-drivers/nmea_navsat_driver, including a bag file with the NMEA sentences that caused it." % e)
 
     except rospy.ROSInterruptException:
-        GPS.close() #Close GPS serial port
+        GPS.close()  # Close GPS serial port

@@ -35,9 +35,9 @@
  */
 
 #include <rclcpp/rclcpp.hpp>
-#include <rosflight/mag_cal.h>
+#include <rosflight/mag_cal.hpp>
 
-int main(int argc, char **argv)
+int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
 

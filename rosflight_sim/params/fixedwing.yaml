@@ -79,4 +79,4 @@
     C_Y_r: 0.3280
     C_Y_delta_a: -0.0486 #check the sign on this
     C_Y_delta_e: 0.0
-    C_Y_delta_r:  -0.2424 #check the sign on this
+    C_Y_delta_r: -0.2424 #check the sign on this

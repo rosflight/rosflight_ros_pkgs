@@ -37,8 +37,8 @@
 #ifndef MAVROSFLIGHT_PARAM_H
 #define MAVROSFLIGHT_PARAM_H
 
-#include <rosflight/mavrosflight/mavlink_bridge.h>
-#include <rosflight/mavrosflight/mavlink_serial.h>
+#include <rosflight/mavrosflight/mavlink_bridge.hpp>
+#include <rosflight/mavrosflight/mavlink_serial.hpp>
 
 #include <yaml-cpp/yaml.h>
 
@@ -56,7 +56,7 @@ public:
   MAV_PARAM_TYPE getType() const;
   double getValue() const;
 
-  void requestSet(double value, mavlink_message_t *msg);
+  void requestSet(double value, mavlink_message_t * msg);
   bool handleUpdate(const mavlink_param_value_t &msg);
 
 private:
@@ -67,7 +67,7 @@ private:
   float getRawValue(double value);
   double getCastValue(double value);
 
-  template <typename T>
+  template<typename T>
   double fromRawValue(float value)
   {
     T t_value;
@@ -75,7 +75,7 @@ private:
     return static_cast<double>(t_value);
   }
 
-  template <typename T>
+  template<typename T>
   float toRawValue(double value)
   {
     T t_value = static_cast<T>(value);
@@ -84,7 +84,7 @@ private:
     return result;
   }
 
-  template <typename T>
+  template<typename T>
   double toCastValue(double value)
   {
     return static_cast<double>(static_cast<T>(value));

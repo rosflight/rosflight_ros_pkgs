@@ -1,4 +1,4 @@
-#include <rosflight_utils/viz.h>
+#include <rosflight_utils/viz.hpp>
 
 namespace rosflight_utils
 {
@@ -12,20 +12,19 @@ Viz::Viz() : Node("viz_node")
 
   // Magnetometer visualization
   mag_sub_ = this->create_subscription<sensor_msgs::msg::MagneticField>(
-    "/magnetometer", 1, std::bind(&Viz::magCallback, this,std::placeholders::_1));
+    "/magnetometer", 1, std::bind(&Viz::magCallback, this, std::placeholders::_1));
   mag_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("viz/magnetometer", 1);
   pts_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("viz/cloud", 1);
 
   // Attitude visualization
   att_sub_ = this->create_subscription<rosflight_msgs::msg::Attitude>(
-    "/attitude", 1, std::bind(&Viz::attCallback, this,std::placeholders::_1));
+    "/attitude", 1, std::bind(&Viz::attCallback, this, std::placeholders::_1));
   pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("viz/attitude", 1);
 }
 
-void Viz::magCallback(const sensor_msgs::msg::MagneticField::ConstSharedPtr& msg)
+void Viz::magCallback(const sensor_msgs::msg::MagneticField::ConstSharedPtr &msg)
 {
-  if (mag_throttle_ > mag_skip_)
-  {
+  if (mag_throttle_ > mag_skip_) {
     // unpack message
     double x = msg->magnetic_field.x;
     double y = msg->magnetic_field.y;
@@ -76,8 +75,7 @@ void Viz::magCallback(const sensor_msgs::msg::MagneticField::ConstSharedPtr& msg
     pts_msg.color.g = 1.0;
     pts_msg.color.b = 0.0;
 
-    for (const auto & item : pts_list_)
-    {
+    for (const auto &item : pts_list_) {
       pts_msg.points.push_back(item);
     }
 
@@ -87,7 +85,7 @@ void Viz::magCallback(const sensor_msgs::msg::MagneticField::ConstSharedPtr& msg
   mag_throttle_++;
 }
 
-void Viz::attCallback(const rosflight_msgs::msg::Attitude::ConstSharedPtr& msg)
+void Viz::attCallback(const rosflight_msgs::msg::Attitude::ConstSharedPtr &msg)
 {
   geometry_msgs::msg::PoseStamped pose;
   pose.header = msg->header;
@@ -99,7 +97,7 @@ void Viz::attCallback(const rosflight_msgs::msg::Attitude::ConstSharedPtr& msg)
 
 } // namespace rosflight_utils
 
-int main(int argc, char **argv)
+int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<rosflight_utils::Viz>());

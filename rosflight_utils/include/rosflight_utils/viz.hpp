@@ -35,8 +35,8 @@ private:
   std::string fixed_frame_ = "fixed_frame";
 
   // Functions
-  void magCallback(const sensor_msgs::msg::MagneticField::ConstSharedPtr& msg);
-  void attCallback(const rosflight_msgs::msg::Attitude::ConstSharedPtr& msg);
+  void magCallback(const sensor_msgs::msg::MagneticField::ConstSharedPtr &msg);
+  void attCallback(const rosflight_msgs::msg::Attitude::ConstSharedPtr &msg);
 };
 
 } // namespace rosflight_utils

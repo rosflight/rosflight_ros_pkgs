@@ -41,12 +41,13 @@ class MAVForcesAndMoments
 protected:
   static double sat(double x, double max, double min)
   {
-    if (x > max)
+    if (x > max) {
       return max;
-    else if (x < min)
+    } else if (x < min) {
       return min;
-    else
+    } else {
       return x;
+    }
   }
 
   static double max(double x, double y) { return (x > y) ? x : y; }
@@ -61,7 +62,8 @@ public:
     double t;              // current time
   };
 
-  virtual Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x, const int act_cmds[]) = 0;
+  virtual Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x,
+                                                             const int act_cmds[]) = 0;
   virtual void set_wind(Eigen::Vector3d wind) = 0;
 };
 

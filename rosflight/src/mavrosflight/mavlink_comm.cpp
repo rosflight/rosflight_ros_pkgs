@@ -34,13 +34,14 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#include <rosflight/mavrosflight/mavlink_comm.h>
+#include <rosflight/mavrosflight/mavlink_comm.hpp>
 
 namespace mavrosflight
 {
 using boost::asio::serial_port_base;
 
-MavlinkComm::MavlinkComm() : io_service_(), read_buf_raw_(), msg_in_(), status_in_(), write_in_progress_(false) {}
+MavlinkComm::MavlinkComm()
+  : io_service_(), read_buf_raw_(), msg_in_(), status_in_(), write_in_progress_(false) {}
 
 MavlinkComm::~MavlinkComm() = default;
 
@@ -61,40 +62,38 @@ void MavlinkComm::close()
   io_service_.stop();
   do_close();
 
-  if (io_thread_.joinable())
-  {
+  if (io_thread_.joinable()) {
     io_thread_.join();
   }
 }
 
-void MavlinkComm::register_mavlink_listener(MavlinkListenerInterface *const listener)
+void MavlinkComm::register_mavlink_listener(MavlinkListenerInterface * const listener)
 {
-  if (listener == nullptr)
+  if (listener == nullptr) {
     return;
+  }
 
   bool already_registered = false;
-  for (auto & item : listeners_)
-  {
-    if (listener == item)
-    {
+  for (auto &item : listeners_) {
+    if (listener == item) {
       already_registered = true;
       break;
     }
   }
 
-  if (!already_registered)
+  if (!already_registered) {
     listeners_.push_back(listener);
+  }
 }
 
-void MavlinkComm::unregister_mavlink_listener(MavlinkListenerInterface *const listener)
+void MavlinkComm::unregister_mavlink_listener(MavlinkListenerInterface * const listener)
 {
-  if (listener == nullptr)
+  if (listener == nullptr) {
     return;
+  }
 
-  for (int i = 0; i < (int) listeners_.size(); i++)
-  {
-    if (listener == listeners_[i])
-    {
+  for (int i = 0; i < (int) listeners_.size(); i++) {
+    if (listener == listeners_[i]) {
       listeners_.erase(listeners_.begin() + i);
       i--;
     }
@@ -103,8 +102,9 @@ void MavlinkComm::unregister_mavlink_listener(MavlinkListenerInterface *const li
 
 void MavlinkComm::async_read()
 {
-  if (!is_open())
+  if (!is_open()) {
     return;
+  }
 
   do_async_read(boost::asio::buffer(read_buf_raw_, MAVLINK_SERIAL_READ_BUF_SIZE),
                 boost::bind(&MavlinkComm::async_read_end, this, boost::asio::placeholders::error,
@@ -113,21 +113,18 @@ void MavlinkComm::async_read()
 
 void MavlinkComm::async_read_end(const boost::system::error_code &error, size_t bytes_transferred)
 {
-  if (!is_open())
+  if (!is_open()) {
     return;
+  }
 
-  if (error)
-  {
+  if (error) {
     close();
     return;
   }
 
-  for (int i = 0; i < (int) bytes_transferred; i++)
-  {
-    if (mavlink_parse_char(MAVLINK_COMM_0, read_buf_raw_[i], &msg_in_, &status_in_))
-    {
-      for (auto & listener : listeners_)
-      {
+  for (int i = 0; i < (int) bytes_transferred; i++) {
+    if (mavlink_parse_char(MAVLINK_COMM_0, read_buf_raw_[i], &msg_in_, &status_in_)) {
+      for (auto &listener : listeners_) {
         listener->handle_mavlink_message(msg_in_);
       }
     }
@@ -138,7 +135,7 @@ void MavlinkComm::async_read_end(const boost::system::error_code &error, size_t 
 
 void MavlinkComm::send_message(const mavlink_message_t &msg)
 {
-  auto *buffer = new WriteBuffer();
+  auto * buffer = new WriteBuffer();
   buffer->len = mavlink_msg_to_send_buffer(buffer->data, &msg);
   assert(buffer->len <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
 
@@ -152,48 +149,49 @@ void MavlinkComm::send_message(const mavlink_message_t &msg)
 
 void MavlinkComm::async_write(bool check_write_state)
 {
-  if (check_write_state && write_in_progress_)
+  if (check_write_state && write_in_progress_) {
     return;
+  }
 
   mutex_lock lock(mutex_);
-  if (write_queue_.empty())
+  if (write_queue_.empty()) {
     return;
+  }
 
   write_in_progress_ = true;
-  WriteBuffer *buffer = write_queue_.front();
+  WriteBuffer * buffer = write_queue_.front();
   do_async_write(boost::asio::buffer(buffer->dpos(), buffer->nbytes()),
                  boost::bind(&MavlinkComm::async_write_end, this, boost::asio::placeholders::error,
                              boost::asio::placeholders::bytes_transferred));
 }
 
-void MavlinkComm::async_write_end(const boost::system::error_code &error, std::size_t bytes_transferred)
+void MavlinkComm::async_write_end(const boost::system::error_code &error,
+                                  std::size_t bytes_transferred)
 {
-  if (error)
-  {
+  if (error) {
     std::cerr << error.message() << std::endl;
     close();
     return;
   }
 
   mutex_lock lock(mutex_);
-  if (write_queue_.empty())
-  {
+  if (write_queue_.empty()) {
     write_in_progress_ = false;
     return;
   }
 
-  WriteBuffer *buffer = write_queue_.front();
+  WriteBuffer * buffer = write_queue_.front();
   buffer->pos += bytes_transferred;
-  if (buffer->nbytes() == 0)
-  {
+  if (buffer->nbytes() == 0) {
     write_queue_.pop_front();
     delete buffer;
   }
 
-  if (write_queue_.empty())
+  if (write_queue_.empty()) {
     write_in_progress_ = false;
-  else
+  } else {
     async_write(false);
+  }
 }
 
 } // namespace mavrosflight

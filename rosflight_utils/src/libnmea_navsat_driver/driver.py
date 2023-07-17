@@ -32,14 +32,12 @@
 
 import math
 
-import rospy
-
-from sensor_msgs.msg import NavSatFix, NavSatStatus, TimeReference
-from geometry_msgs.msg import TwistStamped
-from rosflight_msgs.msg import GPS
-
-from libnmea_navsat_driver.checksum_utils import check_nmea_checksum
 import libnmea_navsat_driver.parser
+import rospy
+from libnmea_navsat_driver.checksum_utils import check_nmea_checksum
+from sensor_msgs.msg import TimeReference
+
+from rosflight_msgs.msg import GPS
 
 
 class RosNMEADriver(object):

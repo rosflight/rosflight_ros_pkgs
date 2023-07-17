@@ -43,13 +43,13 @@
 
 #include <mavlink/mavlink.h>
 #include <rosflight.h>
-#include <rosflight_sim/sil_board.h>
+#include <rosflight_sim/sil_board.hpp>
 
-#include <rosflight_sim/fixedwing_forces_and_moments.h>
-#include <rosflight_sim/mav_forces_and_moments.h>
-#include <rosflight_sim/multirotor_forces_and_moments.h>
+#include <rosflight_sim/fixedwing_forces_and_moments.hpp>
+#include <rosflight_sim/mav_forces_and_moments.hpp>
+#include <rosflight_sim/multirotor_forces_and_moments.hpp>
 
-#include <rosflight_sim/gz_compat.h>
+#include <rosflight_sim/gz_compat.hpp>
 
 namespace rosflight_sim
 {
@@ -62,10 +62,10 @@ public:
 protected:
   void Reset() override;
   void Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf) override;
-  void OnUpdate(const gazebo::common::UpdateInfo& _info);
+  void OnUpdate(const gazebo::common::UpdateInfo &_info);
 
 private:
-  void windCallback(const geometry_msgs::msg::Vector3& msg);
+  void windCallback(const geometry_msgs::msg::Vector3 &msg);
   void publishTruth();
 
   rclcpp::Node::SharedPtr node_;
@@ -88,7 +88,7 @@ private:
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr truth_NED_pub_;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr truth_NWU_pub_;
 
-  MAVForcesAndMoments* mav_dynamics_;
+  MAVForcesAndMoments * mav_dynamics_;
 
   // container for forces
   Eigen::Matrix<double, 6, 1> forces_, applied_forces_;

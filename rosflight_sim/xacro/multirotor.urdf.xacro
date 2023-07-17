@@ -7,33 +7,34 @@ Author: James Jackson
 
 -->
 
-<robot name="multirotor" xmlns:xacro="http://ros.org/wiki/xacro">
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="multirotor">
   <!-- Properties -->
   <xacro:arg name="mav_name" default="multirotor"/>
 
-  <xacro:property name="namespace" value="$(arg mav_name)" />
-  <xacro:property name="use_mesh_file" value="true" />
-  <xacro:property name="mesh_file" value="$(arg mesh_file_location)" />
-  <xacro:property name="mass" value="2.0" />
-  <xacro:property name="body_width" value="0.505" />
-  <xacro:property name="body_height" value="0.1" />
+  <xacro:property name="namespace" value="$(arg mav_name)"/>
+  <xacro:property name="use_mesh_file" value="true"/>
+  <xacro:property name="mesh_file" value="$(arg mesh_file_location)"/>
+  <xacro:property name="mass" value="2.0"/>
+  <xacro:property name="body_width" value="0.505"/>
+  <xacro:property name="body_height" value="0.1"/>
   <xacro:property name="body_inertia">
-    <inertia ixx="0.07" ixy="0.0" ixz="0.0" iyy="0.08" iyz="0.0" izz="0.12" />
-  </xacro:property> />
+    <inertia ixx="0.07" ixy="0.0" ixz="0.0" iyy="0.08" iyz="0.0" izz="0.12"/>
+  </xacro:property>
+  />
 
   <!-- *********************** GAZEBO ROBOT DEFINITION ******************* -->
   <link name="${namespace}/base_link">
     <inertial>
-      <mass value="${mass}" />  <!-- [kg] -->
-      <origin xyz="0 0 0" />
-      <xacro:insert_block name="body_inertia" />
+      <mass value="${mass}"/>  <!-- [kg] -->
+      <origin xyz="0 0 0"/>
+      <xacro:insert_block name="body_inertia"/>
     </inertial>
 
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <xacro:if value="${use_mesh_file}">
-          <mesh filename="${mesh_file}" scale="1 1 1" />
+          <mesh filename="${mesh_file}" scale="1 1 1"/>
         </xacro:if>
         <xacro:unless value="${use_mesh_file}">
           <cylinder length="${body_height}" radius="${body_width}"/>
@@ -42,10 +43,10 @@ Author: James Jackson
     </visual>
 
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <xacro:if value="${use_mesh_file}">
-          <mesh filename="${mesh_file}" scale="1 1 1" />
+          <mesh filename="${mesh_file}" scale="1 1 1"/>
         </xacro:if>
         <xacro:unless value="${use_mesh_file}">
           <cylinder length="${body_height}" radius="${body_width}"/>

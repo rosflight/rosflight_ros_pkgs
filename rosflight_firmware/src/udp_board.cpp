@@ -41,7 +41,10 @@ using boost::asio::ip::udp;
 
 namespace rosflight_firmware
 {
-UDPBoard::UDPBoard(std::string bind_host, uint16_t bind_port, std::string remote_host, uint16_t remote_port) :
+UDPBoard::UDPBoard(std::string bind_host,
+                   uint16_t bind_port,
+                   std::string remote_host,
+                   uint16_t remote_port) :
   bind_host_(bind_host),
   bind_port_(bind_port),
   remote_host_(remote_host),
@@ -60,11 +63,15 @@ UDPBoard::~UDPBoard()
   io_service_.stop();
   socket_.close();
 
-  if (io_thread_.joinable())
+  if (io_thread_.joinable()) {
     io_thread_.join();
+  }
 }
 
-void UDPBoard::set_ports(std::string bind_host, uint16_t bind_port, std::string remote_host, uint16_t remote_port)
+void UDPBoard::set_ports(std::string bind_host,
+                         uint16_t bind_port,
+                         std::string remote_host,
+                         uint16_t remote_port)
 {
   bind_host_ = bind_host;
   bind_port_ = bind_port;
@@ -75,7 +82,7 @@ void UDPBoard::set_ports(std::string bind_host, uint16_t bind_port, std::string 
 void UDPBoard::serial_init(uint32_t baud_rate, uint32_t dev)
 {
   // can throw an uncaught boost::system::system_error exception
-  (void)dev;
+  (void) dev;
 
   udp::resolver resolver(io_service_);
 
@@ -98,9 +105,9 @@ void UDPBoard::serial_init(uint32_t baud_rate, uint32_t dev)
 
 void UDPBoard::serial_flush() {}
 
-void UDPBoard::serial_write(const uint8_t *src, size_t len)
+void UDPBoard::serial_write(const uint8_t * src, size_t len)
 {
-  Buffer *buffer = new Buffer(src, len);
+  Buffer * buffer = new Buffer(src, len);
 
   {
     MutexLock lock(write_mutex_);
@@ -120,14 +127,14 @@ uint8_t UDPBoard::serial_read()
 {
   MutexLock lock(read_mutex_);
 
-  if (read_queue_.empty())
+  if (read_queue_.empty()) {
     return 0;
+  }
 
-  Buffer *buffer = read_queue_.front();
+  Buffer * buffer = read_queue_.front();
   uint8_t byte = buffer->consume_byte();
 
-  if (buffer->empty())
-  {
+  if (buffer->empty()) {
     read_queue_.pop_front();
     delete buffer;
   }
@@ -136,19 +143,22 @@ uint8_t UDPBoard::serial_read()
 
 void UDPBoard::async_read()
 {
-  if (!socket_.is_open())
+  if (!socket_.is_open()) {
     return;
+  }
 
   MutexLock lock(read_mutex_);
-  socket_.async_receive_from(boost::asio::buffer(read_buffer_, MAVLINK_MAX_PACKET_LEN), remote_endpoint_,
-                             boost::bind(&UDPBoard::async_read_end, this, boost::asio::placeholders::error,
+  socket_.async_receive_from(boost::asio::buffer(read_buffer_, MAVLINK_MAX_PACKET_LEN),
+                             remote_endpoint_,
+                             boost::bind(&UDPBoard::async_read_end,
+                                         this,
+                                         boost::asio::placeholders::error,
                                          boost::asio::placeholders::bytes_transferred));
 }
 
 void UDPBoard::async_read_end(const boost::system::error_code &error, size_t bytes_transferred)
 {
-  if (!error)
-  {
+  if (!error) {
     MutexLock lock(read_mutex_);
     read_queue_.push_back(new Buffer(read_buffer_, bytes_transferred));
   }
@@ -157,44 +167,46 @@ void UDPBoard::async_read_end(const boost::system::error_code &error, size_t byt
 
 void UDPBoard::async_write(bool check_write_state)
 {
-  if (check_write_state && write_in_progress_)
+  if (check_write_state && write_in_progress_) {
     return;
+  }
 
   MutexLock lock(write_mutex_);
-  if (write_queue_.empty())
+  if (write_queue_.empty()) {
     return;
+  }
 
   write_in_progress_ = true;
-  Buffer *buffer = write_queue_.front();
+  Buffer * buffer = write_queue_.front();
   socket_.async_send_to(boost::asio::buffer(buffer->dpos(), buffer->nbytes()), remote_endpoint_,
-                        boost::bind(&UDPBoard::async_write_end, this, boost::asio::placeholders::error,
+                        boost::bind(&UDPBoard::async_write_end,
+                                    this,
+                                    boost::asio::placeholders::error,
                                     boost::asio::placeholders::bytes_transferred));
 }
 
 void UDPBoard::async_write_end(const boost::system::error_code &error, size_t bytes_transferred)
 {
-  if (!error)
-  {
+  if (!error) {
     MutexLock lock(write_mutex_);
 
-    if (write_queue_.empty())
-    {
+    if (write_queue_.empty()) {
       write_in_progress_ = false;
       return;
     }
 
-    Buffer *buffer = write_queue_.front();
+    Buffer * buffer = write_queue_.front();
     buffer->pos += bytes_transferred;
-    if (buffer->empty())
-    {
+    if (buffer->empty()) {
       write_queue_.pop_front();
       delete buffer;
     }
 
-    if (write_queue_.empty())
+    if (write_queue_.empty()) {
       write_in_progress_ = false;
-    else
+    } else {
       async_write(false);
+    }
   }
 }
 

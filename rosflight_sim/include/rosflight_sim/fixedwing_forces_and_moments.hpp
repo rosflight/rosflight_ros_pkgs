@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Daniel Koch and James Jackson, BYU MAGICC Lab.
+ * Copyright (c) 2017 Daniel Koch, James Jackson and Gary Ellingson, BYU MAGICC Lab.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,47 +29,88 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * \file time_manager.h
- * \author Daniel Koch <daniel.koch@byu.edu>
- */
+#ifndef ROSFLIGHT_SIM_FIXEDWING_FORCES_AND_MOMENTS_H
+#define ROSFLIGHT_SIM_FIXEDWING_FORCES_AND_MOMENTS_H
 
-#ifndef MAVROSFLIGHT_TIME_MANAGER_H
-#define MAVROSFLIGHT_TIME_MANAGER_H
-
-#include <rosflight/mavrosflight/mavlink_bridge.h>
-#include <rosflight/mavrosflight/mavlink_comm.h>
-#include <rosflight/mavrosflight/mavlink_listener_interface.h>
 #include <rclcpp/rclcpp.hpp>
+#include <rosflight_sim/mav_forces_and_moments.hpp>
+#include <eigen3/Eigen/Dense>
 
-#include <chrono>
-#include <memory>
-
-namespace mavrosflight
+namespace rosflight_sim
 {
-class TimeManager : MavlinkListenerInterface
+class Fixedwing : public MAVForcesAndMoments
 {
-public:
-  TimeManager(MavlinkComm *comm,
-              rclcpp::Node *node);
-
-  void handle_mavlink_message(const mavlink_message_t &msg) override;
-
-  std::chrono::nanoseconds fcu_time_to_system_time(std::chrono::nanoseconds fcu_time);
-
 private:
-  MavlinkComm *const comm_;
-  rclcpp::Node *const node_;
+  rclcpp::Node::SharedPtr node_;
 
-  rclcpp::TimerBase::SharedPtr time_sync_timer_;
-  void timer_callback();
+  // physical parameters
+  double rho_;
 
-  double offset_alpha_;
-  std::chrono::nanoseconds offset_ns_;
+  // aerodynamic coefficients
+  struct WingCoeff
+  {
+    double S;
+    double b;
+    double c;
+    double M;
+    double epsilon;
+    double alpha0;
+  } wing_;
 
-  bool initialized_;
+  // Propeller Coefficients
+  struct PropCoeff
+  {
+    double k_motor;
+    double k_T_P;
+    double k_Omega;
+    double e;
+    double S;
+    double C;
+  } prop_;
+
+  // Lift Coefficients
+  struct LiftCoeff
+  {
+    double O;
+    double alpha;
+    double beta;
+    double p;
+    double q;
+    double r;
+    double delta_a;
+    double delta_e;
+    double delta_r;
+  };
+
+  LiftCoeff CL_;
+  LiftCoeff CD_;
+  LiftCoeff Cm_;
+  LiftCoeff CY_;
+  LiftCoeff Cell_;
+  LiftCoeff Cn_;
+
+  // not constants
+  // actuators
+  struct Actuators
+  {
+    double e;
+    double a;
+    double r;
+    double t;
+  } delta_;
+
+  // wind
+  Eigen::Vector3d wind_;
+
+public:
+  explicit Fixedwing(rclcpp::Node::SharedPtr node);
+  ~Fixedwing();
+
+  Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x,
+                                                     const int act_cmds[]) override;
+  void set_wind(Eigen::Vector3d wind) override;
 };
 
-} // namespace mavrosflight
+} // namespace rosflight_sim
 
-#endif // MAVROSFLIGHT_TIME_MANAGER_H
+#endif // ROSFLIGHT_SIM_FIXEDWING_FORCES_AND_MOMENTS_H

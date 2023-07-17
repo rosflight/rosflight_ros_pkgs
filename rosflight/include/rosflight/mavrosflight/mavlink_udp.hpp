@@ -37,7 +37,7 @@
 #ifndef MAVROSFLIGHT_MAVLINK_UDP_H
 #define MAVROSFLIGHT_MAVLINK_UDP_H
 
-#include <rosflight/mavrosflight/mavlink_comm.h>
+#include <rosflight/mavrosflight/mavlink_comm.hpp>
 
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
@@ -56,7 +56,10 @@ public:
    * \param remote_host Host where the other node is running
    * \param remote_port Port number for the other node
    */
-  MavlinkUDP(std::string bind_host, uint16_t bind_port, std::string remote_host, uint16_t remote_port);
+  MavlinkUDP(std::string bind_host,
+             uint16_t bind_port,
+             std::string remote_host,
+             uint16_t remote_port);
 
   /**
    * \brief Stops communication and closes the serial port before the object is destroyed
@@ -72,9 +75,11 @@ private:
   void do_open() override;
   void do_close() override;
   void do_async_read(const boost::asio::mutable_buffers_1 &buffer,
-                     boost::function<void(const boost::system::error_code &, size_t)> handler) override;
+                     boost::function<void(const boost::system::error_code &,
+                                          size_t)> handler) override;
   void do_async_write(const boost::asio::const_buffers_1 &buffer,
-                      boost::function<void(const boost::system::error_code &, size_t)> handler) override;
+                      boost::function<void(const boost::system::error_code &,
+                                           size_t)> handler) override;
 
   //===========================================================================
   // member variables

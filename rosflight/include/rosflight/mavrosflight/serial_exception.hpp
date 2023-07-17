@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Daniel Koch, James Jackson and Gary Ellingson, BYU MAGICC Lab.
+ * Copyright (c) 2017 Daniel Koch and James Jackson, BYU MAGICC Lab.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,87 +29,51 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ROSFLIGHT_SIM_FIXEDWING_FORCES_AND_MOMENTS_H
-#define ROSFLIGHT_SIM_FIXEDWING_FORCES_AND_MOMENTS_H
+/**
+ * \file serial_exception.h
+ * \author Daniel Koch <daniel.koch@byu.edu>
+ */
 
-#include <rclcpp/rclcpp.hpp>
-#include <rosflight_sim/mav_forces_and_moments.h>
-#include <eigen3/Eigen/Dense>
+#ifndef MAVROSFLIGHT_SERIAL_EXCEPTION_H
+#define MAVROSFLIGHT_SERIAL_EXCEPTION_H
 
-namespace rosflight_sim
+#include <exception>
+#include <sstream>
+#include <string>
+
+#include <boost/system/system_error.hpp>
+
+namespace mavrosflight
 {
-class Fixedwing : public MAVForcesAndMoments
+/**
+ * \brief Describes an exception encountered while using the boost serial libraries
+ */
+class SerialException : public std::exception
 {
-private:
-  rclcpp::Node::SharedPtr node_;
-
-  // physical parameters
-  double rho_;
-
-  // aerodynamic coefficients
-  struct WingCoeff
-  {
-    double S;
-    double b;
-    double c;
-    double M;
-    double epsilon;
-    double alpha0;
-  } wing_;
-
-  // Propeller Coefficients
-  struct PropCoeff
-  {
-    double k_motor;
-    double k_T_P;
-    double k_Omega;
-    double e;
-    double S;
-    double C;
-  } prop_;
-
-  // Lift Coefficients
-  struct LiftCoeff
-  {
-    double O;
-    double alpha;
-    double beta;
-    double p;
-    double q;
-    double r;
-    double delta_a;
-    double delta_e;
-    double delta_r;
-  };
-
-  LiftCoeff CL_;
-  LiftCoeff CD_;
-  LiftCoeff Cm_;
-  LiftCoeff CY_;
-  LiftCoeff Cell_;
-  LiftCoeff Cn_;
-
-  // not constants
-  // actuators
-  struct Actuators
-  {
-    double e;
-    double a;
-    double r;
-    double t;
-  } delta_;
-
-  // wind
-  Eigen::Vector3d wind_;
-
 public:
-  explicit Fixedwing(rclcpp::Node::SharedPtr  node);
-  ~Fixedwing();
+  explicit SerialException(const char * const description) { init(description); }
 
-  Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x, const int act_cmds[]) override;
-  void set_wind(Eigen::Vector3d wind) override;
+  explicit SerialException(const std::string &description) { init(description.c_str()); }
+
+  explicit SerialException(const boost::system::system_error &err) { init(err.what()); }
+
+  SerialException(const SerialException &other) : what_(other.what_) {}
+
+  ~SerialException() noexcept override = default;
+
+  const char * what() const noexcept override { return what_.c_str(); }
+
+private:
+  std::string what_;
+
+  void init(const char * const description)
+  {
+    std::ostringstream ss;
+    ss << "Serial Error: " << description;
+    what_ = ss.str();
+  }
 };
 
-} // namespace rosflight_sim
+} // namespace mavrosflight
 
-#endif // ROSFLIGHT_SIM_FIXEDWING_FORCES_AND_MOMENTS_H
+#endif // MAVROSFLIGHT_SERIAL_EXCEPTION_H

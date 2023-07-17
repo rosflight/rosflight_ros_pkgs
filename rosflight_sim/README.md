@@ -1,15 +1,17 @@
 # ROSflight Sim Package
 
-This package runs the ROSflight firmware as a gazebo plugin.  It simulates all the connected sensors
+This package runs the ROSflight firmware as a gazebo plugin. It simulates all the connected sensors
 and communicates the same way that the hardware does in real life.
 
 ## Parameters
+
 Parameters should be set in the same namespace as specified in the `xacro` file that declares the
-plugin.  If you are unsure what this is, try running gazebo with the `--verbose` setting on and look 
+plugin. If you are unsure what this is, try running gazebo with the `--verbose` setting on and look
 for a message that looks like `loading parameters from <namespace> ns`
 
 - `gazebo_host`: host name or IP address of the machine running the gazebo instance
-- `gazebo_port`: port of rosflight_sim plugin. (default = `14525`)  This only needs to change if you are trying to simulate multiple agents
+- `gazebo_port`: port of rosflight_sim plugin. (default = `14525`)  This only needs to change if you are trying to
+  simulate multiple agents
 - `ROS_host`: host name or IP address of the machine running `rosflight_io`
 - `ROS_port`: port of `rosflight_io` only needs to change if simulating multiple agents
 

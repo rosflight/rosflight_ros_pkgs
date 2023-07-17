@@ -37,8 +37,8 @@
 #ifndef MAVROSFLIGHT_MAVLINK_COMM_H
 #define MAVROSFLIGHT_MAVLINK_COMM_H
 
-#include <rosflight/mavrosflight/mavlink_bridge.h>
-#include <rosflight/mavrosflight/mavlink_listener_interface.h>
+#include <rosflight/mavrosflight/mavlink_bridge.hpp>
+#include <rosflight/mavrosflight/mavlink_listener_interface.hpp>
 
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
@@ -83,13 +83,13 @@ public:
    * \brief Register a listener for mavlink messages
    * \param listener Pointer to an object that implements the MavlinkListenerInterface interface
    */
-  void register_mavlink_listener(MavlinkListenerInterface *listener);
+  void register_mavlink_listener(MavlinkListenerInterface * listener);
 
   /**
    * \brief Unregister a listener for mavlink messages
    * \param listener Pointer to an object that implements the MavlinkListenerInterface interface
    */
-  void unregister_mavlink_listener(MavlinkListenerInterface *listener);
+  void unregister_mavlink_listener(MavlinkListenerInterface * listener);
 
   /**
    * \brief Send a mavlink message
@@ -102,9 +102,11 @@ protected:
   virtual void do_open() = 0;
   virtual void do_close() = 0;
   virtual void do_async_read(const boost::asio::mutable_buffers_1 &buffer,
-                             boost::function<void(const boost::system::error_code &, size_t)> handler) = 0;
+                             boost::function<void(const boost::system::error_code &,
+                                                  size_t)> handler) = 0;
   virtual void do_async_write(const boost::asio::const_buffers_1 &buffer,
-                              boost::function<void(const boost::system::error_code &, size_t)> handler) = 0;
+                              boost::function<void(const boost::system::error_code &,
+                                                   size_t)> handler) = 0;
 
   boost::asio::io_service io_service_; //!< boost io service provider
 
@@ -124,13 +126,13 @@ private:
 
     WriteBuffer() : len(0), pos(0) {}
 
-    WriteBuffer(const uint8_t *buf, uint16_t len) : len(len), pos(0)
+    WriteBuffer(const uint8_t * buf, uint16_t len) : len(len), pos(0)
     {
       assert(len <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
       memcpy(data, buf, len);
     }
 
-    const uint8_t *dpos() const { return data + pos; }
+    const uint8_t * dpos() const { return data + pos; }
 
     size_t nbytes() const { return len - pos; }
   };

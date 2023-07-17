@@ -47,7 +47,7 @@
 
 #include <udp_board.h>
 
-#include <rosflight_sim/gz_compat.h>
+#include <rosflight_sim/gz_compat.hpp>
 
 namespace rosflight_sim
 {
@@ -119,7 +119,7 @@ private:
   uint64_t next_imu_update_time_us_ = 0;
   uint64_t imu_update_period_us_ = 0;
 
-  void RCCallback(const rosflight_msgs::msg::RCRaw& msg);
+  void RCCallback(const rosflight_msgs::msg::RCRaw &msg);
   bool motors_spinning();
 
   GazeboVector prev_vel_1_;
@@ -149,24 +149,24 @@ public:
   uint16_t num_sensor_errors() override;
 
   bool new_imu_data() override;
-  bool imu_read(float accel[3], float* temperature, float gyro[3], uint64_t* time_us) override;
+  bool imu_read(float accel[3], float * temperature, float gyro[3], uint64_t * time_us) override;
   void imu_not_responding_error() override;
 
   bool mag_present() override;
   void mag_read(float mag[3]) override;
-  void mag_update() override{};
+  void mag_update() override {};
 
   bool baro_present() override;
-  void baro_read(float* pressure, float* temperature) override;
-  void baro_update() override{};
+  void baro_read(float * pressure, float * temperature) override;
+  void baro_update() override {};
 
   bool diff_pressure_present() override;
-  void diff_pressure_read(float* diff_pressure, float* temperature) override;
-  void diff_pressure_update() override{};
+  void diff_pressure_read(float * diff_pressure, float * temperature) override;
+  void diff_pressure_update() override {};
 
   bool sonar_present() override;
   float sonar_read() override;
-  void sonar_update() override{};
+  void sonar_update() override {};
 
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)
@@ -181,8 +181,8 @@ public:
 
   // non-volatile memory
   void memory_init() override;
-  bool memory_read(void* dest, size_t len) override;
-  bool memory_write(const void* src, size_t len) override;
+  bool memory_read(void * dest, size_t len) override;
+  bool memory_write(const void * src, size_t len) override;
 
   // LEDs
   void led0_on() override;
@@ -195,8 +195,8 @@ public:
 
   // Backup Memory
   void backup_memory_init() override;
-  bool backup_memory_read(void* dest, size_t len) override;
-  void backup_memory_write(const void* src, size_t len) override;
+  bool backup_memory_read(void * dest, size_t len) override;
+  void backup_memory_write(const void * src, size_t len) override;
   void backup_memory_clear(size_t len) override;
 
   bool gnss_present() override;
@@ -220,7 +220,7 @@ public:
                     gazebo::physics::ModelPtr model,
                     rclcpp::Node::SharedPtr node,
                     std::string mav_type);
-  inline const int* get_outputs() const { return pwm_outputs_; }
+  inline const int * get_outputs() const { return pwm_outputs_; }
 #if GAZEBO_MAJOR_VERSION >= 9
   gazebo::common::SphericalCoordinates sph_coord_;
 #endif
