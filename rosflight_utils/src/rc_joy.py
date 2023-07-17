@@ -65,6 +65,7 @@ class Channel(Enum):
     SW3 = 6
     SW4 = 7
 
+
 # Joystick configuration. The configuration for each joystick consists
 # of the following:
 #    - List of keywords to identify the joystick/controller type

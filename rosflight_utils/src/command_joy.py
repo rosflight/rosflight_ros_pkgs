@@ -21,6 +21,7 @@ class Mapping(Enum):
     zsign = 6
     fsign = 7
 
+
 # Joystick configuration. The configuration for each joystick consists
 # of the following:
 #    - List of keywords to identify the joystick/controller type

@@ -30,15 +30,13 @@ private:
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_pub_;
 
   // Variables
-  tf2::Quaternion q_att_;
   std::vector<geometry_msgs::msg::Point> pts_list_;
-  double mag_sum_;
-  int mag_count_, mag_throttle_, mag_skip_;
+  int mag_throttle_, mag_skip_;
   std::string fixed_frame_ = "fixed_frame";
 
   // Functions
-  void magCallback(sensor_msgs::msg::MagneticField::ConstSharedPtr msg);
-  void attCallback(rosflight_msgs::msg::Attitude::ConstSharedPtr msg);
+  void magCallback(const sensor_msgs::msg::MagneticField::ConstSharedPtr& msg);
+  void attCallback(const rosflight_msgs::msg::Attitude::ConstSharedPtr& msg);
 };
 
 } // namespace rosflight_utils
