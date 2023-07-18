@@ -76,6 +76,9 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link,
         << bind_host << ":"
         << bind_port << "\n";
 
+  // Get communication delay parameters, in nanoseconds
+  serial_delay_ns_ = node_->get_parameter_or<long>("serial_delay_ns", 0.006 * 1e9);
+
   // Get Sensor Parameters
   gyro_stdev_ = node_->get_parameter_or<double>("gyro_stdev", 0.00226);
   gyro_bias_range_ = node_->get_parameter_or<double>("gyro_bias_range", 0.25);
@@ -165,6 +168,27 @@ uint64_t SIL_Board::clock_micros()
 }
 
 void SIL_Board::clock_delay(uint32_t milliseconds) {}
+
+uint8_t SIL_Board::serial_read()
+{
+  auto next_message = serial_delay_queue_.front();
+  serial_delay_queue_.pop();
+  return std::get<1>(next_message);
+}
+
+uint16_t SIL_Board::serial_bytes_available()
+{
+  auto current_time = node_->get_clock()->now().nanoseconds();
+
+  // Get available serial_read messages from the firmware
+  if (UDPBoard::serial_bytes_available()) {
+    serial_delay_queue_.emplace(current_time, UDPBoard::serial_read());
+  }
+
+  // Determine if there are any serial_read messages that are ready for processing
+  return !serial_delay_queue_.empty()
+    && (current_time - std::get<0>(serial_delay_queue_.front())) > serial_delay_ns_;
+}
 
 // sensors
 /// TODO these sensors have noise, no bias

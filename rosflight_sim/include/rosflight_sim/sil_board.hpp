@@ -58,6 +58,9 @@ private:
 
   double imu_update_rate_ = 0;
 
+  long serial_delay_ns_ = 0;
+  std::queue<std::tuple<long, uint8_t>> serial_delay_queue_;
+
   double gyro_stdev_ = 0;
   double gyro_bias_walk_stdev_ = 0;
   double gyro_bias_range_ = 0;
@@ -143,6 +146,10 @@ public:
   uint32_t clock_millis() override;
   uint64_t clock_micros() override;
   void clock_delay(uint32_t milliseconds) override;
+
+  // serial
+  uint8_t serial_read() override;
+  uint16_t serial_bytes_available() override;
 
   // sensors
   void sensors_init() override;
