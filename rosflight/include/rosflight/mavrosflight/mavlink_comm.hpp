@@ -95,18 +95,18 @@ public:
    * \brief Send a mavlink message
    * \param msg The message to send
    */
-  void send_message(const mavlink_message_t &msg);
+  void send_message(const mavlink_message_t & msg);
 
 protected:
   virtual bool is_open() = 0;
   virtual void do_open() = 0;
   virtual void do_close() = 0;
-  virtual void do_async_read(const boost::asio::mutable_buffers_1 &buffer,
-                             boost::function<void(const boost::system::error_code &,
-                                                  size_t)> handler) = 0;
-  virtual void do_async_write(const boost::asio::const_buffers_1 &buffer,
-                              boost::function<void(const boost::system::error_code &,
-                                                   size_t)> handler) = 0;
+  virtual void do_async_read(
+    const boost::asio::mutable_buffers_1 & buffer,
+    boost::function<void(const boost::system::error_code &, size_t)> handler) = 0;
+  virtual void do_async_write(
+    const boost::asio::const_buffers_1 & buffer,
+    boost::function<void(const boost::system::error_code &, size_t)> handler) = 0;
 
   boost::asio::io_service io_service_; //!< boost io service provider
 
@@ -156,7 +156,7 @@ private:
    * \param error Error code
    * \param bytes_transferred Number of bytes received
    */
-  void async_read_end(const boost::system::error_code &error, size_t bytes_transferred);
+  void async_read_end(const boost::system::error_code & error, size_t bytes_transferred);
 
   /**
    * \brief Initialize an asynchronous write operation
@@ -169,7 +169,7 @@ private:
    * \param error Error code
    * \param bytes_transferred Number of bytes sent
    */
-  void async_write_end(const boost::system::error_code &error, size_t bytes_transferred);
+  void async_write_end(const boost::system::error_code & error, size_t bytes_transferred);
 
   //===========================================================================
   // member variables

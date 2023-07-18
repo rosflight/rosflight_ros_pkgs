@@ -51,7 +51,7 @@ public:
    * \brief The handler function for mavlink messages to be implemented by derived classes
    * \param msg The mavlink message to handle
    */
-  virtual void handle_mavlink_message(const mavlink_message_t &msg) = 0;
+  virtual void handle_mavlink_message(const mavlink_message_t & msg) = 0;
 };
 
 } // namespace mavrosflight

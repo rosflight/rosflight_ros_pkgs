@@ -53,11 +53,11 @@ class SerialException : public std::exception
 public:
   explicit SerialException(const char * const description) { init(description); }
 
-  explicit SerialException(const std::string &description) { init(description.c_str()); }
+  explicit SerialException(const std::string & description) { init(description.c_str()); }
 
-  explicit SerialException(const boost::system::system_error &err) { init(err.what()); }
+  explicit SerialException(const boost::system::system_error & err) { init(err.what()); }
 
-  SerialException(const SerialException &other) : what_(other.what_) {}
+  SerialException(const SerialException & other) : what_(other.what_) {}
 
   ~SerialException() noexcept override = default;
 

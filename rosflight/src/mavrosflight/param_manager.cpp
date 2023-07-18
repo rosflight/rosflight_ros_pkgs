@@ -42,34 +42,24 @@
 
 namespace mavrosflight
 {
-ParamManager::ParamManager(MavlinkComm * const comm, rclcpp::Node * const node) :
-  node_(node),
-  comm_(comm),
-  unsaved_changes_(false),
-  write_request_in_progress_(false),
-  first_param_received_(false),
-  num_params_(0),
-  received_count_(0),
-  received_(nullptr),
-  got_all_params_(false),
-  param_set_in_progress_(false)
+ParamManager::ParamManager(MavlinkComm * const comm, rclcpp::Node * const node)
+    : node_(node), comm_(comm), unsaved_changes_(false), write_request_in_progress_(false),
+      first_param_received_(false), num_params_(0), received_count_(0), received_(nullptr),
+      got_all_params_(false), param_set_in_progress_(false)
 {
   comm_->register_mavlink_listener(this);
 
-  param_set_timer_ = node_->create_wall_timer(
-    std::chrono::milliseconds(10),
-    std::bind(&ParamManager::param_set_timer_callback, this),
-    nullptr);
+  param_set_timer_ =
+    node_->create_wall_timer(std::chrono::milliseconds(10),
+                             std::bind(&ParamManager::param_set_timer_callback, this), nullptr);
 }
 
 ParamManager::~ParamManager()
 {
-  if (first_param_received_) {
-    delete[] received_;
-  }
+  if (first_param_received_) { delete[] received_; }
 }
 
-void ParamManager::handle_mavlink_message(const mavlink_message_t &msg)
+void ParamManager::handle_mavlink_message(const mavlink_message_t & msg)
 {
   switch (msg.msgid) {
     case MAVLINK_MSG_ID_PARAM_VALUE:
@@ -81,12 +71,9 @@ void ParamManager::handle_mavlink_message(const mavlink_message_t &msg)
   }
 }
 
-bool ParamManager::unsaved_changes() const
-{
-  return unsaved_changes_;
-}
+bool ParamManager::unsaved_changes() const { return unsaved_changes_; }
 
-bool ParamManager::get_param_value(const std::string &name, double * value)
+bool ParamManager::get_param_value(const std::string & name, double * value)
 {
   if (is_param_id(name)) {
     *value = params_[name].getValue();
@@ -97,7 +84,7 @@ bool ParamManager::get_param_value(const std::string &name, double * value)
   }
 }
 
-bool ParamManager::set_param_value(const std::string &name, double value)
+bool ParamManager::set_param_value(const std::string & name, double value)
 {
   if (is_param_id(name)) {
     mavlink_message_t msg;
@@ -133,28 +120,22 @@ bool ParamManager::write_params()
 
 void ParamManager::register_param_listener(ParamListenerInterface * listener)
 {
-  if (listener == nullptr) {
-    return;
-  }
+  if (listener == nullptr) { return; }
 
   bool already_registered = false;
-  for (auto &item : listeners_) {
+  for (auto & item : listeners_) {
     if (listener == item) {
       already_registered = true;
       break;
     }
   }
 
-  if (!already_registered) {
-    listeners_.push_back(listener);
-  }
+  if (!already_registered) { listeners_.push_back(listener); }
 }
 
 void ParamManager::unregister_param_listener(ParamListenerInterface * listener)
 {
-  if (listener == nullptr) {
-    return;
-  }
+  if (listener == nullptr) { return; }
 
   for (int i = 0; i < (int) listeners_.size(); i++) {
     if (listener == listeners_[i]) {
@@ -164,7 +145,7 @@ void ParamManager::unregister_param_listener(ParamListenerInterface * listener)
   }
 }
 
-bool ParamManager::save_to_file(const std::string &filename)
+bool ParamManager::save_to_file(const std::string & filename)
 {
   // build YAML document
   YAML::Emitter yaml;
@@ -186,21 +167,20 @@ bool ParamManager::save_to_file(const std::string &filename)
     fout.open(filename.c_str());
     fout << yaml.c_str();
     fout.close();
-  }
-  catch (...) {
+  } catch (...) {
     return false;
   }
 
   return true;
 }
 
-bool ParamManager::load_from_file(const std::string &filename)
+bool ParamManager::load_from_file(const std::string & filename)
 {
   try {
     YAML::Node root = YAML::LoadFile(filename);
     assert(root.IsSequence());
 
-    for (auto &&item : root) {
+    for (auto && item : root) {
       if (item.IsMap() && item["name"] && item["type"] && item["value"]) {
         if (is_param_id(item["name"].as<std::string>())) {
           Param param = params_.find(item["name"].as<std::string>())->second;
@@ -212,8 +192,7 @@ bool ParamManager::load_from_file(const std::string &filename)
     }
 
     return true;
-  }
-  catch (...) {
+  } catch (...) {
     return false;
   }
 }
@@ -224,9 +203,7 @@ void ParamManager::request_params()
     request_param_list();
   } else {
     for (int i = 0; i < num_params_; i++) {
-      if (!received_[i]) {
-        request_param(i);
-      }
+      if (!received_[i]) { request_param(i); }
     }
   }
 }
@@ -242,17 +219,12 @@ void ParamManager::request_param(int index)
 {
   mavlink_message_t param_request_msg;
   char empty[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN] = {0};
-  mavlink_msg_param_request_read_pack(1,
-                                      50,
-                                      &param_request_msg,
-                                      1,
-                                      MAV_COMP_ID_ALL,
-                                      empty,
+  mavlink_msg_param_request_read_pack(1, 50, &param_request_msg, 1, MAV_COMP_ID_ALL, empty,
                                       (int16_t) index);
   comm_->send_message(param_request_msg);
 }
 
-void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
+void ParamManager::handle_param_value_msg(const mavlink_message_t & msg)
 {
   mavlink_param_value_t param;
   mavlink_msg_param_value_decode(&msg, &param);
@@ -261,9 +233,7 @@ void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
     first_param_received_ = true;
     num_params_ = param.param_count;
     received_ = new bool[num_params_];
-    for (int i = 0; i < num_params_; i++) {
-      received_[i] = false;
-    }
+    for (int i = 0; i < num_params_; i++) { received_[i] = false; }
   }
 
   // ensure null termination of name
@@ -280,19 +250,16 @@ void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
 
     // increase the param count
     received_count_++;
-    if (received_count_ == num_params_) {
-      got_all_params_ = true;
-    }
+    if (received_count_ == num_params_) { got_all_params_ = true; }
 
-    for (auto &listener : listeners_) {
-      listener->on_new_param_received(name,
-                                      params_[name].getValue());
+    for (auto & listener : listeners_) {
+      listener->on_new_param_received(name, params_[name].getValue());
     }
   } else // otherwise check if we have new unsaved changes as a result of a param set request
   {
     if (params_[name].handleUpdate(param)) {
       unsaved_changes_ = true;
-      for (auto &listener : listeners_) {
+      for (auto & listener : listeners_) {
         listener->on_param_value_updated(name, params_[name].getValue());
         listener->on_params_saved_change(unsaved_changes_);
       }
@@ -300,7 +267,7 @@ void ParamManager::handle_param_value_msg(const mavlink_message_t &msg)
   }
 }
 
-void ParamManager::handle_command_ack_msg(const mavlink_message_t &msg)
+void ParamManager::handle_command_ack_msg(const mavlink_message_t & msg)
 {
   if (write_request_in_progress_) {
     mavlink_rosflight_cmd_ack_t ack;
@@ -312,7 +279,7 @@ void ParamManager::handle_command_ack_msg(const mavlink_message_t &msg)
         RCLCPP_INFO(node_->get_logger(), "Param write succeeded");
         unsaved_changes_ = false;
 
-        for (auto &listener : listeners_) { listener->on_params_saved_change(unsaved_changes_); }
+        for (auto & listener : listeners_) { listener->on_params_saved_change(unsaved_changes_); }
       } else {
         RCLCPP_INFO(node_->get_logger(),
                     "Param write failed - maybe disarm the aircraft and try again?");
@@ -323,7 +290,7 @@ void ParamManager::handle_command_ack_msg(const mavlink_message_t &msg)
   }
 }
 
-bool ParamManager::is_param_id(const std::string &name)
+bool ParamManager::is_param_id(const std::string & name)
 {
   return (params_.find(name) != params_.end());
 }
@@ -337,15 +304,9 @@ int ParamManager::get_num_params() const
   }
 }
 
-int ParamManager::get_params_received() const
-{
-  return received_count_;
-}
+int ParamManager::get_params_received() const { return received_count_; }
 
-bool ParamManager::got_all_params() const
-{
-  return got_all_params_;
-}
+bool ParamManager::got_all_params() const { return got_all_params_; }
 
 void ParamManager::param_set_timer_callback()
 {
