@@ -35,7 +35,7 @@
  */
 
 #include <iostream>
-#include <rosflight_firmware/udp_board.h>
+#include <rosflight_firmware/udp_board.hpp>
 
 using boost::asio::ip::udp;
 
@@ -43,7 +43,7 @@ namespace rosflight_firmware
 {
 UDPBoard::UDPBoard(std::string bind_host, uint16_t bind_port, std::string remote_host,
                    uint16_t remote_port)
-    : bind_host_(bind_host), bind_port_(bind_port), remote_host_(remote_host),
+    : bind_host_(std::move(bind_host)), bind_port_(bind_port), remote_host_(std::move(remote_host)),
       remote_port_(remote_port), io_service_(), socket_(io_service_), write_in_progress_(false)
 {}
 
@@ -61,9 +61,9 @@ UDPBoard::~UDPBoard()
 void UDPBoard::set_ports(std::string bind_host, uint16_t bind_port, std::string remote_host,
                          uint16_t remote_port)
 {
-  bind_host_ = bind_host;
+  bind_host_ = std::move(bind_host);
   bind_port_ = bind_port;
-  remote_host_ = remote_host;
+  remote_host_ = std::move(remote_host);
   remote_port_ = remote_port;
 }
 
@@ -95,7 +95,7 @@ void UDPBoard::serial_flush() {}
 
 void UDPBoard::serial_write(const uint8_t * src, size_t len)
 {
-  Buffer * buffer = new Buffer(src, len);
+  auto buffer = new Buffer(src, len);
 
   {
     MutexLock lock(write_mutex_);

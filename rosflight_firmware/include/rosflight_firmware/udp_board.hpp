@@ -51,27 +51,23 @@ namespace rosflight_firmware
 class UDPBoard : public Board
 {
 public:
-  UDPBoard(std::string bind_host = "localhost",
-           uint16_t bind_port = 14525,
-           std::string remote_host = "localhost",
-           uint16_t remote_port = 14520);
+  explicit UDPBoard(std::string bind_host = "localhost", uint16_t bind_port = 14525,
+                    std::string remote_host = "localhost", uint16_t remote_port = 14520);
   ~UDPBoard();
 
   void serial_init(uint32_t baud_rate, uint32_t dev) override;
   void serial_write(const uint8_t * src, size_t len) override;
-  uint16_t serial_bytes_available(void) override;
-  uint8_t serial_read(void) override;
+  uint16_t serial_bytes_available() override;
+  uint8_t serial_read() override;
   void serial_flush() override;
 
-  void set_ports(std::string bind_host,
-                 uint16_t bind_port,
-                 std::string remote_host,
+  void set_ports(std::string bind_host, uint16_t bind_port, std::string remote_host,
                  uint16_t remote_port);
 
 private:
   struct Buffer
   {
-    uint8_t data[MAVLINK_MAX_PACKET_LEN];
+    uint8_t data[MAVLINK_MAX_PACKET_LEN] = {0};
     size_t len;
     size_t pos;
 
@@ -94,10 +90,10 @@ private:
   typedef boost::lock_guard<boost::recursive_mutex> MutexLock;
 
   void async_read();
-  void async_read_end(const boost::system::error_code &error, size_t bytes_transferred);
+  void async_read_end(const boost::system::error_code & error, size_t bytes_transferred);
 
   void async_write(bool check_write_state);
-  void async_write_end(const boost::system::error_code &error, size_t bytes_transferred);
+  void async_write_end(const boost::system::error_code & error, size_t bytes_transferred);
 
   std::string bind_host_;
   uint16_t bind_port_;
@@ -115,7 +111,7 @@ private:
   boost::asio::ip::udp::endpoint bind_endpoint_;
   boost::asio::ip::udp::endpoint remote_endpoint_;
 
-  uint8_t read_buffer_[MAVLINK_MAX_PACKET_LEN];
+  uint8_t read_buffer_[MAVLINK_MAX_PACKET_LEN] = {0};
   std::list<Buffer *> read_queue_;
 
   std::list<Buffer *> write_queue_;
