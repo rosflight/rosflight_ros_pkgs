@@ -1,5 +1,7 @@
 # ROSflight2
 
+[![ROS2 CI](https://github.com/byu-magicc/rosflight2/actions/workflows/ros2-ci.yml/badge.svg)](https://github.com/byu-magicc/rosflight2/actions/workflows/ros2-ci.yml)
+
 This repository contains an in-development ROS2 stack for interfacing with an autopilot running the ROSflight firmware.
 For more information on the ROSflight autopilot firmware stack, visit http://rosflight.org. Please note that the
 documentation currently is written for ROS1 and while most of it is still relevant, some of the details for building and

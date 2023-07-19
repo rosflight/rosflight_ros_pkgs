@@ -15,9 +15,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        ros_distro: [ humble ]
+        ros_distro: [ humble, iron ]
         include:
           - ros_distro: 'humble'
+            os: ubuntu-22.04
+          - ros_distro: 'iron'
             os: ubuntu-22.04
 
     steps:
