@@ -167,7 +167,9 @@ uint8_t SIL_Board::serial_read()
 
 uint16_t SIL_Board::serial_bytes_available()
 {
-  auto current_time = node_->get_clock()->now().nanoseconds();
+  // Get current time. Doesn't use ROS time as ROS time proved to be inconsistent and lead to slower
+  // serial communication.
+  auto current_time = std::chrono::high_resolution_clock::now().time_since_epoch().count();
 
   // Get available serial_read messages from the firmware
   if (UDPBoard::serial_bytes_available()) {
