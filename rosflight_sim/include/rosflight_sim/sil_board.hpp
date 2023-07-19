@@ -45,7 +45,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rosflight_msgs/msg/rc_raw.hpp>
 
-#include <udp_board.h>
+#include <udp_board.hpp>
 
 #include <rosflight_sim/gz_compat.hpp>
 
@@ -161,19 +161,19 @@ public:
 
   bool mag_present() override;
   void mag_read(float mag[3]) override;
-  void mag_update() override;
+  void mag_update() override {};
 
   bool baro_present() override;
   void baro_read(float * pressure, float * temperature) override;
-  void baro_update() override;
+  void baro_update() override {};
 
   bool diff_pressure_present() override;
   void diff_pressure_read(float * diff_pressure, float * temperature) override;
-  void diff_pressure_update() override;
+  void diff_pressure_update() override {};
 
   bool sonar_present() override;
   float sonar_read() override;
-  void sonar_update() override;
+  void sonar_update() override {};
 
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)

@@ -337,7 +337,7 @@ Eigen::Matrix<double, 6, 1> Fixedwing::updateForcesAndTorques(Current_State x, c
     forces(2) = 0.5 * (rho_) * Va * Va * wing_.S
       * (CZ_a + (CZ_q_a * wing_.c * q) / (2.0 * Va) + CZ_deltaE_a * delta_curr.e);
 
-    forces(3) = 0.5 * (rho_) *Va * Va * wing_.S * wing_.b
+    forces(3) = 0.5 * (rho_) * Va * Va * wing_.S * wing_.b
         * (Cell_.O + Cell_.beta * beta + (Cell_.p * wing_.b * p) / (2.0 * Va)
            + (Cell_.r * wing_.b * r) / (2.0 * Va) + Cell_.delta_a * delta_curr.a
            + Cell_.delta_r * delta_.r)
