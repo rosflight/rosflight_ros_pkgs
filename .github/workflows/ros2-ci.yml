@@ -14,6 +14,7 @@ jobs:
     name: Build on ros2 ${{ matrix.ros_distro }} and ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         ros_distro: [ humble, iron ]
         include:
