@@ -1,0 +1,49 @@
+name: ROS2 CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    name: Build on ros2 ${{ matrix.ros_distro }} and ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        ros_distro: [ humble ]
+        include:
+          - ros_distro: 'humble'
+            os: ubuntu-22.04
+
+    steps:
+      - uses: ros-tooling/setup-ros@v0.7
+        with:
+          required-ros-distributions: ${{ matrix.ros_distro }}
+
+      - name: Setup ros2 workspace
+        run: |
+          source /opt/ros/${{ matrix.ros_distro }}/setup.bash
+          mkdir -p ${{github.workspace}}/ros2_ws/src
+          cd ${{github.workspace}}/ros2_ws
+          colcon build
+
+      - uses: actions/checkout@v2
+        with:
+          path: 'ros2_ws/src/rosflight2'
+
+      - name: Install dependencies
+        run: |
+          cd ${{github.workspace}}/ros2_ws
+          rosdep update
+          rosdep install --from-paths ./ -i -y -r --rosdistro ${{ matrix.ros_distro }}
+
+      - name: colcon build
+        run: |
+          source /opt/ros/${{ matrix.ros_distro }}/setup.bash
+          cd ${{github.workspace}}/ros2_ws
+          colcon build --event-handlers console_direct+
