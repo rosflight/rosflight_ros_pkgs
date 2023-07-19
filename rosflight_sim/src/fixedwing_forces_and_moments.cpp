@@ -329,7 +329,7 @@ Eigen::Matrix<double, 6, 1> Fixedwing::updateForcesAndTorques(Current_State x, c
     double CZ_deltaE_a = -CD_.delta_e * sa - CL_.delta_e * ca;
 
     forces(0) = 0.5 * (rho_) * Va * Va * wing_.S
-      * (CX_a + (CX_q_a * wing_.c * q) / (2.0 * Va) + CX_deltaE_a * delta_.e)
+      * (CX_a + (CX_q_a * wing_.c * q) / (2.0 * Va) + CX_deltaE_a * delta_curr.e)
       + 0.5 * rho_ * prop_.S * prop_.C * (pow((prop_.k_motor * delta_.t), 2.0) - Va * Va);
     forces(1) = 0.5 * (rho_) * Va * Va * wing_.S
       * (CY_.O + CY_.beta * beta + ((CY_.p * wing_.b * p) / (2.0 * Va))
