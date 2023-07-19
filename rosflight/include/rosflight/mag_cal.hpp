@@ -38,8 +38,8 @@
 #ifndef ROSFLIGHT_SENSORS_CALIBRATE_MAG_H
 #define ROSFLIGHT_SENSORS_CALIBRATE_MAG_H
 
-#include <rclcpp/rclcpp.hpp>
 #include <message_filters/subscriber.h>
+#include <rclcpp/rclcpp.hpp>
 
 #include <rosflight_msgs/srv/param_set.hpp>
 
@@ -75,7 +75,7 @@ public:
    * @brief set_refence_magnetic_field_strength
    * @param reference_magnetic_field
    */
-  bool mag_callback(const sensor_msgs::msg::MagneticField::ConstSharedPtr &mag);
+  bool mag_callback(const sensor_msgs::msg::MagneticField::ConstSharedPtr & mag);
 
   void set_reference_magnetic_field_strength(double reference_magnetic_field);
 
@@ -125,16 +125,13 @@ private:
   Eigen::MatrixXd ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, int iters, double inlier_thresh);
 
   // function to vector from ellipsoid center to surface along input vector
-  static Eigen::Vector3d intersect(const Eigen::Vector3d &r_m,
-                                   const Eigen::Vector3d &r_e,
-                                   const Eigen::MatrixXd &Q,
-                                   const Eigen::MatrixXd &ub,
-                                   double k);
+  static Eigen::Vector3d intersect(const Eigen::Vector3d & r_m, const Eigen::Vector3d & r_e,
+                                   const Eigen::MatrixXd & Q, const Eigen::MatrixXd & ub, double k);
 
   /*
       sort eigenvalues and eigenvectors output from Eigen library
   */
-  static void eigSort(Eigen::MatrixXd &w, Eigen::MatrixXd &v);
+  static void eigSort(Eigen::MatrixXd & w, Eigen::MatrixXd & v);
 
   /*
       This function gets ellipsoid parameters via least squares on ellipsoidal data
@@ -148,7 +145,7 @@ private:
       paper: Renaudin, Valérie, Muhammad Haris Afzal, and Gérard Lachapelle. "Complete triaxis
       magnetometer calibration in the magnetic domain." Journal of sensors 2010 (2010).
   */
-  void magCal(Eigen::MatrixXd u, Eigen::MatrixXd &A, Eigen::MatrixXd &bb) const;
+  void magCal(Eigen::MatrixXd u, Eigen::MatrixXd & A, Eigen::MatrixXd & bb) const;
 };
 
 } // namespace rosflight

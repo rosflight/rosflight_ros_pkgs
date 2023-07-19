@@ -32,8 +32,8 @@
 #ifndef ROSFLIGHT_SIM_MULTIROTOR_FORCES_AND_MOMENTS_H
 #define ROSFLIGHT_SIM_MULTIROTOR_FORCES_AND_MOMENTS_H
 
-#include <rclcpp/rclcpp.hpp>
 #include <eigen3/Eigen/Dense>
+#include <rclcpp/rclcpp.hpp>
 
 #include <rosflight_sim/mav_forces_and_moments.hpp>
 

@@ -33,18 +33,9 @@
 
 namespace rosflight_sim
 {
-Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node) :
-  node_(std::move(node)),
-  rho_(0),
-  wing_(),
-  prop_(),
-  CL_(),
-  CD_(),
-  Cm_(),
-  CY_(),
-  Cell_(),
-  Cn_(),
-  delta_()
+Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node)
+    : node_(std::move(node)), rho_(0), wing_(), prop_(), CL_(), CD_(), Cm_(), CY_(), Cell_(), Cn_(),
+      delta_()
 {
   if (!node_->get_parameter("rho", rho_)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'rho' not defined");
@@ -235,7 +226,6 @@ Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node) :
     RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_delta_r' not defined");
   }
 
-
   // Y Params (Sideslip Forces)
   if (!node_->get_parameter("C_Y_O", CY_.O)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_O' not defined");
@@ -308,15 +298,12 @@ Eigen::Matrix<double, 6, 1> Fixedwing::updateForcesAndTorques(Current_State x, c
     double sign = (alpha >= 0 ? 1 : -1); // Sigmoid function
     double sigma_a =
       (1 + exp(-(wing_.M * (alpha - wing_.alpha0))) + exp((wing_.M * (alpha + wing_.alpha0))))
-        / ((1 + exp(-(wing_.M * (alpha - wing_.alpha0))))
-          * (1 + exp((wing_.M * (alpha + wing_.alpha0)))));
+      / ((1 + exp(-(wing_.M * (alpha - wing_.alpha0))))
+         * (1 + exp((wing_.M * (alpha + wing_.alpha0)))));
     double CL_a = (1 - sigma_a) * (CL_.O + CL_.alpha * alpha) + sigma_a * (2 * sign * sa * sa * ca);
     double AR = (pow(wing_.b, 2.0)) / wing_.S;
-    double CD_a =
-      CD_.p
-        + ((pow((CL_.O + CL_.alpha * (alpha)), 2.0))
-          / (3.14159 * 0.9
-            * AR)); // the const 0.9 in this equation replaces the e (Oswald Factor) variable and may be inaccurate
+    double CD_a = CD_.p + ((pow((CL_.O + CL_.alpha * (alpha)), 2.0)) / (3.14159 * 0.9 * AR));
+    // the const 0.9 in this equation replaces the e (Oswald Factor) variable and may be inaccurate
 
     double CX_a = -CD_a * ca + CL_a * sa;
     double CX_q_a = -CD_.q * ca + CL_.q * sa;
@@ -327,26 +314,24 @@ Eigen::Matrix<double, 6, 1> Fixedwing::updateForcesAndTorques(Current_State x, c
     double CZ_deltaE_a = -CD_.delta_e * sa - CL_.delta_e * ca;
 
     forces(0) = 0.5 * (rho_) * Va * Va * wing_.S
-      * (CX_a + (CX_q_a * wing_.c * q) / (2.0 * Va) + CX_deltaE_a * delta_.e)
+        * (CX_a + (CX_q_a * wing_.c * q) / (2.0 * Va) + CX_deltaE_a * delta_.e)
       + 0.5 * rho_ * prop_.S * prop_.C * (pow((prop_.k_motor * delta_.t), 2.0) - Va * Va);
     forces(1) = 0.5 * (rho_) * Va * Va * wing_.S
       * (CY_.O + CY_.beta * beta + ((CY_.p * wing_.b * p) / (2.0 * Va))
-        + ((CY_.r * wing_.b * r) / (2.0 * Va))
-        + CY_.delta_a * delta_.a + CY_.delta_r * delta_.r);
+         + ((CY_.r * wing_.b * r) / (2.0 * Va)) + CY_.delta_a * delta_.a + CY_.delta_r * delta_.r);
     forces(2) = 0.5 * (rho_) * Va * Va * wing_.S
       * (CZ_a + (CZ_q_a * wing_.c * q) / (2.0 * Va) + CZ_deltaE_a * delta_.e);
 
-    forces(3) = 0.5 * (rho_) * Va * Va * wing_.S * wing_.b
-      * (Cell_.O + Cell_.beta * beta + (Cell_.p * wing_.b * p) / (2.0 * Va)
-        + (Cell_.r * wing_.b * r) / (2.0 * Va) + Cell_.delta_a * delta_.a
-        + Cell_.delta_r * delta_.r)
+    forces(3) = 0.5 * (rho_) *Va * Va * wing_.S * wing_.b
+        * (Cell_.O + Cell_.beta * beta + (Cell_.p * wing_.b * p) / (2.0 * Va)
+           + (Cell_.r * wing_.b * r) / (2.0 * Va) + Cell_.delta_a * delta_.a
+           + Cell_.delta_r * delta_.r)
       - prop_.k_T_P * pow((prop_.k_Omega * delta_.t), 2.0);
     forces(4) = 0.5 * (rho_) * Va * Va * wing_.S * wing_.c
       * (Cm_.O + Cm_.alpha * alpha + (Cm_.q * wing_.c * q) / (2.0 * Va) + Cm_.delta_e * delta_.e);
     forces(5) = 0.5 * (rho_) * Va * Va * wing_.S * wing_.b
       * (Cn_.O + Cn_.beta * beta + (Cn_.p * wing_.b * p) / (2.0 * Va)
-        + (Cn_.r * wing_.b * r) / (2.0 * Va)
-        + Cn_.delta_a * delta_.a + Cn_.delta_r * delta_.r);
+         + (Cn_.r * wing_.b * r) / (2.0 * Va) + Cn_.delta_a * delta_.a + Cn_.delta_r * delta_.r);
   } else {
     forces(0) =
       0.5 * rho_ * prop_.S * prop_.C * ((prop_.k_motor * delta_.t * prop_.k_motor * delta_.t));
@@ -360,9 +345,6 @@ Eigen::Matrix<double, 6, 1> Fixedwing::updateForcesAndTorques(Current_State x, c
   return forces;
 }
 
-void Fixedwing::set_wind(Eigen::Vector3d wind)
-{
-  wind_ = wind;
-}
+void Fixedwing::set_wind(Eigen::Vector3d wind) { wind_ = wind; }
 
 } // namespace rosflight_sim

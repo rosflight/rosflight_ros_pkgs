@@ -122,7 +122,7 @@ private:
   uint64_t next_imu_update_time_us_ = 0;
   uint64_t imu_update_period_us_ = 0;
 
-  void RCCallback(const rosflight_msgs::msg::RCRaw &msg);
+  void RCCallback(const rosflight_msgs::msg::RCRaw & msg);
   bool motors_spinning();
 
   GazeboVector prev_vel_1_;
@@ -161,19 +161,19 @@ public:
 
   bool mag_present() override;
   void mag_read(float mag[3]) override;
-  void mag_update() override {};
+  void mag_update() override;
 
   bool baro_present() override;
   void baro_read(float * pressure, float * temperature) override;
-  void baro_update() override {};
+  void baro_update() override;
 
   bool diff_pressure_present() override;
   void diff_pressure_read(float * diff_pressure, float * temperature) override;
-  void diff_pressure_update() override {};
+  void diff_pressure_update() override;
 
   bool sonar_present() override;
   float sonar_read() override;
-  void sonar_update() override {};
+  void sonar_update() override;
 
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)
@@ -222,10 +222,8 @@ public:
   void battery_current_set_multiplier(double multiplier) override;
 
   // Gazebo stuff
-  void gazebo_setup(gazebo::physics::LinkPtr link,
-                    gazebo::physics::WorldPtr world,
-                    gazebo::physics::ModelPtr model,
-                    rclcpp::Node::SharedPtr node,
+  void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
+                    gazebo::physics::ModelPtr model, rclcpp::Node::SharedPtr node,
                     std::string mav_type);
   inline const int * get_outputs() const { return pwm_outputs_; }
 #if GAZEBO_MAJOR_VERSION >= 9

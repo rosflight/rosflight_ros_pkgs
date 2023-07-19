@@ -29,35 +29,25 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <rosflight_sim/sil_board.hpp>
 #include <fstream>
+#include <rosflight_sim/sil_board.hpp>
 
 #include <iostream>
 
 namespace rosflight_sim
 {
-SIL_Board::SIL_Board() :
-  rosflight_firmware::UDPBoard(),
-  random_generator_(std::chrono::system_clock::now().time_since_epoch().count()) {}
+SIL_Board::SIL_Board()
+    : rosflight_firmware::UDPBoard(),
+      random_generator_(std::chrono::system_clock::now().time_since_epoch().count())
+{}
 
-void SIL_Board::init_board()
-{
-  boot_time_ = GZ_COMPAT_GET_SIM_TIME(world_);
-}
+void SIL_Board::init_board() { boot_time_ = GZ_COMPAT_GET_SIM_TIME(world_); }
 
-constexpr double rad2Deg(double x)
-{
-  return 180.0 / M_PI * x;
-}
-constexpr double deg2Rad(double x)
-{
-  return M_PI / 180.0 * x;
-}
+constexpr double rad2Deg(double x) { return 180.0 / M_PI * x; }
+constexpr double deg2Rad(double x) { return M_PI / 180.0 * x; }
 
-void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link,
-                             gazebo::physics::WorldPtr world,
-                             gazebo::physics::ModelPtr model,
-                             rclcpp::Node::SharedPtr node,
+void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
+                             gazebo::physics::ModelPtr model, rclcpp::Node::SharedPtr node,
                              std::string mav_type)
 {
   link_ = link;
@@ -73,8 +63,7 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link,
 
   set_ports(bind_host, bind_port, remote_host, remote_port);
   gzmsg << "ROSflight SIL Conneced to " << remote_host << ":" << remote_port << " from "
-        << bind_host << ":"
-        << bind_port << "\n";
+        << bind_host << ":" << bind_port << "\n";
 
   // Get communication delay parameters, in nanoseconds
   serial_delay_ns_ = node_->get_parameter_or<long>("serial_delay_ns", 0.006 * 1e9);
@@ -222,10 +211,7 @@ void SIL_Board::sensors_init()
 #endif
 }
 
-uint16_t SIL_Board::num_sensor_errors()
-{
-  return 0;
-}
+uint16_t SIL_Board::num_sensor_errors() { return 0; }
 
 bool SIL_Board::new_imu_data()
 {
@@ -286,15 +272,12 @@ bool SIL_Board::imu_read(float accel[3], float * temperature, float gyro[3], uin
 
   // Normal Noise from motors
   if (motors_spinning()) {
-    GZ_COMPAT_SET_X(y_gyro,
-                    GZ_COMPAT_GET_X(y_gyro)
-                      + gyro_stdev_ * normal_distribution_(random_generator_));
-    GZ_COMPAT_SET_Y(y_gyro,
-                    GZ_COMPAT_GET_Y(y_gyro)
-                      + gyro_stdev_ * normal_distribution_(random_generator_));
-    GZ_COMPAT_SET_Z(y_gyro,
-                    GZ_COMPAT_GET_Z(y_gyro)
-                      + gyro_stdev_ * normal_distribution_(random_generator_));
+    GZ_COMPAT_SET_X(
+      y_gyro, GZ_COMPAT_GET_X(y_gyro) + gyro_stdev_ * normal_distribution_(random_generator_));
+    GZ_COMPAT_SET_Y(
+      y_gyro, GZ_COMPAT_GET_Y(y_gyro) + gyro_stdev_ * normal_distribution_(random_generator_));
+    GZ_COMPAT_SET_Z(
+      y_gyro, GZ_COMPAT_GET_Z(y_gyro) + gyro_stdev_ * normal_distribution_(random_generator_));
   }
 
   // Random Walk for bias
@@ -357,15 +340,9 @@ void SIL_Board::mag_read(float mag[3])
   mag[2] = (float) -GZ_COMPAT_GET_Z(y_mag);
 }
 
-bool SIL_Board::mag_present()
-{
-  return true;
-}
+bool SIL_Board::mag_present() { return true; }
 
-bool SIL_Board::baro_present()
-{
-  return true;
-}
+bool SIL_Board::baro_present() { return true; }
 
 void SIL_Board::baro_read(float * pressure, float * temperature)
 {
@@ -420,10 +397,7 @@ void SIL_Board::diff_pressure_read(float * diff_pressure, float * temperature)
   *temperature = 27.0;
 }
 
-bool SIL_Board::sonar_present()
-{
-  return true;
-}
+bool SIL_Board::sonar_present() { return true; }
 
 float SIL_Board::sonar_read()
 {
@@ -439,30 +413,18 @@ float SIL_Board::sonar_read()
   }
 }
 
-bool SIL_Board::battery_voltage_present() const
-{
-  return true;
-}
+bool SIL_Board::battery_voltage_present() const { return true; }
 
-float SIL_Board::battery_voltage_read() const
-{
-  return 15 * battery_voltage_multiplier;
-}
+float SIL_Board::battery_voltage_read() const { return 15 * battery_voltage_multiplier; }
 
 void SIL_Board::battery_voltage_set_multiplier(double multiplier)
 {
   battery_voltage_multiplier = (float) multiplier;
 }
 
-bool SIL_Board::battery_current_present() const
-{
-  return true;
-}
+bool SIL_Board::battery_current_present() const { return true; }
 
-float SIL_Board::battery_current_read() const
-{
-  return 1 * battery_current_multiplier;
-}
+float SIL_Board::battery_current_read() const { return 1 * battery_current_multiplier; }
 
 void SIL_Board::battery_current_set_multiplier(double multiplier)
 {
@@ -480,7 +442,7 @@ void SIL_Board::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
   latestRC_.values[4] = 1000; // attitude override
   latestRC_.values[5] = 1000; // arm
 
-  for (int &pwm_output : pwm_outputs_) { pwm_output = 1000; }
+  for (int & pwm_output : pwm_outputs_) { pwm_output = 1000; }
 
   rc_sub_ = node_->create_subscription<rosflight_msgs::msg::RCRaw>(
     "RC", 1, std::bind(&SIL_Board::RCCallback, this, std::placeholders::_1));
@@ -493,9 +455,7 @@ float SIL_Board::rc_read(uint8_t channel)
   }
 
   // no publishers, set throttle low and center everything else
-  if (channel == 2) {
-    return 0.0;
-  }
+  if (channel == 2) { return 0.0; }
 
   return 0.5;
 }
@@ -509,10 +469,7 @@ void SIL_Board::pwm_disable()
   for (int i = 0; i < 14; i++) { pwm_write(i, 0); }
 }
 
-bool SIL_Board::rc_lost()
-{
-  return !rc_received_;
-}
+bool SIL_Board::rc_lost() { return !rc_received_; }
 
 void SIL_Board::rc_init(rc_type_t rc_type) {}
 
@@ -526,8 +483,7 @@ bool SIL_Board::memory_read(void * dest, size_t len)
   memory_file.open(directory + "/mem.bin", std::ios::binary);
 
   if (!memory_file.is_open()) {
-    RCLCPP_ERROR(node_->get_logger(),
-                 "Unable to load rosflight memory file %s/mem.bin",
+    RCLCPP_ERROR(node_->get_logger(), "Unable to load rosflight memory file %s/mem.bin",
                  directory.c_str());
     return false;
   }
@@ -544,8 +500,7 @@ bool SIL_Board::memory_write(const void * src, size_t len)
   const int dir_err = system(mkdir_command.c_str());
 
   if (dir_err == -1) {
-    RCLCPP_ERROR(node_->get_logger(),
-                 "Unable to write rosflight memory file %s/mem.bin",
+    RCLCPP_ERROR(node_->get_logger(), "Unable to write rosflight memory file %s/mem.bin",
                  directory.c_str());
     return false;
   }
@@ -590,29 +545,22 @@ bool SIL_Board::backup_memory_read(void * dest, size_t len)
 
 void SIL_Board::backup_memory_write(const void * src, size_t len)
 {
-  if (len < BACKUP_SRAM_SIZE) {
-    memcpy(backup_memory_, src, len);
-  }
+  if (len < BACKUP_SRAM_SIZE) { memcpy(backup_memory_, src, len); }
 }
 
 void SIL_Board::backup_memory_clear(size_t len)
 {
-  if (len < BACKUP_SRAM_SIZE) {
-    memset(backup_memory_, 0, len);
-  }
+  if (len < BACKUP_SRAM_SIZE) { memset(backup_memory_, 0, len); }
 }
 
-void SIL_Board::RCCallback(const rosflight_msgs::msg::RCRaw &msg)
+void SIL_Board::RCCallback(const rosflight_msgs::msg::RCRaw & msg)
 {
   rc_received_ = true;
   last_rc_message_ = node_->get_clock()->now();
   latestRC_ = msg;
 }
 
-bool SIL_Board::gnss_present()
-{
-  return GAZEBO_MAJOR_VERSION >= 9;
-}
+bool SIL_Board::gnss_present() { return GAZEBO_MAJOR_VERSION >= 9; }
 void SIL_Board::gnss_update() {}
 
 rosflight_firmware::GNSSData SIL_Board::gnss_read()
@@ -672,10 +620,7 @@ rosflight_firmware::GNSSData SIL_Board::gnss_read()
   return out;
 }
 
-bool SIL_Board::gnss_has_new_data()
-{
-  return GAZEBO_MAJOR_VERSION >= 9;
-}
+bool SIL_Board::gnss_has_new_data() { return GAZEBO_MAJOR_VERSION >= 9; }
 rosflight_firmware::GNSSFull SIL_Board::gnss_full_read()
 {
   rosflight_firmware::GNSSFull out;
