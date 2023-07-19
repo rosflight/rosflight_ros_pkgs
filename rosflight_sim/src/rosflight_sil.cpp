@@ -139,6 +139,8 @@ void ROSflightSIL::DeclareFixedwingParams()
   node_->declare_parameter("prop_S", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("prop_C", rclcpp::PARAMETER_DOUBLE);
 
+  node_->declare_parameter("servo_tau", rclcpp::PARAMETER_DOUBLE);
+
   node_->declare_parameter("C_L_O", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("C_L_alpha", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("C_L_beta", rclcpp::PARAMETER_DOUBLE);

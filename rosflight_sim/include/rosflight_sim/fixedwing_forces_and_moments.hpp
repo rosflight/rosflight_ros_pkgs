@@ -89,6 +89,8 @@ private:
   LiftCoeff Cell_;
   LiftCoeff Cn_;
 
+  double servo_tau_;
+
   // not constants
   // actuators
   struct Actuators
@@ -98,6 +100,9 @@ private:
     double r;
     double t;
   } delta_;
+
+  Actuators delta_prev_;
+  Actuators delta_prev_command_;
 
   // wind
   Eigen::Vector3d wind_;

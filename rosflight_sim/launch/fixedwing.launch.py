@@ -74,7 +74,7 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
-            'paused': paused,
+            'pause': paused,
             'gui': gui,
             'verbose': verbose,
             'world': world_file,
