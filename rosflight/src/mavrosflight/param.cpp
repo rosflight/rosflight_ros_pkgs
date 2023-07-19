@@ -52,31 +52,19 @@ Param::Param(mavlink_param_value_t msg) : value_(0), new_value_(0), expected_raw
   init(std::string(name), msg.param_index, (MAV_PARAM_TYPE) msg.param_type, msg.param_value);
 }
 
-Param::Param(std::string name, int index, MAV_PARAM_TYPE type, float raw_value) :
-  value_(0), new_value_(0), expected_raw_value_(0)
+Param::Param(std::string name, int index, MAV_PARAM_TYPE type, float raw_value)
+    : value_(0), new_value_(0), expected_raw_value_(0)
 {
   init(std::move(name), index, type, raw_value);
 }
 
-std::string Param::getName() const
-{
-  return name_;
-}
+std::string Param::getName() const { return name_; }
 
-int Param::getIndex() const
-{
-  return index_;
-}
+int Param::getIndex() const { return index_; }
 
-MAV_PARAM_TYPE Param::getType() const
-{
-  return type_;
-}
+MAV_PARAM_TYPE Param::getType() const { return type_; }
 
-double Param::getValue() const
-{
-  return value_;
-}
+double Param::getValue() const { return value_; }
 
 void Param::requestSet(double value, mavlink_message_t * msg)
 {
@@ -84,32 +72,20 @@ void Param::requestSet(double value, mavlink_message_t * msg)
     new_value_ = getCastValue(value);
     expected_raw_value_ = getRawValue(new_value_);
 
-    mavlink_msg_param_set_pack(1,
-                               50,
-                               msg,
-                               1,
-                               MAV_COMP_ID_ALL,
-                               name_.c_str(),
-                               expected_raw_value_,
+    mavlink_msg_param_set_pack(1, 50, msg, 1, MAV_COMP_ID_ALL, name_.c_str(), expected_raw_value_,
                                type_);
 
     set_in_progress_ = true;
   }
 }
 
-bool Param::handleUpdate(const mavlink_param_value_t &msg)
+bool Param::handleUpdate(const mavlink_param_value_t & msg)
 {
-  if (msg.param_index != index_) {
-    return false;
-  }
+  if (msg.param_index != index_) { return false; }
 
-  if (msg.param_type != type_) {
-    return false;
-  }
+  if (msg.param_type != type_) { return false; }
 
-  if (set_in_progress_ && msg.param_value == expected_raw_value_) {
-    set_in_progress_ = false;
-  }
+  if (set_in_progress_ && msg.param_value == expected_raw_value_) { set_in_progress_ = false; }
 
   if (msg.param_value != getRawValue()) {
     setFromRawValue(msg.param_value);
@@ -163,10 +139,7 @@ void Param::setFromRawValue(float raw_value)
   }
 }
 
-float Param::getRawValue()
-{
-  return getRawValue(value_);
-}
+float Param::getRawValue() { return getRawValue(value_); }
 
 float Param::getRawValue(double value)
 {

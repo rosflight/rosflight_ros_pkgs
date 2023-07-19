@@ -59,19 +59,19 @@ public:
   ParamManager(MavlinkComm * comm, rclcpp::Node * node);
   ~ParamManager();
 
-  void handle_mavlink_message(const mavlink_message_t &msg) override;
+  void handle_mavlink_message(const mavlink_message_t & msg) override;
 
   bool unsaved_changes() const;
 
-  bool get_param_value(const std::string &name, double * value);
-  bool set_param_value(const std::string &name, double value);
+  bool get_param_value(const std::string & name, double * value);
+  bool set_param_value(const std::string & name, double value);
   bool write_params();
 
   void register_param_listener(ParamListenerInterface * listener);
   void unregister_param_listener(ParamListenerInterface * listener);
 
-  bool save_to_file(const std::string &filename);
-  bool load_from_file(const std::string &filename);
+  bool save_to_file(const std::string & filename);
+  bool load_from_file(const std::string & filename);
 
   int get_num_params() const;
   int get_params_received() const;
@@ -83,10 +83,10 @@ private:
   void request_param_list();
   void request_param(int index);
 
-  void handle_param_value_msg(const mavlink_message_t &msg);
-  void handle_command_ack_msg(const mavlink_message_t &msg);
+  void handle_param_value_msg(const mavlink_message_t & msg);
+  void handle_command_ack_msg(const mavlink_message_t & msg);
 
-  bool is_param_id(const std::string &name);
+  bool is_param_id(const std::string & name);
 
   std::vector<ParamListenerInterface *> listeners_;
 

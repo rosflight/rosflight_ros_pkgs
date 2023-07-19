@@ -32,14 +32,14 @@
 #ifndef ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
 #define ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
 
-#include <geometry_msgs/msg/vector3.hpp>
-#include <nav_msgs/msg/odometry.hpp>
-#include <rclcpp/rclcpp.hpp>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/common.hh>
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 #include <gazebo_ros/node.hpp>
+#include <geometry_msgs/msg/vector3.hpp>
+#include <nav_msgs/msg/odometry.hpp>
+#include <rclcpp/rclcpp.hpp>
 
 #include <mavlink/mavlink.h>
 #include <rosflight.h>
@@ -62,10 +62,10 @@ public:
 protected:
   void Reset() override;
   void Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf) override;
-  void OnUpdate(const gazebo::common::UpdateInfo &_info);
+  void OnUpdate(const gazebo::common::UpdateInfo & _info);
 
 private:
-  void windCallback(const geometry_msgs::msg::Vector3 &msg);
+  void windCallback(const geometry_msgs::msg::Vector3 & msg);
   void publishTruth();
 
   rclcpp::Node::SharedPtr node_;

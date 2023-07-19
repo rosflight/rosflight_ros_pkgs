@@ -62,15 +62,14 @@ public:
    * \param mavlink_comm Reference to a MavlinkComm object (serial or UDP)
    * \param baud_rate Serial communication baud rate
    */
-  MavROSflight(MavlinkComm &mavlink_comm,
-               rclcpp::Node * node);
+  MavROSflight(MavlinkComm & mavlink_comm, rclcpp::Node * node);
 
   /**
    * \brief Stops communication and closes the serial port before the object is destroyed
    */
   ~MavROSflight();
 
-  MavlinkComm &comm;
+  MavlinkComm & comm;
   ParamManager param;
   TimeManager time;
 };

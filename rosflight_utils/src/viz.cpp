@@ -22,7 +22,7 @@ Viz::Viz() : Node("viz_node")
   pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("viz/attitude", 1);
 }
 
-void Viz::magCallback(const sensor_msgs::msg::MagneticField::ConstSharedPtr &msg)
+void Viz::magCallback(const sensor_msgs::msg::MagneticField::ConstSharedPtr & msg)
 {
   if (mag_throttle_ > mag_skip_) {
     // unpack message
@@ -75,9 +75,7 @@ void Viz::magCallback(const sensor_msgs::msg::MagneticField::ConstSharedPtr &msg
     pts_msg.color.g = 1.0;
     pts_msg.color.b = 0.0;
 
-    for (const auto &item : pts_list_) {
-      pts_msg.points.push_back(item);
-    }
+    for (const auto & item : pts_list_) { pts_msg.points.push_back(item); }
 
     // publish point cloud
     pts_pub_->publish(pts_msg);
@@ -85,7 +83,7 @@ void Viz::magCallback(const sensor_msgs::msg::MagneticField::ConstSharedPtr &msg
   mag_throttle_++;
 }
 
-void Viz::attCallback(const rosflight_msgs::msg::Attitude::ConstSharedPtr &msg)
+void Viz::attCallback(const rosflight_msgs::msg::Attitude::ConstSharedPtr & msg)
 {
   geometry_msgs::msg::PoseStamped pose;
   pose.header = msg->header;

@@ -39,16 +39,11 @@
 
 namespace rosflight_sim
 {
-ROSflightSIL::ROSflightSIL() :
-  gazebo::ModelPlugin(),
-  comm_(board_),
-  firmware_(board_, comm_),
-  mav_dynamics_() {}
+ROSflightSIL::ROSflightSIL()
+    : gazebo::ModelPlugin(), comm_(board_), firmware_(board_, comm_), mav_dynamics_()
+{}
 
-ROSflightSIL::~ROSflightSIL()
-{
-  GZ_COMPAT_DISCONNECT_WORLD_UPDATE_BEGIN(updateConnection_);
-}
+ROSflightSIL::~ROSflightSIL() { GZ_COMPAT_DISCONNECT_WORLD_UPDATE_BEGIN(updateConnection_); }
 
 void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
 {
@@ -203,7 +198,7 @@ void ROSflightSIL::DeclareFixedwingParams()
 }
 
 // This gets called by the world update event.
-void ROSflightSIL::OnUpdate(const gazebo::common::UpdateInfo &_info)
+void ROSflightSIL::OnUpdate(const gazebo::common::UpdateInfo & _info)
 {
   // We run twice so that that functions that take place when we don't have new IMU data get run
   firmware_.run();
@@ -241,7 +236,7 @@ void ROSflightSIL::Reset()
   link_->ResetPhysicsStates();
 }
 
-void ROSflightSIL::windCallback(const geometry_msgs::msg::Vector3 &msg)
+void ROSflightSIL::windCallback(const geometry_msgs::msg::Vector3 & msg)
 {
   Eigen::Vector3d wind;
   wind << msg.x, msg.y, msg.z;

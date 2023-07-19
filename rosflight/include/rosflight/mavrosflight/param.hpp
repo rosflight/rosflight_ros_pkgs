@@ -57,7 +57,7 @@ public:
   double getValue() const;
 
   void requestSet(double value, mavlink_message_t * msg);
-  bool handleUpdate(const mavlink_param_value_t &msg);
+  bool handleUpdate(const mavlink_param_value_t & msg);
 
 private:
   void init(std::string name, int index, MAV_PARAM_TYPE type, float raw_value);

@@ -32,9 +32,9 @@
 #ifndef ROSFLIGHT_SIM_FIXEDWING_FORCES_AND_MOMENTS_H
 #define ROSFLIGHT_SIM_FIXEDWING_FORCES_AND_MOMENTS_H
 
+#include <eigen3/Eigen/Dense>
 #include <rclcpp/rclcpp.hpp>
 #include <rosflight_sim/mav_forces_and_moments.hpp>
-#include <eigen3/Eigen/Dense>
 
 namespace rosflight_sim
 {

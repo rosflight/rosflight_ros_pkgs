@@ -39,20 +39,15 @@
 
 namespace mavrosflight
 {
-TimeManager::TimeManager(MavlinkComm * const comm,
-                         rclcpp::Node * const node) :
-  comm_(comm),
-  node_(node),
-  offset_alpha_(0.95),
-  offset_ns_(0),
-  initialized_(false)
+TimeManager::TimeManager(MavlinkComm * const comm, rclcpp::Node * const node)
+    : comm_(comm), node_(node), offset_alpha_(0.95), offset_ns_(0), initialized_(false)
 {
   comm_->register_mavlink_listener(this);
   time_sync_timer_ = node_->create_wall_timer(
     std::chrono::milliseconds(100), std::bind(&TimeManager::timer_callback, this), nullptr);
 }
 
-void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
+void TimeManager::handle_mavlink_message(const mavlink_message_t & msg)
 {
   std::chrono::nanoseconds now(node_->get_clock()->now().nanoseconds());
 
@@ -73,17 +68,14 @@ void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
       {
         RCLCPP_INFO(node_->get_logger(), "Detected time offset of %0.3f s.",
                     abs(std::chrono::duration<double>(offset_ns_ - offset_ns).count()));
-        RCLCPP_DEBUG(node_->get_logger(),
-                     "FCU time: %0.3f, System time: %0.3f",
-                     tsync.tc1 * 1e-9,
+        RCLCPP_DEBUG(node_->get_logger(), "FCU time: %0.3f, System time: %0.3f", tsync.tc1 * 1e-9,
                      tsync.ts1 * 1e-9);
         offset_ns_ = offset_ns;
         initialized_ = true;
       } else // otherwise low-pass filter the offset
       {
-        offset_ns_ = std::chrono::duration_cast<std::chrono::nanoseconds>(offset_alpha_ * offset_ns
-                                                                            + (1.0 - offset_alpha_)
-                                                                              * offset_ns_);
+        offset_ns_ = std::chrono::duration_cast<std::chrono::nanoseconds>(
+          offset_alpha_ * offset_ns + (1.0 - offset_alpha_) * offset_ns_);
       }
     }
   }
@@ -91,18 +83,14 @@ void TimeManager::handle_mavlink_message(const mavlink_message_t &msg)
 
 std::chrono::nanoseconds TimeManager::fcu_time_to_system_time(std::chrono::nanoseconds fcu_time)
 {
-  if (!initialized_) {
-    return std::chrono::nanoseconds(node_->get_clock()->now().nanoseconds());
-  }
+  if (!initialized_) { return std::chrono::nanoseconds(node_->get_clock()->now().nanoseconds()); }
 
   std::chrono::nanoseconds ns = fcu_time + offset_ns_;
   if (ns < std::chrono::nanoseconds::zero()) {
-    RCLCPP_ERROR_THROTTLE(node_->get_logger(),
-                          *node_->get_clock(),
-                          1,
-                          "negative time calculated from FCU: fcu_time=%ld, offset_ns=%ld.  Using system time",
-                          fcu_time.count(),
-                          offset_ns_.count());
+    RCLCPP_ERROR_THROTTLE(
+      node_->get_logger(), *node_->get_clock(), 1,
+      "negative time calculated from FCU: fcu_time=%ld, offset_ns=%ld.  Using system time",
+      fcu_time.count(), offset_ns_.count());
     return std::chrono::nanoseconds(node_->get_clock()->now().nanoseconds());
   }
   return ns;

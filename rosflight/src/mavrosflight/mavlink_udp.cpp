@@ -43,28 +43,15 @@ namespace mavrosflight
 {
 using boost::asio::serial_port_base;
 
-MavlinkUDP::MavlinkUDP(std::string bind_host,
-                       uint16_t bind_port,
-                       std::string remote_host,
-                       uint16_t remote_port) :
-  MavlinkComm(),
-  bind_host_(std::move(bind_host)),
-  bind_port_(bind_port),
-  remote_host_(std::move(remote_host)),
-  remote_port_(remote_port),
-  socket_(io_service_)
-{
-}
+MavlinkUDP::MavlinkUDP(std::string bind_host, uint16_t bind_port, std::string remote_host,
+                       uint16_t remote_port)
+    : MavlinkComm(), bind_host_(std::move(bind_host)), bind_port_(bind_port),
+      remote_host_(std::move(remote_host)), remote_port_(remote_port), socket_(io_service_)
+{}
 
-MavlinkUDP::~MavlinkUDP()
-{
-  MavlinkUDP::do_close();
-}
+MavlinkUDP::~MavlinkUDP() { MavlinkUDP::do_close(); }
 
-bool MavlinkUDP::is_open()
-{
-  return socket_.is_open();
-}
+bool MavlinkUDP::is_open() { return socket_.is_open(); }
 
 void MavlinkUDP::do_open()
 {
@@ -83,27 +70,23 @@ void MavlinkUDP::do_open()
     socket_.set_option(udp::socket::reuse_address(true));
     socket_.set_option(udp::socket::send_buffer_size(1000 * MAVLINK_MAX_PACKET_LEN));
     socket_.set_option(udp::socket::receive_buffer_size(1000 * MAVLINK_SERIAL_READ_BUF_SIZE));
-  }
-  catch (const boost::system::system_error &e) {
+  } catch (const boost::system::system_error & e) {
     throw SerialException(e);
   }
 }
 
-void MavlinkUDP::do_close()
-{
-  socket_.close();
-}
+void MavlinkUDP::do_close() { socket_.close(); }
 
-void MavlinkUDP::do_async_read(const boost::asio::mutable_buffers_1 &buffer,
-                               boost::function<void(const boost::system::error_code &,
-                                                    size_t)> handler)
+void MavlinkUDP::do_async_read(
+  const boost::asio::mutable_buffers_1 & buffer,
+  boost::function<void(const boost::system::error_code &, size_t)> handler)
 {
   socket_.async_receive_from(buffer, remote_endpoint_, handler);
 }
 
-void MavlinkUDP::do_async_write(const boost::asio::const_buffers_1 &buffer,
-                                boost::function<void(const boost::system::error_code &,
-                                                     size_t)> handler)
+void MavlinkUDP::do_async_write(
+  const boost::asio::const_buffers_1 & buffer,
+  boost::function<void(const boost::system::error_code &, size_t)> handler)
 {
   socket_.async_send_to(buffer, remote_endpoint_, handler);
 }
