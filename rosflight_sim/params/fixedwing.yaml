@@ -1,6 +1,11 @@
-# Parameters for ROSflight software-in-the-loop simulation.
+# Parameters for ROSflight software-in-the-loop simulation, based on Sonicmodell Skyhunter 1800mm UAV.
+
 # Mass and inertia parameters are defined in fixedwing.urdf.xacro.
-# Based on My Twin Dream parameters.
+# Mass: 2.28
+# Jx: 0.141
+# Jy: 0.208
+# Jz: 0.293
+# Jxz: 0.04
 
 /fixedwing/rosflight_sil:
   ros__parameters:

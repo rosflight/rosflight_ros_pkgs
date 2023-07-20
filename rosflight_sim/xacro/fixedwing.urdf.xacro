@@ -15,10 +15,10 @@ Author: Gary Ellingson
   <xacro:property name="body_width" value="1.4"/>
   <xacro:property name="body_height" value="0.3"/>
   <xacro:property name="body_length" value="1.6"/>
-  <xacro:property name="mass" value="3.92"/>
-  <xacro:property name="Jx" value="0.213"/>
-  <xacro:property name="Jy" value="0.171"/>
-  <xacro:property name="Jz" value="0.350"/>
+  <xacro:property name="mass" value="2.28"/>
+  <xacro:property name="Jx" value="0.141"/>
+  <xacro:property name="Jy" value="0.208"/>
+  <xacro:property name="Jz" value="0.293"/>
   <xacro:property name="Jxz" value="0.04"/>
 
   <!-- Instantiate Link and Visual -->

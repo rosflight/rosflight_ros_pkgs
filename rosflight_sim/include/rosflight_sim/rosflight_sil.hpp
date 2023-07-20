@@ -103,6 +103,7 @@ private:
 
   void DeclareMultirotorParams();
   void DeclareFixedwingParams();
+  void DeclareGeneralParams();
 };
 
 } // namespace rosflight_sim

@@ -65,6 +65,9 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   gzmsg << "ROSflight SIL Conneced to " << remote_host << ":" << remote_port << " from "
         << bind_host << ":" << bind_port << "\n";
 
+  // TODO: These params need to be updated with empirically derived values, using the latest
+  //   hardware (i.e. not the cheap boards with the cheap sensors)
+
   // Get communication delay parameters, in nanoseconds
   serial_delay_ns_ = node_->get_parameter_or<long>("serial_delay_ns", 0.006 * 1e9);
 
@@ -77,7 +80,6 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   acc_bias_range_ = node_->get_parameter_or<double>("acc_bias_range", 0.6);
   acc_bias_walk_stdev_ = node_->get_parameter_or<double>("acc_bias_walk_stdev", 0.00001);
 
-  // TODO: Update airspeed and mag values with empirically-derived data
   mag_stdev_ = node_->get_parameter_or<double>("mag_stdev", 0.10);
   mag_bias_range_ = node_->get_parameter_or<double>("mag_bias_range", 0.10);
   mag_bias_walk_stdev_ = node_->get_parameter_or<double>("mag_bias_walk_stdev", 0.001);
