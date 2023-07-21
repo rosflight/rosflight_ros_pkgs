@@ -89,7 +89,7 @@ def generate_launch_description():
         xacro_filepath_string, mappings={
             'mesh_file_location': os.path.join(
                 get_package_share_directory('rosflight_sim'),
-                'resources/wing.dae'
+                'resources/skyhunter.stl'
             )
         }
     ).toxml()
