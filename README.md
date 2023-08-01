@@ -30,9 +30,7 @@ functionality, including visualization tools for the attitude estimate and magne
 
 # Updated ROS2 Instructions
 
-Currently, this repo has only been tested with Ubuntu 22.04 LTS and ROS2 Humble.
-
-## Building the full development workspace
+## Building the workspace
 
 1. Before installing any new packages, update your system with `sudo apt update` and`sudo apt upgrade`.
 2. Install ROS2 Humble. Follow the directions on
@@ -42,36 +40,17 @@ Currently, this repo has only been tested with Ubuntu 22.04 LTS and ROS2 Humble.
    can be done with `source /opt/ros/humble/setup.bash`, or you can set bash to source it automatically when opened
    with `echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc`. Re-open your terminal so that this echo command can
    take effect.
-4. Clone the rosflight2 repository and it's submodules
-   with `git clone --recursive https://github.com/byu-magicc/rosflight2.git`. Enter that directory with `cd rosflight2`.
-5. Install all required dependencies with rosdep. To do so, initialize rosdep with `sudo rosdep init`, update
+4. Create a rosflight workspace folder and cd into it with `mkdir rosflight_ws && cd rosflight_ws`.
+5. Clone the rosflight2 repository and its submodules
+   with `git clone --recursive https://github.com/byu-magicc/rosflight2.git`.
+6. Install all required dependencies with rosdep. To do so, initialize rosdep with `sudo rosdep init`, update
    with `rosdep update`, and install the dependencies
-   with `rosdep install -i --from-path rosflight rosflight_utils rosflight_msgs rosflight_firmware rosflight_sim rosflight_pkgs -y --ignore-src`.
-6. Rosdep will install Gazebo for the rosflight_sim packaged, which has a setup file that will need to be sourced. Set
+   with `rosdep install -i --from-path ./ -y --ignore-src`.
+7. Rosdep will install Gazebo for the rosflight_sim packaged, which has a setup file that will need to be sourced. Set
    it to be sourced automatically with `echo "source /usr/share/gazebo/setup.sh" >> ~/.bashrc`.
-7. Build the repository with `colcon build`. Once built, set the rosflight setup file to be sourced automatically
-   with `echo "source ~/rosflight2/install/setup.bash" >> ~/.bashrc`. If you cloned the repository in a different
+8. Build the repository with `colcon build`. Once built, set the rosflight setup file to be sourced automatically
+   with `echo "source ~/rosflight_ws/install/setup.bash" >> ~/.bashrc`. If your workspace folder is in a different
    location than your home directory, updated the path in the command to reflect its location.
-
-## Building the rosflight_io node only (for a headless computer)
-
-1. Before installing any new packages, update your system with `sudo apt update` and`sudo apt upgrade`.
-2. Install ROS2 Humble. Follow the directions on
-   the [ROS2 documentation](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html), installing
-   the `ros-humble-ros-base` and `ros-dev-tools` packages.
-3. Before ROS can be used, the setup file will need to be sourced in every terminal that you want to use ROS in. This
-   can be done with `source /opt/ros/humble/setup.bash`, or you can set bash to source it automatically when opened
-   with `echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc`. Re-open your terminal so that this echo command can
-   take effect.
-4. Clone the ROSflight repository and it's submodules
-   with `git clone --recursive https://github.com/byu-magicc/rosflight2.git`. Enter that directory with `cd rosflight2`.
-5. Install all required dependencies with rosdep. To do so, initialize rosdep with `sudo rosdep init`, update
-   with `rosdep update`, and install the dependencies
-   with `rosdep install -i --from-path rosflight rosflight_msgs -y --ignore-src`.
-6. Build the repository with `colcon build --packages-select rosflight rosflight_msgs`. Once built, set the rosflight
-   setup file to be sourced automatically with `echo "source ~/rosflight2/install/setup.bash" >> ~/.bashrc`. If you
-   cloned the repository in a different location other than your home directory, updated the path in the command to
-   reflect its location.
 
 ## Running the rosflight_io node
 
