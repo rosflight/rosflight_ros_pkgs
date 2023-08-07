@@ -369,7 +369,7 @@ void SIL_Board::baro_read(float * pressure, float * temperature)
   y_baro += baro_bias_;
 
   (*pressure) = (float) y_baro;
-  (*temperature) = 27.0f;
+  (*temperature) = 27.0f + 273.15f;
 }
 
 bool SIL_Board::diff_pressure_present()
@@ -398,7 +398,7 @@ void SIL_Board::diff_pressure_read(float * diff_pressure, float * temperature)
   y_as += airspeed_bias_;
 
   *diff_pressure = (float) y_as;
-  *temperature = 27.0;
+  *temperature = 27.0 + 273.15;
 }
 
 bool SIL_Board::sonar_present() { return true; }
