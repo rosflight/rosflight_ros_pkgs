@@ -39,6 +39,7 @@ Currently supported joystick controllers are:
     * Taranis Q-X7 transmitter connected over USB
     * XBox controller
     * RealFlight InterLink controller
+    * RadioMaster TX16S transmitter connected over USB
 
 To add support for a new controller, simply add its configuration to
 the config dictionary.
