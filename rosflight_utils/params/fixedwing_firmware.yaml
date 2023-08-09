@@ -1,12 +1,16 @@
-- {name: MOTOR_PWM_UPDATE, type: 6, value: 50}
-- {name: ARM_SPIN_MOTORS, type: 6, value: 0}
-- {name: MOTOR_IDLE_THR, type: 9, value: 0.1}
-- {name: ARM_CHANNEL, type: 6, value: 4}
-- {name: FIXED_WING, type: 6, value: 1}
-- {name: MIXER, type: 6, value: 10}
-- {name: ELEVATOR_REV, type: 6, value: 0}
-- {name: AIL_REV, type: 6, value: 0}
-- {name: RUDDER_REV, type: 6, value: 0}
-- {name: CAL_GYRO_ARM, type: 6, value: 0}
-- {name: RC_THR_OVRD_CHN, type: 6, value: 4}
-- {name: RC_ATT_OVRD_CHN, type: 6, value: 4}
+# Parameters for using a Fixedwing with ROSflight2 firmware.
+
+- {name: MOTOR_PWM_UPDATE, type: 6, value: 50} # Set pwm update rate for motor.
+- {name: ARM_SPIN_MOTORS, type: 6, value: 0} # Do not set motors to spin when armed.
+- {name: MOTOR_IDLE_THR, type: 9, value: .1} # Set motor to not idle at zero throttle.
+- {name: ARM_CHANNEL, type: 6, value: 4} # Set to desired arm channel.
+- {name: FIXED_WING, type: 6, value: 1} # Configure firmware for fixedwing.
+- {name: MIXER, type: 6, value: 10} # Set mixer to pass through, to directly pass ROSplane2 commands to acutators.
+- {name: ELEVATOR_REV, type: 6, value: 0} # Option to reverse elevator.
+- {name: AIL_REV, type: 6, value: 0} # Option to reverse Aileron.
+- {name: RUDDER_REV, type: 6, value: 0} # Option to reverse rudder.
+- {name: CAL_GYRO_ARM, type: 6, value: 0} # Option to calibrate gyro when arming (generally only for multi-rotors).
+- {name: RC_THR_OVRD_CHN, type: 6, value: 5} # Set pilot override channel for throttle control.
+- {name: RC_ATT_OVRD_CHN, type: 6, value: 5} # Set pilot override channel for attitude control.
+- {name: RC_ATT_CTRL_CHN, type: 6, value: 8} # TODO this should not be 8.
+- {name: MIN_THROTTLE, type: 6, value: 0} # Set to not take the minimum of the commanded throttles.
