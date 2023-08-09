@@ -32,6 +32,7 @@ class DummyRC(Node):
         super().__init__('dummy_rc')
         self.arm_service = self.create_service(Trigger, 'arm', self.arm_callback)
         self.disarm_service = self.create_service(Trigger, 'disarm', self.disarm_callback)
+        self.disable_override_service = self.create_service(Trigger, 'enable_override', self.enable_override_callback)
         self.disable_override_service = self.create_service(Trigger, 'disable_override', self.disable_override_callback)
         self.rc_publisher = self.create_publisher(RCRaw, 'RC', 10)
         self.timer = self.create_timer(1 / update_freq, self.timer_callback)
