@@ -53,6 +53,13 @@
 
 namespace rosflight_sim
 {
+/**
+ * @brief This class serves as the SIL plugin for Gazebo, holding an instance of sil_board,
+ * calling the forces and moments calculation functions, and interacting directly with Gazebo.
+ *
+ * @note This class does not inherit from rclcpp::Node as Gazebo provides the node that should be
+ * used.
+ */
 class ROSflightSIL : public gazebo::ModelPlugin
 {
 public:
@@ -60,12 +67,26 @@ public:
   ~ROSflightSIL() override;
 
 protected:
+  /**
+   * @brief Determines what should happen when the reset action is called within Gazebo.
+   */
   void Reset() override;
+  /**
+   * @brief Initializes the SIL. Should only be called once, on Gazebo startup.
+   */
   void Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf) override;
+  /**
+   * @brief Callback function used by Gazebo to update the simulation. Contains forces and moments
+   * calculations.
+   */
   void OnUpdate(const gazebo::common::UpdateInfo & _info);
 
 private:
   void windCallback(const geometry_msgs::msg::Vector3 & msg);
+  /**
+   * @brief Callback for publishing true pose on ROS topic using information obtained directly from
+   * Gazebo.
+   */
   void publishTruth();
 
   rclcpp::Node::SharedPtr node_;
@@ -96,11 +117,22 @@ private:
   // For reset handlin
   GazeboPose initial_pose_;
 
-  // helper functions for converting to and from eigen
+  /**
+   * @brief Converts a vector from a gazebo datatype to an eigen datatype.
+   */
   static Eigen::Vector3d vec3_to_eigen_from_gazebo(GazeboVector vec);
+  /**
+   * @brief Converts a vector from an eigen datatype to a gazebo datatype.
+   */
   static GazeboVector vec3_to_gazebo_from_eigen(Eigen::Vector3d vec);
+  /**
+   * @brief Create an eigen rotation matrix from a Gazebo quaternion.
+   */
   static Eigen::Matrix3d rotation_to_eigen_from_gazebo(GazeboQuaternion vec);
 
+  /**
+   * Declares all ROS params to be used by the class. Must be called in the constructor.
+   */
   void declareSILParams();
 };
 

@@ -39,6 +39,13 @@
 
 namespace rosflight_sim
 {
+/**
+ * @brief This class contains the forces and moments calculations used for multirotor simulations.
+ *
+ * @note Default values for parameters are not provided as parameters are interdependent on each
+ * other and need to be provided as a set. Notifying the user of missing parameters helps avoid
+ * inadvertently using an incomplete set of parameters.
+ */
 class Multirotor : public MAVForcesAndMoments
 {
 private:
@@ -82,14 +89,33 @@ private:
   Eigen::VectorXd actual_forces_;
   Eigen::VectorXd actual_torques_;
 
+  /**
+   * @brief Declares ROS parameters. Must be called in the constructor.
+   */
   void declareMultirotorParams();
 
 public:
+  /**
+   * @param node ROS2 node to obtain parameters from. Usually the node provided by the Gazebo model
+   * plugin.
+   */
   explicit Multirotor(rclcpp::Node::SharedPtr node);
   ~Multirotor();
 
+  /**
+   * @brief Calculates forces and moments based on current state and aerodynamic forces.
+   *
+   * @param x Current state of aircraft
+   * @param act_cmds Actuator commands
+   * @return 6x1 eigen matrix of calculated forces and moments
+   */
   Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x,
                                                      const int act_cmds[]) override;
+  /**
+   * @brief Sets the wind speed to use when calculating the forces and moments.
+   *
+   * @param wind Eigen vector of wind speeds
+   */
   void set_wind(Eigen::Vector3d wind) override;
 };
 

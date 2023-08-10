@@ -51,6 +51,11 @@
 
 namespace rosflight_sim
 {
+/**
+ * @brief ROSflight firmware board implementation for simulator. This class handles sensors,
+ * actuators, and FCU clock and memory for the firmware. It also adds a simulated serial delay. It
+ * inherits from UDP board, which establishes a communication link over UDP.
+ */
 class SIL_Board : public rosflight_firmware::UDPBoard
 {
 private:
@@ -122,7 +127,18 @@ private:
   uint64_t next_imu_update_time_us_ = 0;
   uint64_t imu_update_period_us_ = 0;
 
+  /**
+   * @brief Callback function to update RC values when new values are recieved.
+   *
+   * @param msg ROSflight RC message published on /RC topic
+   */
   void RCCallback(const rosflight_msgs::msg::RCRaw & msg);
+  /**
+   * @brief Checks the current pwm value for throttle to see if the motor pwm is above minimum, and that
+   * the motors should be spinning.
+   *
+   * @return true if throttle pwm is greater than 1100, false if less than or equal to.
+   */
   bool motors_spinning();
 
   GazeboVector prev_vel_1_;
@@ -139,96 +155,367 @@ public:
   SIL_Board();
 
   // setup
+  /**
+   * @brief Sets up board with initial values and state.
+   */
   void init_board() override;
-  void board_reset(bool bootloader) override;
+  /**
+   * @brief Function required to be overridden, but not used by sim.
+   */
+  void board_reset(bool bootloader) override {};
 
   // clock
+  /**
+   * @brief Gets current FCU time in milliseconds based on Gazebo time.
+   *
+   * @return Current FCU time in milliseconds.
+   */
   uint32_t clock_millis() override;
+  /**
+   * @brief Gets current FCU time in microseconds based on Gazebo time.
+   *
+   * @return Current FCU time in microseconds
+   */
   uint64_t clock_micros() override;
-  void clock_delay(uint32_t milliseconds) override;
+  /**
+   * @brief Function required to be overridden, but not used by sim.
+   */
+  void clock_delay(uint32_t milliseconds) override {};
 
   // serial
+  /**
+   * @brief Function that is called in firmware loop to read from serial buffer. Overriden to
+   * implement serial delay for simulation purposes.
+   */
   uint8_t serial_read() override;
+  /**
+   * @brief Function to check if bytes are in the serial communication buffer. Overriden to
+   * implement a serial delay for simulation purposes.
+   *
+   * @return true if bytes are ready.
+   */
   uint16_t serial_bytes_available() override;
 
   // sensors
+  /**
+   * @brief Initializes all the sensors within Gazebo, using provided sensor parameters.
+   */
   void sensors_init() override;
+  /**
+   * @brief Function used to return number of unhealthy sensors. Currently returns 0.
+   *
+   * @return 0
+   */
   uint16_t num_sensor_errors() override;
 
+  /**
+   * @brief Checks if there is new IMU data ready to be processed.
+   *
+   * @return true if unprocessed IMU data exists.
+   */
   bool new_imu_data() override;
+  /**
+   * @brief Generates simulated IMU data from truth data from Gazebo. Utilizes noise, bias, and walk
+   * parameters provided. All data is returned through the values given as the function arguments.
+   *
+   * @param accel Acceleration values to populate.
+   * @param temperature IMU temperature value to populate.
+   * @param gyro Gyro values to populate.
+   * @param time_us Time value to populate.
+   */
   bool imu_read(float accel[3], float * temperature, float gyro[3], uint64_t * time_us) override;
+  /**
+   * @brief Prints a ROS error stating that the IMU is not responding.
+   */
   void imu_not_responding_error() override;
 
+  /**
+   * @brief Function used to check if a magnetometer is present. Currently always returns true.
+   *
+   * @return true
+   */
   bool mag_present() override;
+  /**
+   * @brief Generates magnetometer data based on Gazebo orientation and given noise/bias parameters.
+   * Returns through function arguments.
+   *
+   * @param mag Magnetometer values to populate.
+   */
   void mag_read(float mag[3]) override;
+  /**
+   * @brief Function required to be overridden, but not used by sim.
+   */
   void mag_update() override {};
 
+  /**
+   * @brief Function used to check if a barometer is present. Currently returns true.
+   *
+   * @return true
+   */
   bool baro_present() override;
+  /**
+   * @brief Generates barometer measurement based on Gazebo altitude and noise/bias parameters.
+   * Returns output through function arguments.
+   *
+   * @param pressure Pressure value to populate.
+   * @param temperature Temperature value to populate.
+   */
   void baro_read(float * pressure, float * temperature) override;
+  /**
+   * @brief Function required to be overridden, but not used by sim.
+   */
   void baro_update() override {};
 
+  /**
+   * @brief Checks if a pitot tube sensor is present. Returns true if sim is a fixedwing sim.
+   *
+   * @return true if fixedwing sim, false otherwise.
+   */
   bool diff_pressure_present() override;
+  /**
+   * @brief Generates a differential pressure measurement based on Gazebo speed and noise/bias
+   * parameters. Return output through function arguments.
+   *
+   * @param diff_pressure Differential pressure value to populate.
+   * @param temperature Temperature value to populate.
+   */
   void diff_pressure_read(float * diff_pressure, float * temperature) override;
+  /**
+   * @brief Function required to be overridden, but not used by sim.
+   */
   void diff_pressure_update() override {};
 
+  /**
+   * @brief Function used to see if a sonar altitude sensor is present. Currently returns true.
+   *
+   * @return true
+   */
   bool sonar_present() override;
+  /**
+   * @brief Generates sonar reading based on min/max range and noise parameters. Based on Gazebo
+   * altitude value.
+   *
+   * @note Currently does not take UAV attitude into account, only absolute altitude.
+   *
+   * @return Sonar reading.
+   */
   float sonar_read() override;
+  /**
+   * @brief Function required to be overridden, but not used by sim.
+   */
   void sonar_update() override {};
 
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)
+  /**
+   * @brief Initializes RC PWM values to idle values.
+   *
+   * @note Does not use function arguments. Refresh rate is determined by RC publish rate, idle
+   * value is hard coded.
+   *
+   * @param refresh_rate Does nothing. Follows /RC topic's publish rate.
+   * @param idle_pwm Does nothing. Hardcoded.
+   */
   void pwm_init(uint32_t refresh_rate, uint16_t idle_pwm) override;
+  /**
+   * @brief Writes PWM value to given channel, from a value between 0 and 1. The value is scaled to
+   * 1000 to 2000 and then written to the channel.
+   *
+   * @param channel Channel to write PWM to.
+   * @param value Value between 0 and 1, to write to channel.
+   */
   void pwm_write(uint8_t channel, float value) override;
+  /**
+   * @brief Sets all PWM values to 1000.
+   */
   void pwm_disable() override;
 
   // RC
+  /**
+   * @brief Gets latest RC values published on /RC. If nothing in publishing on /RC, values are set
+   * to idle.
+   *
+   * @param channel Channel to read value from.
+   * @return 0.5
+   */
   float rc_read(uint8_t channel) override;
-  void rc_init(rc_type_t rc_type) override;
+  /**
+   * @brief Function required to be overridden, but not used by sim.
+   */
+  void rc_init(rc_type_t rc_type) override {};
+  /**
+   * @brief Function used to check if RC connection is present. Currently returns false if anything
+   * is ever published on RC.
+   *
+   * @return False if /RC has had a message published, true otherwise.
+   */
   bool rc_lost() override;
 
   // non-volatile memory
-  void memory_init() override;
+  /**
+   * @brief Function required to be overridden, but not used by sim.
+   */
+  void memory_init() override {};
+  /**
+   * @brief Reads data from memory file.
+   *
+   * @param dest Memory location to read from (?)
+   * @param len Length of memory to read (?)
+   * @return True if read successfully, false if otherwise.
+   */
   bool memory_read(void * dest, size_t len) override;
+  /**
+   * @brief Writes data to memory file.
+   *
+   * @param dest Memory location to write to (?)
+   * @param len Length of memory to write to (?)
+   * @return True if read successfully, false if otherwise.
+   */
   bool memory_write(const void * src, size_t len) override;
 
   // LEDs
-  void led0_on() override;
-  void led0_off() override;
-  void led0_toggle() override;
+  /**
+   * @brief Function required to be overridden, but not used by sim.
+   */
+  void led0_on() override {};
+  /**
+   * @brief Function required to be overridden, but not used by sim.
+   */
+  void led0_off() override {};
+  /**
+   * @brief Function required to be overridden, but not used by sim.
+   */
+  void led0_toggle() override {};
 
-  void led1_on() override;
-  void led1_off() override;
-  void led1_toggle() override;
+  /**
+   * @brief Function required to be overridden, but not used by sim.
+   */
+  void led1_on() override {};
+  /**
+   * @brief Function required to be overridden, but not used by sim.
+   */
+  void led1_off() override {};
+  /**
+   * @brief Function required to be overridden, but not used by sim.
+   */
+  void led1_toggle() override {};
 
   // Backup Memory
-  void backup_memory_init() override;
+  /**
+   * @brief Function required to be overridden, but not used by sim.
+   */
+  void backup_memory_init() override {};
+  /**
+   * @brief Reads data from backup memory object.
+   *
+   * @param dest Memory location to read from (?)
+   * @param len Length of memory to read (?)
+   * @return True if read successfully, false if otherwise.
+   */
   bool backup_memory_read(void * dest, size_t len) override;
+  /**
+   * @brief Writes data to backup memory object.
+   *
+   * @param dest Memory location to write to (?)
+   * @param len Length of memory to write to (?)
+   * @return True if read successfully, false if otherwise.
+   */
   void backup_memory_write(const void * src, size_t len) override;
+  /**
+   * @brief Clears data from the backup memory, starting at the beginning and equal to the length
+   * of the input argument provided.
+   *
+   * @param len Length of data to clear.
+   */
   void backup_memory_clear(size_t len) override;
 
+  /**
+   * @brief Function used to check if GNSS is present. Currenlty returns true.
+   *
+   * @return true
+   */
   bool gnss_present() override;
-  void gnss_update() override;
+  /**
+   * @brief Function required to be overridden, but not used by sim.
+   */
+  void gnss_update() override {};
 
+  /**
+   * @brief Generates GNSS data based on Gazebo truth and noise/bias parameters.
+   *
+   * @return Populated GNSSData object
+   */
   rosflight_firmware::GNSSData gnss_read() override;
+  /**
+   * @brief Function used to check if gnss has new data to read. Currently returns true.
+   *
+   * @return true
+   */
   bool gnss_has_new_data() override;
+  /**
+   * @brief Generates GNSSFull data based on Gazebo truth and noise/bias parameters.
+   *
+   * @return Populated GNSSFull object
+   */
   rosflight_firmware::GNSSFull gnss_full_read() override;
 
+  /**
+   * @brief Function used to check if battery volt meter is present. Currently returns true.
+   *
+   * @return true
+   */
   bool battery_voltage_present() const override;
+  /**
+   * @brief Checks battery voltage. Currently just returns constant value.
+   *
+   * @note No battery simulation exists, function returns constant value.
+   *
+   * @return Battery voltage
+   */
   float battery_voltage_read() const override;
+  /**
+   * @brief Sets battery voltage calibration constant.
+   *
+   * @param multiplier Voltage calibration constant
+   */
   void battery_voltage_set_multiplier(double multiplier) override;
 
+  /**
+   * @brief Function used to check if current meter is present. Currently returns true.
+   *
+   * @return true
+   */
   bool battery_current_present() const override;
+  /**
+   * @brief Checks battery current draw. Currently just returns constant value.
+   *
+   * @note No battery simulation exists, function returns constant value.
+   *
+   * @return Battery current draw
+   */
   float battery_current_read() const override;
+  /**
+ * @brief Sets battery current calibration constant.
+ *
+ * @param multiplier Current calibration constant
+ */
   void battery_current_set_multiplier(double multiplier) override;
 
   // Gazebo stuff
+  /**
+   * @brief Initializes the firmware with ROS parameters and Gazebo data types.
+   *
+   * @param link Gazebo link pointer, provided by ModelPlugin::Load function
+   * @param world Gazebo world pointer, provided by ModelPlugin::Load function
+   * @param model Gazebo model pointer, provided by ModelPlugin::Load function
+   * @param node ROS node pointer, provided by ModelPlugin::Load function
+   * @param mav_type Simulation type
+   */
   void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
                     gazebo::physics::ModelPtr model, rclcpp::Node::SharedPtr node,
                     std::string mav_type);
   inline const int * get_outputs() const { return pwm_outputs_; }
-#if GAZEBO_MAJOR_VERSION >= 9
   gazebo::common::SphericalCoordinates sph_coord_;
-#endif
 };
 
 } // namespace rosflight_sim

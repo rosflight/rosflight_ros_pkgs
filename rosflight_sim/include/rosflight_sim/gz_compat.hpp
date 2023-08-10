@@ -29,6 +29,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @brief Convenience macros for interacting with Gazebo.
+ *
+ * @note Previously enabled utilizing different Gazebo versions with different API. The versions with the
+ * old API have since reached EOL and removed from this file, so this file could be removed.
+ */
+
 #ifndef ROSFLIGHT_SIM_GZ_COMPAT_H
 #define ROSFLIGHT_SIM_GZ_COMPAT_H
 

@@ -7,7 +7,6 @@ and communicates the same way that the hardware does in real life.
 
 Parameters can be set in the "rosflight/params/multirotor.yaml" files and "rosflight_sim/params/fixedwing.yaml".
 
-
 ## General Parameters
 
 These parameters apply to both multirotors and fixedwings, and are used by sil_board. They have default values and don't 
@@ -59,4 +58,5 @@ need to be set in the .yaml files.
 
 ## Multirotor and Fixedwing params
 
-All parameters for multirotors and fixedwings must be defined in their respective .yaml files. ROS will give a warning for any missing parameters. Refer to the existing parameter files to know what parameters are required.
+All parameters for multirotors and fixedwings must be defined in their respective .yaml files. ROS will give a warning 
+for any missing parameters. Refer to the existing parameter files to know what parameters are required.

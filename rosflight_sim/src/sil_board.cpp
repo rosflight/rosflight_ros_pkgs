@@ -142,8 +142,6 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
   next_imu_update_time_us_ = 0;
 }
 
-void SIL_Board::board_reset(bool bootloader) {}
-
 // clock
 
 uint32_t SIL_Board::clock_millis()
@@ -157,8 +155,6 @@ uint64_t SIL_Board::clock_micros()
   uint64_t micros = (uint64_t) ((GZ_COMPAT_GET_SIM_TIME(world_) - boot_time_).Double() * 1e6);
   return micros;
 }
-
-void SIL_Board::clock_delay(uint32_t milliseconds) {}
 
 uint8_t SIL_Board::serial_read()
 {
@@ -203,7 +199,6 @@ void SIL_Board::sensors_init()
   GZ_COMPAT_SET_X(inertial_magnetic_field_, cos(-inclination_) * cos(-declination_));
   GZ_COMPAT_SET_Y(inertial_magnetic_field_, cos(-inclination_) * sin(-declination_));
 
-#if GAZEBO_MAJOR_VERSION >= 9
   using SC = gazebo::common::SphericalCoordinates;
   using Ang = ignition::math::Angle;
   sph_coord_.SetSurfaceType(SC::SurfaceType::EARTH_WGS84);
@@ -212,7 +207,6 @@ void SIL_Board::sensors_init()
   sph_coord_.SetElevationReference(origin_altitude_);
   // Force x-axis to be north-aligned. I promise, I will change everything to ENU in the next commit
   sph_coord_.SetHeadingOffset(Ang(-M_PI / 2.0));
-#endif
 }
 
 uint16_t SIL_Board::num_sensor_errors() { return 0; }
@@ -234,7 +228,7 @@ bool SIL_Board::imu_read(float accel[3], float * temperature, float gyro[3], uin
   GazeboVector current_vel = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);
   GazeboVector y_acc;
 
-  // this is James' egregious hack to overcome wild imu while sitting on the ground
+  // this is James's egregious hack to overcome wild imu while sitting on the ground
   if (GZ_COMPAT_GET_LENGTH(current_vel) < 0.05) {
     y_acc = q_I_NWU.RotateVectorReverse(-gravity_);
   } else {
@@ -305,7 +299,7 @@ bool SIL_Board::imu_read(float accel[3], float * temperature, float gyro[3], uin
   gyro[1] = (float) -GZ_COMPAT_GET_Y(y_gyro);
   gyro[2] = (float) -GZ_COMPAT_GET_Z(y_gyro);
 
-  (*temperature) = 27.0;
+  (*temperature) = 27.0 + 273.15;
   (*time_us) = clock_micros();
   return true;
 }
@@ -475,11 +469,7 @@ void SIL_Board::pwm_disable()
 
 bool SIL_Board::rc_lost() { return !rc_received_; }
 
-void SIL_Board::rc_init(rc_type_t rc_type) {}
-
 // non-volatile memory
-void SIL_Board::memory_init() {}
-
 bool SIL_Board::memory_read(void * dest, size_t len)
 {
   std::string directory = "rosflight_memory" + std::string(node_->get_namespace());
@@ -525,18 +515,6 @@ bool SIL_Board::motors_spinning()
   }
 }
 
-// LED
-
-void SIL_Board::led0_on() {}
-void SIL_Board::led0_off() {}
-void SIL_Board::led0_toggle() {}
-
-void SIL_Board::led1_on() {}
-void SIL_Board::led1_off() {}
-void SIL_Board::led1_toggle() {}
-
-void SIL_Board::backup_memory_init() {}
-
 bool SIL_Board::backup_memory_read(void * dest, size_t len)
 {
   if (len <= BACKUP_SRAM_SIZE) {
@@ -564,13 +542,11 @@ void SIL_Board::RCCallback(const rosflight_msgs::msg::RCRaw & msg)
   latestRC_ = msg;
 }
 
-bool SIL_Board::gnss_present() { return GAZEBO_MAJOR_VERSION >= 9; }
-void SIL_Board::gnss_update() {}
+bool SIL_Board::gnss_present() { return true; }
 
 rosflight_firmware::GNSSData SIL_Board::gnss_read()
 {
   rosflight_firmware::GNSSData out;
-#if GAZEBO_MAJOR_VERSION >= 9
   using Vec3 = ignition::math::Vector3d;
   using Coord = gazebo::common::SphericalCoordinates::CoordinateType;
 
@@ -620,15 +596,14 @@ rosflight_firmware::GNSSData SIL_Board::gnss_read()
 
   out.rosflight_timestamp = clock_micros();
 
-#endif
   return out;
 }
 
-bool SIL_Board::gnss_has_new_data() { return GAZEBO_MAJOR_VERSION >= 9; }
+bool SIL_Board::gnss_has_new_data() { return true; }
+
 rosflight_firmware::GNSSFull SIL_Board::gnss_full_read()
 {
   rosflight_firmware::GNSSFull out;
-#if GAZEBO_MAJOR_VERSION >= 9
   using Vec3 = ignition::math::Vector3d;
   using Vec3 = ignition::math::Vector3d;
   using Coord = gazebo::common::SphericalCoordinates::CoordinateType;
@@ -690,7 +665,6 @@ rosflight_firmware::GNSSFull SIL_Board::gnss_full_read()
   out.p_dop = 0.0; // TODO
   out.rosflight_timestamp = clock_micros();
 
-#endif
   return out;
 }
 

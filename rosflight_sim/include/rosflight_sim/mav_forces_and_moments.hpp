@@ -36,9 +36,20 @@
 
 namespace rosflight_sim
 {
+/**
+ * @brief Base class for forces and moments classes for UAVs.
+ */
 class MAVForcesAndMoments
 {
 protected:
+  /**
+   * @brief Saturation function for actuator commands.
+   *
+   * @param x Unsaturated command
+   * @param max Max allowable command value
+   * @param min Min allowable command value
+   * @return Saturated command
+   */
   static double sat(double x, double max, double min)
   {
     if (x > max) {
@@ -50,20 +61,48 @@ protected:
     }
   }
 
+  /**
+   * @brief Determine the largest value between two possible values.
+   *
+   * @param x Value to compare
+   * @param y Value to compare
+   * @return x or y, whichever is largest
+   */
   static double max(double x, double y) { return (x > y) ? x : y; }
 
 public:
+  /**
+   * @brief Struct for storing the position and velocity of the MAV for both translation and rotation
+   * coordinates, as well as the time of the state.
+   */
   struct Current_State
   {
-    Eigen::Vector3d pos;   // Position of MAV in NED wrt initial position
-    Eigen::Matrix3d rot;   // Rotation of MAV in NED wrt initial position
-    Eigen::Vector3d vel;   // Body-fixed velocity of MAV wrt initial position (NED)
-    Eigen::Vector3d omega; // Body-fixed angular velocity of MAV (NED)
-    double t;              // current time
+    /// Position of MAV in NED wrt initial position
+    Eigen::Vector3d pos;
+    /// Rotation of MAV in NED wrt initial position
+    Eigen::Matrix3d rot;
+    /// Body-fixed velocity of MAV wrt initial position (NED)
+    Eigen::Vector3d vel;
+    /// Body-fixed angular velocity of MAV (NED)
+    Eigen::Vector3d omega;
+    /// current time
+    double t;
   };
 
+  /**
+   * @brief Interface function for calculating the current MAV forces and moments for Gazebo.
+   *
+   * @param x Current state of MAV
+   * @param act_cmds Current MAV commands
+   * @return Calculated forces and moments
+   */
   virtual Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x,
                                                              const int act_cmds[]) = 0;
+  /**
+   * @brief Interface function for updating the wind speed to use in the forces and moments calculations.
+   *
+   * @param wind Wind velocities
+   */
   virtual void set_wind(Eigen::Vector3d wind) = 0;
 };
 
