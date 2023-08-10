@@ -92,7 +92,7 @@ private:
   /**
    * @brief Declares ROS parameters. Must be called in the constructor.
    */
-  void declareMultirotorParams();
+  void declare_multirotor_params();
 
 public:
   /**
@@ -109,8 +109,8 @@ public:
    * @param act_cmds Actuator commands
    * @return 6x1 eigen matrix of calculated forces and moments
    */
-  Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x,
-                                                     const int act_cmds[]) override;
+  Eigen::Matrix<double, 6, 1> update_forces_and_torques(CurrentState x,
+                                                        const int act_cmds[]) override;
   /**
    * @brief Sets the wind speed to use when calculating the forces and moments.
    *

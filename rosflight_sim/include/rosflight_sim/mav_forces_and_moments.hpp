@@ -75,7 +75,7 @@ public:
    * @brief Struct for storing the position and velocity of the MAV for both translation and rotation
    * coordinates, as well as the time of the state.
    */
-  struct Current_State
+  struct CurrentState
   {
     /// Position of MAV in NED wrt initial position
     Eigen::Vector3d pos;
@@ -96,8 +96,8 @@ public:
    * @param act_cmds Current MAV commands
    * @return Calculated forces and moments
    */
-  virtual Eigen::Matrix<double, 6, 1> updateForcesAndTorques(Current_State x,
-                                                             const int act_cmds[]) = 0;
+  virtual Eigen::Matrix<double, 6, 1> update_forces_and_torques(CurrentState x,
+                                                                const int act_cmds[]) = 0;
   /**
    * @brief Interface function for updating the wind speed to use in the forces and moments calculations.
    *

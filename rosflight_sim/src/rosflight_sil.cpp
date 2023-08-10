@@ -72,7 +72,7 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
     gzerr << "[rosflight_sim] Please specify a value for parameter \"mavType\".\n";
   }
 
-  declareSILParams();
+  declare_SIL_params();
 
   if (mav_type_ == "multirotor") {
     mav_dynamics_ = new Multirotor(node_);
@@ -96,7 +96,7 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   truth_NWU_pub_ = node_->create_publisher<nav_msgs::msg::Odometry>("truth/NWU", 1);
 }
 
-void ROSflightSIL::declareSILParams()
+void ROSflightSIL::declare_SIL_params()
 {
   node_->declare_parameter("gazebo_host", rclcpp::PARAMETER_STRING);
   node_->declare_parameter("gazebo_port", rclcpp::PARAMETER_INTEGER);
@@ -153,7 +153,7 @@ void ROSflightSIL::OnUpdate(const gazebo::common::UpdateInfo & _info)
   Eigen::Matrix3d NWU_to_NED;
   NWU_to_NED << 1, 0, 0, 0, -1, 0, 0, 0, -1;
 
-  MAVForcesAndMoments::Current_State state;
+  MAVForcesAndMoments::CurrentState state;
   GazeboPose pose = GZ_COMPAT_GET_WORLD_COG_POSE(link_);
   GazeboVector vel = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);
   GazeboVector omega = GZ_COMPAT_GET_RELATIVE_ANGULAR_VEL(link_);
@@ -165,7 +165,7 @@ void ROSflightSIL::OnUpdate(const gazebo::common::UpdateInfo & _info)
   state.omega = NWU_to_NED * vec3_to_eigen_from_gazebo(omega);
   state.t = _info.simTime.Double();
 
-  forces_ = mav_dynamics_->updateForcesAndTorques(state, board_.get_outputs());
+  forces_ = mav_dynamics_->update_forces_and_torques(state, board_.get_outputs());
 
   // apply the forces and torques to the joint (apply in NWU)
   GazeboVector force = vec3_to_gazebo_from_eigen(NWU_to_NED * forces_.block<3, 1>(0, 0));
@@ -173,7 +173,7 @@ void ROSflightSIL::OnUpdate(const gazebo::common::UpdateInfo & _info)
   link_->AddRelativeForce(force);
   link_->AddRelativeTorque(torque);
 
-  publishTruth();
+  publish_truth();
 }
 
 void ROSflightSIL::Reset()
@@ -182,14 +182,14 @@ void ROSflightSIL::Reset()
   link_->ResetPhysicsStates();
 }
 
-void ROSflightSIL::windCallback(const geometry_msgs::msg::Vector3 & msg)
+void ROSflightSIL::wind_callback(const geometry_msgs::msg::Vector3 & msg)
 {
   Eigen::Vector3d wind;
   wind << msg.x, msg.y, msg.z;
   mav_dynamics_->set_wind(wind);
 }
 
-void ROSflightSIL::publishTruth()
+void ROSflightSIL::publish_truth()
 {
   GazeboPose pose = GZ_COMPAT_GET_WORLD_COG_POSE(link_);
   GazeboVector vel = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);

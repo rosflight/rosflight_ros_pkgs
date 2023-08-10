@@ -56,7 +56,7 @@ namespace rosflight_sim
  * actuators, and FCU clock and memory for the firmware. It also adds a simulated serial delay. It
  * inherits from UDP board, which establishes a communication link over UDP.
  */
-class SIL_Board : public rosflight_firmware::UDPBoard
+class SILBoard : public rosflight_firmware::UDPBoard
 {
 private:
   GazeboVector inertial_magnetic_field_;
@@ -128,11 +128,11 @@ private:
   uint64_t imu_update_period_us_ = 0;
 
   /**
-   * @brief Callback function to update RC values when new values are recieved.
+   * @brief Callback function to update RC values when new values are received.
    *
    * @param msg ROSflight RC message published on /RC topic
    */
-  void RCCallback(const rosflight_msgs::msg::RCRaw & msg);
+  void RC_callback(const rosflight_msgs::msg::RCRaw & msg);
   /**
    * @brief Checks the current pwm value for throttle to see if the motor pwm is above minimum, and that
    * the motors should be spinning.
@@ -152,7 +152,7 @@ private:
   uint8_t backup_memory_[BACKUP_SRAM_SIZE] = {0};
 
 public:
-  SIL_Board();
+  SILBoard();
 
   // setup
   /**

@@ -36,19 +36,19 @@
 
 namespace rosflight_sim
 {
-SIL_Board::SIL_Board()
+SILBoard::SILBoard()
     : rosflight_firmware::UDPBoard(),
       random_generator_(std::chrono::system_clock::now().time_since_epoch().count())
 {}
 
-void SIL_Board::init_board() { boot_time_ = GZ_COMPAT_GET_SIM_TIME(world_); }
+void SILBoard::init_board() { boot_time_ = GZ_COMPAT_GET_SIM_TIME(world_); }
 
 constexpr double rad2Deg(double x) { return 180.0 / M_PI * x; }
 constexpr double deg2Rad(double x) { return M_PI / 180.0 * x; }
 
-void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
-                             gazebo::physics::ModelPtr model, rclcpp::Node::SharedPtr node,
-                             std::string mav_type)
+void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
+                            gazebo::physics::ModelPtr model, rclcpp::Node::SharedPtr node,
+                            std::string mav_type)
 {
   link_ = link;
   world_ = world;
@@ -144,26 +144,26 @@ void SIL_Board::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Wor
 
 // clock
 
-uint32_t SIL_Board::clock_millis()
+uint32_t SILBoard::clock_millis()
 {
   uint32_t millis = (uint32_t) ((GZ_COMPAT_GET_SIM_TIME(world_) - boot_time_).Double() * 1e3);
   return millis;
 }
 
-uint64_t SIL_Board::clock_micros()
+uint64_t SILBoard::clock_micros()
 {
   uint64_t micros = (uint64_t) ((GZ_COMPAT_GET_SIM_TIME(world_) - boot_time_).Double() * 1e6);
   return micros;
 }
 
-uint8_t SIL_Board::serial_read()
+uint8_t SILBoard::serial_read()
 {
   auto next_message = serial_delay_queue_.front();
   serial_delay_queue_.pop();
   return std::get<1>(next_message);
 }
 
-uint16_t SIL_Board::serial_bytes_available()
+uint16_t SILBoard::serial_bytes_available()
 {
   // Get current time. Doesn't use ROS time as ROS time proved to be inconsistent and lead to slower
   // serial communication.
@@ -182,7 +182,7 @@ uint16_t SIL_Board::serial_bytes_available()
 // sensors
 /// TODO these sensors have noise, no bias
 /// noise params are hard coded
-void SIL_Board::sensors_init()
+void SILBoard::sensors_init()
 {
   // Initialize the Biases
   GZ_COMPAT_SET_X(gyro_bias_, gyro_bias_range_ * uniform_distribution_(random_generator_));
@@ -209,9 +209,9 @@ void SIL_Board::sensors_init()
   sph_coord_.SetHeadingOffset(Ang(-M_PI / 2.0));
 }
 
-uint16_t SIL_Board::num_sensor_errors() { return 0; }
+uint16_t SILBoard::num_sensor_errors() { return 0; }
 
-bool SIL_Board::new_imu_data()
+bool SILBoard::new_imu_data()
 {
   uint64_t now_us = clock_micros();
   if (now_us >= next_imu_update_time_us_) {
@@ -222,7 +222,7 @@ bool SIL_Board::new_imu_data()
   }
 }
 
-bool SIL_Board::imu_read(float accel[3], float * temperature, float gyro[3], uint64_t * time_us)
+bool SILBoard::imu_read(float accel[3], float * temperature, float gyro[3], uint64_t * time_us)
 {
   GazeboQuaternion q_I_NWU = GZ_COMPAT_GET_ROT(GZ_COMPAT_GET_WORLD_POSE(link_));
   GazeboVector current_vel = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);
@@ -304,12 +304,12 @@ bool SIL_Board::imu_read(float accel[3], float * temperature, float gyro[3], uin
   return true;
 }
 
-void SIL_Board::imu_not_responding_error()
+void SILBoard::imu_not_responding_error()
 {
   RCLCPP_ERROR(node_->get_logger(), "[gazebo_rosflight_sil] imu not responding");
 }
 
-void SIL_Board::mag_read(float mag[3])
+void SILBoard::mag_read(float mag[3])
 {
   GazeboPose I_to_B = GZ_COMPAT_GET_WORLD_POSE(link_);
   GazeboVector noise;
@@ -338,11 +338,11 @@ void SIL_Board::mag_read(float mag[3])
   mag[2] = (float) -GZ_COMPAT_GET_Z(y_mag);
 }
 
-bool SIL_Board::mag_present() { return true; }
+bool SILBoard::mag_present() { return true; }
 
-bool SIL_Board::baro_present() { return true; }
+bool SILBoard::baro_present() { return true; }
 
-void SIL_Board::baro_read(float * pressure, float * temperature)
+void SILBoard::baro_read(float * pressure, float * temperature)
 {
   // pull z measurement out of Gazebo
   GazeboPose current_state_NWU = GZ_COMPAT_GET_WORLD_POSE(link_);
@@ -366,7 +366,7 @@ void SIL_Board::baro_read(float * pressure, float * temperature)
   (*temperature) = 27.0f + 273.15f;
 }
 
-bool SIL_Board::diff_pressure_present()
+bool SILBoard::diff_pressure_present()
 {
   if (mav_type_ == "fixedwing") {
     return true;
@@ -375,7 +375,7 @@ bool SIL_Board::diff_pressure_present()
   }
 }
 
-void SIL_Board::diff_pressure_read(float * diff_pressure, float * temperature)
+void SILBoard::diff_pressure_read(float * diff_pressure, float * temperature)
 {
   static double rho_ = 1.225;
   // Calculate Airspeed
@@ -395,9 +395,9 @@ void SIL_Board::diff_pressure_read(float * diff_pressure, float * temperature)
   *temperature = 27.0 + 273.15;
 }
 
-bool SIL_Board::sonar_present() { return true; }
+bool SILBoard::sonar_present() { return true; }
 
-float SIL_Board::sonar_read()
+float SILBoard::sonar_read()
 {
   GazeboPose current_state_NWU = GZ_COMPAT_GET_WORLD_POSE(link_);
   double alt = GZ_COMPAT_GET_Z(GZ_COMPAT_GET_POS(current_state_NWU));
@@ -411,26 +411,26 @@ float SIL_Board::sonar_read()
   }
 }
 
-bool SIL_Board::battery_voltage_present() const { return true; }
+bool SILBoard::battery_voltage_present() const { return true; }
 
-float SIL_Board::battery_voltage_read() const { return 15 * battery_voltage_multiplier; }
+float SILBoard::battery_voltage_read() const { return 15 * battery_voltage_multiplier; }
 
-void SIL_Board::battery_voltage_set_multiplier(double multiplier)
+void SILBoard::battery_voltage_set_multiplier(double multiplier)
 {
   battery_voltage_multiplier = (float) multiplier;
 }
 
-bool SIL_Board::battery_current_present() const { return true; }
+bool SILBoard::battery_current_present() const { return true; }
 
-float SIL_Board::battery_current_read() const { return 1 * battery_current_multiplier; }
+float SILBoard::battery_current_read() const { return 1 * battery_current_multiplier; }
 
-void SIL_Board::battery_current_set_multiplier(double multiplier)
+void SILBoard::battery_current_set_multiplier(double multiplier)
 {
   battery_current_multiplier = (float) multiplier;
 }
 
 // PWM
-void SIL_Board::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
+void SILBoard::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
 {
   rc_received_ = false;
   latestRC_.values[0] = 1500; // x
@@ -443,10 +443,10 @@ void SIL_Board::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
   for (int & pwm_output : pwm_outputs_) { pwm_output = 1000; }
 
   rc_sub_ = node_->create_subscription<rosflight_msgs::msg::RCRaw>(
-    "RC", 1, std::bind(&SIL_Board::RCCallback, this, std::placeholders::_1));
+    "RC", 1, std::bind(&SILBoard::RC_callback, this, std::placeholders::_1));
 }
 
-float SIL_Board::rc_read(uint8_t channel)
+float SILBoard::rc_read(uint8_t channel)
 {
   if (rc_sub_->get_publisher_count() > 0) {
     return static_cast<float>(latestRC_.values[channel] - 1000) / 1000.0f;
@@ -458,19 +458,19 @@ float SIL_Board::rc_read(uint8_t channel)
   return 0.5;
 }
 
-void SIL_Board::pwm_write(uint8_t channel, float value)
+void SILBoard::pwm_write(uint8_t channel, float value)
 {
   pwm_outputs_[channel] = 1000 + (uint16_t) (1000 * value);
 }
-void SIL_Board::pwm_disable()
+void SILBoard::pwm_disable()
 {
   for (int i = 0; i < 14; i++) { pwm_write(i, 0); }
 }
 
-bool SIL_Board::rc_lost() { return !rc_received_; }
+bool SILBoard::rc_lost() { return !rc_received_; }
 
 // non-volatile memory
-bool SIL_Board::memory_read(void * dest, size_t len)
+bool SILBoard::memory_read(void * dest, size_t len)
 {
   std::string directory = "rosflight_memory" + std::string(node_->get_namespace());
   std::ifstream memory_file;
@@ -487,7 +487,7 @@ bool SIL_Board::memory_read(void * dest, size_t len)
   return true;
 }
 
-bool SIL_Board::memory_write(const void * src, size_t len)
+bool SILBoard::memory_write(const void * src, size_t len)
 {
   std::string directory = "rosflight_memory" + std::string(node_->get_namespace());
   std::string mkdir_command = "mkdir -p " + directory;
@@ -506,7 +506,7 @@ bool SIL_Board::memory_write(const void * src, size_t len)
   return true;
 }
 
-bool SIL_Board::motors_spinning()
+bool SILBoard::motors_spinning()
 {
   if (pwm_outputs_[2] > 1100) {
     return true;
@@ -515,7 +515,7 @@ bool SIL_Board::motors_spinning()
   }
 }
 
-bool SIL_Board::backup_memory_read(void * dest, size_t len)
+bool SILBoard::backup_memory_read(void * dest, size_t len)
 {
   if (len <= BACKUP_SRAM_SIZE) {
     memcpy(dest, backup_memory_, len);
@@ -525,26 +525,26 @@ bool SIL_Board::backup_memory_read(void * dest, size_t len)
   }
 }
 
-void SIL_Board::backup_memory_write(const void * src, size_t len)
+void SILBoard::backup_memory_write(const void * src, size_t len)
 {
   if (len < BACKUP_SRAM_SIZE) { memcpy(backup_memory_, src, len); }
 }
 
-void SIL_Board::backup_memory_clear(size_t len)
+void SILBoard::backup_memory_clear(size_t len)
 {
   if (len < BACKUP_SRAM_SIZE) { memset(backup_memory_, 0, len); }
 }
 
-void SIL_Board::RCCallback(const rosflight_msgs::msg::RCRaw & msg)
+void SILBoard::RC_callback(const rosflight_msgs::msg::RCRaw & msg)
 {
   rc_received_ = true;
   last_rc_message_ = node_->get_clock()->now();
   latestRC_ = msg;
 }
 
-bool SIL_Board::gnss_present() { return true; }
+bool SILBoard::gnss_present() { return true; }
 
-rosflight_firmware::GNSSData SIL_Board::gnss_read()
+rosflight_firmware::GNSSData SILBoard::gnss_read()
 {
   rosflight_firmware::GNSSData out;
   using Vec3 = ignition::math::Vector3d;
@@ -599,9 +599,9 @@ rosflight_firmware::GNSSData SIL_Board::gnss_read()
   return out;
 }
 
-bool SIL_Board::gnss_has_new_data() { return true; }
+bool SILBoard::gnss_has_new_data() { return true; }
 
-rosflight_firmware::GNSSFull SIL_Board::gnss_full_read()
+rosflight_firmware::GNSSFull SILBoard::gnss_full_read()
 {
   rosflight_firmware::GNSSFull out;
   using Vec3 = ignition::math::Vector3d;

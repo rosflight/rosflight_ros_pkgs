@@ -82,16 +82,16 @@ protected:
   void OnUpdate(const gazebo::common::UpdateInfo & _info);
 
 private:
-  void windCallback(const geometry_msgs::msg::Vector3 & msg);
+  void wind_callback(const geometry_msgs::msg::Vector3 & msg);
   /**
    * @brief Callback for publishing true pose on ROS topic using information obtained directly from
    * Gazebo.
    */
-  void publishTruth();
+  void publish_truth();
 
   rclcpp::Node::SharedPtr node_;
 
-  SIL_Board board_;
+  SILBoard board_;
   rosflight_firmware::Mavlink comm_;
   rosflight_firmware::ROSflight firmware_;
 
@@ -133,7 +133,7 @@ private:
   /**
    * Declares all ROS params to be used by the class. Must be called in the constructor.
    */
-  void declareSILParams();
+  void declare_SIL_params();
 };
 
 } // namespace rosflight_sim

@@ -37,14 +37,14 @@ Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node)
     : node_(std::move(node)), rho_(0), wing_(), prop_(), CL_(), CD_(), Cm_(), CY_(), Cell_(), Cn_(),
       delta_()
 {
-  declareFixedwingParams();
-  updateParamsFromROS();
+  declare_fixedwing_params();
+  update_params_from_ROS();
   wind_ = Eigen::Vector3d::Zero();
 }
 
 Fixedwing::~Fixedwing() = default;
 
-void Fixedwing::declareFixedwingParams()
+void Fixedwing::declare_fixedwing_params()
 {
   node_->declare_parameter("rho", rclcpp::PARAMETER_DOUBLE);
 
@@ -126,7 +126,7 @@ void Fixedwing::declareFixedwingParams()
   node_->declare_parameter("C_Y_delta_r", rclcpp::PARAMETER_DOUBLE);
 }
 
-void Fixedwing::updateParamsFromROS()
+void Fixedwing::update_params_from_ROS()
 {
   if (!node_->get_parameter("rho", rho_)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'rho' not defined");
@@ -351,7 +351,7 @@ void Fixedwing::updateParamsFromROS()
   }
 }
 
-Eigen::Matrix<double, 6, 1> Fixedwing::updateForcesAndTorques(Current_State x, const int act_cmds[])
+Eigen::Matrix<double, 6, 1> Fixedwing::update_forces_and_torques(CurrentState x, const int act_cmds[])
 {
   delta_.a = (act_cmds[0] - 1500.0) / 500.0;
   delta_.e = -(act_cmds[1] - 1500.0) / 500.0;
