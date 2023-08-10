@@ -37,6 +37,97 @@ Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node)
     : node_(std::move(node)), rho_(0), wing_(), prop_(), CL_(), CD_(), Cm_(), CY_(), Cell_(), Cn_(),
       delta_()
 {
+  declareFixedwingParams();
+  updateParamsFromROS();
+  wind_ = Eigen::Vector3d::Zero();
+}
+
+Fixedwing::~Fixedwing() = default;
+
+void Fixedwing::declareFixedwingParams()
+{
+  node_->declare_parameter("rho", rclcpp::PARAMETER_DOUBLE);
+
+  node_->declare_parameter("wing_s", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("wing_b", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("wing_c", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("wing_M", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("wing_epsilon", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("wing_alpha0", rclcpp::PARAMETER_DOUBLE);
+
+  node_->declare_parameter("k_motor", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("k_T_P", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("k_Omega", rclcpp::PARAMETER_DOUBLE);
+
+  node_->declare_parameter("prop_e", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("prop_S", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("prop_C", rclcpp::PARAMETER_DOUBLE);
+
+  node_->declare_parameter("servo_tau", rclcpp::PARAMETER_DOUBLE);
+
+  node_->declare_parameter("C_L_O", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_L_alpha", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_L_beta", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_L_p", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_L_q", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_L_r", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_L_delta_a", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_L_delta_e", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_L_delta_r", rclcpp::PARAMETER_DOUBLE);
+
+  node_->declare_parameter("C_D_O", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_D_alpha", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_D_beta", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_D_p", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_D_q", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_D_r", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_D_delta_a", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_D_delta_e", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_D_delta_r", rclcpp::PARAMETER_DOUBLE);
+
+  node_->declare_parameter("C_ell_O", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_ell_alpha", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_ell_beta", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_ell_p", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_ell_q", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_ell_r", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_ell_delta_a", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_ell_delta_e", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_ell_delta_r", rclcpp::PARAMETER_DOUBLE);
+
+  node_->declare_parameter("C_m_O", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_m_alpha", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_m_beta", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_m_p", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_m_q", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_m_r", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_m_delta_a", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_m_delta_e", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_m_delta_r", rclcpp::PARAMETER_DOUBLE);
+
+  node_->declare_parameter("C_n_O", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_n_alpha", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_n_beta", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_n_p", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_n_q", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_n_r", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_n_delta_a", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_n_delta_e", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_n_delta_r", rclcpp::PARAMETER_DOUBLE);
+
+  node_->declare_parameter("C_Y_O", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_Y_alpha", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_Y_beta", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_Y_p", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_Y_q", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_Y_r", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_Y_delta_a", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_Y_delta_e", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("C_Y_delta_r", rclcpp::PARAMETER_DOUBLE);
+}
+
+void Fixedwing::updateParamsFromROS()
+{
   if (!node_->get_parameter("rho", rho_)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'rho' not defined");
   }
@@ -82,7 +173,7 @@ Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node)
   }
 
   if(!node_->get_parameter("servo_tau", servo_tau_)){
-      RCLCPP_ERROR(node_->get_logger(), "Param 'servo_tau' not defined");
+    RCLCPP_ERROR(node_->get_logger(), "Param 'servo_tau' not defined");
   }
 
   // Lift Params
@@ -258,11 +349,7 @@ Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node)
   if (!node_->get_parameter("C_Y_delta_r", CY_.delta_r)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_delta_r' not defined");
   }
-
-  wind_ = Eigen::Vector3d::Zero();
 }
-
-Fixedwing::~Fixedwing() = default;
 
 Eigen::Matrix<double, 6, 1> Fixedwing::updateForcesAndTorques(Current_State x, const int act_cmds[])
 {

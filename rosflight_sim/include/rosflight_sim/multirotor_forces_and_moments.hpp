@@ -82,6 +82,8 @@ private:
   Eigen::VectorXd actual_forces_;
   Eigen::VectorXd actual_torques_;
 
+  void declareMultirotorParams();
+
 public:
   explicit Multirotor(rclcpp::Node::SharedPtr node);
   ~Multirotor();

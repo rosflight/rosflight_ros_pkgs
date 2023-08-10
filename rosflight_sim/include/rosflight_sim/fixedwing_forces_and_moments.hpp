@@ -107,6 +107,10 @@ private:
   // wind
   Eigen::Vector3d wind_;
 
+  void declareFixedwingParams();
+
+  void updateParamsFromROS();
+
 public:
   explicit Fixedwing(rclcpp::Node::SharedPtr node);
   ~Fixedwing();

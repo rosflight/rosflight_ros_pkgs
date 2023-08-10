@@ -101,9 +101,7 @@ private:
   static GazeboVector vec3_to_gazebo_from_eigen(Eigen::Vector3d vec);
   static Eigen::Matrix3d rotation_to_eigen_from_gazebo(GazeboQuaternion vec);
 
-  void DeclareMultirotorParams();
-  void DeclareFixedwingParams();
-  void DeclareGeneralParams();
+  void declareSILParams();
 };
 
 } // namespace rosflight_sim

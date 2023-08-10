@@ -72,13 +72,11 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
     gzerr << "[rosflight_sim] Please specify a value for parameter \"mavType\".\n";
   }
 
-  DeclareGeneralParams();
+  declareSILParams();
 
   if (mav_type_ == "multirotor") {
-    DeclareMultirotorParams();
     mav_dynamics_ = new Multirotor(node_);
   } else if (mav_type_ == "fixedwing") {
-    DeclareFixedwingParams();
     mav_dynamics_ = new Fixedwing(node_);
   } else {
     gzthrow("unknown or unsupported mav type\n")
@@ -98,108 +96,7 @@ void ROSflightSIL::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   truth_NWU_pub_ = node_->create_publisher<nav_msgs::msg::Odometry>("truth/NWU", 1);
 }
 
-void ROSflightSIL::DeclareMultirotorParams()
-{
-  node_->declare_parameter("mass", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("linear_mu", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("angular_mu", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("ground_effect", rclcpp::PARAMETER_DOUBLE_ARRAY);
-
-  node_->declare_parameter("num_rotors", rclcpp::PARAMETER_INTEGER);
-  node_->declare_parameter("rotor_positions", rclcpp::PARAMETER_DOUBLE_ARRAY);
-  node_->declare_parameter("rotor_vector_normal", rclcpp::PARAMETER_DOUBLE_ARRAY);
-
-  node_->declare_parameter("rotor_rotation_directions", rclcpp::PARAMETER_INTEGER_ARRAY);
-  node_->declare_parameter("rotor_max_thrust", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("rotor_F", rclcpp::PARAMETER_DOUBLE_ARRAY);
-  node_->declare_parameter("rotor_T", rclcpp::PARAMETER_DOUBLE_ARRAY);
-  node_->declare_parameter("rotor_tau_up", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("rotor_tau_down", rclcpp::PARAMETER_DOUBLE);
-}
-
-void ROSflightSIL::DeclareFixedwingParams()
-{
-  node_->declare_parameter("rho", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("wing_s", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("wing_b", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("wing_c", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("wing_M", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("wing_epsilon", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("wing_alpha0", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("k_motor", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("k_T_P", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("k_Omega", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("prop_e", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("prop_S", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("prop_C", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("servo_tau", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("C_L_O", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_L_alpha", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_L_beta", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_L_p", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_L_q", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_L_r", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_L_delta_a", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_L_delta_e", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_L_delta_r", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("C_D_O", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_D_alpha", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_D_beta", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_D_p", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_D_q", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_D_r", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_D_delta_a", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_D_delta_e", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_D_delta_r", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("C_ell_O", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_ell_alpha", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_ell_beta", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_ell_p", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_ell_q", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_ell_r", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_ell_delta_a", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_ell_delta_e", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_ell_delta_r", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("C_m_O", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_m_alpha", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_m_beta", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_m_p", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_m_q", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_m_r", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_m_delta_a", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_m_delta_e", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_m_delta_r", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("C_n_O", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_n_alpha", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_n_beta", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_n_p", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_n_q", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_n_r", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_n_delta_a", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_n_delta_e", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_n_delta_r", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("C_Y_O", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_Y_alpha", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_Y_beta", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_Y_p", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_Y_q", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_Y_r", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_Y_delta_a", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_Y_delta_e", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_Y_delta_r", rclcpp::PARAMETER_DOUBLE);
-}
-
-void ROSflightSIL::DeclareGeneralParams()
+void ROSflightSIL::declareSILParams()
 {
   node_->declare_parameter("gazebo_host", rclcpp::PARAMETER_STRING);
   node_->declare_parameter("gazebo_port", rclcpp::PARAMETER_INTEGER);

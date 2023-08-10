@@ -36,6 +36,8 @@ namespace rosflight_sim
 Multirotor::Multirotor(rclcpp::Node::SharedPtr node)
     : node_(std::move(node)), num_rotors_(0), linear_mu_(0), angular_mu_(0)
 {
+  declareMultirotorParams();
+
   if (!node_->get_parameter("linear_mu", linear_mu_)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'linear_mu' not defined");
   }
@@ -135,6 +137,25 @@ Multirotor::Multirotor(rclcpp::Node::SharedPtr node)
 }
 
 Multirotor::~Multirotor() = default;
+
+void Multirotor::declareMultirotorParams()
+{
+  node_->declare_parameter("mass", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("linear_mu", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("angular_mu", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("ground_effect", rclcpp::PARAMETER_DOUBLE_ARRAY);
+
+  node_->declare_parameter("num_rotors", rclcpp::PARAMETER_INTEGER);
+  node_->declare_parameter("rotor_positions", rclcpp::PARAMETER_DOUBLE_ARRAY);
+  node_->declare_parameter("rotor_vector_normal", rclcpp::PARAMETER_DOUBLE_ARRAY);
+
+  node_->declare_parameter("rotor_rotation_directions", rclcpp::PARAMETER_INTEGER_ARRAY);
+  node_->declare_parameter("rotor_max_thrust", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("rotor_F", rclcpp::PARAMETER_DOUBLE_ARRAY);
+  node_->declare_parameter("rotor_T", rclcpp::PARAMETER_DOUBLE_ARRAY);
+  node_->declare_parameter("rotor_tau_up", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("rotor_tau_down", rclcpp::PARAMETER_DOUBLE);
+}
 
 Eigen::Matrix<double, 6, 1> Multirotor::updateForcesAndTorques(Current_State x,
                                                                const int act_cmds[])
