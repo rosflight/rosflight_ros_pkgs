@@ -1,3 +1,11 @@
+"""
+File: viz_mag.launch.py
+Author: Brandon Sutherland
+Created: June 28, 2023
+Last Modified: June 28, 2023
+Description: ROS2 launch file used to launch magnetometer Rviz visualization.
+"""
+
 from ament_index_python import get_package_share_directory
 
 from launch import LaunchDescription

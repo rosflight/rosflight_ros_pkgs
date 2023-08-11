@@ -4,7 +4,9 @@
   <version>2.0.0</version>
   <description>Supporting utilities for ROSflight packages</description>
 
-  <maintainer email="gary.ellingson@byu.edu">gary</maintainer>
+  <maintainer email="brandonsutherland2@gmail.com">Brandon Sutherland</maintainer>
+
+  <author email="brandonsutherland2@gmail.com">Brandon Sutherland</author>
 
   <license>BSD</license>
 

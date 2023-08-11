@@ -4,11 +4,12 @@
   <version>2.0.0</version>
   <description>Software-in-the-loop (SIL) simulator for the ROSflight firmware</description>
 
-  <maintainer email="superjax08@gmail.com">James Jackson</maintainer>
+  <maintainer email="brandonsutherland2@gmail.com">Brandon Sutherland</maintainer>
 
-  <author>James Jackson</author>
+  <author email="superjax08@gmail.com">James Jackson</author>
   <author>Gary Ellingson</author>
-  <author>Daniel Koch</author>
+  <author email="daniel.p.koch@gmail.com">Daniel Koch</author>
+  <author email="brandonsutherland2@gmail.com">Brandon Sutherland</author>
 
   <license>BSD</license>
 

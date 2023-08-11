@@ -1,5 +1,8 @@
 /*
+ * Software License Agreement (BSD-3 License)
+ *
  * Copyright (c) 2017 Daniel Koch, James Jackson and Gary Ellingson, BYU MAGICC Lab.
+ * Copyright (c) 2023 Brandon Sutherland and Ian Reid, AeroVironment Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

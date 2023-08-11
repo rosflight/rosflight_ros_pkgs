@@ -4,7 +4,7 @@
   <version>2.0.0</version>
   <description>ROS interface for the ROSflight autopilot stack</description>
 
-  <maintainer email="daniel.p.koch@gmail.com">Daniel Koch</maintainer>
+  <maintainer email="brandonsutherland2@gmail.com">Brandon Sutherland</maintainer>
 
   <author email="daniel.p.koch@gmail.com">Daniel Koch</author>
   <author email="superjax08@gmail.com">James Jackson</author>

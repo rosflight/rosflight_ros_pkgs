@@ -1,3 +1,11 @@
+"""
+File: fixedwing.launch.py
+Author: Brandon Sutherland
+Created: June 13, 2023
+Last Modified: July 17, 2023
+Description: ROS2 launch file used to launch Gazebo with the rosflight SIL.
+"""
+
 import os
 from pathlib import Path
 

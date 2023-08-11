@@ -1,3 +1,11 @@
+"""
+File: fixedwing_init_firmware.launch.py
+Author: Brandon Sutherland
+Created: June 22, 2023
+Last Modified: July 17, 2023
+Description: ROS2 launch file used to load parameters and call services needed for initializing firmware for fixedwings.
+"""
+
 import os
 
 from ament_index_python import get_package_share_directory

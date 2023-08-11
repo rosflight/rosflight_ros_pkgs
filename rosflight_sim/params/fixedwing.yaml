@@ -1,4 +1,5 @@
 # Parameters for ROSflight software-in-the-loop simulation, based on Sonicmodell Skyhunter 1800mm UAV.
+# Authors: Ian Reid and Phil Tokumaru
 
 # Mass and inertia parameters are defined in fixedwing.urdf.xacro.
 # Mass: 2.28

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # Copyright (c) 2017 Daniel Koch and James Jackson, BYU MAGICC Lab.
+# Copyright (c) 2023 Brandon Sutherland, AeroVironment Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,7 +30,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""ROS node for emulating RC controller for SIL simulation
+"""
+ROS node for emulating RC controller for SIL simulation
 
 This script implements a ROS node that uses a joystick controller to
 emulate an RC receiver for software-in-the-loop simulation with the
@@ -44,7 +46,7 @@ Currently supported joystick controllers are:
 To add support for a new controller, simply add its configuration to
 the config dictionary.
 
-Authors: James Jackson, Daniel Koch
+Authors: James Jackson, Daniel Koch, Brandon Sutherland
 """
 
 from enum import Enum

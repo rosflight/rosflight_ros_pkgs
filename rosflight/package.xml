@@ -4,10 +4,11 @@
   <version>2.0.0</version>
   <description>Package for interfacing to the ROSflight autopilot firmware over MAVLink</description>
 
-  <maintainer email="daniel.p.koch@gmail.com">Daniel Koch</maintainer>
+  <maintainer email="brandonsutherland2@gmail.com">Brandon Sutherland</maintainer>
 
   <author email="daniel.p.koch@gmail.com">Daniel Koch</author>
   <author email="superjax08@gmail.com">James Jackson</author>
+  <author email="brandonsutherland2@gmail.com">Brandon Sutherland</author>
 
   <license>BSD</license>
 

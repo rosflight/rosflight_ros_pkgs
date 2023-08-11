@@ -1,3 +1,11 @@
+"""
+File: multirotor_sim_io_joy.launch.py
+Author: Brandon Sutherland
+Created: June 22, 2023
+Last Modified: July 17, 2023
+Description: ROS2 launch file used to launch multirotor SIL, rosflight_io, and rc_joy all at once.
+"""
+
 import os
 
 from ament_index_python import get_package_share_directory
