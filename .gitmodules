@@ -4,3 +4,6 @@
 [submodule "rosflight_firmware/firmware"]
 	path = rosflight_firmware/firmware
 	url = https://github.com/rosflight/firmware
+[submodule "rosflight_msgs"]
+	path = rosflight_msgs
+	url = https://github.com/rosflight/rosflight_msgs.git
