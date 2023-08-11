@@ -14,6 +14,11 @@ Changelog for package rosflight_sim
 * Created worlds for fixedwing and multirotor simulations
 * Added error message for missing UAV params
 * Removed sensor noise and bias params from multirotor param file and updated defaults in sil_board
+* Created new fixedwing aerodynamic parameters and Gazebo model file for Sonicmodel Skyhunter 1800mm
+* Added simulated serial delay to sil_board and servo first order response behavior to fixedwing_forces_and_moments
+* Eliminated all compiler warnings and all applicable clang-tidy warnings
+* Reformatted code to match ROS2 style guide
+* Re-implemented linter build checking using github actions
 * Contributors: Brandon Sutherland, Ian Reid, Brady Anderson
 
 1.4.0 (2020-10-06)

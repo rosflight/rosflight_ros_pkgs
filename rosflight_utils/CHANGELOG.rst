@@ -10,6 +10,10 @@ Changelog for package rosflight_utils
 * Removed unused simple_pid, turbomath, WaypointConvert utils
 * Removed postprocess utils due to lack of required functionality in ROS2
 * Removed joy c++ node in favor of similar command_joy python node
+* Removed outdated GPS driver in favor of external GPS libraries
+* Re-implemented linter build checking using github actions
+* Fixed airspeed reporting incorrect values
+* Added doxygen documentation to almost all functions
 * Contributors: Brandon Sutherland, Ian Reid, Brady Anderson
 
 1.4.0 (2020-10-06)

@@ -5,6 +5,9 @@ Changelog for package rosflight_firmware
 2.0.0 (pre-release)
 ------------------
 * Updated package to ROS2
+* Eliminated all compiler warnings and all applicable clang-tidy warnings
+* Reformatted code to match ROS2 style guide
+* Re-implemented linter build checking using github actions
 * Contributors: Brandon Sutherland
 
 1.4.0 (2020-10-06)

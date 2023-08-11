@@ -5,8 +5,12 @@ Changelog for package rosflight
 2.0.0 (pre-release)
 ------------------
 * Updated mavrosflight, mag_cal, rosflight_io to ROS2 Humble
-* Removed time and timer abstraction from mavrosflight due to ROS2 difficulties
+* Removed time, timer, and logger abstraction from mavrosflight due to ROS2 difficulties
 * Improved firmware to rosflight_io time offset error message
+* Updated C++ standard to C++ 17
+* Eliminated all compiler warnings and all applicable clang-tidy warnings
+* Updated coding style to match ROS2 standard
+* Re-implemented linter build checking using github actions
 * Contributors: Brandon Sutherland, Ian Reid, Brady Anderson
 
 1.4.0 (2020-10-06)
