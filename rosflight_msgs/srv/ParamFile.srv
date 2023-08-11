@@ -1,5 +1,5 @@
 # Define parameter file
 
-string filename
+string filename # filename of parameter file to load from/to
 ---
-bool success
+bool success # whether or not the operation was successful
