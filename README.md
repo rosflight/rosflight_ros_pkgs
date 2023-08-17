@@ -27,7 +27,7 @@ rosflight_sim for its sil_board.
 
 ## rosflight_msgs
 
-This package (contained in a git submodule) contains the ROSflight2 message and service definitions.
+This package contains the ROSflight message and service definitions.
 
 ## rosflight_pkgs
 
