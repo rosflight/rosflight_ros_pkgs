@@ -37,11 +37,11 @@
 #ifndef MAVROSFLIGHT_PARAM_MANAGER_H
 #define MAVROSFLIGHT_PARAM_MANAGER_H
 
-#include <rosflight/mavrosflight/mavlink_bridge.hpp>
-#include <rosflight/mavrosflight/mavlink_comm.hpp>
-#include <rosflight/mavrosflight/mavlink_listener_interface.hpp>
-#include <rosflight/mavrosflight/param.hpp>
-#include <rosflight/mavrosflight/param_listener_interface.hpp>
+#include <rosflight_io/mavrosflight/mavlink_bridge.hpp>
+#include <rosflight_io/mavrosflight/mavlink_comm.hpp>
+#include <rosflight_io/mavrosflight/mavlink_listener_interface.hpp>
+#include <rosflight_io/mavrosflight/param.hpp>
+#include <rosflight_io/mavrosflight/param_listener_interface.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 

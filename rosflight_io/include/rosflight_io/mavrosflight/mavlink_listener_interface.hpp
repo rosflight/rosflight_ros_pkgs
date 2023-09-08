@@ -30,53 +30,30 @@
  */
 
 /**
- * \file mavlink_serial.cpp
+ * \file mavlink_listener_interface.h
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#include <rosflight/mavrosflight/mavlink_serial.hpp>
-#include <rosflight/mavrosflight/serial_exception.hpp>
+#ifndef MAVROSFLIGHT_MAVLINK_LISTENER_INTERFACE_H
+#define MAVROSFLIGHT_MAVLINK_LISTENER_INTERFACE_H
+
+#include <rosflight_io/mavrosflight/mavlink_bridge.hpp>
 
 namespace mavrosflight
 {
-using boost::asio::serial_port_base;
-
-MavlinkSerial::MavlinkSerial(std::string port, int baud_rate)
-    : MavlinkComm(), serial_port_(io_service_), port_(std::move(port)), baud_rate_(baud_rate)
-{}
-
-MavlinkSerial::~MavlinkSerial() { MavlinkSerial::do_close(); }
-
-bool MavlinkSerial::is_open() { return serial_port_.is_open(); }
-
-void MavlinkSerial::do_open()
+/**
+ * \brief Describes an interface classes can implement to receive and handle mavlink messages
+ */
+class MavlinkListenerInterface
 {
-  try {
-    serial_port_.open(port_);
-    serial_port_.set_option(serial_port_base::baud_rate(baud_rate_));
-    serial_port_.set_option(serial_port_base::character_size(8));
-    serial_port_.set_option(serial_port_base::parity(serial_port_base::parity::none));
-    serial_port_.set_option(serial_port_base::stop_bits(serial_port_base::stop_bits::one));
-    serial_port_.set_option(serial_port_base::flow_control(serial_port_base::flow_control::none));
-  } catch (const boost::system::system_error & e) {
-    throw SerialException(e);
-  }
-}
-
-void MavlinkSerial::do_close() { serial_port_.close(); }
-
-void MavlinkSerial::do_async_read(
-  const boost::asio::mutable_buffers_1 & buffer,
-  boost::function<void(const boost::system::error_code &, size_t)> handler)
-{
-  serial_port_.async_read_some(buffer, handler);
-}
-
-void MavlinkSerial::do_async_write(
-  const boost::asio::const_buffers_1 & buffer,
-  boost::function<void(const boost::system::error_code &, size_t)> handler)
-{
-  serial_port_.async_write_some(buffer, handler);
-}
+public:
+  /**
+   * \brief The handler function for mavlink messages to be implemented by derived classes
+   * \param msg The mavlink message to handle
+   */
+  virtual void handle_mavlink_message(const mavlink_message_t & msg) = 0;
+};
 
 } // namespace mavrosflight
+
+#endif // MAVROSFLIGHT_MAVLINK_LISTENER_INTERFACE_H

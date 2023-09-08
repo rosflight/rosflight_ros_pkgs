@@ -11,8 +11,8 @@
   <license>BSD</license>
 
   <url type="website">https://rosflight.org</url>
-  <url type="repository">https://github.com/rosflight/rosflight2</url>
-  <url type="bugtracker">https://github.com/rosflight/rosflight2/issues</url>
+  <url type="repository">https://github.com/rosflight/rosflight</url>
+  <url type="bugtracker">https://github.com/rosflight/rosflight/issues</url>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>

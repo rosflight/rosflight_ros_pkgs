@@ -34,7 +34,7 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#include <rosflight/mavrosflight/mavlink_comm.hpp>
+#include <rosflight_io/mavrosflight/mavlink_comm.hpp>
 
 namespace mavrosflight
 {

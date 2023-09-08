@@ -55,7 +55,7 @@
 #include <eigen_stl_containers/eigen_stl_vector_container.h>
 #include <vector>
 
-namespace rosflight
+namespace rosflight_io
 {
 /**
  * \brief CalibrateMag sensor class
@@ -151,6 +151,6 @@ private:
   void magCal(Eigen::MatrixXd u, Eigen::MatrixXd & A, Eigen::MatrixXd & bb) const;
 };
 
-} // namespace rosflight
+} // namespace rosflight_io
 
 #endif // ROSFLIGHT_SENSORS_CALIBRATE_MAG_H

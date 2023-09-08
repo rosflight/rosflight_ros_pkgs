@@ -37,7 +37,7 @@
 #ifndef MAVROSFLIGHT_MAVLINK_UDP_H
 #define MAVROSFLIGHT_MAVLINK_UDP_H
 
-#include <rosflight/mavrosflight/mavlink_comm.hpp>
+#include <rosflight_io/mavrosflight/mavlink_comm.hpp>
 
 #include <boost/asio.hpp>
 #include <boost/function.hpp>

@@ -30,71 +30,50 @@
  */
 
 /**
- * \file mavlink_serial.h
+ * \file mavrosflight.h
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#ifndef MAVROSFLIGHT_MAVLINK_SERIAL_H
-#define MAVROSFLIGHT_MAVLINK_SERIAL_H
+#ifndef MAVROSFLIGHT_MAVROSFLIGHT_H
+#define MAVROSFLIGHT_MAVROSFLIGHT_H
 
-#include <rosflight/mavrosflight/mavlink_comm.hpp>
+#include <rosflight_io/mavrosflight/mavlink_bridge.hpp>
+#include <rosflight_io/mavrosflight/mavlink_comm.hpp>
+#include <rosflight_io/mavrosflight/param_manager.hpp>
+#include <rosflight_io/mavrosflight/time_manager.hpp>
 
-#include <boost/asio.hpp>
+#include <rosflight_io/mavrosflight/mavlink_listener_interface.hpp>
+#include <rosflight_io/mavrosflight/param_listener_interface.hpp>
+
+#include <rclcpp/rclcpp.hpp>
+
 #include <boost/function.hpp>
 
+#include <cstdint>
 #include <string>
 
 namespace mavrosflight
 {
-class MavlinkSerial : public MavlinkComm
+class MavROSflight
 {
 public:
   /**
    * \brief Instantiates the class and begins communication on the specified serial port
-   * \param port Name of the serial port (e.g. "/dev/ttyUSB0")
+   * \param mavlink_comm Reference to a MavlinkComm object (serial or UDP)
    * \param baud_rate Serial communication baud rate
    */
-  MavlinkSerial(std::string port, int baud_rate);
+  MavROSflight(MavlinkComm & mavlink_comm, rclcpp::Node * node);
 
   /**
    * \brief Stops communication and closes the serial port before the object is destroyed
    */
-  ~MavlinkSerial() override;
+  ~MavROSflight();
 
-private:
-  //===========================================================================
-  // methods
-  //===========================================================================
-
-  bool is_open() override;
-  void do_open() override;
-  void do_close() override;
-
-  /**
-   * \brief Initiate an asynchronous read operation
-   */
-  void do_async_read(
-    const boost::asio::mutable_buffers_1 & buffer,
-    boost::function<void(const boost::system::error_code &, size_t)> handler) override;
-
-  /**
-   * \brief Initialize an asynchronous write operation
-   * \param check_write_state If true, only start another write operation if a write sequence is not already running
-   */
-  void do_async_write(
-    const boost::asio::const_buffers_1 & buffer,
-    boost::function<void(const boost::system::error_code &, size_t)> handler) override;
-
-  //===========================================================================
-  // member variables
-  //===========================================================================
-
-  boost::asio::serial_port serial_port_; //!< boost serial port object
-
-  std::string port_;
-  int baud_rate_;
+  MavlinkComm & comm;
+  ParamManager param;
+  TimeManager time;
 };
 
 } // namespace mavrosflight
 
-#endif // MAVROSFLIGHT_MAVLINK_SERIAL_H
+#endif // MAVROSFLIGHT_MAVROSFLIGHT_H

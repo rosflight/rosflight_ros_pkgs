@@ -1,8 +1,5 @@
 /*
- * Software License Agreement (BSD-3 License)
- *
  * Copyright (c) 2017 Daniel Koch and James Jackson, BYU MAGICC Lab.
- * Copyright (c) 2023 Brandon Sutherland, AeroVironment Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,19 +30,15 @@
  */
 
 /**
- * \file rosflight_io_node.cpp
+ * \file mavlink_bridge.h
  * \author Daniel Koch <daniel.koch@byu.edu>
  *
- * Entry point for the mavrosflight_node executable
+ * MAVLink adapter header
  */
 
-#include <rclcpp/rclcpp.hpp>
-#include <rosflight/rosflight_io.hpp>
+#ifndef MAVROSFLIGHT_MAVLINK_BRIDGE_H
+#define MAVROSFLIGHT_MAVLINK_BRIDGE_H
 
-int main(int argc, char ** argv)
-{
-  rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<rosflight_io::rosflightIO>());
-  rclcpp::shutdown();
-  return 0;
-}
+#include <rosflight_io/mavlink/v1.0/rosflight/mavlink.h>
+
+#endif // MAVROSFLIGHT_MAVLINK_BRIDGE_H

@@ -30,45 +30,22 @@
  */
 
 /**
- * \file time_manager.h
+ * \file mavrosflight.cpp
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#ifndef MAVROSFLIGHT_TIME_MANAGER_H
-#define MAVROSFLIGHT_TIME_MANAGER_H
-
-#include <rclcpp/rclcpp.hpp>
-#include <rosflight/mavrosflight/mavlink_bridge.hpp>
-#include <rosflight/mavrosflight/mavlink_comm.hpp>
-#include <rosflight/mavrosflight/mavlink_listener_interface.hpp>
-
-#include <chrono>
-#include <memory>
+#include <rosflight_io/mavrosflight/mavrosflight.hpp>
 
 namespace mavrosflight
 {
-class TimeManager : MavlinkListenerInterface
+using boost::asio::serial_port_base;
+
+MavROSflight::MavROSflight(MavlinkComm & mavlink_comm, rclcpp::Node * const node)
+    : comm(mavlink_comm), param(&comm, node), time(&comm, node)
 {
-public:
-  TimeManager(MavlinkComm * comm, rclcpp::Node * node);
+  comm.open();
+}
 
-  void handle_mavlink_message(const mavlink_message_t & msg) override;
-
-  std::chrono::nanoseconds fcu_time_to_system_time(std::chrono::nanoseconds fcu_time);
-
-private:
-  MavlinkComm * const comm_;
-  rclcpp::Node * const node_;
-
-  rclcpp::TimerBase::SharedPtr time_sync_timer_;
-  void timer_callback();
-
-  double offset_alpha_;
-  std::chrono::nanoseconds offset_ns_;
-
-  bool initialized_;
-};
+MavROSflight::~MavROSflight() { comm.close(); }
 
 } // namespace mavrosflight
-
-#endif // MAVROSFLIGHT_TIME_MANAGER_H

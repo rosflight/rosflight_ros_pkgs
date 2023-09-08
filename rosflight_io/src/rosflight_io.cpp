@@ -42,16 +42,16 @@
 #define GIT_VERSION_STRING TOSTRING(ROSFLIGHT_VERSION)
 #endif
 
-#include <rosflight/mavrosflight/mavlink_serial.hpp>
-#include <rosflight/mavrosflight/mavlink_udp.hpp>
-#include <rosflight/mavrosflight/serial_exception.hpp>
+#include <rosflight_io/mavrosflight/mavlink_serial.hpp>
+#include <rosflight_io/mavrosflight/mavlink_udp.hpp>
+#include <rosflight_io/mavrosflight/serial_exception.hpp>
 #include <string>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <utility>
 
-#include <rosflight/rosflight_io.hpp>
+#include <rosflight_io/rosflight_io.hpp>
 
 namespace rosflight_io
 {

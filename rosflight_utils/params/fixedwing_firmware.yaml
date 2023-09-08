@@ -1,4 +1,4 @@
-# Parameters for using a Fixedwing with ROSflight2 firmware.
+# Parameters for using a Fixedwing with ROSflight firmware.
 
 - {name: MOTOR_PWM_UPDATE, type: 6, value: 50} # Set pwm update rate for motor.
 - {name: ARM_SPIN_MOTORS, type: 6, value: 0} # Do not set motors to spin when armed.

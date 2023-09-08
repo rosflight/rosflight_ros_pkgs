@@ -37,7 +37,7 @@
 #include <fstream>
 #include <functional>
 
-#include <rosflight/mavrosflight/param_manager.hpp>
+#include <rosflight_io/mavrosflight/param_manager.hpp>
 #include <yaml-cpp/yaml.h>
 
 namespace mavrosflight

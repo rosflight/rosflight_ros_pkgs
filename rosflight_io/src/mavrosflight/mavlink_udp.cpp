@@ -34,8 +34,8 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#include <rosflight/mavrosflight/mavlink_udp.hpp>
-#include <rosflight/mavrosflight/serial_exception.hpp>
+#include <rosflight_io/mavrosflight/mavlink_udp.hpp>
+#include <rosflight_io/mavrosflight/serial_exception.hpp>
 
 using boost::asio::ip::udp;
 

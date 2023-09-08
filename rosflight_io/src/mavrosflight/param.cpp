@@ -34,7 +34,7 @@
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#include <rosflight/mavrosflight/param.hpp>
+#include <rosflight_io/mavrosflight/param.hpp>
 
 namespace mavrosflight
 {

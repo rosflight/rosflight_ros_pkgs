@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-          path: 'ros2_ws/src/rosflight2'
+          path: 'ros2_ws/src/rosflight'
 
       - name: Install dependencies
         run: |

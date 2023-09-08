@@ -37,8 +37,8 @@
 #ifndef MAVROSFLIGHT_MAVLINK_COMM_H
 #define MAVROSFLIGHT_MAVLINK_COMM_H
 
-#include <rosflight/mavrosflight/mavlink_bridge.hpp>
-#include <rosflight/mavrosflight/mavlink_listener_interface.hpp>
+#include <rosflight_io/mavrosflight/mavlink_bridge.hpp>
+#include <rosflight_io/mavrosflight/mavlink_listener_interface.hpp>
 
 #include <boost/asio.hpp>
 #include <boost/function.hpp>

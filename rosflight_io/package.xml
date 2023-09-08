@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>rosflight</name>
+  <name>rosflight_io</name>
   <version>2.0.0</version>
   <description>Package for interfacing to the ROSflight autopilot firmware over MAVLink</description>
 
@@ -13,8 +13,8 @@
   <license>BSD</license>
 
   <url type="website">https://rosflight.org</url>
-  <url type="repository">https://github.com/rosflight/rosflight2</url>
-  <url type="bugtracker">https://github.com/rosflight/rosflight2/issues</url>
+  <url type="repository">https://github.com/rosflight/rosflight</url>
+  <url type="bugtracker">https://github.com/rosflight/rosflight/issues</url>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

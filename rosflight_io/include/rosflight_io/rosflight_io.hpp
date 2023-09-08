@@ -80,10 +80,10 @@
 #include <rosflight_msgs/srv/param_get.hpp>
 #include <rosflight_msgs/srv/param_set.hpp>
 
-#include <rosflight/mavrosflight/mavlink_comm.hpp>
-#include <rosflight/mavrosflight/mavlink_listener_interface.hpp>
-#include <rosflight/mavrosflight/mavrosflight.hpp>
-#include <rosflight/mavrosflight/param_listener_interface.hpp>
+#include <rosflight_io/mavrosflight/mavlink_comm.hpp>
+#include <rosflight_io/mavrosflight/mavlink_listener_interface.hpp>
+#include <rosflight_io/mavrosflight/mavrosflight.hpp>
+#include <rosflight_io/mavrosflight/param_listener_interface.hpp>
 
 namespace rosflight_io
 {

@@ -30,7 +30,7 @@ def generate_launch_description():
 
     # Start rosflight_io interface node
     rosflight_io_node = Node(
-        package='rosflight',
+        package='rosflight_io',
         executable='rosflight_io',
         output='screen',
         parameters=[

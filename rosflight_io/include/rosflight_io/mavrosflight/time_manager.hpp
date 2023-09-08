@@ -30,30 +30,45 @@
  */
 
 /**
- * \file mavlink_listener_interface.h
+ * \file time_manager.h
  * \author Daniel Koch <daniel.koch@byu.edu>
  */
 
-#ifndef MAVROSFLIGHT_MAVLINK_LISTENER_INTERFACE_H
-#define MAVROSFLIGHT_MAVLINK_LISTENER_INTERFACE_H
+#ifndef MAVROSFLIGHT_TIME_MANAGER_H
+#define MAVROSFLIGHT_TIME_MANAGER_H
 
-#include <rosflight/mavrosflight/mavlink_bridge.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <rosflight_io/mavrosflight/mavlink_bridge.hpp>
+#include <rosflight_io/mavrosflight/mavlink_comm.hpp>
+#include <rosflight_io/mavrosflight/mavlink_listener_interface.hpp>
+
+#include <chrono>
+#include <memory>
 
 namespace mavrosflight
 {
-/**
- * \brief Describes an interface classes can implement to receive and handle mavlink messages
- */
-class MavlinkListenerInterface
+class TimeManager : MavlinkListenerInterface
 {
 public:
-  /**
-   * \brief The handler function for mavlink messages to be implemented by derived classes
-   * \param msg The mavlink message to handle
-   */
-  virtual void handle_mavlink_message(const mavlink_message_t & msg) = 0;
+  TimeManager(MavlinkComm * comm, rclcpp::Node * node);
+
+  void handle_mavlink_message(const mavlink_message_t & msg) override;
+
+  std::chrono::nanoseconds fcu_time_to_system_time(std::chrono::nanoseconds fcu_time);
+
+private:
+  MavlinkComm * const comm_;
+  rclcpp::Node * const node_;
+
+  rclcpp::TimerBase::SharedPtr time_sync_timer_;
+  void timer_callback();
+
+  double offset_alpha_;
+  std::chrono::nanoseconds offset_ns_;
+
+  bool initialized_;
 };
 
 } // namespace mavrosflight
 
-#endif // MAVROSFLIGHT_MAVLINK_LISTENER_INTERFACE_H
+#endif // MAVROSFLIGHT_TIME_MANAGER_H

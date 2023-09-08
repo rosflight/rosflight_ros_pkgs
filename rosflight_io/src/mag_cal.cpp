@@ -39,9 +39,9 @@
  */
 
 #include <cstdio>
-#include <rosflight/mag_cal.hpp>
+#include <rosflight_io/mag_cal.hpp>
 
-namespace rosflight
+namespace rosflight_io
 {
 CalibrateMag::CalibrateMag()
     : Node("calibrate_accel_temp"), reference_field_strength_(1.0), calibrating_(false),
@@ -491,4 +491,4 @@ bool CalibrateMag::set_param(std::string name, double value)
   }
 }
 
-} // namespace rosflight
+} // namespace rosflight_io

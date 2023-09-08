@@ -35,7 +35,7 @@
  */
 #include <functional>
 
-#include <rosflight/mavrosflight/time_manager.hpp>
+#include <rosflight_io/mavrosflight/time_manager.hpp>
 
 namespace mavrosflight
 {

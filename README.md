@@ -1,13 +1,13 @@
-# ROSflight2
+# ROSflight
 
-[![ROS2 CI](https://github.com/rosflight/rosflight2/actions/workflows/ros2-ci.yml/badge.svg)](https://github.com/rosflight/rosflight2/actions/workflows/ros2-ci.yml)
+[![ROS2 CI](https://github.com/rosflight/rosflight/actions/workflows/ros2-ci.yml/badge.svg)](https://github.com/rosflight/rosflight/actions/workflows/ros2-ci.yml)
 
 This repository contains a ROS2 stack for interfacing with an autopilot running the ROSflight firmware.
 For more information on the ROSflight autopilot firmware stack, visit http://rosflight.org.
 
 # Packages Overview
 
-## rosflight
+## rosflight_io
 
 This package contains the rosflight_io node, which provides the core functionality for interfacing an onboard computer
 with the autopilot. This node streams autopilot sensor and status data to the onboard computer, streams control
@@ -91,9 +91,9 @@ The gazebo simulator with the sil_node can be launched alongside rosflight_io an
 ### Firmware parameter files
 
 Basic parameter files for setting up a multirotor or fixedwing UAV have been provided, under the
-`rosflight2/rosflight_utils/params` directory. Use 
-`ros2 service call /param_load_from_file rosflight_msgs/srv/ParamFile "{filename: "/path_to_rosflight2/rosflight_utils/params/fixedwing_firmware.yaml"}"` for fixedwings and 
-`ros2 service call /param_load_from_file rosflight_msgs/srv/ParamFile "{filename:"/path_to_rosflight2/rosflight_utils/params/multirotor_firmware.yaml"}"` for multirotors.
+`rosflight/rosflight_utils/params` directory. Use 
+`ros2 service call /param_load_from_file rosflight_msgs/srv/ParamFile "{filename: "/path_to_rosflight/rosflight_utils/params/fixedwing_firmware.yaml"}"` for fixedwings and 
+`ros2 service call /param_load_from_file rosflight_msgs/srv/ParamFile "{filename:"/path_to_rosflight/rosflight_utils/params/multirotor_firmware.yaml"}"` for multirotors.
 
 ### Firmware initialization launch files
 
@@ -115,8 +115,8 @@ files found in the `rosflight_utils/params` directory mentioned above.
    with `echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc`. Re-open your terminal so that this echo command can
    take effect.
 4. Create a rosflight workspace folder and cd into it with `mkdir rosflight_ws && cd rosflight_ws`.
-5. Clone the rosflight2 repository and its submodules
-   with `git clone --recursive https://github.com/byu-magicc/rosflight2.git`.
+5. Clone the rosflight repository and its submodules
+   with `git clone --recursive https://github.com/rosflight/rosflight.git`.
 6. Install all required dependencies with rosdep. To do so, initialize rosdep with `sudo rosdep init`, update
    with `rosdep update`, and install the dependencies
    with `rosdep install -i --from-path ./ -y --ignore-src`.
@@ -129,7 +129,7 @@ files found in the `rosflight_utils/params` directory mentioned above.
 ## Running the rosflight_io node
 
 To run the rosflight_io node when connected to real hardware, use the
-command `ros2 run rosflight rosflight_io --ros-args -p port:=/dev/ttyACM0`, replacing `/dev/ttyACM0` with the location
+command `ros2 run rosflight_io rosflight_io --ros-args -p port:=/dev/ttyACM0`, replacing `/dev/ttyACM0` with the location
 of serial port connected to the flight controller. This will launch a ROS2 node on your computer that will publish all
 sensor topics and create all command subscriptions needed to communicated with the firmware.
 
@@ -148,7 +148,7 @@ real sensors it calls Gazebo sensors.
 ### Launch rosflight_io node
 
 To run the rosflight_io node with the simulator, use the
-command `ros2 run rosflight rosflight_io --ros-args -p udp:=true`.
+command `ros2 run rosflight_io rosflight_io --ros-args -p udp:=true`.
 
 ### Launch RC controller interface node
 

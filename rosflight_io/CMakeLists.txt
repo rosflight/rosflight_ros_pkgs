@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(rosflight)
+project(rosflight_io)
 
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
@@ -33,7 +33,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
 
 ## Look for and clone MAVLINK if it is missing
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/include/rosflight/mavlink/v1.0/.git")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/include/rosflight_io/mavlink/v1.0/.git")
   message(STATUS "MAVLink submodule not found at ${CMAKE_CURRENT_SOURCE_DIR}/include/rosflight/mavlink/v1.0")
   execute_process(
     COMMAND git submodule update --init --recursive
@@ -133,7 +133,7 @@ install(TARGETS mavrosflight rosflight_io calibrate_mag
   )
 
 # Mark cpp header files for installation
-install(DIRECTORY include/rosflight/mavrosflight/
+install(DIRECTORY include/rosflight_io/mavrosflight/
   DESTINATION include/${PROJECT_NAME}
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE

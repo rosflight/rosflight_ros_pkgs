@@ -5,7 +5,7 @@ and communicates the same way that the hardware does in real life.
 
 ## Parameters
 
-Parameters can be set in the "rosflight/params/multirotor.yaml" files and "rosflight_sim/params/fixedwing.yaml".
+Parameters can be set in the "rosflight_sim/params/multirotor.yaml" files and "rosflight_sim/params/fixedwing.yaml".
 
 ## General Parameters
 

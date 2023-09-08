@@ -1,5 +1,8 @@
 /*
+ * Software License Agreement (BSD-3 License)
+ *
  * Copyright (c) 2017 Daniel Koch and James Jackson, BYU MAGICC Lab.
+ * Copyright (c) 2023 Brandon Sutherland, AeroVironment Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,22 +33,19 @@
  */
 
 /**
- * \file mavrosflight.cpp
+ * \file rosflight_io_node.cpp
  * \author Daniel Koch <daniel.koch@byu.edu>
+ *
+ * Entry point for the mavrosflight_node executable
  */
 
-#include <rosflight/mavrosflight/mavrosflight.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <rosflight_io/rosflight_io.hpp>
 
-namespace mavrosflight
+int main(int argc, char ** argv)
 {
-using boost::asio::serial_port_base;
-
-MavROSflight::MavROSflight(MavlinkComm & mavlink_comm, rclcpp::Node * const node)
-    : comm(mavlink_comm), param(&comm, node), time(&comm, node)
-{
-  comm.open();
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<rosflight_io::rosflightIO>());
+  rclcpp::shutdown();
+  return 0;
 }
-
-MavROSflight::~MavROSflight() { comm.close(); }
-
-} // namespace mavrosflight
