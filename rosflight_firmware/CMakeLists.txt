@@ -18,10 +18,10 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
 
-# clone firmware submodule if it is missing
-set(FIRMWARE_SUBMODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/firmware")
+# clone rosflight_firmware submodule if it is missing
+set(FIRMWARE_SUBMODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/rosflight_firmware")
 if(NOT EXISTS "${FIRMWARE_SUBMODULE_DIR}/.git")
-  message(STATUS "Firmware submodule not found at ${FIRMWARE_SUBMODULE_DIR}")
+  message(STATUS "rosflight_firmware submodule not found at ${FIRMWARE_SUBMODULE_DIR}")
   execute_process(
     COMMAND git submodule update --init --recursive
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -32,12 +32,12 @@ endif()
 execute_process(COMMAND git rev-parse --short=8 HEAD
   OUTPUT_VARIABLE GIT_VERSION_HASH
   OUTPUT_STRIP_TRAILING_WHITESPACE
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/firmware)
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rosflight_firmware)
 
 execute_process(COMMAND git describe --tags --abbrev=8 --always --dirty --long
   OUTPUT_VARIABLE GIT_VERSION_STRING
   OUTPUT_STRIP_TRAILING_WHITESPACE
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/firmware)
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rosflight_firmware)
 
 if("${GIT_VERSION_STRING}" STREQUAL "")
   set(GIT_VERSION_STRING "undefined")
@@ -53,10 +53,11 @@ endif()
 ###########
 
 set(FIRMWARE_INCLUDE_DIRS
-  firmware/include/
-  firmware/lib/
-  firmware/comms/
-  firmware/test/
+  rosflight_firmware/include/
+  rosflight_firmware/lib/
+  rosflight_firmware/comms/
+  rosflight_firmware/test/
+  rosflight_firmware/boards/udp/
   )
 
 include_directories(include
@@ -66,21 +67,21 @@ include_directories(include
 
 # rosflight_firmware
 add_library(rosflight_firmware
-  firmware/src/rosflight.cpp
-  firmware/src/nanoprintf.cpp
-  firmware/src/estimator.cpp
-  firmware/src/mixer.cpp
-  firmware/src/controller.cpp
-  firmware/src/param.cpp
-  firmware/src/state_manager.cpp
-  firmware/src/rc.cpp
-  firmware/src/command_manager.cpp
-  firmware/src/sensors.cpp
-  firmware/src/comm_manager.cpp
+  rosflight_firmware/src/rosflight.cpp
+  rosflight_firmware/src/nanoprintf.cpp
+  rosflight_firmware/src/estimator.cpp
+  rosflight_firmware/src/mixer.cpp
+  rosflight_firmware/src/controller.cpp
+  rosflight_firmware/src/param.cpp
+  rosflight_firmware/src/state_manager.cpp
+  rosflight_firmware/src/rc.cpp
+  rosflight_firmware/src/command_manager.cpp
+  rosflight_firmware/src/sensors.cpp
+  rosflight_firmware/src/comm_manager.cpp
 
-  firmware/comms/mavlink/mavlink.cpp
+  rosflight_firmware/comms/mavlink/mavlink.cpp
 
-  firmware/lib/turbomath/turbomath.cpp
+  rosflight_firmware/lib/turbomath/turbomath.cpp
   )
 target_compile_definitions(rosflight_firmware PUBLIC
   GIT_VERSION_HASH=0x${GIT_VERSION_HASH}
@@ -98,7 +99,7 @@ install(
 
 # rosflight_udp_board
 add_library(rosflight_udp_board
-  src/udp_board.cpp
+  rosflight_firmware/boards/udp/udp_board.cpp
   )
 target_link_libraries(rosflight_udp_board
   rosflight_firmware
@@ -118,7 +119,7 @@ install(
 
 # rosflight_test
 add_library(rosflight_test
-  firmware/test/test_board.cpp
+  rosflight_firmware/test/test_board.cpp
   )
 target_link_libraries(rosflight_test
   rosflight_firmware
@@ -135,7 +136,7 @@ install(
 
 
 install(
-  DIRECTORY include/${PROJECT_NAME}/ ${FIRMWARE_INCLUDE_DIRS}
+  DIRECTORY ${PROJECT_NAME}/ ${FIRMWARE_INCLUDE_DIRS}
   DESTINATION include
 )
 
