@@ -1,6 +1,6 @@
-[submodule "rosflight/include/mavlink/v1.0"]
-	path = rosflight/include/rosflight/mavlink/v1.0
+[submodule "rosflight_io/include/rosflight_io/mavlink/v1.0"]
+	path = rosflight_io/include/rosflight_io/mavlink/v1.0
 	url = https://github.com/rosflight/mavlink_c_library.git
-[submodule "rosflight_firmware/firmware"]
-	path = rosflight_firmware/firmware
-	url = https://github.com/rosflight/firmware
+[submodule "rosflight_firmware/rosflight_firmware"]
+	path = rosflight_firmware/rosflight_firmware
+	url = https://github.com/rosflight/rosflight_firmware.git

@@ -1,11 +1,13 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>rosflight_utils</name>
+  <name>rosflight_io</name>
   <version>2.0.0</version>
-  <description>Supporting utilities for ROSflight packages</description>
+  <description>Package for interfacing to the ROSflight autopilot firmware over MAVLink</description>
 
   <maintainer email="brandonsutherland2@gmail.com">Brandon Sutherland</maintainer>
 
+  <author email="daniel.p.koch@gmail.com">Daniel Koch</author>
+  <author email="superjax08@gmail.com">James Jackson</author>
   <author email="brandonsutherland2@gmail.com">Brandon Sutherland</author>
 
   <license>BSD</license>
@@ -15,23 +17,26 @@
   <url type="bugtracker">https://github.com/rosflight/rosflight/issues</url>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-  <buildtool_depend>ament_cmake_python</buildtool_depend>
 
-  <exec_depend>ros2launch</exec_depend>
-
+  <!-- ROS packages -->
   <depend>rclcpp</depend>
-  <depend>rclpy</depend>
+  <depend>eigen_stl_containers</depend>
   <depend>geometry_msgs</depend>
+  <depend>rosflight_msgs</depend>
   <depend>sensor_msgs</depend>
-  <depend>visualization_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
   <depend>tf2</depend>
   <depend>tf2_geometry_msgs</depend>
-  <depend>python3-pygame</depend>
+  <depend>message_filters</depend>
 
-  <depend>rosflight_msgs</depend>
-  <depend>rosflight_sim</depend>
-  <depend>rosflight_firmware</depend>
-  <depend>rosflight_io</depend>
+  <!-- system libraries -->
+  <depend>boost</depend>
+  <depend>eigen</depend>
+  <depend>yaml-cpp</depend>
+
+  <build_depend>git</build_depend>
+  <build_depend>pkg-config</build_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
