@@ -30,7 +30,6 @@
 
   <depend>rosflight_msgs</depend>
   <depend>rosflight_sim</depend>
-  <depend>rosflight_firmware</depend>
   <depend>rosflight_io</depend>
 
   <export>
