@@ -41,6 +41,16 @@ include_directories(
   ${FIRMWARE_INCLUDE_DIRS}
 )
 
+# clone firmware submodule if it is missing
+set(FIRMWARE_SUBMODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/rosflight_sim/rosflight_firmware")
+if(NOT EXISTS "${FIRMWARE_SUBMODULE_DIR}/.git")
+  message(STATUS "Firmware submodule not found at ${FIRMWARE_SUBMODULE_DIR}")
+  execute_process(
+          COMMAND git submodule update --init --recursive
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  )
+endif()
+
 # Git information
 execute_process(COMMAND git rev-parse --short=8 HEAD
         OUTPUT_VARIABLE GIT_VERSION_HASH
