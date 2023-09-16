@@ -19,3 +19,7 @@ build
 install
 log
 cmake_commands.sh
+
+# Doxygen
+html
+latex
