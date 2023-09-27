@@ -87,13 +87,13 @@
 
 namespace rosflight_io
 {
-class rosflightIO : public rclcpp::Node,
+class ROSflightIO : public rclcpp::Node,
                     public mavrosflight::MavlinkListenerInterface,
                     public mavrosflight::ParamListenerInterface
 {
 public:
-  rosflightIO();
-  ~rosflightIO() override;
+  ROSflightIO();
+  ~ROSflightIO() override;
 
   void handle_mavlink_message(const mavlink_message_t & msg) override;
 
