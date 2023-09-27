@@ -40,7 +40,7 @@
 namespace rosflight_sim
 {
 SILBoard::SILBoard()
-    : rosflight_firmware::UDPBoard(),
+    : UDPBoard(),
       random_generator_(std::chrono::system_clock::now().time_since_epoch().count())
 {}
 

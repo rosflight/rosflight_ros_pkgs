@@ -25,7 +25,6 @@
   <depend>gazebo_ros</depend>
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
-  <depend>rosflight_firmware</depend>
   <depend>rosflight_msgs</depend>
 
   <depend>eigen</depend>

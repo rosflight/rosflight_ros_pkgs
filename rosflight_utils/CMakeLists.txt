@@ -28,14 +28,14 @@ find_package(tf2_geometry_msgs REQUIRED)
 include_directories(include
   ${ament_INCLUDE_DIRS}
   ${rclcpp_INCLUDE_DIRS}
-  )
+)
 
 # viz executable
 add_executable(viz src/viz.cpp)
 target_link_libraries(viz
   ${rclcpp_LIBRARIES}
   ${ament_LIBRARIES}
-  )
+)
 ament_target_dependencies(viz
   geometry_msgs
   rosflight_msgs
@@ -43,7 +43,7 @@ ament_target_dependencies(viz
   tf2
   tf2_geometry_msgs
   visualization_msgs
-  )
+)
 
 # Install header files
 install(
@@ -59,14 +59,13 @@ install(
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-# TODO: Update remaining python scripts to ROS2
 # Install python scripts
 install(PROGRAMS
   src/command_joy.py
   src/rc_joy.py
   src/rc_sim.py
   DESTINATION lib/${PROJECT_NAME}
-  )
+)
 
 # Install launch files
 install(

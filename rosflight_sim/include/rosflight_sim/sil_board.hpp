@@ -48,8 +48,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rosflight_msgs/msg/rc_raw.hpp>
 
-#include <udp_board.hpp>
-
+#include <rosflight_sim/udp_board.hpp>
 #include <rosflight_sim/gz_compat.hpp>
 
 namespace rosflight_sim
@@ -59,7 +58,7 @@ namespace rosflight_sim
  * actuators, and FCU clock and memory for the firmware. It also adds a simulated serial delay. It
  * inherits from UDP board, which establishes a communication link over UDP.
  */
-class SILBoard : public rosflight_firmware::UDPBoard
+class SILBoard : public UDPBoard
 {
 private:
   GazeboVector inertial_magnetic_field_;
