@@ -35,8 +35,7 @@
 /**
  * \file rosflight_io_node.cpp
  * \author Daniel Koch <daniel.koch@byu.edu>
- *
- * Entry point for the mavrosflight_node executable
+ * \author Brandon Sutherland <brandonsutherland2@gmail.com>
  */
 
 #include <rclcpp/rclcpp.hpp>

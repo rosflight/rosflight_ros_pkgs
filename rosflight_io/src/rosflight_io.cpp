@@ -33,9 +33,11 @@
  */
 
 /**
- * \file rosflight_io.cpp
- * \author Daniel Koch <daniel.koch@byu.edu>
+ * @file rosflight_io.cpp
+ * @author Daniel Koch <daniel.koch\@byu.edu>
+ * @author Brandon Sutherland <brandonsutherland2\@gmail.com>
  */
+
 #ifdef ROSFLIGHT_VERSION
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x) // Somehow, C++ requires two macros to convert a macro to a string
@@ -295,6 +297,9 @@ void ROSflightIO::handle_heartbeat_msg(const mavlink_message_t & msg)
 
 void ROSflightIO::handle_status_msg(const mavlink_message_t & msg)
 {
+  /// @todo There is a lot happening on this one message type, it may be best to offload
+  ///  some of it to other messages.
+
   mavlink_rosflight_status_t status_msg;
   mavlink_msg_rosflight_status_decode(&msg, &status_msg);
 
@@ -406,6 +411,8 @@ void ROSflightIO::handle_statustext_msg(const mavlink_message_t & msg)
   memcpy(c_str, status.text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
   c_str[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = '\0';
 
+  // Switch statement without break will execute sequentially until the next break, meaning MAV severity
+  //  EMERGENCY, ALERT, CRITICAL, and ERROR will call the RCLCPP_ERROR line
   switch (status.severity) {
     case MAV_SEVERITY_EMERGENCY:
     case MAV_SEVERITY_ALERT:
@@ -665,8 +672,7 @@ void ROSflightIO::handle_small_mag_msg(const mavlink_message_t & msg)
 
   //! \todo calibration, correct units, floating point message type
   sensor_msgs::msg::MagneticField mag_msg;
-  mag_msg.header.stamp =
-    this->get_clock()->now(); // mavrosflight_->time.get_ros_time_us(mag.time_boot_us);
+  mag_msg.header.stamp = this->get_clock()->now();
   mag_msg.header.frame_id = frame_id_;
 
   mag_msg.magnetic_field.x = mag.xmag;
@@ -894,6 +900,9 @@ void ROSflightIO::handle_rosflight_gnss_msg(const mavlink_message_t & msg)
 
 void ROSflightIO::handle_rosflight_gnss_full_msg(const mavlink_message_t & msg)
 {
+  /// \todo Publishes a lot of duplicate data, reduce this down to more unified topics and MAVLink
+  ///  communication. (Move additional information in gnss_full to gnss and get rid of gnss_full?)
+
   mavlink_rosflight_gnss_full_t full;
   mavlink_msg_rosflight_gnss_full_decode(&msg, &full);
 
@@ -978,6 +987,8 @@ void ROSflightIO::auxCommandCallback(const rosflight_msgs::msg::AuxCommand::Cons
 void ROSflightIO::externalAttitudeCallback(
   const rosflight_msgs::msg::Attitude::ConstSharedPtr & msg)
 {
+  /// \todo Re-enable angular_velocity (or make it more clear that it is disabled)
+
   geometry_msgs::msg::Quaternion attitude = msg->attitude;
   // geometry_msgs::msg::Vector3 angular_velocity = msg->angular_velocity;
 
@@ -1085,9 +1096,11 @@ void ROSflightIO::check_error_code(uint8_t current, uint8_t previous, ROSFLIGHT_
                                    const std::string & name)
 {
   if ((current & code) != (previous & code)) {
-    if (current & code) RCLCPP_ERROR(this->get_logger(), "Autopilot ERROR: %s", name.c_str());
-    else
+    if (current & code) {
+      RCLCPP_ERROR(this->get_logger(), "Autopilot ERROR: %s", name.c_str());
+    } else {
       RCLCPP_INFO(this->get_logger(), "Autopilot RECOVERED ERROR: %s", name.c_str());
+    }
   }
 }
 
