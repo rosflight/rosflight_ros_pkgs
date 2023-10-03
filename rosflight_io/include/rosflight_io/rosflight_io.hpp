@@ -592,105 +592,105 @@ private:
     return value < min ? min : (value > max ? max : value);
   }
 
-  /// @brief "command" ROS topic subscription.
+  /// "command" ROS topic subscription.
   rclcpp::Subscription<rosflight_msgs::msg::Command>::SharedPtr command_sub_;
-  /// @brief "aux_command" ROS topic subscription.
+  /// "aux_command" ROS topic subscription.
   rclcpp::Subscription<rosflight_msgs::msg::AuxCommand>::SharedPtr aux_command_sub_;
-  /// @brief "external_attitude" ROS topic subscription.
+  /// "external_attitude" ROS topic subscription.
   rclcpp::Subscription<rosflight_msgs::msg::Attitude>::SharedPtr extatt_sub_;
 
-  /// @brief "unsaved_params" ROS topic publisher.
+  /// "unsaved_params" ROS topic publisher.
   rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr unsaved_params_pub_;
-  /// @brief "imu/data" ROS topic publisher.
+  /// "imu/data" ROS topic publisher.
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
-  /// @brief "imu/temperature" ROS topic publisher.
+  /// "imu/temperature" ROS topic publisher.
   rclcpp::Publisher<sensor_msgs::msg::Temperature>::SharedPtr imu_temp_pub_;
-  /// @brief "output_raw" ROS topic publisher.
+  /// "output_raw" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::OutputRaw>::SharedPtr output_raw_pub_;
-  /// @brief "rc_raw" ROS topic publisher.
+  /// "rc_raw" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::RCRaw>::SharedPtr rc_raw_pub_;
-  /// @brief "airspeed" ROS topic publisher.
+  /// "airspeed" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::Airspeed>::SharedPtr diff_pressure_pub_;
-  /// @brief "baro" ROS topic publisher.
+  /// "baro" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::Barometer>::SharedPtr baro_pub_;
-  /// @brief "sonar" ROS topic publisher.
+  /// "sonar" ROS topic publisher.
   rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr sonar_pub_;
-  /// @brief "gnss" ROS topic publisher.
+  /// "gnss" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::GNSS>::SharedPtr gnss_pub_;
-  /// @brief "gnss_full" ROS topic publisher.
+  /// "gnss_full" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::GNSSFull>::SharedPtr gnss_full_pub_;
-  /// @brief "navsat_compat/fix" ROS topic publisher.
+  /// "navsat_compat/fix" ROS topic publisher.
   rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr nav_sat_fix_pub_;
-  /// @brief "navsat_compat/vel" ROS topic publisher.
+  /// "navsat_compat/vel" ROS topic publisher.
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_stamped_pub_;
-  /// @brief "navsat_compat/time_reference" ROS topic publisher.
+  /// "navsat_compat/time_reference" ROS topic publisher.
   rclcpp::Publisher<sensor_msgs::msg::TimeReference>::SharedPtr time_reference_pub_;
-  /// @brief "magnetometer" ROS topic publisher.
+  /// "magnetometer" ROS topic publisher.
   rclcpp::Publisher<sensor_msgs::msg::MagneticField>::SharedPtr mag_pub_;
-  /// @brief "attitude" ROS topic publisher.
+  /// "attitude" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::Attitude>::SharedPtr attitude_pub_;
-  /// @brief "attitude/euler" ROS topic publisher.
+  /// "attitude/euler" ROS topic publisher.
   rclcpp::Publisher<geometry_msgs::msg::Vector3Stamped>::SharedPtr euler_pub_;
-  /// @brief "status" ROS topic publisher.
+  /// "status" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::Status>::SharedPtr status_pub_;
-  /// @brief "version" ROS topic publisher.
+  /// "version" ROS topic publisher.
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr version_pub_;
-  /// @brief "lidar" ROS topic publisher.
+  /// "lidar" ROS topic publisher.
   rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr lidar_pub_;
-  /// @brief "rosflight_errors" ROS topic publisher.
+  /// "rosflight_errors" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::Error>::SharedPtr error_pub_;
-  /// @brief "battery" ROS topic publisher.
+  /// "battery" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::BatteryStatus>::SharedPtr battery_status_pub_;
-  /// @brief "named_value/int/" ROS topic publisher.
+  /// "named_value/int/" ROS topic publisher.
   std::map<std::string, rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr> named_value_int_pubs_;
-  /// @brief "named_value/float/" ROS topic publisher.
+  /// "named_value/float/" ROS topic publisher.
   std::map<std::string, rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr>
     named_value_float_pubs_;
-  /// @brief "named_value/command_struct/" ROS topic publisher.
+  /// "named_value/command_struct/" ROS topic publisher.
   std::map<std::string, rclcpp::Publisher<rosflight_msgs::msg::Command>::SharedPtr>
     named_command_struct_pubs_;
 
-  /// @brief "param_get" ROS service.
+  /// "param_get" ROS service.
   rclcpp::Service<rosflight_msgs::srv::ParamGet>::SharedPtr param_get_srv_;
-  /// @brief "param_set" ROS service.
+  /// "param_set" ROS service.
   rclcpp::Service<rosflight_msgs::srv::ParamSet>::SharedPtr param_set_srv_;
-  /// @brief "param_write" ROS service.
+  /// "param_write" ROS service.
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr param_write_srv_;
-  /// @brief "param_save_to_file" ROS service.
+  /// "param_save_to_file" ROS service.
   rclcpp::Service<rosflight_msgs::srv::ParamFile>::SharedPtr param_save_to_file_srv_;
-  /// @brief "param_load_from_file" ROS service.
+  /// "param_load_from_file" ROS service.
   rclcpp::Service<rosflight_msgs::srv::ParamFile>::SharedPtr param_load_from_file_srv_;
-  /// @brief "calibrate_imu" ROS service.
+  /// "calibrate_imu" ROS service.
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr imu_calibrate_bias_srv_;
-  /// @brief "calibrate_rc_trim" ROS service.
+  /// "calibrate_rc_trim" ROS service.
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr calibrate_rc_srv_;
-  /// @brief "calibrate_baro" ROS service.
+  /// "calibrate_baro" ROS service.
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr calibrate_baro_srv_;
-  /// @brief "calibrate_airspeed" ROS service.
+  /// "calibrate_airspeed" ROS service.
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr calibrate_airspeed_srv_;
-  /// @brief "reboot" ROS service.
+  /// "reboot" ROS service.
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr reboot_srv_;
-  /// @brief "reboot_to_bootloader" ROS service.
+  /// "reboot_to_bootloader" ROS service.
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr reboot_bootloader_srv_;
 
-  /// @brief ROS timer for param requests.
+  /// ROS timer for param requests.
   rclcpp::TimerBase::SharedPtr param_timer_;
-  /// @brief ROS timer for firmware version requests.
+  /// ROS timer for firmware version requests.
   rclcpp::TimerBase::SharedPtr version_timer_;
-  /// @brief ROS timer for heartbeat requests.
+  /// ROS timer for heartbeat requests.
   rclcpp::TimerBase::SharedPtr heartbeat_timer_;
 
-  /// @brief Quaternion ROS message, for passing quaternion data between functions.
+  /// Quaternion ROS message, for passing quaternion data between functions.
   geometry_msgs::msg::Quaternion attitude_quat_;
-  /// @brief Previous firmware status, used to detect changes in status.
+  /// Previous firmware status, used to detect changes in status.
   mavlink_rosflight_status_t prev_status_;
 
-  /// @brief Frame ID string, used to include frame in published ROS message.
+  /// Frame ID string, used to include frame in published ROS message.
   std::string frame_id_;
 
-  /// @brief Pointer to Mavlink communication object, used by MavROSflight.
+  /// Pointer to Mavlink communication object, used by MavROSflight.
   mavrosflight::MavlinkComm * mavlink_comm_;
-  /// @brief Pointer to MavROSflight instance, which is used for all serial communication.
+  /// Pointer to MavROSflight instance, which is used for all serial communication.
   mavrosflight::MavROSflight * mavrosflight_;
 };
 
