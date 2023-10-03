@@ -135,11 +135,6 @@ void CalibrateMag::run()
   }
 }
 
-void CalibrateMag::set_reference_magnetic_field_strength(double reference_magnetic_field)
-{
-  reference_field_strength_ = reference_magnetic_field;
-}
-
 void CalibrateMag::start_mag_calibration()
 {
   calibrating_ = true;
@@ -429,11 +424,6 @@ Eigen::MatrixXd CalibrateMag::ellipsoidLS(EigenSTL::vector_Vector3d meas)
   return u;
 }
 
-/*
-   This function compute magnetometer calibration parameters according to Section 5.3 of the
-paper: Renaudin, Valérie, Muhammad Haris Afzal, and Gérard Lachapelle. "Complete triaxis
-magnetometer calibration in the magnetic domain." Journal of sensors 2010 (2010).
-*/
 void CalibrateMag::magCal(Eigen::MatrixXd u, Eigen::MatrixXd & A, Eigen::MatrixXd & bb) const
 {
   // unpack coefficients

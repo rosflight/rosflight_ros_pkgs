@@ -58,88 +58,136 @@
 namespace rosflight_io
 {
 /**
- * \brief CalibrateMag sensor class
+ * @class CalibrateMag sensor class
+ * @brief Used to determine and set magnetometer calibration constants in firmware.
+ *
+ * This class is used to calibrate the magnetometer in the ROSflight firmware. It collects magnetometer
+ * data, calculates the constants of best fit from that data, and then sets those parameters through
+ * rosflight_io.
  */
 class CalibrateMag : public rclcpp::Node
 {
 public:
+  /**
+   * @brief Default constructor for CalibrateMag.
+   */
   CalibrateMag();
 
+  /**
+   * @brief Main run function for magnetometer calibration.
+   */
   void run();
 
+private:
   /**
-   * \brief Begin the magnetometer calibration routine
+   * @brief Begin the magnetometer calibration routine.
    */
   void start_mag_calibration();
 
+  /**
+   * @brief Calculate calibration constants from collected data.
+   */
   void do_mag_calibration();
 
   /**
-   * @brief set_refence_magnetic_field_strength
-   * @param reference_magnetic_field
+   * @brief Callback function for "magnetometer" ROS topic subscription.
+   *
+   * This function is called everytime CalibrateMag receives magnetometer data from rosflight_io over
+   * the "magnetometer" topic. It collects magnetometer data until the calibration time has completed,
+   * printing status messages in the process.
+   *
+   * @param mag ROS MagneticField message object.
    */
   bool mag_callback(const sensor_msgs::msg::MagneticField::ConstSharedPtr & mag);
 
   /// The const stuff is to make it read-only
+  /// Get the value from A(1,1) (index starts at 1).
   double a11() const { return A_(0, 0); }
+  /// Get the value from A(1,2) (index starts at 1).
   double a12() const { return A_(0, 1); }
+  /// Get the value from A(1,3) (index starts at 1).
   double a13() const { return A_(0, 2); }
+  /// Get the value from A(2,1) (index starts at 1).
   double a21() const { return A_(1, 0); }
+  /// Get the value from A(2,2) (index starts at 1).
   double a22() const { return A_(1, 1); }
+  /// Get the value from A(2,3) (index starts at 1).
   double a23() const { return A_(1, 2); }
+  /// Get the value from A(3,1) (index starts at 1).
   double a31() const { return A_(2, 0); }
+  /// Get the value from A(3,2) (index starts at 1).
   double a32() const { return A_(2, 1); }
+  /// Get the value from A(3,3) (index starts at 1).
   double a33() const { return A_(2, 2); }
+  /// Get the x value from the b matrix.
   double bx() const { return b_(0, 0); }
+  /// Get the y value from the b matrix.
   double by() const { return b_(1, 0); }
+  /// Get the z value from the b matrix.
   double bz() const { return b_(2, 0); }
 
-private:
+  /**
+   * @brief Set a ROSflight parameter.
+   * @param name Name of parameter to set.
+   * @param value Value to set parameter to.
+   * @return Success of parameter setting.
+   */
   bool set_param(std::string name, double value);
 
+  /// "magnetometer" ROS topic subscription.
   message_filters::Subscriber<sensor_msgs::msg::MagneticField> mag_subscriber_;
 
+  /// "param_set" ROS service client, used for setting ROSflight params.
   rclcpp::Client<rosflight_msgs::srv::ParamSet>::SharedPtr param_set_client_;
 
-  Eigen::MatrixXd A_, b_;
+  Eigen::MatrixXd A_; ///< Matrix used in calibration constant calculation.
+  Eigen::MatrixXd b_; ///< Matrix used in calibration constant calculation.
 
-  double reference_field_strength_; //!< the strength of earth's magnetic field at your location
+  double reference_field_strength_; ///< The strength of earth's magnetic field at your location.
 
-  bool calibrating_;        //!< whether a temperature calibration is in progress
-  bool first_time_;         //!< waiting for first measurement for calibration
-  double calibration_time_; //!< seconds to record data for temperature compensation
-  double start_time_;       //!< timestamp of first calibration measurement
-  int ransac_iters_;        //!< number of ransac iterations to fit ellipsoid to mag measurements
-  int measurement_skip_;
-  int measurement_throttle_;
-  double inlier_thresh_; //!< threshold to consider measurement an inlier in ellipsoidRANSAC
-  Eigen::Vector3d measurement_prev_;
-  EigenSTL::vector_Vector3d measurements_;
+  bool calibrating_;         ///< Flag for whether a calibration is currently in progress.
+  bool first_time_;          ///< Flag for waiting for first measurement for calibration.
+  double calibration_time_;  ///< Seconds to record data for calibration.
+  double start_time_;        ///< Timestamp of first calibration measurement.
+  int ransac_iters_;         ///< Number of ransac iterations to fit ellipsoid to mag measurements.
+  int measurement_skip_;     ///< Number of measurements to skip at the start of calibration.
+  int measurement_throttle_; ///< Stores the number measurements already skipped.
+  double inlier_thresh_;     ///< Threshold to consider a measurement an inlier in ellipsoidRANSAC.
+  Eigen::Vector3d measurement_prev_; ///< Stores previous measurement to ensure no duplicate measurements.
+  EigenSTL::vector_Vector3d measurements_; ///< Stores all measurements.
 
-  // function to perform RANSAC on ellipsoid data
+  /**
+   * @brief Function to perform RANSAC on ellipsoid data.
+   * @param meas Vector of stored measurement data.
+   * @param iters Number of iterations to run RANSAC on data.
+   * @param inlier_thresh Distance threshold for which measurements are included in calibration.
+   * @return Ellipsoid fit to measurements, for use in calibration.
+   */
   Eigen::MatrixXd ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, int iters, double inlier_thresh);
 
-  // function to vector from ellipsoid center to surface along input vector
+  /// Function to vector from ellipsoid center to surface along input vector
   static Eigen::Vector3d intersect(const Eigen::Vector3d & r_m, const Eigen::Vector3d & r_e,
                                    const Eigen::MatrixXd & Q, const Eigen::MatrixXd & ub, double k);
 
-  /*
-      sort eigenvalues and eigenvectors output from Eigen library
-  */
+  /// Sort eigenvalues and eigenvectors output from Eigen library.
   static void eigSort(Eigen::MatrixXd & w, Eigen::MatrixXd & v);
 
-  /*
-      This function gets ellipsoid parameters via least squares on ellipsoidal data
-      according to the paper: Li, Qingde, and John G. Griffiths. "Least squares ellipsoid
-      specific fitting." Geometric modeling and processing, 2004. proceedings. IEEE, 2004.
-  */
+  /**
+   * @brief Gets ellipsoid parameters via least squares fitting.
+   *
+   * This function gets ellipsoid parameters via least squares on ellipsoidal data
+   * according to the paper: Li, Qingde, and John G. Griffiths. "Least squares ellipsoid
+   * specific fitting." Geometric modeling and processing, 2004. proceedings. IEEE, 2004.
+   */
   static Eigen::MatrixXd ellipsoidLS(EigenSTL::vector_Vector3d meas);
 
-  /*
-      This function compute magnetometer calibration parameters according to Section 5.3 of the
-      paper: Renaudin, Valérie, Muhammad Haris Afzal, and Gérard Lachapelle. "Complete triaxis
-      magnetometer calibration in the magnetic domain." Journal of sensors 2010 (2010).
-  */
+  /**
+   * @brief Compute magnetometer calibration parameters.
+   *
+   * This function compute magnetometer calibration parameters according to Section 5.3 of the
+   * paper: Renaudin, Valérie, Muhammad Haris Afzal, and Gérard Lachapelle. "Complete triaxis
+   * magnetometer calibration in the magnetic domain." Journal of sensors 2010 (2010).
+   */
   void magCal(Eigen::MatrixXd u, Eigen::MatrixXd & A, Eigen::MatrixXd & bb) const;
 };
 
