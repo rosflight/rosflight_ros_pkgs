@@ -164,7 +164,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void board_reset(bool bootloader) override {};
+  void board_reset(bool bootloader) override{};
 
   // clock
   /**
@@ -182,7 +182,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void clock_delay(uint32_t milliseconds) override {};
+  void clock_delay(uint32_t milliseconds) override{};
 
   // serial
   /**
@@ -247,7 +247,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void mag_update() override {};
+  void mag_update() override{};
 
   /**
    * @brief Function used to check if a barometer is present. Currently returns true.
@@ -266,7 +266,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void baro_update() override {};
+  void baro_update() override{};
 
   /**
    * @brief Checks if a pitot tube sensor is present. Returns true if sim is a fixedwing sim.
@@ -285,7 +285,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void diff_pressure_update() override {};
+  void diff_pressure_update() override{};
 
   /**
    * @brief Function used to see if a sonar altitude sensor is present. Currently returns true.
@@ -305,7 +305,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void sonar_update() override {};
+  void sonar_update() override{};
 
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)
@@ -344,7 +344,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void rc_init(rc_type_t rc_type) override {};
+  void rc_init(rc_type_t rc_type) override{};
   /**
    * @brief Function used to check if RC connection is present. Currently returns false if anything
    * is ever published on RC.
@@ -357,7 +357,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void memory_init() override {};
+  void memory_init() override{};
   /**
    * @brief Reads data from memory file.
    *
@@ -379,34 +379,34 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led0_on() override {};
+  void led0_on() override{};
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led0_off() override {};
+  void led0_off() override{};
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led0_toggle() override {};
+  void led0_toggle() override{};
 
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led1_on() override {};
+  void led1_on() override{};
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led1_off() override {};
+  void led1_off() override{};
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led1_toggle() override {};
+  void led1_toggle() override{};
 
   // Backup Memory
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void backup_memory_init() override {};
+  void backup_memory_init() override{};
   /**
    * @brief Reads data from backup memory object.
    *
@@ -440,7 +440,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void gnss_update() override {};
+  void gnss_update() override{};
 
   /**
    * @brief Generates GNSS data based on Gazebo truth and noise/bias parameters.
