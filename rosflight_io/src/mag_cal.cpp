@@ -364,11 +364,6 @@ void CalibrateMag::eigSort(Eigen::MatrixXd & w, Eigen::MatrixXd & v)
   v = v1;
 }
 
-/*
-   This function gets ellipsoid parameters via least squares on ellipsoidal data
-   according to the paper: Li, Qingde, and John G. Griffiths. "Least squares ellipsoid
-   specific fitting." Geometric modeling and processing, 2004. proceedings. IEEE, 2004.
-   */
 Eigen::MatrixXd CalibrateMag::ellipsoidLS(EigenSTL::vector_Vector3d meas)
 {
   // form D matrix from eq. 6

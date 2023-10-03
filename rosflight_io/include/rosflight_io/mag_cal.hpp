@@ -80,14 +80,6 @@ public:
    */
   bool mag_callback(const sensor_msgs::msg::MagneticField::ConstSharedPtr & mag);
 
-  void set_reference_magnetic_field_strength(double reference_magnetic_field);
-
-  /**
-   * \brief Check if a calibration is in progress
-   * \return True if a calibration is currently in progress
-   */
-  bool is_calibrating() const { return calibrating_; }
-
   /// The const stuff is to make it read-only
   double a11() const { return A_(0, 0); }
   double a12() const { return A_(0, 1); }
