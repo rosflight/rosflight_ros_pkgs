@@ -297,9 +297,6 @@ void ROSflightIO::handle_heartbeat_msg(const mavlink_message_t & msg)
 
 void ROSflightIO::handle_status_msg(const mavlink_message_t & msg)
 {
-  /// @todo There is a lot happening on this one message type, it may be best to offload
-  ///  some of it to other messages.
-
   mavlink_rosflight_status_t status_msg;
   mavlink_msg_rosflight_status_decode(&msg, &status_msg);
 
