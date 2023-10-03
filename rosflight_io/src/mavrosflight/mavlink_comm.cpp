@@ -41,7 +41,11 @@ namespace mavrosflight
 using boost::asio::serial_port_base;
 
 MavlinkComm::MavlinkComm()
-    : io_service_(), read_buf_raw_(), msg_in_(), status_in_(), write_in_progress_(false)
+    : io_service_()
+    , read_buf_raw_()
+    , msg_in_()
+    , status_in_()
+    , write_in_progress_(false)
 {}
 
 MavlinkComm::~MavlinkComm() = default;

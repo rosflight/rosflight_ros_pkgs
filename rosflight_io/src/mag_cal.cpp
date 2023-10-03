@@ -44,8 +44,12 @@
 namespace rosflight_io
 {
 CalibrateMag::CalibrateMag()
-    : Node("calibrate_accel_temp"), reference_field_strength_(1.0), calibrating_(false),
-      first_time_(true), start_time_(0), measurement_throttle_(0)
+    : Node("calibrate_accel_temp")
+    , reference_field_strength_(1.0)
+    , calibrating_(false)
+    , first_time_(true)
+    , start_time_(0)
+    , measurement_throttle_(0)
 {
   A_ = Eigen::MatrixXd::Zero(3, 3);
   b_ = Eigen::MatrixXd::Zero(3, 1);

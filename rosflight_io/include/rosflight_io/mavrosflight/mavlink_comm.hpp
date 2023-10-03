@@ -124,9 +124,14 @@ private:
     size_t len;
     size_t pos;
 
-    WriteBuffer() : len(0), pos(0) {}
+    WriteBuffer()
+        : len(0)
+        , pos(0)
+    {}
 
-    WriteBuffer(const uint8_t * buf, uint16_t len) : len(len), pos(0)
+    WriteBuffer(const uint8_t * buf, uint16_t len)
+        : len(len)
+        , pos(0)
     {
       assert(len <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
       memcpy(data, buf, len);

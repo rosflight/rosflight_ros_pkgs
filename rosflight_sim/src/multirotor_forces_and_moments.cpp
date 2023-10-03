@@ -37,7 +37,10 @@
 namespace rosflight_sim
 {
 Multirotor::Multirotor(rclcpp::Node::SharedPtr node)
-    : node_(std::move(node)), num_rotors_(0), linear_mu_(0), angular_mu_(0)
+    : node_(std::move(node))
+    , num_rotors_(0)
+    , linear_mu_(0)
+    , angular_mu_(0)
 {
   declare_multirotor_params();
 

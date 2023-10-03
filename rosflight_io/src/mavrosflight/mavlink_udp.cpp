@@ -45,8 +45,12 @@ using boost::asio::serial_port_base;
 
 MavlinkUDP::MavlinkUDP(std::string bind_host, uint16_t bind_port, std::string remote_host,
                        uint16_t remote_port)
-    : MavlinkComm(), bind_host_(std::move(bind_host)), bind_port_(bind_port),
-      remote_host_(std::move(remote_host)), remote_port_(remote_port), socket_(io_service_)
+    : MavlinkComm()
+    , bind_host_(std::move(bind_host))
+    , bind_port_(bind_port)
+    , remote_host_(std::move(remote_host))
+    , remote_port_(remote_port)
+    , socket_(io_service_)
 {}
 
 MavlinkUDP::~MavlinkUDP() { MavlinkUDP::do_close(); }

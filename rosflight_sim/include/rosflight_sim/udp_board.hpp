@@ -71,9 +71,14 @@ private:
     size_t len;
     size_t pos;
 
-    Buffer() : len(0), pos(0) {}
+    Buffer()
+        : len(0)
+        , pos(0)
+    {}
 
-    Buffer(const uint8_t * src, size_t length) : len(length), pos(0)
+    Buffer(const uint8_t * src, size_t length)
+        : len(length)
+        , pos(0)
     {
       assert(length <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
       memcpy(data, src, length);

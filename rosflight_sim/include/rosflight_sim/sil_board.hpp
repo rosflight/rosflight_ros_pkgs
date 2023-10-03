@@ -48,8 +48,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rosflight_msgs/msg/rc_raw.hpp>
 
-#include <rosflight_sim/udp_board.hpp>
 #include <rosflight_sim/gz_compat.hpp>
+#include <rosflight_sim/udp_board.hpp>
 
 namespace rosflight_sim
 {

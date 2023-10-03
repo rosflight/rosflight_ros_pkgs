@@ -40,8 +40,8 @@
 namespace rosflight_sim
 {
 SILBoard::SILBoard()
-    : UDPBoard(),
-      random_generator_(std::chrono::system_clock::now().time_since_epoch().count())
+    : UDPBoard()
+    , random_generator_(std::chrono::system_clock::now().time_since_epoch().count())
 {}
 
 void SILBoard::init_board() { boot_time_ = GZ_COMPAT_GET_SIM_TIME(world_); }

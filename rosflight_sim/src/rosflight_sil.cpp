@@ -43,7 +43,10 @@
 namespace rosflight_sim
 {
 ROSflightSIL::ROSflightSIL()
-    : gazebo::ModelPlugin(), comm_(board_), firmware_(board_, comm_), mav_dynamics_()
+    : gazebo::ModelPlugin()
+    , comm_(board_)
+    , firmware_(board_, comm_)
+    , mav_dynamics_()
 {}
 
 ROSflightSIL::~ROSflightSIL() { GZ_COMPAT_DISCONNECT_WORLD_UPDATE_BEGIN(updateConnection_); }
