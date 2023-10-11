@@ -1,6 +1,6 @@
 # ROSflight
 
-[![ROS2 CI](https://github.com/rosflight/rosflight/actions/workflows/ros2-ci.yml/badge.svg)](https://github.com/rosflight/rosflight/actions/workflows/ros2-ci.yml)
+[![ROS2 CI](https://github.com/rosflight/rosflight_ros_pkgs/actions/workflows/ros2-ci.yml/badge.svg)](https://github.com/rosflight/rosflight_ros_pkgs/actions/workflows/ros2-ci.yml) [![clang-format](https://github.com/rosflight/rosflight_ros_pkgs/actions/workflows/clang-format.yml/badge.svg)](https://github.com/rosflight/rosflight_ros_pkgs/actions/workflows/clang-format.yml) 
 
 This repository contains a ROS2 stack for interfacing with an autopilot running the ROSflight firmware.
 For more information on the ROSflight autopilot firmware stack, visit http://rosflight.org.

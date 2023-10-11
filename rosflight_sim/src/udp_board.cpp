@@ -34,8 +34,8 @@
  * \author Daniel Koch
  */
 
-#include <iostream>
 #include "rosflight_sim/udp_board.hpp"
+#include <iostream>
 
 using boost::asio::ip::udp;
 
@@ -43,8 +43,13 @@ namespace rosflight_sim
 {
 UDPBoard::UDPBoard(std::string bind_host, uint16_t bind_port, std::string remote_host,
                    uint16_t remote_port)
-    : bind_host_(std::move(bind_host)), bind_port_(bind_port), remote_host_(std::move(remote_host)),
-      remote_port_(remote_port), io_service_(), socket_(io_service_), write_in_progress_(false)
+    : bind_host_(std::move(bind_host))
+    , bind_port_(bind_port)
+    , remote_host_(std::move(remote_host))
+    , remote_port_(remote_port)
+    , io_service_()
+    , socket_(io_service_)
+    , write_in_progress_(false)
 {}
 
 UDPBoard::~UDPBoard()

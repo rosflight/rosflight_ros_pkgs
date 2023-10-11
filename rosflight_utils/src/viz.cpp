@@ -36,7 +36,8 @@
 
 namespace rosflight_utils
 {
-Viz::Viz() : Node("viz_node")
+Viz::Viz()
+    : Node("viz_node")
 {
   // retrieve params
 

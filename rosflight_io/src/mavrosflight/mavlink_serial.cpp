@@ -42,7 +42,10 @@ namespace mavrosflight
 using boost::asio::serial_port_base;
 
 MavlinkSerial::MavlinkSerial(std::string port, int baud_rate)
-    : MavlinkComm(), serial_port_(io_service_), port_(std::move(port)), baud_rate_(baud_rate)
+    : MavlinkComm()
+    , serial_port_(io_service_)
+    , port_(std::move(port))
+    , baud_rate_(baud_rate)
 {}
 
 MavlinkSerial::~MavlinkSerial() { MavlinkSerial::do_close(); }

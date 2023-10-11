@@ -43,9 +43,16 @@
 namespace mavrosflight
 {
 ParamManager::ParamManager(MavlinkComm * const comm, rclcpp::Node * const node)
-    : node_(node), comm_(comm), unsaved_changes_(false), write_request_in_progress_(false),
-      first_param_received_(false), num_params_(0), received_count_(0), received_(nullptr),
-      got_all_params_(false), param_set_in_progress_(false)
+    : node_(node)
+    , comm_(comm)
+    , unsaved_changes_(false)
+    , write_request_in_progress_(false)
+    , first_param_received_(false)
+    , num_params_(0)
+    , received_count_(0)
+    , received_(nullptr)
+    , got_all_params_(false)
+    , param_set_in_progress_(false)
 {
   comm_->register_mavlink_listener(this);
 

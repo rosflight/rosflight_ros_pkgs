@@ -40,7 +40,11 @@
 namespace mavrosflight
 {
 TimeManager::TimeManager(MavlinkComm * const comm, rclcpp::Node * const node)
-    : comm_(comm), node_(node), offset_alpha_(0.95), offset_ns_(0), initialized_(false)
+    : comm_(comm)
+    , node_(node)
+    , offset_alpha_(0.95)
+    , offset_ns_(0)
+    , initialized_(false)
 {
   comm_->register_mavlink_listener(this);
   time_sync_timer_ = node_->create_wall_timer(
@@ -64,8 +68,7 @@ void TimeManager::handle_mavlink_message(const mavlink_message_t & msg)
 
       // if difference > 10ms, use it directly
       if (!initialized_ || (offset_ns_ - offset_ns) > std::chrono::milliseconds(10)
-        || (offset_ns_ - offset_ns) < std::chrono::milliseconds(-10))
-      {
+          || (offset_ns_ - offset_ns) < std::chrono::milliseconds(-10)) {
         RCLCPP_INFO(node_->get_logger(), "Detected time offset of %0.3f s.",
                     abs(std::chrono::duration<double>(offset_ns_ - offset_ns).count()));
         RCLCPP_DEBUG(node_->get_logger(), "FCU time: %0.3f, System time: %0.3f", tsync.tc1 * 1e-9,

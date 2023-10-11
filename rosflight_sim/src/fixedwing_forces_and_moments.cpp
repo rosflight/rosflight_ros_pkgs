@@ -37,8 +37,17 @@
 namespace rosflight_sim
 {
 Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node)
-    : node_(std::move(node)), rho_(0), wing_(), prop_(), CL_(), CD_(), Cm_(), CY_(), Cell_(), Cn_(),
-      delta_()
+    : node_(std::move(node))
+    , rho_(0)
+    , wing_()
+    , prop_()
+    , CL_()
+    , CD_()
+    , Cm_()
+    , CY_()
+    , Cell_()
+    , Cn_()
+    , delta_()
 {
   declare_fixedwing_params();
   update_params_from_ROS();
@@ -175,7 +184,7 @@ void Fixedwing::update_params_from_ROS()
     RCLCPP_ERROR(node_->get_logger(), "Param 'prop_C' not defined");
   }
 
-  if(!node_->get_parameter("servo_tau", servo_tau_)){
+  if (!node_->get_parameter("servo_tau", servo_tau_)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'servo_tau' not defined");
   }
 
@@ -354,7 +363,8 @@ void Fixedwing::update_params_from_ROS()
   }
 }
 
-Eigen::Matrix<double, 6, 1> Fixedwing::update_forces_and_torques(CurrentState x, const int act_cmds[])
+Eigen::Matrix<double, 6, 1> Fixedwing::update_forces_and_torques(CurrentState x,
+                                                                 const int act_cmds[])
 {
   delta_.a = (act_cmds[0] - 1500.0) / 500.0;
   delta_.e = -(act_cmds[1] - 1500.0) / 500.0;
@@ -365,8 +375,10 @@ Eigen::Matrix<double, 6, 1> Fixedwing::update_forces_and_torques(CurrentState x,
 
   float Ts = .003; // refresh rate TODO find a way to programmatically set this.
 
-  delta_curr.a = 1/(2*servo_tau_/Ts + 1) * (delta_prev_command_.a + delta_.a + (2*servo_tau_/Ts - 1)*delta_prev_.a);
-  delta_curr.e = 1/(2*servo_tau_/Ts + 1) * (delta_prev_command_.e + delta_.e + (2*servo_tau_/Ts - 1)*delta_prev_.e);
+  delta_curr.a = 1 / (2 * servo_tau_ / Ts + 1)
+    * (delta_prev_command_.a + delta_.a + (2 * servo_tau_ / Ts - 1) * delta_prev_.a);
+  delta_curr.e = 1 / (2 * servo_tau_ / Ts + 1)
+    * (delta_prev_command_.e + delta_.e + (2 * servo_tau_ / Ts - 1) * delta_prev_.e);
 
   delta_prev_ = delta_curr;
 
@@ -418,25 +430,28 @@ Eigen::Matrix<double, 6, 1> Fixedwing::update_forces_and_torques(CurrentState x,
     double CZ_q_a = -CD_.q * sa - CL_.q * ca;
     double CZ_deltaE_a = -CD_.delta_e * sa - CL_.delta_e * ca;
 
-    forces(0) = 0.5 * (rho_) * Va * Va * wing_.S
-      * (CX_a + (CX_q_a * wing_.c * q) / (2.0 * Va) + CX_deltaE_a * delta_curr.e)
+    forces(0) = 0.5 * (rho_) *Va * Va * wing_.S
+        * (CX_a + (CX_q_a * wing_.c * q) / (2.0 * Va) + CX_deltaE_a * delta_curr.e)
       + 0.5 * rho_ * prop_.S * prop_.C * (pow((prop_.k_motor * delta_.t), 2.0) - Va * Va);
-    forces(1) = 0.5 * (rho_) * Va * Va * wing_.S
+    forces(1) = 0.5 * (rho_) *Va * Va * wing_.S
       * (CY_.O + CY_.beta * beta + ((CY_.p * wing_.b * p) / (2.0 * Va))
-         + ((CY_.r * wing_.b * r) / (2.0 * Va)) + CY_.delta_a * delta_curr.a + CY_.delta_r * delta_.r);
-    forces(2) = 0.5 * (rho_) * Va * Va * wing_.S
+         + ((CY_.r * wing_.b * r) / (2.0 * Va)) + CY_.delta_a * delta_curr.a
+         + CY_.delta_r * delta_.r);
+    forces(2) = 0.5 * (rho_) *Va * Va * wing_.S
       * (CZ_a + (CZ_q_a * wing_.c * q) / (2.0 * Va) + CZ_deltaE_a * delta_curr.e);
 
-    forces(3) = 0.5 * (rho_) * Va * Va * wing_.S * wing_.b
+    forces(3) = 0.5 * (rho_) *Va * Va * wing_.S * wing_.b
         * (Cell_.O + Cell_.beta * beta + (Cell_.p * wing_.b * p) / (2.0 * Va)
            + (Cell_.r * wing_.b * r) / (2.0 * Va) + Cell_.delta_a * delta_curr.a
            + Cell_.delta_r * delta_.r)
       - prop_.k_T_P * pow((prop_.k_Omega * delta_.t), 2.0);
-    forces(4) = 0.5 * (rho_) * Va * Va * wing_.S * wing_.c
-      * (Cm_.O + Cm_.alpha * alpha + (Cm_.q * wing_.c * q) / (2.0 * Va) + Cm_.delta_e * delta_curr.e);
-    forces(5) = 0.5 * (rho_) * Va * Va * wing_.S * wing_.b
+    forces(4) = 0.5 * (rho_) *Va * Va * wing_.S * wing_.c
+      * (Cm_.O + Cm_.alpha * alpha + (Cm_.q * wing_.c * q) / (2.0 * Va)
+         + Cm_.delta_e * delta_curr.e);
+    forces(5) = 0.5 * (rho_) *Va * Va * wing_.S * wing_.b
       * (Cn_.O + Cn_.beta * beta + (Cn_.p * wing_.b * p) / (2.0 * Va)
-         + (Cn_.r * wing_.b * r) / (2.0 * Va) + Cn_.delta_a * delta_curr.a + Cn_.delta_r * delta_.r);
+         + (Cn_.r * wing_.b * r) / (2.0 * Va) + Cn_.delta_a * delta_curr.a
+         + Cn_.delta_r * delta_.r);
   } else {
     forces(0) =
       0.5 * rho_ * prop_.S * prop_.C * ((prop_.k_motor * delta_.t * prop_.k_motor * delta_.t));

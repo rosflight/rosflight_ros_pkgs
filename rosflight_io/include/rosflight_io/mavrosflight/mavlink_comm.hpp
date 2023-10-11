@@ -101,12 +101,12 @@ protected:
   virtual bool is_open() = 0;
   virtual void do_open() = 0;
   virtual void do_close() = 0;
-  virtual void do_async_read(
-    const boost::asio::mutable_buffers_1 & buffer,
-    boost::function<void(const boost::system::error_code &, size_t)> handler) = 0;
-  virtual void do_async_write(
-    const boost::asio::const_buffers_1 & buffer,
-    boost::function<void(const boost::system::error_code &, size_t)> handler) = 0;
+  virtual void
+  do_async_read(const boost::asio::mutable_buffers_1 & buffer,
+                boost::function<void(const boost::system::error_code &, size_t)> handler) = 0;
+  virtual void
+  do_async_write(const boost::asio::const_buffers_1 & buffer,
+                 boost::function<void(const boost::system::error_code &, size_t)> handler) = 0;
 
   boost::asio::io_service io_service_; //!< boost io service provider
 
@@ -124,9 +124,14 @@ private:
     size_t len;
     size_t pos;
 
-    WriteBuffer() : len(0), pos(0) {}
+    WriteBuffer()
+        : len(0)
+        , pos(0)
+    {}
 
-    WriteBuffer(const uint8_t * buf, uint16_t len) : len(len), pos(0)
+    WriteBuffer(const uint8_t * buf, uint16_t len)
+        : len(len)
+        , pos(0)
     {
       assert(len <= MAVLINK_MAX_PACKET_LEN); //! \todo Do something less catastrophic here
       memcpy(data, buf, len);

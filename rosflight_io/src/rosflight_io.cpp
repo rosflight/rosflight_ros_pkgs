@@ -55,7 +55,9 @@
 
 namespace rosflight_io
 {
-rosflightIO::rosflightIO() : Node("rosflight_io"), prev_status_()
+rosflightIO::rosflightIO()
+    : Node("rosflight_io")
+    , prev_status_()
 {
   command_sub_ = this->create_subscription<rosflight_msgs::msg::Command>(
     "command", 1, std::bind(&rosflightIO::commandCallback, this, std::placeholders::_1));
