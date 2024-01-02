@@ -36,7 +36,7 @@
     C_L_q: 8.7092
     C_L_r: 0.0
     C_L_delta_a: 0.0
-    C_L_delta_e: -0.4726
+    C_L_delta_e: -0.13 # Correct sign?
     C_L_delta_r: 0.0
 
     C_D_O: 0.00445
@@ -57,7 +57,7 @@
     C_ell_r: 0.1871
     C_ell_delta_a: 0.17 #change back/double check
     C_ell_delta_e: 0.0
-    C_ell_delta_r: 0.0305
+    C_ell_delta_r: 0.0
 
     C_m_O: 0.02626
     C_m_alpha: -1.2761
@@ -66,7 +66,7 @@
     C_m_q: -17.8301 # check the sign on this
     C_m_r: 0.0
     C_m_delta_a: 0.0
-    C_m_delta_e: -1.5446 # check the sign on this
+    C_m_delta_e: -.99 # check the sign on this
     C_m_delta_r: 0.0
 
     C_n_O: 0.0
@@ -75,16 +75,16 @@
     C_n_p: -0.0364
     C_n_q: 0.0
     C_n_r: -0.1541
-    C_n_delta_a: 0.0248
+    C_n_delta_a: -0.011
     C_n_delta_e: 0.0
-    C_n_delta_r: 0.1085 #check the sign on this
+    C_n_delta_r: 0.0 #check the sign on this
 
     C_Y_O: 0.0
     C_Y_alpha: 0.00
     C_Y_beta: -0.3681
     C_Y_p: 0.0700
     C_Y_q: 0.0
-    C_Y_r: 0.3280
-    C_Y_delta_a: 0.0486 #check the sign on this
+    C_Y_r: 0.0
+    C_Y_delta_a: 0.075 #check the sign on this
     C_Y_delta_e: 0.0
-    C_Y_delta_r: -0.2424 #check the sign on this
+    C_Y_delta_r: 0.0 #check the sign on this
