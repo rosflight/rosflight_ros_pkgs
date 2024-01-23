@@ -86,7 +86,7 @@ config['Taranis'][Channel.RUD] = lambda j: j.get_axis(3)
 config['Taranis'][Channel.SW1] = lambda j: j.get_axis(4)
 config['Taranis'][Channel.SW2] = lambda j: j.get_axis(5)
 config['Taranis'][Channel.SW3] = lambda j: j.get_axis(6)
-config['Taranis'][Channel.SW4] = lambda j: j.get_axis(7)
+config['Taranis'][Channel.SW4] = lambda j: 0
 
 config['XBox'] = {}
 config['XBox']['keys'] = ['Xbox', 'X-Box']
