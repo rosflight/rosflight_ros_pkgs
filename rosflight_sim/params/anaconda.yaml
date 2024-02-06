@@ -1,0 +1,96 @@
+# Parameters for ROSflight software-in-the-loop simulation, based on Sonicmodell Skyhunter 1800mm UAV.
+# Authors: Ian Reid and Phil Tokumaru
+
+# Mass and inertia parameters are defined in fixedwing.urdf.xacro.
+# Mass: 2.28
+# Jx: 0.141
+# Jy: 0.208
+# Jz: 0.293
+# Jxz: 0.04
+
+/fixedwing/rosflight_sil:
+  ros__parameters:
+    rho: 1.2682
+
+    wing_s: .52
+    wing_b: 2.08
+    wing_c: 0.2350
+    wing_M: 50.0
+    wing_epsilon: 0.9 # revisit -- may not need this for the calculation
+    wing_alpha0: 0.05236
+
+    k_motor: 40.0 # revisit -- max exit velocity of air.
+    k_T_P: 0.0
+    k_Omega: 0.0
+
+    prop_e: 0.8
+    prop_S: 0.061575216
+    prop_C: 1.0
+
+    servo_tau: .01
+    
+    # Anaconda done for C_L
+
+    C_L_O: .375
+    C_L_alpha: 4.43
+    C_L_beta: 0.0
+    C_L_p: 0.0
+    C_L_q: 1.89
+    C_L_r: 0.0
+    C_L_delta_a: 0.0
+    C_L_delta_e: .09 # Correct sign?
+    C_L_delta_r: 0.0
+    
+    # Anaconda done for C_D
+
+    C_D_O: 0.045
+    C_D_alpha: 0.03 # revisit
+    C_D_beta: 0.0 # revisit
+    C_D_p: 0.0 # revisit
+    C_D_q: 0.0 # revisit
+    C_D_r: 0.0 # revisit
+    C_D_delta_a: 0.0 # revisit
+    C_D_delta_e: 0.09 # revisit
+    C_D_delta_r: 0.0 # revisit
+
+    C_ell_O: 0.0
+    C_ell_alpha: 0.00
+    C_ell_beta: -0.0790
+    C_ell_p: -0.5077
+    C_ell_q: 0.0
+    C_ell_r: 0.1871
+    C_ell_delta_a: 0.17 #change back/double check
+    C_ell_delta_e: 0.0
+    C_ell_delta_r: 0.0
+
+    C_m_O: 0.01988 # Average of Skyhunter and Aerosonde
+    C_m_alpha: -2.008 # Average of Skyhunter and Aerosonde
+    C_m_beta: 0.0
+    C_m_p: 0.0
+    C_m_q: -22.351
+    C_m_r: 0.0
+    C_m_delta_a: 0.0
+    C_m_delta_e: -.99 # Leaving this as is but not verified.
+    C_m_delta_r: 0.0
+
+    C_n_O: 0.0
+    C_n_alpha: 0.0
+    C_n_beta: 0.1301
+    C_n_p: -0.0364
+    C_n_q: 0.0
+    C_n_r: -0.1541
+    C_n_delta_a: -0.011
+    C_n_delta_e: 0.0
+    C_n_delta_r: 0.0 #check the sign on this
+
+    # Anaconda done for C_Y
+
+    C_Y_O: 0.0
+    C_Y_alpha: 0.00
+    C_Y_beta: -0.84
+    C_Y_p: 0.0700
+    C_Y_q: 0.0
+    C_Y_r: 0.0
+    C_Y_delta_a: 0.075 #check the sign on this
+    C_Y_delta_e: 0.0
+    C_Y_delta_r: .2 #check the sign on this
