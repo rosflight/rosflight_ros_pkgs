@@ -1,9 +1,10 @@
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Changelog for package rosflight_utils
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Changelog for package rosflight_gcs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 2.0.0 (pre-release)
 ------------------
+* !! Renamed package to rosflight_gcs and moved sim-related utilites to rosflight_sim
 * Updated viz files, rc_joy.py, rc_sim.py, and command_joy.py to ROS2
 * Rewrote launch files using ROS2 python launch api
 * Added launch and param files to initialize firmware for simulation flying

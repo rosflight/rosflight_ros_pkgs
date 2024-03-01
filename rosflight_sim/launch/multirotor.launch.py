@@ -86,7 +86,7 @@ def generate_launch_description():
             'gui': gui,
             'verbose': verbose,
             'world': world_file,
-            'params_file': os.path.join(get_package_share_directory('rosflight_sim'), 'params/multirotor.yaml'),
+            'params_file': os.path.join(get_package_share_directory('rosflight_sim'), 'params/multirotor_dynamics.yaml'),
         }.items()
     )
 

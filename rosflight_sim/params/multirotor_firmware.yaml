@@ -1,2 +1,3 @@
 - {name: ARM_CHANNEL, type: 6, value: 4}
 - {name: MIXER, type: 6, value: 1}
+- {name: FAILSAFE_THR, type: 9, value: 0.0}

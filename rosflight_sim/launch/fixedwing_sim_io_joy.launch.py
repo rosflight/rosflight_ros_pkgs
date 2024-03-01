@@ -1,9 +1,9 @@
 """
-File: multirotor_sim_io_joy.launch.py
+File: fixedwing_sim_io_joy.launch.py
 Author: Brandon Sutherland
 Created: June 22, 2023
 Last Modified: July 17, 2023
-Description: ROS2 launch file used to launch multirotor SIL, rosflight_io, and rc_joy all at once.
+Description: ROS2 launch file used to launch fixedwing SIL, rosflight_io, and rc_joy all at once.
 """
 
 import os
@@ -16,14 +16,14 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    """This is a launch file that runs the bare minimum requirements fly a multirotor in gazebo"""
+    """This is a launch file that runs the bare minimum requirements fly a fixedwing in gazebo"""
 
     # Start simulator
     simulator_launch_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
                 get_package_share_directory('rosflight_sim'),
-                'launch/multirotor.launch.py'
+                'launch/fixedwing.launch.py'
             )
         )
     )
@@ -40,10 +40,10 @@ def generate_launch_description():
 
     # Start rc_joy node for RC input
     rc_joy_node = Node(
-        package='rosflight_utils',
+        package='rosflight_sim',
         executable='rc_joy.py',
         remappings=[
-            ('/RC', '/multirotor/RC')
+            ('/RC', '/fixedwing/RC')
         ]
     )
 
