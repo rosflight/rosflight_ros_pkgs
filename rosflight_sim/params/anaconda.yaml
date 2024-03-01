@@ -61,7 +61,7 @@
     C_ell_r: 0.1871
     C_ell_delta_a: 0.17 #change back/double check
     C_ell_delta_e: 0.0
-    C_ell_delta_r: 0.0
+    C_ell_delta_r: 0.0024
 
     C_m_O: 0.01988 # Average of Skyhunter and Aerosonde
     C_m_alpha: -2.008 # Average of Skyhunter and Aerosonde
@@ -81,7 +81,7 @@
     C_n_r: -0.1541
     C_n_delta_a: -0.011
     C_n_delta_e: 0.0
-    C_n_delta_r: 0.0 #check the sign on this
+    C_n_delta_r: -0.069 #check the sign on this
 
     # Anaconda done for C_Y
 
