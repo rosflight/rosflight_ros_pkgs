@@ -7,6 +7,7 @@ Description: ROS2 launch file used to launch Gazebo with the rosflight SIL.
 """
 
 import os
+import sys
 from pathlib import Path
 
 import xacro
@@ -73,6 +74,12 @@ def generate_launch_description():
         'ros_log_level', default_value=TextSubstitution(text='info')
     )
 
+    aircraft = 'skyhunter' # default aircraft
+    
+    for arg in sys.argv:
+        if arg.startswith("aircraft:="):
+            aircraft = arg.split(":=")[1]
+
     # Start simulator
     gazebo_launch_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -86,12 +93,12 @@ def generate_launch_description():
             'gui': gui,
             'verbose': verbose,
             'world': world_file,
-            'params_file': os.path.join(get_package_share_directory('rosflight_sim'), 'params/fixedwing.yaml'),
+            'params_file': os.path.join(get_package_share_directory('rosflight_sim'), f'params/{aircraft}.yaml'),
         }.items()
     )
 
     # Render xacro file
-    xacro_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'), 'xacro/fixedwing.urdf.xacro')
+    xacro_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'), f'xacro/{aircraft}.urdf.xacro')
     urdf_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'), 'resources/fixedwing.urdf')
     robot_description = xacro.process_file(
         xacro_filepath_string, mappings={

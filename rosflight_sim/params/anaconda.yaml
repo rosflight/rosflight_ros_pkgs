@@ -2,11 +2,11 @@
 # Authors: Ian Reid and Phil Tokumaru
 
 # Mass and inertia parameters are defined in fixedwing.urdf.xacro.
-# Mass: 2.28
-# Jx: 0.141
-# Jy: 0.208
-# Jz: 0.293
-# Jxz: 0.04
+# Mass: 4.5
+# Jx: 0.24855
+# Jy: 0.3784
+# Jz: 0.618
+# Jxz: 0.06
 
 /fixedwing/rosflight_sil:
   ros__parameters:

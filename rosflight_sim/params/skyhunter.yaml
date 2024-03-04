@@ -36,7 +36,7 @@
     C_L_q: 8.7092
     C_L_r: 0.0
     C_L_delta_a: 0.0
-    C_L_delta_e: -0.13 # Correct sign?
+    C_L_delta_e: 0.13 # Correct sign?
     C_L_delta_r: 0.0
 
     C_D_O: 0.00445
