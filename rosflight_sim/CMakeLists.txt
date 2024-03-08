@@ -16,7 +16,8 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 # Since Gazebo doesn't have an arm64 target, skip this package if 
 # architecture is arm64
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_64")
+message(${CMAKE_SYSTEM_PROCESSOR})
+if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "aarch64")
   return()
 endif()
 
