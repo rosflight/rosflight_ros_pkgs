@@ -75,7 +75,7 @@ def generate_launch_description():
     )
 
     aircraft = 'skyhunter' # default aircraft
-    
+
     for arg in sys.argv:
         if arg.startswith("aircraft:="):
             aircraft = arg.split(":=")[1]
@@ -93,13 +93,16 @@ def generate_launch_description():
             'gui': gui,
             'verbose': verbose,
             'world': world_file,
-            'params_file': os.path.join(get_package_share_directory('rosflight_sim'), f'params/{aircraft}_dynamics.yaml'),
+            'params_file': os.path.join(get_package_share_directory('rosflight_sim'),
+                                        f'params/{aircraft}_dynamics.yaml'),
         }.items()
     )
 
     # Render xacro file
-    xacro_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'), f'xacro/{aircraft}.urdf.xacro')
-    urdf_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'), 'resources/fixedwing.urdf')
+    xacro_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'),
+                                         f'xacro/{aircraft}.urdf.xacro')
+    urdf_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'),
+                                        'resources/fixedwing.urdf')
     robot_description = xacro.process_file(
         xacro_filepath_string, mappings={
             'mesh_file_location': os.path.join(

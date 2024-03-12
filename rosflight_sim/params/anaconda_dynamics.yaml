@@ -28,7 +28,7 @@
     prop_C: 1.0
 
     servo_tau: .01
-    
+
     # Anaconda done for C_L
 
     C_L_O: .375
@@ -40,7 +40,7 @@
     C_L_delta_a: 0.0
     C_L_delta_e: .09 # Correct sign?
     C_L_delta_r: 0.0
-    
+
     # Anaconda done for C_D
 
     C_D_O: 0.045
