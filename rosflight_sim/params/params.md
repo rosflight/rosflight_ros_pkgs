@@ -1,8 +1,8 @@
-## Parameters
+# Dynamics Parameters
 
 TODO: Migrate info to param files to minimize desync between documentation and code (put documentation right next to its code)
 
-Parameters can be set in the "rosflight_sim/params/multirotor.yaml" files and "rosflight_sim/params/fixedwing.yaml".
+Parameters can be set in the "rosflight_sim/params/multirotor_dynamics.yaml" files and "rosflight_sim/params/fixedwing_dynamics.yaml".
 
 ## General Parameters
 
@@ -57,3 +57,10 @@ need to be set in the .yaml files.
 
 All parameters for multirotors and fixedwings must be defined in their respective .yaml files. ROS will give a warning 
 for any missing parameters. Refer to the existing parameter files to know what parameters are required.
+<<<<<<< HEAD:rosflight_sim/params/params.md
+=======
+
+# Firmware Parameters
+
+The fixedwing_firmware.yaml and multirotor_firmware.yaml files contain the necessary firmware parameters to get either MAV up and flying quickly in the sim. These parameter files are used by the fixedwing_init_firmware.launch.py and multirotor_init_firmware.launch.py launch files.
+>>>>>>> c289385 (created rosflight_gcs, moved rosflight_utils to gcs and sim):rosflight_sim/params/README.md

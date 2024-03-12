@@ -45,7 +45,7 @@ namespace rosflight_sim
  * @brief This class contains the forces and moments calculations used for fixedwing simulations in
  * Gazebo. It uses the dynamic model described in Small Unmanned Aircraft: Theory and Practice by
  * Dr. Randy Beard and Dr. Tim McLain. Aerodynamic parameters can be configured at runtime in the
- * fixedwing.yaml parameter file.
+ * fixedwing_dynamics.yaml parameter file.
  *
  * @note Default values for parameters are not provided as parameters are interdependent on each
  * other and need to be provided as a set. Notifying the user of missing parameters helps avoid

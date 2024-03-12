@@ -46,7 +46,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 
-namespace rosflight_utils
+namespace rosflight_gcs
 {
 class Viz : public rclcpp::Node
 {
@@ -73,4 +73,4 @@ private:
   void attCallback(const rosflight_msgs::msg::Attitude::ConstSharedPtr & msg);
 };
 
-} // namespace rosflight_utils
+} // namespace rosflight_gcs

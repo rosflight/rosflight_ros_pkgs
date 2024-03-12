@@ -22,7 +22,9 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "aarch64")
 endif()
 
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
 find_package(gazebo_dev)
 find_package(gazebo_plugins REQUIRED)
 find_package(gazebo_ros REQUIRED)
@@ -191,6 +193,13 @@ install(
 install(
   DIRECTORY params
   DESTINATION share/${PROJECT_NAME}
+)
+
+install(PROGRAMS
+  src/command_joy.py
+  src/rc_joy.py
+  src/rc_sim.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_package()

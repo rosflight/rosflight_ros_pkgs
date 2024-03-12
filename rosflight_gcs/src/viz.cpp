@@ -32,9 +32,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <rosflight_utils/viz.hpp>
+#include <rosflight_gcs/viz.hpp>
 
-namespace rosflight_utils
+namespace rosflight_gcs
 {
 Viz::Viz()
     : Node("viz_node")
@@ -128,12 +128,12 @@ void Viz::attCallback(const rosflight_msgs::msg::Attitude::ConstSharedPtr & msg)
   pose_pub_->publish(pose);
 }
 
-} // namespace rosflight_utils
+} // namespace rosflight_gcs
 
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<rosflight_utils::Viz>());
+  rclcpp::spin(std::make_shared<rosflight_gcs::Viz>());
   rclcpp::shutdown();
   return 0;
 }

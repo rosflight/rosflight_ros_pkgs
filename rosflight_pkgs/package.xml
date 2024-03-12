@@ -20,7 +20,7 @@
   <exec_depend>rosflight_io</exec_depend>
   <exec_depend>rosflight_msgs</exec_depend>
   <exec_depend>rosflight_sim</exec_depend>
-  <exec_depend>rosflight_utils</exec_depend>
+  <exec_depend>rosflight_gcs</exec_depend>
 
   <export>
     <architecture_independent/>

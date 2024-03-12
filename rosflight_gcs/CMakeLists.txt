@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(rosflight_utils)
+project(rosflight_gcs)
 
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
@@ -15,9 +15,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 find_package(ament_cmake REQUIRED)
-find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rclpy REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rosflight_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -59,14 +57,6 @@ install(
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-# Install python scripts
-install(PROGRAMS
-  src/command_joy.py
-  src/rc_joy.py
-  src/rc_sim.py
-  DESTINATION lib/${PROJECT_NAME}
-)
-
 # Install launch files
 install(
   DIRECTORY launch
@@ -77,12 +67,6 @@ install(
 # Install rviz files
 install(
   DIRECTORY rviz
-  DESTINATION share/${PROJECT_NAME}
-)
-
-# Install params files
-install(
-  DIRECTORY params
   DESTINATION share/${PROJECT_NAME}
 )
 

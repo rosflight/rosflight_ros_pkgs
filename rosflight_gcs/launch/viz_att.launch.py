@@ -1,9 +1,9 @@
 """
-File: viz_mag.launch.py
+File: viz_att.launch.py
 Author: Brandon Sutherland
 Created: June 28, 2023
 Last Modified: June 28, 2023
-Description: ROS2 launch file used to launch magnetometer Rviz visualization.
+Description: ROS2 launch file used to launch attitude Rviz visualization.
 """
 
 from ament_index_python import get_package_share_directory
@@ -15,11 +15,11 @@ from launch_ros.actions import Node, PushRosNamespace
 
 
 def generate_launch_description():
-    """ Launches rviz with ROSflight magnetometer visualization """
+    """ Launches rviz with ROSflight attitude visualization """
 
     # Get rviz config filepath
     rviz2_config_file = PathJoinSubstitution(
-        [get_package_share_directory('rosflight_utils'), 'rviz', 'viz_mag.rviz']
+        [get_package_share_directory('rosflight_gcs'), 'rviz', 'viz_att.rviz']
     )
 
     # Launch rviz
@@ -35,7 +35,7 @@ def generate_launch_description():
 
     # Launch viz node
     viz_node = Node(
-        package='rosflight_utils',
+        package='rosflight_gcs',
         executable='viz'
     )
 

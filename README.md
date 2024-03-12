@@ -43,22 +43,11 @@ fixedwing simulation and `ros2 launch rosflight_sim multirotor.launch.py` for a 
 `gui:=false` to launch a sim without visualization. See the launch files under `rosflight_sim/launch` for additional 
 parameters.
 
-## rosflight_utils
-
-This package contains additional supporting scripts and libraries that are not part of the core ROSflight package
-functionality. These include the following:
-
-### Attitude and magnetometer visualizer
-
-This utility uses RViz and the viz node to allow easy visualization of the attitude of flight controller (as 
-determined by the firmware's onboard estimator) and the magnetometer data. These can be launched with `ros2 launch 
-rosflight_utils viz_att.launch.py` and `ros2 launch rosflight_utils viz_mag.launch.py`.
-
 ### rc_joy
 
 This script contains a node that allows for connecting a gamepad or transmitter to the simulator. To use it, plug in 
-a controller and launch `ros2 run rosflight_utils rc_joy.py --ros-args --remap RC:=/fixedwing/RC` for a fixedwing sim or
-`ros2 run rosflight_utils rc_joy.py --ros-args --remap RC:=/multirotor/RC` for a multirotor sim. Currently 
+a controller and launch `ros2 run rosflight_sim rc_joy.py --ros-args --remap RC:=/fixedwing/RC` for a fixedwing sim or
+`ros2 run rosflight_sim rc_joy.py --ros-args --remap RC:=/multirotor/RC` for a multirotor sim. Currently 
 supported devices are Taranis Q-X7 transmitters, XBox controllers, RealFlight InterLink controllers, and 
 RadioMaster TX16S transmitters. Adding addition devices can be done easily, so long as the device has USB gamepad 
 support.
@@ -66,8 +55,8 @@ support.
 ### command_joy
 
 This script contains a node that allows for using a gamepad or transmitter for the command input to rosflight. To use 
-it, plug in a controller and launch `ros2 run rosflight_utils command_joy.py --ros-args --remap RC:=/fixedwing/RC` for a
-fixedwing sim or `ros2 run rosflight_utils command_joy.py --ros-args --remap RC:=/multirotor/RC` for a multirotor sim. 
+it, plug in a controller and launch `ros2 run rosflight_sim command_joy.py --ros-args --remap RC:=/fixedwing/RC` for a
+fixedwing sim or `ros2 run rosflight_sim command_joy.py --ros-args --remap RC:=/multirotor/RC` for a multirotor sim. 
 Currently supported devices are Taranis Q-X7 transmitters, XBox controllers, RealFlight InterLink controllers, and
 RadioMaster TX16S transmitters. Adding addition devices can be done easily, so long as the device has USB gamepad
 support.
@@ -76,8 +65,8 @@ support.
 
 This script contains a node that allows for arming/disarming the firmware in the simulator as well as enabling/disabling
 rc_override as if flipping switches on an actual controller. Currently, this node expects the arm switch to be on 
-channel 4 and the override switch to be on channel 5. Launch it with `ros2 run rosflight_utils rc_sim.py --ros-args 
---remap RC:=/fixedwing/RC` for a fixedwing sim or `ros2 run rosflight_utils rc_sim.py --ros-args --remap 
+channel 4 and the override switch to be on channel 5. Launch it with `ros2 run rosflight_sim rc_sim.py --ros-args 
+--remap RC:=/fixedwing/RC` for a fixedwing sim or `ros2 run rosflight_sim rc_sim.py --ros-args --remap 
 RC:=/multirotor/RC` for a multirotor sim. Arm with `ros2 service call /arm std_srvs/srv/Trigger`, disarm with `ros2 
 service call /disarm std_srvs/srv/Trigger`, enable override with `ros2 service call /enable_override 
 std_srvs/srv/Trigger`, and disable override with `ros2 service call /disable_override std_srvs/srv/Trigger`.
@@ -85,22 +74,22 @@ std_srvs/srv/Trigger`, and disable override with `ros2 service call /disable_ove
 ### Simulator, rosflight_io, and rc_joy launch files
 
 The gazebo simulator with the sil_node can be launched alongside rosflight_io and rc_joy, for convenience. Use 
-`ros2 launch rosflight_utils fixedwing_sim_io_joy.launch.py` for a fixedwing sim and 
-`ros2 launch rosflight_utils multirotor_sim_io_joy.launch.py` for a multirotor sim.
+`ros2 launch rosflight_sim fixedwing_sim_io_joy.launch.py` for a fixedwing sim and 
+`ros2 launch rosflight_sim multirotor_sim_io_joy.launch.py` for a multirotor sim.
 
 ### Firmware parameter files
 
 Basic parameter files for setting up a multirotor or fixedwing UAV have been provided, under the
-`rosflight/rosflight_utils/params` directory. Use 
-`ros2 service call /param_load_from_file rosflight_msgs/srv/ParamFile "{filename: "/path_to_rosflight/rosflight_utils/params/fixedwing_firmware.yaml"}"` for fixedwings and 
-`ros2 service call /param_load_from_file rosflight_msgs/srv/ParamFile "{filename:"/path_to_rosflight/rosflight_utils/params/multirotor_firmware.yaml"}"` for multirotors.
+`rosflight/rosflight_sim/params` directory. Use 
+`ros2 service call /param_load_from_file rosflight_msgs/srv/ParamFile "{filename: "/path_to_rosflight/rosflight_sim/params/fixedwing_firmware.yaml"}"` for fixedwings and 
+`ros2 service call /param_load_from_file rosflight_msgs/srv/ParamFile "{filename:"/path_to_rosflight/rosflight_sim/params/multirotor_firmware.yaml"}"` for multirotors.
 
 ### Firmware initialization launch files
 
 To make setting up the firmware with initial calibrations and parameters easier, launch files have been provided to 
-automate this process. Use `ros2 launch rosflight_utils fixedwing_init_firmware.launch.py` for fixedwings and `ros2 
-launch rosflight_utils multirotor_init_firmware.launch.py` for multirotors. These launch files reference the parameter
-files found in the `rosflight_utils/params` directory mentioned above.
+automate this process. Use `ros2 launch rosflight_sim fixedwing_init_firmware.launch.py` for fixedwings and `ros2 
+launch rosflight_sim multirotor_init_firmware.launch.py` for multirotors. These launch files reference the parameter
+files found in the `rosflight_sim/params` directory mentioned above.
 
 # Building/Running Instructions
 
@@ -153,18 +142,27 @@ command `ros2 run rosflight_io rosflight_io --ros-args -p udp:=true`.
 ### Launch RC controller interface node
 
 To connect an RC controller to the simulator, plug a controller into your computer and launch the rc_joy node
-with `ros2 run rosflight_utils rc_joy.py --ros-args --remap /RC:=/fixedwing/RC`. This will launch a node that receives
+with `ros2 run rosflight_sim rc_joy.py --ros-args --remap /RC:=/fixedwing/RC`. This will launch a node that receives
 RC controller commands and publishes them to be received by rosflight_sil. It currently only has support for the
 following: Xbox controllers, Taranis QX7 transmitters, RadioMaster TX16s transmitters, and RealFlight controllers. To
-add more, edit rosflight_utils/src/rc_joy.py and rebuild the workspace.
+add more, edit rosflight_sim/src/rc_joy.py and rebuild the workspace.
 
 ### Launch Gazebo, rosflight_io, and RC interface all at once
 
 To launch the rosflight_sil, rosflight_io node, and rc_joy nodes all at once rather than individually, use the
-command `ros2 launch rosflight_utils fixedwing_sim_io_joy.launch.py`.
+command `ros2 launch rosflight_sim fixedwing_sim_io_joy.launch.py`.
 
 ### Setup firmware parameters for flying in simulation
 
 Note that in order to actually arm and fly the UAV in the simulator, you still need to set the proper parameters on the
 flight controller. To do so, launch both the rosflight_sil and rosflight_io nodes. Set all necessary parameters
-with `ros2 launch rosflight_utils fixedwing_init_firmware.launch.py`. Wait until launch file completes.
+with `ros2 launch rosflight_sim fixedwing_init_firmware.launch.py`. Wait until launch file completes.
+
+## rosflight_gcs
+
+This package contains utilities that will be used to support the ground control station experience. Currently this is under development and only contains a couple of former rosflight_utils packages.
+
+### Attitude and magnetometer visualizer
+
+This utility uses RViz and the viz node to allow easy visualization of the attitude of flight controller (as determined by the firmware's onboard estimator) and the magnetometer data. These can be launched with `ros2 launch rosflight_utils viz_att.launch.py` and `ros2 launch rosflight_utils viz_mag.launch.py`.
+

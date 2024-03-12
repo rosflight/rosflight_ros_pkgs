@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>rosflight_utils</name>
+  <name>rosflight_gcs</name>
   <version>2.0.0</version>
   <description>Supporting utilities for ROSflight packages</description>
 
@@ -15,18 +15,15 @@
   <url type="bugtracker">https://github.com/rosflight/rosflight/issues</url>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-  <buildtool_depend>ament_cmake_python</buildtool_depend>
 
   <exec_depend>ros2launch</exec_depend>
 
   <depend>rclcpp</depend>
-  <depend>rclpy</depend>
   <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>visualization_msgs</depend>
   <depend>tf2</depend>
   <depend>tf2_geometry_msgs</depend>
-  <depend>python3-pygame</depend>
 
   <depend>rosflight_msgs</depend>
   <depend>rosflight_sim</depend>
