@@ -121,6 +121,17 @@ config['TX16S'][Channel.SW2] = lambda j: j.get_axis(5)
 config['TX16S'][Channel.SW3] = lambda j: j.get_axis(6)
 config['TX16S'][Channel.SW4] = lambda j: 0
 
+config['Boxer'] = {}
+config['Boxer']['keys'] = ['OpenTX Radiomaster Boxer Joystick']
+config['Boxer'][Channel.AIL] = lambda j: j.get_axis(0)
+config['Boxer'][Channel.ELV] = lambda j: j.get_axis(1)
+config['Boxer'][Channel.THR] = lambda j: j.get_axis(2)
+config['Boxer'][Channel.RUD] = lambda j: j.get_axis(3)
+config['Boxer'][Channel.SW1] = lambda j: j.get_axis(4)
+config['Boxer'][Channel.SW2] = lambda j: j.get_axis(5)
+config['Boxer'][Channel.SW3] = lambda j: j.get_axis(6)
+config['Boxer'][Channel.SW4] = lambda j: 0
+
 
 class RCJoy(Node):
     def __init__(self):
