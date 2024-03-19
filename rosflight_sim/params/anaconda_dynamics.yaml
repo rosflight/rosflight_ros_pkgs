@@ -18,14 +18,19 @@
     wing_M: 50.0
     wing_epsilon: 0.9 # revisit -- may not need this for the calculation
     wing_alpha0: 0.05236
-
-    k_motor: 40.0 # revisit -- max exit velocity of air.
-    k_T_P: 0.0
-    k_Omega: 0.0
-
-    prop_e: 0.8
-    prop_S: 0.061575216
-    prop_C: 1.0
+    
+    D_prop : 0.381 # prop diameter in m (15 in)
+    CT_0 : 0.06288743
+    CT_1 : -0.02704452
+    CT_2 : -0.31320732
+    CQ_0 :  0.00614891
+    CQ_1 : -0.0106795
+    CQ_2 : -0.011779
+    KV : 560.0        # Motor speed constant from datasheet in RPM/V
+    KQ : 0.01705                       #((1 /(KV_rpm_per_volt)) *60) / (2 *M_PI) Back-emf constant, KV in V-s/rad, Motor torque constant, KQ in N-m/A
+    V_max : 24.0                  # voltage for 6s battery at 4 volts per cell
+    R_motor : 0.042              # ohms
+    I_0 : 1.5                     # no-load (zero torque) current (A)
 
     servo_tau: .01
 

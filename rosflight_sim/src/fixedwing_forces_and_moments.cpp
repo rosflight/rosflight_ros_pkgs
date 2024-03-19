@@ -32,6 +32,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cmath>
+#include <rclcpp/logging.hpp>
+#include <rclcpp/parameter_value.hpp>
 #include <rosflight_sim/fixedwing_forces_and_moments.hpp>
 
 namespace rosflight_sim
@@ -41,6 +44,7 @@ Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node)
     , rho_(0)
     , wing_()
     , prop_()
+    , motor_()
     , CL_()
     , CD_()
     , Cm_()
@@ -66,14 +70,6 @@ void Fixedwing::declare_fixedwing_params()
   node_->declare_parameter("wing_M", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("wing_epsilon", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("wing_alpha0", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("k_motor", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("k_T_P", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("k_Omega", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("prop_e", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("prop_S", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("prop_C", rclcpp::PARAMETER_DOUBLE);
 
   node_->declare_parameter("servo_tau", rclcpp::PARAMETER_DOUBLE);
 
@@ -136,6 +132,21 @@ void Fixedwing::declare_fixedwing_params()
   node_->declare_parameter("C_Y_delta_a", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("C_Y_delta_e", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("C_Y_delta_r", rclcpp::PARAMETER_DOUBLE);
+
+  node_->declare_parameter("D_prop", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("CT_0", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("CT_1", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("CT_2", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("CQ_0", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("CQ_1", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("CQ_2", rclcpp::PARAMETER_DOUBLE);
+
+  node_->declare_parameter("KV", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("KQ", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("V_max", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("R_motor", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("I_0", rclcpp::PARAMETER_DOUBLE);
+
 }
 
 void Fixedwing::update_params_from_ROS()
@@ -165,23 +176,43 @@ void Fixedwing::update_params_from_ROS()
   }
 
   // Propeller Coefficients
-  if (!node_->get_parameter("k_motor", prop_.k_motor)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'k_motor' not defined");
+  if (!node_->get_parameter("D_prop", prop_.D_prop)) {
+    RCLCPP_ERROR(node_->get_logger(), "Param 'D_prop' not defined");
   }
-  if (!node_->get_parameter("k_T_P", prop_.k_T_P)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'k_T_P' not defined");
+  if (!node_->get_parameter("CT_0", prop_.CT_0)) {
+    RCLCPP_ERROR(node_->get_logger(), "Param 'CT_0' not defined");
   }
-  if (!node_->get_parameter("k_Omega", prop_.k_Omega)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'k_Omega' not defined");
+  if (!node_->get_parameter("CT_1", prop_.CT_1)) {
+    RCLCPP_ERROR(node_->get_logger(), "Param 'CT_1' not defined");
   }
-  if (!node_->get_parameter("prop_e", prop_.e)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'prop_e' not defined");
+  if (!node_->get_parameter("CT_2", prop_.CT_2)) {
+    RCLCPP_ERROR(node_->get_logger(), "Param 'CT_2' not defined");
   }
-  if (!node_->get_parameter("prop_S", prop_.S)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'prop_S' not defined");
+  if (!node_->get_parameter("CQ_0", prop_.CQ_0)) {
+    RCLCPP_ERROR(node_->get_logger(), "Param 'CQ_0' not defined");
   }
-  if (!node_->get_parameter("prop_C", prop_.C)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'prop_C' not defined");
+  if (!node_->get_parameter("CQ_1", prop_.CQ_1)) {
+    RCLCPP_ERROR(node_->get_logger(), "Param 'CQ_1' not defined");
+  }
+  if (!node_->get_parameter("CQ_2", prop_.CQ_2)) {
+    RCLCPP_ERROR(node_->get_logger(), "Param 'CQ_2' not defined");
+  }
+
+  // Motor Coefficients
+  if (!node_->get_parameter("KV", motor_.KV)) {
+    RCLCPP_ERROR(node_->get_logger(), "Param 'KV' not defined");
+  }
+  if (!node_->get_parameter("KQ", motor_.KQ)) {
+    RCLCPP_ERROR(node_->get_logger(), "Param 'KQ' not defined");
+  }
+  if (!node_->get_parameter("V_max", motor_.V_max)) {
+    RCLCPP_ERROR(node_->get_logger(), "Param 'V_max' not defined");
+  }
+  if (!node_->get_parameter("R_motor", motor_.R_motor)) {
+    RCLCPP_ERROR(node_->get_logger(), "Param 'R_motor' not defined");
+  }
+  if (!node_->get_parameter("I_0", motor_.I_0)) {
+    RCLCPP_ERROR(node_->get_logger(), "Param 'I_0' not defined");
   }
 
   if (!node_->get_parameter("servo_tau", servo_tau_)) {
@@ -398,14 +429,33 @@ Eigen::Matrix<double, 6, 1> Fixedwing::update_forces_and_torques(CurrentState x,
 
   Eigen::Matrix<double, 6, 1> forces;
 
+  /*
+   * The following math follows the method described in chapter 4 of
+   * Small Unmanned Aircraft: Theory and Practice
+   * By Randy Beard and Tim McLain.
+   * Look there for a detailed explanation of each line in the rest of this function
+   */
+
+  double v_in = motor_.V_max * delta_.t;
+
+  double a = (prop_.CQ_0 *(rho_) *(pow((prop_.D_prop), 5.0)) / (pow((2 * M_PI), 2.0)));
+  double b = (prop_.CQ_1 *(rho_) *(pow((prop_.D_prop), 4.0)) / (2 * M_PI)) * Va 
+            + ((pow((motor_.KQ), 2.0)) /(motor_.R_motor));
+  double c = (prop_.CQ_2 *(rho_) *(pow((prop_.D_prop), 3.0)) * (pow((Va), 2.0))) 
+              - ((motor_.KQ)/(motor_.R_motor)) *v_in + ((motor_.KQ) *(motor_.I_0));
+
+  double Omega_p = ((-b + sqrt((pow((b), 2.0)) - (4 *a *c))) / (2 *a));
+
+  double Prop_Force = ((rho_) *(pow((prop_.D_prop), 4.0)) *(((prop_.CT_0) *(pow((Omega_p), 2.0)))/ (4*(pow((M_PI), 2.0))))) 
+              + ((rho_) *(pow((prop_.D_prop), 3.0)) *(prop_.CT_1) *(Va) *(Omega_p)/(2 * M_PI)) 
+              + ((rho_) *(pow((prop_.D_prop), 2.0)) *(prop_.CT_2) *(pow((Va), 2.0)));
+
+  double Prop_Torque = ((rho_) *(pow((prop_.D_prop), 5.0)) *((((prop_.CQ_0)/(4 *(pow((M_PI), 2.0))) *(pow((Omega_p), 2.0))))))
+              + ((rho_) *(pow((prop_.D_prop), 4.0)) *(prop_.CQ_1) *(Va) *(Omega_p)/(2 * M_PI))
+              + ((rho_) *(pow((prop_.D_prop), 3.0)) *(prop_.CQ_2) *(pow((Va), 2.0)));
+
   // Be sure that we have some significant airspeed before we run aerodynamics, and don't let NaNs get through
   if (Va > 1.0 && std::isfinite(Va)) {
-    /*
-     * The following math follows the method described in chapter 4 of
-     * Small Unmanned Aircraft: Theory and Practice
-     * By Randy Beard and Tim McLain.
-     * Look there for a detailed explanation of each line in the rest of this function
-     */
     double alpha = atan2(wr, ur);
     double beta = asin(vr / Va);
 
@@ -413,10 +463,10 @@ Eigen::Matrix<double, 6, 1> Fixedwing::update_forces_and_torques(CurrentState x,
     double sa = sin(alpha);
 
     double sign = (alpha >= 0 ? 1 : -1); // Sigmoid function
-    double sigma_a =
-      (1 + exp(-(wing_.M * (alpha - wing_.alpha0))) + exp((wing_.M * (alpha + wing_.alpha0))))
-      / ((1 + exp(-(wing_.M * (alpha - wing_.alpha0))))
-         * (1 + exp((wing_.M * (alpha + wing_.alpha0)))));
+    double sigma_a = 0.0;
+    //  (1 + exp(-(wing_.M * (alpha - wing_.alpha0))) + exp((wing_.M * (alpha + wing_.alpha0))))
+    //  / ((1 + exp(-(wing_.M * (alpha - wing_.alpha0))))
+    //     * (1 + exp((wing_.M * (alpha + wing_.alpha0)))));
     double CL_a = (1 - sigma_a) * (CL_.O + CL_.alpha * alpha) + sigma_a * (2 * sign * sa * sa * ca);
     double AR = (pow(wing_.b, 2.0)) / wing_.S;
     double CD_a = CD_.p + ((pow((CL_.O + CL_.alpha * (alpha)), 2.0)) / (3.14159 * 0.9 * AR));
@@ -432,32 +482,43 @@ Eigen::Matrix<double, 6, 1> Fixedwing::update_forces_and_torques(CurrentState x,
 
     forces(0) = 0.5 * (rho_) *Va * Va * wing_.S
         * (CX_a + (CX_q_a * wing_.c * q) / (2.0 * Va) + CX_deltaE_a * delta_curr.e)
-      + 0.5 * rho_ * prop_.S * prop_.C * (pow((prop_.k_motor * delta_.t), 2.0) - Va * Va);
+      + Prop_Force;
+
     forces(1) = 0.5 * (rho_) *Va * Va * wing_.S
       * (CY_.O + CY_.beta * beta + ((CY_.p * wing_.b * p) / (2.0 * Va))
          + ((CY_.r * wing_.b * r) / (2.0 * Va)) + CY_.delta_a * delta_curr.a
          + CY_.delta_r * delta_.r);
+
     forces(2) = 0.5 * (rho_) *Va * Va * wing_.S
       * (CZ_a + (CZ_q_a * wing_.c * q) / (2.0 * Va) + CZ_deltaE_a * delta_curr.e);
 
     forces(3) = 0.5 * (rho_) *Va * Va * wing_.S * wing_.b
         * (Cell_.O + Cell_.beta * beta + (Cell_.p * wing_.b * p) / (2.0 * Va)
            + (Cell_.r * wing_.b * r) / (2.0 * Va) + Cell_.delta_a * delta_curr.a
-           + Cell_.delta_r * delta_.r)
-      - prop_.k_T_P * pow((prop_.k_Omega * delta_.t), 2.0);
+           + Cell_.delta_r * delta_.r) - Prop_Torque;
+
     forces(4) = 0.5 * (rho_) *Va * Va * wing_.S * wing_.c
       * (Cm_.O + Cm_.alpha * alpha + (Cm_.q * wing_.c * q) / (2.0 * Va)
          + Cm_.delta_e * delta_curr.e);
+
     forces(5) = 0.5 * (rho_) *Va * Va * wing_.S * wing_.b
       * (Cn_.O + Cn_.beta * beta + (Cn_.p * wing_.b * p) / (2.0 * Va)
          + (Cn_.r * wing_.b * r) / (2.0 * Va) + Cn_.delta_a * delta_curr.a
          + Cn_.delta_r * delta_.r);
   } else {
-    forces(0) =
-      0.5 * rho_ * prop_.S * prop_.C * ((prop_.k_motor * delta_.t * prop_.k_motor * delta_.t));
+  
+    if (delta_.t == 0.0) {
+      forces(0) = 0.0;
+    }
+    else {
+      forces(0) = Prop_Force;
+    }
+    
+    RCLCPP_INFO_STREAM(node_->get_logger(), "Prop_Force: " << Prop_Force);
+    
     forces(1) = 0.0;
     forces(2) = 0.0;
-    forces(3) = 0.0;
+    forces(3) = 0.0; // We do not simulate torque in the low speed conditions, this is because it usually means we are on the ground.
     forces(4) = 0.0;
     forces(5) = 0.0;
   }

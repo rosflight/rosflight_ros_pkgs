@@ -70,16 +70,27 @@ private:
     double alpha0;
   } wing_;
 
-  // Propeller Coefficients
+  // Propeller Coefficients 
   struct PropCoeff
   {
-    double k_motor;
-    double k_T_P;
-    double k_Omega;
-    double e;
-    double S;
-    double C;
+    double D_prop;
+    double CT_0;
+    double CT_1;
+    double CT_2;
+    double CQ_0;
+    double CQ_1;
+    double CQ_2;
   } prop_;
+  
+  // Motor Coefficients 
+  struct MotorCoeff
+  {
+    double KV;
+    double KQ;
+    double V_max;
+    double R_motor;
+    double I_0;
+  } motor_;
 
   // Lift Coefficients
   struct LiftCoeff
