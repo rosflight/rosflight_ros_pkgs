@@ -514,8 +514,6 @@ Eigen::Matrix<double, 6, 1> Fixedwing::update_forces_and_torques(CurrentState x,
       forces(0) = Prop_Force;
     }
     
-    RCLCPP_INFO_STREAM(node_->get_logger(), "Prop_Force: " << Prop_Force);
-    
     forces(1) = 0.0;
     forces(2) = 0.0;
     forces(3) = 0.0; // We do not simulate torque in the low speed conditions, this is because it usually means we are on the ground.
