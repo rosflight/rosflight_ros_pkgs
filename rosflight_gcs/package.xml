@@ -26,7 +26,6 @@
   <depend>tf2_geometry_msgs</depend>
 
   <depend>rosflight_msgs</depend>
-  <depend>rosflight_sim</depend>
   <depend>rosflight_io</depend>
 
   <export>
