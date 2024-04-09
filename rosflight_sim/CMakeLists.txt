@@ -14,10 +14,10 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
 endif(NOT CMAKE_BUILD_TYPE)
 
-# Since Gazebo doesn't have an arm64 target, skip this package if 
-# architecture is arm64
-message(${CMAKE_SYSTEM_PROCESSOR})
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "aarch64")
+# Since Gazebo doesn't have an arm64 target, skip this package if gazebo is not found
+find_package(gazebo_ros QUIET)
+if(NOT gazebo_FOUND)
+  install(CODE "message(\"Gazebo not found, skipping ${PROJECT_NAME}\")")
   return()
 endif()
 
