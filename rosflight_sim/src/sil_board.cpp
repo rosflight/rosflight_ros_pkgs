@@ -188,12 +188,12 @@ uint16_t SILBoard::serial_bytes_available()
 void SILBoard::sensors_init()
 {
   // Initialize the Biases
-  GZ_COMPAT_SET_X(gyro_bias_, 0.0);
-  GZ_COMPAT_SET_Y(gyro_bias_, 0.0);
-  GZ_COMPAT_SET_Z(gyro_bias_, 0.0);
-  GZ_COMPAT_SET_X(acc_bias_, 0.0);
-  GZ_COMPAT_SET_Y(acc_bias_, 0.0);
-  GZ_COMPAT_SET_Z(acc_bias_, 0.0);
+  GZ_COMPAT_SET_X(gyro_bias_, gyro_bias_range_ * uniform_distribution_(random_generator_));
+  GZ_COMPAT_SET_Y(gyro_bias_, gyro_bias_range_ * uniform_distribution_(random_generator_));
+  GZ_COMPAT_SET_Z(gyro_bias_, gyro_bias_range_ * uniform_distribution_(random_generator_));
+  GZ_COMPAT_SET_X(acc_bias_, acc_bias_range_ * uniform_distribution_(random_generator_));
+  GZ_COMPAT_SET_Y(acc_bias_, acc_bias_range_ * uniform_distribution_(random_generator_));
+  GZ_COMPAT_SET_Z(acc_bias_, acc_bias_range_ * uniform_distribution_(random_generator_));
 
   // Gazebo coordinates is NWU and Earth's magnetic field is defined in NED, hence the negative signs
   double inclination_ = 1.14316156541;
@@ -241,20 +241,23 @@ bool SILBoard::imu_read(float accel[3], float * temperature, float gyro[3], uint
   // Apply normal noise (only if armed, because most of the noise comes from motors
   if (motors_spinning()) {
     GZ_COMPAT_SET_X(y_acc,
-                    GZ_COMPAT_GET_X(y_acc));
+                    GZ_COMPAT_GET_X(y_acc) + acc_stdev_ * normal_distribution_(random_generator_));
     GZ_COMPAT_SET_Y(y_acc,
-                    GZ_COMPAT_GET_Y(y_acc));
+                    GZ_COMPAT_GET_Y(y_acc) + acc_stdev_ * normal_distribution_(random_generator_));
     GZ_COMPAT_SET_Z(y_acc,
-                    GZ_COMPAT_GET_Z(y_acc));
+                    GZ_COMPAT_GET_Z(y_acc) + acc_stdev_ * normal_distribution_(random_generator_));
   }
 
   // Perform Random Walk for biases
   GZ_COMPAT_SET_X(acc_bias_,
-                  GZ_COMPAT_GET_X(acc_bias_));
+                  GZ_COMPAT_GET_X(acc_bias_)
+                    + acc_bias_walk_stdev_ * normal_distribution_(random_generator_));
   GZ_COMPAT_SET_Y(acc_bias_,
-                  GZ_COMPAT_GET_Y(acc_bias_));
+                  GZ_COMPAT_GET_Y(acc_bias_)
+                    + acc_bias_walk_stdev_ * normal_distribution_(random_generator_));
   GZ_COMPAT_SET_Z(acc_bias_,
-                  GZ_COMPAT_GET_Z(acc_bias_));
+                  GZ_COMPAT_GET_Z(acc_bias_)
+                    + acc_bias_walk_stdev_ * normal_distribution_(random_generator_));
 
   // Add constant Bias to measurement
   GZ_COMPAT_SET_X(y_acc, GZ_COMPAT_GET_X(y_acc) + GZ_COMPAT_GET_X(acc_bias_));
@@ -271,17 +274,23 @@ bool SILBoard::imu_read(float accel[3], float * temperature, float gyro[3], uint
   // Normal Noise from motors
   if (motors_spinning()) {
     GZ_COMPAT_SET_X(
-      y_gyro, GZ_COMPAT_GET_X(y_gyro));
+      y_gyro, GZ_COMPAT_GET_X(y_gyro) + gyro_stdev_ * normal_distribution_(random_generator_));
     GZ_COMPAT_SET_Y(
-      y_gyro, GZ_COMPAT_GET_Y(y_gyro));
+      y_gyro, GZ_COMPAT_GET_Y(y_gyro) + gyro_stdev_ * normal_distribution_(random_generator_));
     GZ_COMPAT_SET_Z(
-      y_gyro, GZ_COMPAT_GET_Z(y_gyro));
+      y_gyro, GZ_COMPAT_GET_Z(y_gyro) + gyro_stdev_ * normal_distribution_(random_generator_));
   }
 
   // Random Walk for bias
-  GZ_COMPAT_SET_X(gyro_bias_, 0.0);
-  GZ_COMPAT_SET_Y(gyro_bias_, 0.0);
-  GZ_COMPAT_SET_Z(gyro_bias_, 0.0);
+  GZ_COMPAT_SET_X(gyro_bias_,
+                  GZ_COMPAT_GET_X(gyro_bias_)
+                    + gyro_bias_walk_stdev_ * normal_distribution_(random_generator_));
+  GZ_COMPAT_SET_Y(gyro_bias_,
+                  GZ_COMPAT_GET_Y(gyro_bias_)
+                    + gyro_bias_walk_stdev_ * normal_distribution_(random_generator_));
+  GZ_COMPAT_SET_Z(gyro_bias_,
+                  GZ_COMPAT_GET_Z(gyro_bias_)
+                    + gyro_bias_walk_stdev_ * normal_distribution_(random_generator_));
 
   // Apply Constant Bias
   GZ_COMPAT_SET_X(y_gyro, GZ_COMPAT_GET_X(y_gyro) + GZ_COMPAT_GET_X(gyro_bias_));
@@ -562,7 +571,7 @@ rosflight_firmware::GNSSData SILBoard::gnss_read()
 
   out.lat = (int) std::round(rad2Deg(lla.X()) * 1e7);
   out.lon = (int) std::round(rad2Deg(lla.Y()) * 1e7);
-  out.height = (int) std::round(lla.Z() * 1e3);
+  out.height = (int) std::round(rad2Deg(lla.Z()) * 1e3);
 
   // For now, we have defined the Gazebo Local Frame as NWU.  This should be fixed in a future
   // commit
