@@ -571,7 +571,7 @@ rosflight_firmware::GNSSData SILBoard::gnss_read()
 
   out.lat = (int) std::round(rad2Deg(lla.X()) * 1e7);
   out.lon = (int) std::round(rad2Deg(lla.Y()) * 1e7);
-  out.height = (int) std::round(rad2Deg(lla.Z()) * 1e3);
+  out.height = (int) std::round(lla.Z() * 1e3);
 
   // For now, we have defined the Gazebo Local Frame as NWU.  This should be fixed in a future
   // commit
