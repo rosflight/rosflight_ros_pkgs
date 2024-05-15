@@ -46,6 +46,7 @@
 #include <gazebo/physics/physics.hh>
 
 #include <rclcpp/rclcpp.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 #include <rosflight_msgs/msg/rc_raw.hpp>
 
 #include <rosflight_sim/gz_compat.hpp>
@@ -96,6 +97,10 @@ private:
   double vertical_gps_stdev_ = 0;
   double gps_velocity_stdev_ = 0;
 
+  double f_x = 0;
+  double f_y = 0;
+  double f_z = 0;
+
   GazeboVector gyro_bias_;
   GazeboVector acc_bias_;
   GazeboVector mag_bias_;
@@ -117,6 +122,7 @@ private:
 
   rclcpp::Node::SharedPtr node_;
   rclcpp::Subscription<rosflight_msgs::msg::RCRaw>::SharedPtr rc_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr forces_sub_;
   rosflight_msgs::msg::RCRaw latestRC_;
   bool rc_received_ = false;
   rclcpp::Time last_rc_message_;
@@ -135,6 +141,12 @@ private:
    * @param msg ROSflight RC message published on /RC topic
    */
   void RC_callback(const rosflight_msgs::msg::RCRaw & msg);
+  /**
+   * @brief Callback function to update the aerodynamic forces.
+   *
+   * @param msg Geometry message that contains the forces and moments.
+   */
+  void forces_callback(const geometry_msgs::msg::TwistStamped & msg);
   /**
    * @brief Checks the current pwm value for throttle to see if the motor pwm is above minimum, and that
    * the motors should be spinning.

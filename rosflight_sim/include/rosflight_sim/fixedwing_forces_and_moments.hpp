@@ -38,6 +38,7 @@
 #include <eigen3/Eigen/Dense>
 #include <rclcpp/rclcpp.hpp>
 #include <rosflight_sim/mav_forces_and_moments.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 
 namespace rosflight_sim
 {
@@ -141,6 +142,8 @@ private:
   * for any missing parameters.
   */
   void update_params_from_ROS();
+  
+  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr forces_moments_pub_;
 
 public:
   /**
