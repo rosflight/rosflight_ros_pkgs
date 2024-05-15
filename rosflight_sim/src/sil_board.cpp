@@ -190,12 +190,6 @@ uint16_t SILBoard::serial_bytes_available()
 /// noise params are hard coded
 void SILBoard::sensors_init()
 {
-  gyro_bias_ = 0.0;
-  gyro_bias_range_ = 0.0;
-
-  acc_bias_ = 0.0;
-  acc_bias_range_ = 0.0;
-
   // Initialize the Biases
   GZ_COMPAT_SET_X(gyro_bias_, gyro_bias_range_ * uniform_distribution_(random_generator_));
   GZ_COMPAT_SET_Y(gyro_bias_, gyro_bias_range_ * uniform_distribution_(random_generator_));
