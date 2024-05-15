@@ -77,6 +77,9 @@ private:
   double acc_bias_range_ = 0;
   double acc_bias_walk_stdev_ = 0;
 
+  double mass_ = 0;   // Use actual values since these are divisors.
+  double rho_ = 0;  // This will prevent a division by zero.
+
   double baro_bias_walk_stdev_ = 0;
   double baro_stdev_ = 0;
   double baro_bias_range_ = 0;

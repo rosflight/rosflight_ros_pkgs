@@ -64,6 +64,7 @@ Fixedwing::~Fixedwing() = default;
 void Fixedwing::declare_fixedwing_params()
 {
   node_->declare_parameter("rho", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("mass", rclcpp::PARAMETER_DOUBLE);
 
   node_->declare_parameter("wing_s", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("wing_b", rclcpp::PARAMETER_DOUBLE);

@@ -105,6 +105,9 @@ void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Worl
   imu_update_rate_ = node_->get_parameter_or<double>("imu_update_rate", 1000.0);
   imu_update_period_us_ = (uint64_t) (1e6 / imu_update_rate_);
 
+  mass_ = node_->get_parameter_or<double>("mass", 2.28);
+  rho_ = node_->get_parameter_or<double>("rho", 1.225);
+
   // Calculate Magnetic Field Vector (for mag simulation)
   auto inclination = node_->get_parameter_or<double>("inclination", 1.14316156541);
   auto declination = node_->get_parameter_or<double>("declination", 0.198584539676);
@@ -233,23 +236,15 @@ bool SILBoard::imu_read(float accel[3], float * temperature, float gyro[3], uint
   GazeboQuaternion q_I_NWU = GZ_COMPAT_GET_ROT(GZ_COMPAT_GET_WORLD_POSE(link_));
   GazeboVector current_vel = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);
   GazeboVector y_acc;
-  static double mass_ = 4.5; // Add parameter to the ROS parameters
   GazeboPose local_pose = GZ_COMPAT_GET_WORLD_POSE(link_);
 
   // this is James's egregious hack to overcome wild imu while sitting on the ground
   if (GZ_COMPAT_GET_LENGTH(current_vel) < 0.05) {
     y_acc = q_I_NWU.RotateVectorReverse(-gravity_);
+  } else if (local_pose.Z() < 0.5) {
+    y_acc = q_I_NWU.RotateVectorReverse(GZ_COMPAT_GET_WORLD_LINEAR_ACCEL(link_) - gravity_);
   } else {
-    GazeboVector y_acc_specific_force;
-    y_acc_specific_force.Set(f_x/mass_, -f_y/mass_, -f_z/mass_);
-    
-    if (local_pose.Z() < 0.5){
-      y_acc = q_I_NWU.RotateVectorReverse(GZ_COMPAT_GET_WORLD_LINEAR_ACCEL(link_) - gravity_);
-    }
-    else{
-      y_acc = y_acc_specific_force;
-    }
-
+    y_acc.Set(f_x/mass_, -f_y/mass_, -f_z/mass_);
   }
 
   // Apply normal noise (only if armed, because most of the noise comes from motors
@@ -394,7 +389,6 @@ bool SILBoard::diff_pressure_present()
 
 void SILBoard::diff_pressure_read(float * diff_pressure, float * temperature)
 {
-  static double rho_ = 1.225; // Add parameter to the ROS parameters
   // Calculate Airspeed
   GazeboVector vel = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);
 
