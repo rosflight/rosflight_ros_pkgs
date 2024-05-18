@@ -3,6 +3,7 @@
  *
  * Copyright (c) 2017 Daniel Koch, James Jackson and Gary Ellingson, BYU MAGICC Lab.
  * Copyright (c) 2023 Brandon Sutherland, AeroVironment Inc.
+ * Copyright (c) 2024 Ian Reid, BYU MAGICC Lab.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +33,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "rosflight_sim/gz_compat.hpp"
 #include <fstream>
+#include <rclcpp/logging.hpp>
 #include <rosflight_sim/sil_board.hpp>
 
 #include <iostream>
@@ -101,6 +104,9 @@ void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Worl
 
   imu_update_rate_ = node_->get_parameter_or<double>("imu_update_rate", 1000.0);
   imu_update_period_us_ = (uint64_t) (1e6 / imu_update_rate_);
+
+  mass_ = node_->get_parameter_or<double>("mass", 2.28);
+  rho_ = node_->get_parameter_or<double>("rho", 1.225);
 
   // Calculate Magnetic Field Vector (for mag simulation)
   auto inclination = node_->get_parameter_or<double>("inclination", 1.14316156541);
@@ -230,12 +236,15 @@ bool SILBoard::imu_read(float accel[3], float * temperature, float gyro[3], uint
   GazeboQuaternion q_I_NWU = GZ_COMPAT_GET_ROT(GZ_COMPAT_GET_WORLD_POSE(link_));
   GazeboVector current_vel = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);
   GazeboVector y_acc;
+  GazeboPose local_pose = GZ_COMPAT_GET_WORLD_POSE(link_);
 
   // this is James's egregious hack to overcome wild imu while sitting on the ground
   if (GZ_COMPAT_GET_LENGTH(current_vel) < 0.05) {
     y_acc = q_I_NWU.RotateVectorReverse(-gravity_);
-  } else {
+  } else if (local_pose.Z() < 0.5) {
     y_acc = q_I_NWU.RotateVectorReverse(GZ_COMPAT_GET_WORLD_LINEAR_ACCEL(link_) - gravity_);
+  } else {
+    y_acc.Set(f_x/mass_, -f_y/mass_, -f_z/mass_);
   }
 
   // Apply normal noise (only if armed, because most of the noise comes from motors
@@ -354,7 +363,7 @@ void SILBoard::baro_read(float * pressure, float * temperature)
   double alt = GZ_COMPAT_GET_Z(GZ_COMPAT_GET_POS(current_state_NWU)) + origin_altitude_;
 
   // Convert to the true pressure reading
-  double y_baro = 101325.0f * (float) pow((1 - 2.25694e-5 * alt), 5.2553);
+  double y_baro = 101325.0f * (float) pow((1 - 2.25694e-5 * alt), 5.2553); // Add these parameters to the parameters.
 
   // Add noise
   y_baro += baro_stdev_ * normal_distribution_(random_generator_);
@@ -380,7 +389,6 @@ bool SILBoard::diff_pressure_present()
 
 void SILBoard::diff_pressure_read(float * diff_pressure, float * temperature)
 {
-  static double rho_ = 1.225;
   // Calculate Airspeed
   GazeboVector vel = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);
 
@@ -447,6 +455,17 @@ void SILBoard::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
 
   rc_sub_ = node_->create_subscription<rosflight_msgs::msg::RCRaw>(
     "RC", 1, std::bind(&SILBoard::RC_callback, this, std::placeholders::_1));
+  forces_sub_ = node_->create_subscription<geometry_msgs::msg::TwistStamped>(
+    "/forces_and_moments", 1, std::bind(&SILBoard::forces_callback, this, std::placeholders::_1));
+}
+
+void SILBoard::forces_callback(const geometry_msgs::msg::TwistStamped & msg)
+{
+
+  f_x = msg.twist.linear.x;
+  f_y = msg.twist.linear.y;
+  f_z = msg.twist.linear.z;
+
 }
 
 float SILBoard::rc_read(uint8_t channel)

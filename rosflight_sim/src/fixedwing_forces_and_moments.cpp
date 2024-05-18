@@ -56,6 +56,7 @@ Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node)
   declare_fixedwing_params();
   update_params_from_ROS();
   wind_ = Eigen::Vector3d::Zero();
+  forces_moments_pub_ = node_->create_publisher<geometry_msgs::msg::TwistStamped>("/forces_and_moments", 1);
 }
 
 Fixedwing::~Fixedwing() = default;
@@ -63,6 +64,7 @@ Fixedwing::~Fixedwing() = default;
 void Fixedwing::declare_fixedwing_params()
 {
   node_->declare_parameter("rho", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("mass", rclcpp::PARAMETER_DOUBLE);
 
   node_->declare_parameter("wing_s", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("wing_b", rclcpp::PARAMETER_DOUBLE);
@@ -520,6 +522,22 @@ Eigen::Matrix<double, 6, 1> Fixedwing::update_forces_and_torques(CurrentState x,
     forces(4) = 0.0;
     forces(5) = 0.0;
   }
+
+  geometry_msgs::msg::TwistStamped msg;
+  
+  rclcpp::Time now = node_->get_clock()->now();
+  
+  msg.header.stamp = now;
+
+  msg.twist.linear.x = forces(0);
+  msg.twist.linear.y = forces(1);
+  msg.twist.linear.z = forces(2);
+
+  msg.twist.angular.x = forces(3);
+  msg.twist.angular.y = forces(4);
+  msg.twist.angular.z = forces(5);
+
+  forces_moments_pub_->publish(msg);
 
   return forces;
 }
