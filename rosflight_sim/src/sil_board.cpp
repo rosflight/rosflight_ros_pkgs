@@ -215,7 +215,7 @@ void SILBoard::sensors_init()
   sph_coord_.SetLongitudeReference(Ang(deg2Rad(origin_longitude_)));
   sph_coord_.SetElevationReference(origin_altitude_);
   // Force x-axis to be north-aligned. I promise, I will change everything to ENU in the next commit
-  sph_coord_.SetHeadingOffset(Ang(-M_PI / 2.0));
+  sph_coord_.SetHeadingOffset(Ang(M_PI / 2.0));
 }
 
 uint16_t SILBoard::num_sensor_errors() { return 0; }
