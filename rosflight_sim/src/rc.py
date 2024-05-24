@@ -31,11 +31,15 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 """
-ROS node for emulating RC controller for SIL simulation
+ROS node for emulating RC controller for SIL simulation.
 
 This script implements a ROS node that uses a joystick controller to
 emulate an RC receiver for software-in-the-loop simulation with the
 ROSflight Gazebo simulator.
+
+If no joystick is detected, it will simulate a joystick that can be
+controlled with ROS service calls to arm/disarm and enable/disable
+override.
 
 Currently supported joystick controllers are:
     * Taranis Q-X7 transmitter connected over USB
@@ -46,7 +50,7 @@ Currently supported joystick controllers are:
 To add support for a new controller, simply add its configuration to
 the config dictionary.
 
-Authors: James Jackson, Daniel Koch, Brandon Sutherland
+Authors: James Jackson, Daniel Koch, Brandon Sutherland, Ian Reid
 """
 
 from enum import Enum
@@ -137,36 +141,43 @@ class RCJoy(Node):
     def __init__(self):
         update_freq = 50  # hz
 
-        super().__init__('rc_joy')
+        super().__init__('rc')
         self.rc_publisher = self.create_publisher(RCRaw, 'RC', 10)
-        self.timer = self.create_timer(1 / update_freq, self.timer_callback)
 
-        pygame.display.init()
-        pygame.joystick.init()
-
+        # Initialize pygame, checking if a joystick is connected
         try:
+            pygame.display.init()
+            pygame.joystick.init()
             self.joy = pygame.joystick.Joystick(0)
+            transmitter_detected = True
         except:
-            self.get_logger().fatal('Failed to open joystick device')
-            quit()
+            self.get_logger().info('No joystick detected (or no display detected), using simulated joystick')
+            transmitter_detected = False
 
-        self.joy.init()
+        # Transmitter detected, initialize joystick
+        if transmitter_detected:
+            self.joy.init()
 
-        # detect joystick/controller type
-        self.get_logger().info('Joystick: %s' % self.joy.get_name())
+            # detect joystick/controller type
+            self.get_logger().info('Joystick: %s' % self.joy.get_name())
 
-        self.joy_type = None
-        for k in config.keys():
-            for key in config[k]['keys']:
-                if key in self.joy.get_name():
-                    self.joy_type = k
-                    break
+            self.joy_type = None
+            for k in config.keys():
+                for key in config[k]['keys']:
+                    if key in self.joy.get_name():
+                        self.joy_type = k
+                        break
 
-        if self.joy_type is None:
-            self.get_logger().fatal('Unsupported joystick device')
-            quit()
+            if self.joy_type is None:
+                # Transmitter is not supported, abort and use simulated joystick
+                self.get_logger().fatal('Unsupported joystick device, using simulated joystick')
+                transmitter_detected = False
+            else:
+                self.get_logger().info('Using %s config' % self.joy_type)
+                self.timer = self.create_timer(1 / update_freq, self.timer_callback)
 
-        self.get_logger().info('Using %s config' % self.joy_type)
+        if not transmitter_detected:
+            pass
 
     def timer_callback(self):
         pygame.event.pump()

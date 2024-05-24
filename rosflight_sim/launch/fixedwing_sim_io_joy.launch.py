@@ -41,7 +41,7 @@ def generate_launch_description():
     # Start rc_joy node for RC input
     rc_joy_node = Node(
         package='rosflight_sim',
-        executable='rc_joy.py',
+        executable='rc.py',
         remappings=[
             ('/RC', '/fixedwing/RC')
         ]
