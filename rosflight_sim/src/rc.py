@@ -233,6 +233,7 @@ class RC(Node):
         response.success = True
         return response
 
+
 def main(args=None):
     rclpy.init(args=args)
     rc = RC()
