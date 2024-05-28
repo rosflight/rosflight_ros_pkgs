@@ -14,3 +14,5 @@
 - {name: RC_ATT_OVRD_CHN, type: 6, value: 5} # Set pilot override channel for attitude control.
 - {name: RC_ATT_CTRL_CHN, type: 6, value: 8} # TODO this should not be 8.
 - {name: MIN_THROTTLE, type: 6, value: 0} # Set to not take the minimum of the commanded throttles.
+- {name: RC_OVRD_DEV, type: 9, value: 1.0} # Ignore any stick inputs when override is enabled.
+- {name: RC_NUM_CHN, type: 6, value: 8} # Set the number of RC channels to max.
