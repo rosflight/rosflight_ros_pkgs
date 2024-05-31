@@ -42,6 +42,7 @@
 
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/common.hh>
+#include <gazebo/common/CommonTypes.hh>
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 
@@ -49,7 +50,6 @@
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <rosflight_msgs/msg/rc_raw.hpp>
 
-#include <rosflight_sim/gz_compat.hpp>
 #include <rosflight_sim/udp_board.hpp>
 
 namespace rosflight_sim
@@ -62,7 +62,7 @@ namespace rosflight_sim
 class SILBoard : public UDPBoard
 {
 private:
-  GazeboVector inertial_magnetic_field_;
+  ignition::math::Vector3d inertial_magnetic_field_;
 
   double imu_update_rate_ = 0;
 
@@ -104,9 +104,9 @@ private:
   double f_y = 0;
   double f_z = 0;
 
-  GazeboVector gyro_bias_;
-  GazeboVector acc_bias_;
-  GazeboVector mag_bias_;
+  ignition::math::Vector3d gyro_bias_;
+  ignition::math::Vector3d acc_bias_;
+  ignition::math::Vector3d mag_bias_;
   double baro_bias_ = 0;
   double airspeed_bias_ = 0;
 
@@ -114,7 +114,7 @@ private:
   std::normal_distribution<double> normal_distribution_;
   std::uniform_real_distribution<double> uniform_distribution_;
 
-  GazeboVector gravity_;
+  ignition::math::Vector3d gravity_;
   double origin_latitude_ = 0;
   double origin_longitude_ = 0;
   double origin_altitude_ = 0;
@@ -158,9 +158,9 @@ private:
    */
   bool motors_spinning();
 
-  GazeboVector prev_vel_1_;
-  GazeboVector prev_vel_2_;
-  GazeboVector prev_vel_3_;
+  ignition::math::Vector3d prev_vel_1_;
+  ignition::math::Vector3d prev_vel_2_;
+  ignition::math::Vector3d prev_vel_3_;
   gazebo::common::Time last_time_;
 
   float battery_voltage_multiplier{1.0};

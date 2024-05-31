@@ -37,6 +37,7 @@
 
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/common.hh>
+#include <gazebo/common/CommonTypes.hh>
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 #include <gazebo_ros/node.hpp>
@@ -51,8 +52,6 @@
 #include <rosflight_sim/fixedwing_forces_and_moments.hpp>
 #include <rosflight_sim/mav_forces_and_moments.hpp>
 #include <rosflight_sim/multirotor_forces_and_moments.hpp>
-
-#include <rosflight_sim/gz_compat.hpp>
 
 namespace rosflight_sim
 {
@@ -118,20 +117,20 @@ private:
   Eigen::Matrix<double, 6, 1> forces_, applied_forces_;
 
   // For reset handlin
-  GazeboPose initial_pose_;
+  ignition::math::Pose3d initial_pose_;
 
   /**
    * @brief Converts a vector from a gazebo datatype to an eigen datatype.
    */
-  static Eigen::Vector3d vec3_to_eigen_from_gazebo(GazeboVector vec);
+  static Eigen::Vector3d vec3_to_eigen_from_gazebo(ignition::math::Vector3d vec);
   /**
    * @brief Converts a vector from an eigen datatype to a gazebo datatype.
    */
-  static GazeboVector vec3_to_gazebo_from_eigen(Eigen::Vector3d vec);
+  static ignition::math::Vector3d vec3_to_gazebo_from_eigen(Eigen::Vector3d vec);
   /**
    * @brief Create an eigen rotation matrix from a Gazebo quaternion.
    */
-  static Eigen::Matrix3d rotation_to_eigen_from_gazebo(GazeboQuaternion vec);
+  static Eigen::Matrix3d rotation_to_eigen_from_gazebo(ignition::math::Quaterniond vec);
 
   /**
    * Declares all ROS params to be used by the class. Must be called in the constructor.
