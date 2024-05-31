@@ -35,7 +35,9 @@
     </physics>
 
     <include>
-      <uri>model://sun</uri>
+      <uri>
+        https://fuel.gazebosim.org/1.0/OpenRobotics/models/Sun
+      </uri>
     </include>
 
     <model name="ground_plane">

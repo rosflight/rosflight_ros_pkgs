@@ -38,18 +38,6 @@ def generate_launch_description():
     yaw_launch_arg = DeclareLaunchArgument(
         'yaw', default_value=TextSubstitution(text='0')
     )
-    paused = LaunchConfiguration('paused')
-    paused_launch_arg = DeclareLaunchArgument(
-        'paused', default_value=TextSubstitution(text='false')
-    )
-    gui = LaunchConfiguration('gui')
-    gui_launch_arg = DeclareLaunchArgument(
-        'gui', default_value=TextSubstitution(text='true')
-    )
-    verbose = LaunchConfiguration('verbose')
-    verbose_launch_arg = DeclareLaunchArgument(
-        'verbose', default_value=TextSubstitution(text='false')
-    )
     world_file = LaunchConfiguration('world_file')
     world_file_launch_arg = DeclareLaunchArgument(
         'world_file', default_value=TextSubstitution(text=os.path.join(
@@ -77,15 +65,14 @@ def generate_launch_description():
     gazebo_launch_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
-                get_package_share_directory('gazebo_ros'),
-                'launch/gazebo.launch.py'
+                get_package_share_directory('ros_gz_sim'),
+                'launch',
+                'gz_sim.launch.py'
             )
         ),
         launch_arguments={
-            'paused': paused,
-            'gui': gui,
-            'verbose': verbose,
-            'world': world_file,
+            'gz_args': ['-r -v1 ', world_file],
+            'on_exit_shutdown': 'true',
             'params_file': os.path.join(get_package_share_directory('rosflight_sim'), 'params/multirotor_dynamics.yaml'),
         }.items()
     )
@@ -105,9 +92,8 @@ def generate_launch_description():
 
     # Spawn vehicle
     spawn_vehicle_node = Node(
-        package='gazebo_ros',
-        executable='spawn_entity.py',
-        respawn=False,
+        package='ros_gz_sim',
+        executable='create',
         output='screen',
         parameters=[
             {'tf_prefix': tf_prefix}
@@ -130,9 +116,6 @@ def generate_launch_description():
         y_launch_arg,
         z_launch_arg,
         yaw_launch_arg,
-        paused_launch_arg,
-        gui_launch_arg,
-        verbose_launch_arg,
         world_file_launch_arg,
         tf_prefix_launch_argument,
         robot_namespace_launch_argument,
