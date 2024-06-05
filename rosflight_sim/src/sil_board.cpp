@@ -44,7 +44,10 @@ namespace rosflight_sim
 {
 SILBoard::SILBoard()
     : UDPBoard()
-    , random_generator_(std::chrono::system_clock::now().time_since_epoch().count())
+    // , random_generator_(std::chrono::system_clock::now().time_since_epoch().count()) // Uncomment if you would like to
+    // have random biases for the sensors on each flight. Otherwise the seed below will keep them consistent (prevents
+    // need for calibration on each boot.)
+    , random_generator_(0)
 {}
 
 void SILBoard::init_board() { boot_time_ = GZ_COMPAT_GET_SIM_TIME(world_); }
