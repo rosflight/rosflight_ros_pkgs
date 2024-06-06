@@ -44,7 +44,10 @@ namespace rosflight_sim
 {
 SILBoard::SILBoard()
     : UDPBoard()
-    , random_generator_(std::chrono::system_clock::now().time_since_epoch().count())
+    // , bias_generator_(std::chrono::system_clock::now().time_since_epoch().count()) // Uncomment if you would like to
+    // have bias biases for the sensors on each flight. Delete next line.
+    , bias_generator_(0)
+    , noise_generator_(std::chrono::system_clock::now().time_since_epoch().count())
 {}
 
 void SILBoard::init_board() { boot_time_ = GZ_COMPAT_GET_SIM_TIME(world_); }
@@ -132,17 +135,17 @@ void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Worl
   gravity_ = GZ_COMPAT_GET_GRAVITY(world_);
 
   // Initialize the Sensor Biases
-  GZ_COMPAT_SET_X(gyro_bias_, gyro_bias_range_ * uniform_distribution_(random_generator_));
-  GZ_COMPAT_SET_Y(gyro_bias_, gyro_bias_range_ * uniform_distribution_(random_generator_));
-  GZ_COMPAT_SET_Z(gyro_bias_, gyro_bias_range_ * uniform_distribution_(random_generator_));
-  GZ_COMPAT_SET_X(acc_bias_, acc_bias_range_ * uniform_distribution_(random_generator_));
-  GZ_COMPAT_SET_Y(acc_bias_, acc_bias_range_ * uniform_distribution_(random_generator_));
-  GZ_COMPAT_SET_Z(acc_bias_, acc_bias_range_ * uniform_distribution_(random_generator_));
-  GZ_COMPAT_SET_X(mag_bias_, mag_bias_range_ * uniform_distribution_(random_generator_));
-  GZ_COMPAT_SET_Y(mag_bias_, mag_bias_range_ * uniform_distribution_(random_generator_));
-  GZ_COMPAT_SET_Z(mag_bias_, mag_bias_range_ * uniform_distribution_(random_generator_));
-  baro_bias_ = baro_bias_range_ * uniform_distribution_(random_generator_);
-  airspeed_bias_ = airspeed_bias_range_ * uniform_distribution_(random_generator_);
+  GZ_COMPAT_SET_X(gyro_bias_, gyro_bias_range_ * uniform_distribution_(bias_generator_));
+  GZ_COMPAT_SET_Y(gyro_bias_, gyro_bias_range_ * uniform_distribution_(bias_generator_));
+  GZ_COMPAT_SET_Z(gyro_bias_, gyro_bias_range_ * uniform_distribution_(bias_generator_));
+  GZ_COMPAT_SET_X(acc_bias_, acc_bias_range_ * uniform_distribution_(bias_generator_));
+  GZ_COMPAT_SET_Y(acc_bias_, acc_bias_range_ * uniform_distribution_(bias_generator_));
+  GZ_COMPAT_SET_Z(acc_bias_, acc_bias_range_ * uniform_distribution_(bias_generator_));
+  GZ_COMPAT_SET_X(mag_bias_, mag_bias_range_ * uniform_distribution_(bias_generator_));
+  GZ_COMPAT_SET_Y(mag_bias_, mag_bias_range_ * uniform_distribution_(bias_generator_));
+  GZ_COMPAT_SET_Z(mag_bias_, mag_bias_range_ * uniform_distribution_(bias_generator_));
+  baro_bias_ = baro_bias_range_ * uniform_distribution_(bias_generator_);
+  airspeed_bias_ = airspeed_bias_range_ * uniform_distribution_(bias_generator_);
 
   prev_vel_1_ = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);
   prev_vel_2_ = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);
@@ -194,12 +197,12 @@ uint16_t SILBoard::serial_bytes_available()
 void SILBoard::sensors_init()
 {
   // Initialize the Biases
-  GZ_COMPAT_SET_X(gyro_bias_, gyro_bias_range_ * uniform_distribution_(random_generator_));
-  GZ_COMPAT_SET_Y(gyro_bias_, gyro_bias_range_ * uniform_distribution_(random_generator_));
-  GZ_COMPAT_SET_Z(gyro_bias_, gyro_bias_range_ * uniform_distribution_(random_generator_));
-  GZ_COMPAT_SET_X(acc_bias_, acc_bias_range_ * uniform_distribution_(random_generator_));
-  GZ_COMPAT_SET_Y(acc_bias_, acc_bias_range_ * uniform_distribution_(random_generator_));
-  GZ_COMPAT_SET_Z(acc_bias_, acc_bias_range_ * uniform_distribution_(random_generator_));
+  GZ_COMPAT_SET_X(gyro_bias_, gyro_bias_range_ * uniform_distribution_(bias_generator_));
+  GZ_COMPAT_SET_Y(gyro_bias_, gyro_bias_range_ * uniform_distribution_(bias_generator_));
+  GZ_COMPAT_SET_Z(gyro_bias_, gyro_bias_range_ * uniform_distribution_(bias_generator_));
+  GZ_COMPAT_SET_X(acc_bias_, acc_bias_range_ * uniform_distribution_(bias_generator_));
+  GZ_COMPAT_SET_Y(acc_bias_, acc_bias_range_ * uniform_distribution_(bias_generator_));
+  GZ_COMPAT_SET_Z(acc_bias_, acc_bias_range_ * uniform_distribution_(bias_generator_));
 
   // Gazebo coordinates is NWU and Earth's magnetic field is defined in NED, hence the negative signs
   double inclination_ = 1.14316156541;
@@ -250,23 +253,23 @@ bool SILBoard::imu_read(float accel[3], float * temperature, float gyro[3], uint
   // Apply normal noise (only if armed, because most of the noise comes from motors
   if (motors_spinning()) {
     GZ_COMPAT_SET_X(y_acc,
-                    GZ_COMPAT_GET_X(y_acc) + acc_stdev_ * normal_distribution_(random_generator_));
+                    GZ_COMPAT_GET_X(y_acc) + acc_stdev_ * normal_distribution_(noise_generator_));
     GZ_COMPAT_SET_Y(y_acc,
-                    GZ_COMPAT_GET_Y(y_acc) + acc_stdev_ * normal_distribution_(random_generator_));
+                    GZ_COMPAT_GET_Y(y_acc) + acc_stdev_ * normal_distribution_(noise_generator_));
     GZ_COMPAT_SET_Z(y_acc,
-                    GZ_COMPAT_GET_Z(y_acc) + acc_stdev_ * normal_distribution_(random_generator_));
+                    GZ_COMPAT_GET_Z(y_acc) + acc_stdev_ * normal_distribution_(noise_generator_));
   }
 
-  // Perform Random Walk for biases
+  // Perform bias Walk for biases
   GZ_COMPAT_SET_X(acc_bias_,
                   GZ_COMPAT_GET_X(acc_bias_)
-                    + acc_bias_walk_stdev_ * normal_distribution_(random_generator_));
+                    + acc_bias_walk_stdev_ * normal_distribution_(noise_generator_));
   GZ_COMPAT_SET_Y(acc_bias_,
                   GZ_COMPAT_GET_Y(acc_bias_)
-                    + acc_bias_walk_stdev_ * normal_distribution_(random_generator_));
+                    + acc_bias_walk_stdev_ * normal_distribution_(noise_generator_));
   GZ_COMPAT_SET_Z(acc_bias_,
                   GZ_COMPAT_GET_Z(acc_bias_)
-                    + acc_bias_walk_stdev_ * normal_distribution_(random_generator_));
+                    + acc_bias_walk_stdev_ * normal_distribution_(noise_generator_));
 
   // Add constant Bias to measurement
   GZ_COMPAT_SET_X(y_acc, GZ_COMPAT_GET_X(y_acc) + GZ_COMPAT_GET_X(acc_bias_));
@@ -283,23 +286,23 @@ bool SILBoard::imu_read(float accel[3], float * temperature, float gyro[3], uint
   // Normal Noise from motors
   if (motors_spinning()) {
     GZ_COMPAT_SET_X(
-      y_gyro, GZ_COMPAT_GET_X(y_gyro) + gyro_stdev_ * normal_distribution_(random_generator_));
+      y_gyro, GZ_COMPAT_GET_X(y_gyro) + gyro_stdev_ * normal_distribution_(noise_generator_));
     GZ_COMPAT_SET_Y(
-      y_gyro, GZ_COMPAT_GET_Y(y_gyro) + gyro_stdev_ * normal_distribution_(random_generator_));
+      y_gyro, GZ_COMPAT_GET_Y(y_gyro) + gyro_stdev_ * normal_distribution_(noise_generator_));
     GZ_COMPAT_SET_Z(
-      y_gyro, GZ_COMPAT_GET_Z(y_gyro) + gyro_stdev_ * normal_distribution_(random_generator_));
+      y_gyro, GZ_COMPAT_GET_Z(y_gyro) + gyro_stdev_ * normal_distribution_(noise_generator_));
   }
 
-  // Random Walk for bias
+  // bias Walk for bias
   GZ_COMPAT_SET_X(gyro_bias_,
                   GZ_COMPAT_GET_X(gyro_bias_)
-                    + gyro_bias_walk_stdev_ * normal_distribution_(random_generator_));
+                    + gyro_bias_walk_stdev_ * normal_distribution_(noise_generator_));
   GZ_COMPAT_SET_Y(gyro_bias_,
                   GZ_COMPAT_GET_Y(gyro_bias_)
-                    + gyro_bias_walk_stdev_ * normal_distribution_(random_generator_));
+                    + gyro_bias_walk_stdev_ * normal_distribution_(noise_generator_));
   GZ_COMPAT_SET_Z(gyro_bias_,
                   GZ_COMPAT_GET_Z(gyro_bias_)
-                    + gyro_bias_walk_stdev_ * normal_distribution_(random_generator_));
+                    + gyro_bias_walk_stdev_ * normal_distribution_(noise_generator_));
 
   // Apply Constant Bias
   GZ_COMPAT_SET_X(y_gyro, GZ_COMPAT_GET_X(y_gyro) + GZ_COMPAT_GET_X(gyro_bias_));
@@ -325,20 +328,20 @@ void SILBoard::mag_read(float mag[3])
 {
   GazeboPose I_to_B = GZ_COMPAT_GET_WORLD_POSE(link_);
   GazeboVector noise;
-  GZ_COMPAT_SET_X(noise, mag_stdev_ * normal_distribution_(random_generator_));
-  GZ_COMPAT_SET_Y(noise, mag_stdev_ * normal_distribution_(random_generator_));
-  GZ_COMPAT_SET_Z(noise, mag_stdev_ * normal_distribution_(random_generator_));
+  GZ_COMPAT_SET_X(noise, mag_stdev_ * normal_distribution_(noise_generator_));
+  GZ_COMPAT_SET_Y(noise, mag_stdev_ * normal_distribution_(noise_generator_));
+  GZ_COMPAT_SET_Z(noise, mag_stdev_ * normal_distribution_(noise_generator_));
 
-  // Random Walk for bias
+  // bias Walk for bias
   GZ_COMPAT_SET_X(mag_bias_,
                   GZ_COMPAT_GET_X(mag_bias_)
-                    + mag_bias_walk_stdev_ * normal_distribution_(random_generator_));
+                    + mag_bias_walk_stdev_ * normal_distribution_(noise_generator_));
   GZ_COMPAT_SET_Y(mag_bias_,
                   GZ_COMPAT_GET_Y(mag_bias_)
-                    + mag_bias_walk_stdev_ * normal_distribution_(random_generator_));
+                    + mag_bias_walk_stdev_ * normal_distribution_(noise_generator_));
   GZ_COMPAT_SET_Z(mag_bias_,
                   GZ_COMPAT_GET_Z(mag_bias_)
-                    + mag_bias_walk_stdev_ * normal_distribution_(random_generator_));
+                    + mag_bias_walk_stdev_ * normal_distribution_(noise_generator_));
 
   // combine parts to create a measurement
   GazeboVector y_mag =
@@ -366,12 +369,12 @@ void SILBoard::baro_read(float * pressure, float * temperature)
   double y_baro = 101325.0f * (float) pow((1 - 2.25694e-5 * alt), 5.2553); // Add these parameters to the parameters.
 
   // Add noise
-  y_baro += baro_stdev_ * normal_distribution_(random_generator_);
+  y_baro += baro_stdev_ * normal_distribution_(noise_generator_);
 
-  // Perform random walk
-  baro_bias_ += baro_bias_walk_stdev_ * normal_distribution_(random_generator_);
+  // Perform bias walk
+  baro_bias_ += baro_bias_walk_stdev_ * normal_distribution_(noise_generator_);
 
-  // Add random walk
+  // Add bias walk
   y_baro += baro_bias_;
 
   (*pressure) = (float) y_baro;
@@ -398,8 +401,8 @@ void SILBoard::diff_pressure_read(float * diff_pressure, float * temperature)
   double y_as = rho_ * Va * Va / 2.0; // Page 130 in the UAV Book
 
   // Add noise
-  y_as += airspeed_stdev_ * normal_distribution_(random_generator_);
-  airspeed_bias_ += airspeed_bias_walk_stdev_ * normal_distribution_(random_generator_);
+  y_as += airspeed_stdev_ * normal_distribution_(noise_generator_);
+  airspeed_bias_ += airspeed_bias_walk_stdev_ * normal_distribution_(noise_generator_);
   y_as += airspeed_bias_;
 
   *diff_pressure = (float) y_as;
@@ -418,7 +421,7 @@ float SILBoard::sonar_read()
   } else if (alt > sonar_max_range_) {
     return (float) sonar_max_range_;
   } else {
-    return (float) (alt + sonar_stdev_ * normal_distribution_(random_generator_));
+    return (float) (alt + sonar_stdev_ * normal_distribution_(noise_generator_));
   }
 }
 
@@ -573,15 +576,15 @@ rosflight_firmware::GNSSData SILBoard::gnss_read()
   using Coord = gazebo::common::SphericalCoordinates::CoordinateType;
 
   GazeboPose local_pose = GZ_COMPAT_GET_WORLD_POSE(link_);
-  Vec3 pos_noise(horizontal_gps_stdev_ * normal_distribution_(random_generator_),
-                 horizontal_gps_stdev_ * normal_distribution_(random_generator_),
-                 vertical_gps_stdev_ * normal_distribution_(random_generator_));
+  Vec3 pos_noise(horizontal_gps_stdev_ * normal_distribution_(noise_generator_),
+                 horizontal_gps_stdev_ * normal_distribution_(noise_generator_),
+                 vertical_gps_stdev_ * normal_distribution_(noise_generator_));
   Vec3 local_pos = GZ_COMPAT_GET_POS(local_pose) + pos_noise;
 
   Vec3 local_vel = GZ_COMPAT_GET_WORLD_LINEAR_VEL(link_);
-  Vec3 vel_noise(gps_velocity_stdev_ * normal_distribution_(random_generator_),
-                 gps_velocity_stdev_ * normal_distribution_(random_generator_),
-                 gps_velocity_stdev_ * normal_distribution_(random_generator_));
+  Vec3 vel_noise(gps_velocity_stdev_ * normal_distribution_(noise_generator_),
+                 gps_velocity_stdev_ * normal_distribution_(noise_generator_),
+                 gps_velocity_stdev_ * normal_distribution_(noise_generator_));
   local_vel += vel_noise;
 
   Vec3 ecef_pos = sph_coord_.PositionTransform(local_pos, Coord::LOCAL, Coord::ECEF);
@@ -631,15 +634,15 @@ rosflight_firmware::GNSSFull SILBoard::gnss_full_read()
   using Coord = gazebo::common::SphericalCoordinates::CoordinateType;
 
   GazeboPose local_pose = GZ_COMPAT_GET_WORLD_POSE(link_);
-  Vec3 pos_noise(horizontal_gps_stdev_ * normal_distribution_(random_generator_),
-                 horizontal_gps_stdev_ * normal_distribution_(random_generator_),
-                 vertical_gps_stdev_ * normal_distribution_(random_generator_));
+  Vec3 pos_noise(horizontal_gps_stdev_ * normal_distribution_(noise_generator_),
+                 horizontal_gps_stdev_ * normal_distribution_(noise_generator_),
+                 vertical_gps_stdev_ * normal_distribution_(noise_generator_));
   Vec3 local_pos = GZ_COMPAT_GET_POS(local_pose) + pos_noise;
 
   Vec3 local_vel = GZ_COMPAT_GET_WORLD_LINEAR_VEL(link_);
-  Vec3 vel_noise(gps_velocity_stdev_ * normal_distribution_(random_generator_),
-                 gps_velocity_stdev_ * normal_distribution_(random_generator_),
-                 gps_velocity_stdev_ * normal_distribution_(random_generator_));
+  Vec3 vel_noise(gps_velocity_stdev_ * normal_distribution_(noise_generator_),
+                 gps_velocity_stdev_ * normal_distribution_(noise_generator_),
+                 gps_velocity_stdev_ * normal_distribution_(noise_generator_));
   local_vel += vel_noise;
 
   // TODO: Do a better job of simulating the wander of GPS

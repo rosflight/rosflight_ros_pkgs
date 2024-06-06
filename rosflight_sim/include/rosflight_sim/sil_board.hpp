@@ -110,7 +110,8 @@ private:
   double baro_bias_ = 0;
   double airspeed_bias_ = 0;
 
-  std::default_random_engine random_generator_;
+  std::default_random_engine bias_generator_;
+  std::default_random_engine noise_generator_;
   std::normal_distribution<double> normal_distribution_;
   std::uniform_real_distribution<double> uniform_distribution_;
 
