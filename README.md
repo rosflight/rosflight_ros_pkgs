@@ -50,8 +50,8 @@ This script contains a node that allows for connecting a gamepad or transmitter 
 To use a transmitter or controller, plug in a controller and launch `ros2 run rosflight_sim rc.py --ros-args --remap
 RC:=/fixedwing/RC` for a fixedwing sim or `ros2 run rosflight_sim rc.py --ros-args --remap RC:=/multirotor/RC` for a
 multirotor sim. Currently supported devices are Taranis Q-X7 transmitters, XBox controllers, RealFlight InterLink
-controllers, and RadioMaster TX16S transmitters. Adding addition devices can be done easily, so long as the device has
-USB gamepad support.
+controllers, and RadioMaster TX16S transmitters. Adding additional devices can be done easily in the script (just
+follow what has already been done), so long as the device has USB gamepad support.
 
 To use a simulated transmitter, set up the firmware so the arm switch is on channel 4 and the override switch is on
 channel 5. Launch the node with `ros2 run rosflight_sim rc.py --ros-args --remap RC:=/fixedwing/RC` for a fixedwing
