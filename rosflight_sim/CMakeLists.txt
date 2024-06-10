@@ -196,9 +196,7 @@ install(
 )
 
 install(PROGRAMS
-  src/command_joy.py
-  src/rc_joy.py
-  src/rc_sim.py
+  src/rc.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

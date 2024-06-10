@@ -43,35 +43,23 @@ fixedwing simulation and `ros2 launch rosflight_sim multirotor.launch.py` for a 
 `gui:=false` to launch a sim without visualization. See the launch files under `rosflight_sim/launch` for additional 
 parameters.
 
-### rc_joy
+### rc
 
-This script contains a node that allows for connecting a gamepad or transmitter to the simulator. To use it, plug in 
-a controller and launch `ros2 run rosflight_sim rc_joy.py --ros-args --remap RC:=/fixedwing/RC` for a fixedwing sim or
-`ros2 run rosflight_sim rc_joy.py --ros-args --remap RC:=/multirotor/RC` for a multirotor sim. Currently 
-supported devices are Taranis Q-X7 transmitters, XBox controllers, RealFlight InterLink controllers, and 
-RadioMaster TX16S transmitters. Adding addition devices can be done easily, so long as the device has USB gamepad 
-support.
+This script contains a node that allows for connecting a gamepad or transmitter to the simulator or using a simulated controller if neither of those are available.
 
-### command_joy
+To use a transmitter or controller, plug in a controller and launch `ros2 run rosflight_sim rc.py --ros-args --remap
+RC:=/fixedwing/RC` for a fixedwing sim or `ros2 run rosflight_sim rc.py --ros-args --remap RC:=/multirotor/RC` for a
+multirotor sim. Currently supported devices are Taranis Q-X7 transmitters, XBox controllers, RealFlight InterLink
+controllers, and RadioMaster TX16S transmitters. Adding additional devices can be done easily in the script (just
+follow what has already been done), so long as the device has USB gamepad support.
 
-This script contains a node that allows for using a gamepad or transmitter for the command input to rosflight. To use 
-it, plug in a controller and launch `ros2 run rosflight_sim command_joy.py --ros-args --remap RC:=/fixedwing/RC` for a
-fixedwing sim or `ros2 run rosflight_sim command_joy.py --ros-args --remap RC:=/multirotor/RC` for a multirotor sim. 
-Currently supported devices are Taranis Q-X7 transmitters, XBox controllers, RealFlight InterLink controllers, and
-RadioMaster TX16S transmitters. Adding addition devices can be done easily, so long as the device has USB gamepad
-support.
+To use a simulated transmitter, set up the firmware so the arm switch is on channel 4 and the override switch is on
+channel 5. Launch the node with `ros2 run rosflight_sim rc.py --ros-args --remap RC:=/fixedwing/RC` for a fixedwing
+sim or `ros2 run rosflight_sim rc.py --ros-args --remap RC:=/multirotor/RC` for a multirotor sim. Arm/disarm with
+`ros2 service call /toggle_arm std_srvs/srv/Trigger`, enable/disable override with `ros2 service call /toggle_override
+std_srvs/srv/Trigger`.
 
-### rc_sim
-
-This script contains a node that allows for arming/disarming the firmware in the simulator as well as enabling/disabling
-rc_override as if flipping switches on an actual controller. Currently, this node expects the arm switch to be on 
-channel 4 and the override switch to be on channel 5. Launch it with `ros2 run rosflight_sim rc_sim.py --ros-args 
---remap RC:=/fixedwing/RC` for a fixedwing sim or `ros2 run rosflight_sim rc_sim.py --ros-args --remap 
-RC:=/multirotor/RC` for a multirotor sim. Arm with `ros2 service call /arm std_srvs/srv/Trigger`, disarm with `ros2 
-service call /disarm std_srvs/srv/Trigger`, enable override with `ros2 service call /enable_override 
-std_srvs/srv/Trigger`, and disable override with `ros2 service call /disable_override std_srvs/srv/Trigger`.
-
-### Simulator, rosflight_io, and rc_joy launch files
+### Simulator, rosflight_io, and rc launch files
 
 The gazebo simulator with the sil_node can be launched alongside rosflight_io and rc_joy, for convenience. Use 
 `ros2 launch rosflight_sim fixedwing_sim_io_joy.launch.py` for a fixedwing sim and 
