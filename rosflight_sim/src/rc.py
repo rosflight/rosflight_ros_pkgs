@@ -183,7 +183,7 @@ class RC(Node):
             self.CHANNEL_MAX = 2000
 
             self.armed = False
-            self.override = False
+            self.override = True
 
             # Initialize rc message with null values
             self.rc_message = RCRaw()
