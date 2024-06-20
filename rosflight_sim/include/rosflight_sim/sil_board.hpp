@@ -472,7 +472,7 @@ public:
 
   bool battery_present() override;
 
-  bool battery_has_new_data() override;
+  bool battery_has_new_data() override{return true;};
   
   bool battery_read(float * voltage, float * current) override;
   /**
