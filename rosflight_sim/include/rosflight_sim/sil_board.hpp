@@ -35,6 +35,7 @@
 #ifndef ROSFLIGHT_SIM_SIL_BOARD_H
 #define ROSFLIGHT_SIM_SIL_BOARD_H
 
+#include "sensors.h"
 #include <cmath>
 #include <cstdbool>
 #include <cstddef>
@@ -47,6 +48,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
+#include <rosflight_msgs/msg/detail/gnss_full__struct.hpp>
 #include <rosflight_msgs/msg/rc_raw.hpp>
 
 #include <rosflight_sim/gz_compat.hpp>
@@ -231,7 +233,7 @@ public:
    *
    * @return true if unprocessed IMU data exists.
    */
-  bool new_imu_data() override;
+  bool imu_has_new_data() override;
   /**
    * @brief Generates simulated IMU data from truth data from Gazebo. Utilizes noise, bias, and walk
    * parameters provided. All data is returned through the values given as the function arguments.
@@ -259,11 +261,11 @@ public:
    *
    * @param mag Magnetometer values to populate.
    */
-  void mag_read(float mag[3]) override;
+  bool mag_read(float mag[3]) override;
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void mag_update() override{};
+  bool mag_has_new_data() override{return false;};
 
   /**
    * @brief Function used to check if a barometer is present. Currently returns true.
@@ -278,11 +280,11 @@ public:
    * @param pressure Pressure value to populate.
    * @param temperature Temperature value to populate.
    */
-  void baro_read(float * pressure, float * temperature) override;
+  bool baro_read(float * pressure, float * temperature) override;
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void baro_update() override{};
+  bool baro_has_new_data() override{return false;};
 
   /**
    * @brief Checks if a pitot tube sensor is present. Returns true if sim is a fixedwing sim.
@@ -297,11 +299,11 @@ public:
    * @param diff_pressure Differential pressure value to populate.
    * @param temperature Temperature value to populate.
    */
-  void diff_pressure_read(float * diff_pressure, float * temperature) override;
+  bool diff_pressure_read(float * diff_pressure, float * temperature) override;
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void diff_pressure_update() override{};
+  bool diff_pressure_has_new_data() override{return false;};
 
   /**
    * @brief Function used to see if a sonar altitude sensor is present. Currently returns true.
@@ -317,11 +319,11 @@ public:
    *
    * @return Sonar reading.
    */
-  float sonar_read() override;
+  bool sonar_read(float * range) override;
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void sonar_update() override{};
+  bool sonar_has_new_data() override{return false;};
 
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)
@@ -356,7 +358,7 @@ public:
    * @param channel Channel to read value from.
    * @return 0.5
    */
-  float rc_read(uint8_t channel) override;
+  float rc_read(uint8_t chan) override;
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
@@ -368,6 +370,8 @@ public:
    * @return False if /RC has had a message published, true otherwise.
    */
   bool rc_lost() override;
+  
+  bool rc_has_new_data() override{return false;};
 
   // non-volatile memory
   /**
@@ -454,69 +458,34 @@ public:
    */
   bool gnss_present() override;
   /**
-   * @brief Function required to be overridden, but not used by sim.
-   */
-  void gnss_update() override{};
-
-  /**
    * @brief Generates GNSS data based on Gazebo truth and noise/bias parameters.
    *
    * @return Populated GNSSData object
    */
-  rosflight_firmware::GNSSData gnss_read() override;
+  bool gnss_read(rosflight_firmware::GNSSData * gnss, rosflight_firmware::GNSSFull * gnss_full) override;
   /**
    * @brief Function used to check if gnss has new data to read. Currently returns true.
    *
    * @return true
    */
   bool gnss_has_new_data() override;
-  /**
-   * @brief Generates GNSSFull data based on Gazebo truth and noise/bias parameters.
-   *
-   * @return Populated GNSSFull object
-   */
-  rosflight_firmware::GNSSFull gnss_full_read() override;
 
-  /**
-   * @brief Function used to check if battery volt meter is present. Currently returns true.
-   *
-   * @return true
-   */
-  bool battery_voltage_present() const override;
-  /**
-   * @brief Checks battery voltage. Currently just returns constant value.
-   *
-   * @note No battery simulation exists, function returns constant value.
-   *
-   * @return Battery voltage
-   */
-  float battery_voltage_read() const override;
+  bool battery_present() override;
+
+  bool battery_has_new_data() override;
+  
+  bool battery_read(float * voltage, float * current) override;
   /**
    * @brief Sets battery voltage calibration constant.
    *
    * @param multiplier Voltage calibration constant
    */
   void battery_voltage_set_multiplier(double multiplier) override;
-
   /**
-   * @brief Function used to check if current meter is present. Currently returns true.
+   * @brief Sets battery current calibration constant.
    *
-   * @return true
+   * @param multiplier Current calibration constant
    */
-  bool battery_current_present() const override;
-  /**
-   * @brief Checks battery current draw. Currently just returns constant value.
-   *
-   * @note No battery simulation exists, function returns constant value.
-   *
-   * @return Battery current draw
-   */
-  float battery_current_read() const override;
-  /**
- * @brief Sets battery current calibration constant.
- *
- * @param multiplier Current calibration constant
- */
   void battery_current_set_multiplier(double multiplier) override;
 
   // Gazebo stuff
