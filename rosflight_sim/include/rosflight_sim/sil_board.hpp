@@ -257,13 +257,14 @@ public:
   bool mag_present() override;
   /**
    * @brief Generates magnetometer data based on Gazebo orientation and given noise/bias parameters.
-   * Returns through function arguments.
    *
    * @param mag Magnetometer values to populate.
+   * @return true if successful.
    */
   bool mag_read(float mag[3]) override;
   /**
    * @brief Function required to be overridden, but not used by sim.
+   * @return true if mag has new data.
    */
   bool mag_has_new_data() override{return true;};
 
@@ -275,14 +276,16 @@ public:
   bool baro_present() override;
   /**
    * @brief Generates barometer measurement based on Gazebo altitude and noise/bias parameters.
-   * Returns output through function arguments.
    *
    * @param pressure Pressure value to populate.
    * @param temperature Temperature value to populate.
+   *
+   * @return true if successful.
    */
   bool baro_read(float * pressure, float * temperature) override;
   /**
    * @brief Function required to be overridden, but not used by sim.
+   * @return true if baro has new data.
    */
   bool baro_has_new_data() override{return true;};
 
@@ -294,14 +297,18 @@ public:
   bool diff_pressure_present() override;
   /**
    * @brief Generates a differential pressure measurement based on Gazebo speed and noise/bias
-   * parameters. Return output through function arguments.
+   * parameters.
    *
    * @param diff_pressure Differential pressure value to populate.
    * @param temperature Temperature value to populate.
+   *
+   * @return true if successful.
    */
   bool diff_pressure_read(float * diff_pressure, float * temperature) override;
   /**
    * @brief Function required to be overridden, but not used by sim.
+   *
+   * @return true if diff_pressure sensor has new data.
    */
   bool diff_pressure_has_new_data() override{return true;};
 
@@ -315,15 +322,19 @@ public:
    * @brief Generates sonar reading based on min/max range and noise parameters. Based on Gazebo
    * altitude value.
    *
+   * @param range measurement to update.
+   *
    * @note Currently does not take UAV attitude into account, only absolute altitude.
    *
-   * @return Sonar reading.
+   * @return true if successful.
    */
   bool sonar_read(float * range) override;
   /**
    * @brief Function required to be overridden, but not used by sim.
+   *
+   * @return true if sonar sensor has new data.
    */
-  bool sonar_has_new_data() override{return false;};
+  bool sonar_has_new_data() override{return true;};
 
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)
@@ -370,7 +381,11 @@ public:
    * @return False if /RC has had a message published, true otherwise.
    */
   bool rc_lost() override;
-  
+  /**
+   * @brief Function used to determine if the rc has new data. Unused by sim.
+   *
+   * @return true if rc has new data.
+   */
   bool rc_has_new_data() override{return true;};
 
   // non-volatile memory
@@ -450,7 +465,6 @@ public:
    * @param len Length of data to clear.
    */
   void backup_memory_clear(size_t len) override;
-
   /**
    * @brief Function used to check if GNSS is present. Currenlty returns true.
    *
@@ -460,7 +474,10 @@ public:
   /**
    * @brief Generates GNSS data based on Gazebo truth and noise/bias parameters.
    *
-   * @return Populated GNSSData object
+   * @param gnss GNSSData object to update.
+   * @param gnss_full GNSSFull object to update.
+   *
+   * @return true if successful.
    */
   bool gnss_read(rosflight_firmware::GNSSData * gnss, rosflight_firmware::GNSSFull * gnss_full) override;
   /**
@@ -469,11 +486,26 @@ public:
    * @return true
    */
   bool gnss_has_new_data() override;
-
+  /**
+   * @brief Function used to check if a battery is present. Currenlty returns true.
+   *
+   * @return true
+   */
   bool battery_present() override;
-
+  /**
+   * @brief Function used to determine if the battery sensor has new data. Unused by sim.
+   *
+   * @return true if battery has new data.
+   */
   bool battery_has_new_data() override{return true;};
-  
+  /**
+   * @brief Creates battery data based on sim model.
+   *
+   * @param voltage The voltage float to update
+   * @param current The current float to update
+   *
+   * @return true if successful.
+   */
   bool battery_read(float * voltage, float * current) override;
   /**
    * @brief Sets battery voltage calibration constant.
