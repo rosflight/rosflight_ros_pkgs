@@ -98,7 +98,7 @@ void UDPBoard::serial_init(uint32_t baud_rate, uint32_t dev)
 
 void UDPBoard::serial_flush() {}
 
-void UDPBoard::serial_write(const uint8_t * src, size_t len)
+void UDPBoard::serial_write(const uint8_t * src, size_t len, uint8_t qos)
 {
   auto buffer = new Buffer(src, len);
 

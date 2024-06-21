@@ -82,7 +82,6 @@ endif()
 # rosflight_firmware
 add_library(rosflight_firmware
   include/rosflight_sim/rosflight_firmware/src/rosflight.cpp
-  include/rosflight_sim/rosflight_firmware/src/nanoprintf.cpp
   include/rosflight_sim/rosflight_firmware/src/estimator.cpp
   include/rosflight_sim/rosflight_firmware/src/mixer.cpp
   include/rosflight_sim/rosflight_firmware/src/controller.cpp
