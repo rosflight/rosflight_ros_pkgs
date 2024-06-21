@@ -70,6 +70,16 @@ void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Worl
   auto remote_host = node_->get_parameter_or<std::string>("ROS_host", "localhost");
   int remote_port = node_->get_parameter_or<int>("ROS_port", 14520);
 
+  // IMU timer
+  // Sonar timer
+  // RC timer
+  // Baro timer
+  // Diff Pressure timer
+  // Mag timer
+  // Battery timer
+  // GNSS timer
+
+
   set_ports(bind_host, bind_port, remote_host, remote_port);
   gzmsg << "ROSflight SIL Conneced to " << remote_host << ":" << remote_port << " from "
         << bind_host << ":" << bind_port << "\n";
@@ -107,6 +117,27 @@ void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Worl
 
   imu_update_rate_ = node_->get_parameter_or<double>("imu_update_rate", 1000.0);
   imu_update_period_us_ = (uint64_t) (1e6 / imu_update_rate_);
+  
+  mag_update_rate_ = node_->get_parameter_or<double>("mag_update_rate", 50.0);
+  mag_update_period_us_ = (uint64_t) (1e6 / mag_update_rate_);
+  
+  gnss_update_rate_ = node_->get_parameter_or<double>("gnss_update_rate", 10.0);
+  gnss_update_period_us_ = (uint64_t) (1e6 / gnss_update_rate_);
+  
+  baro_update_rate_ = node_->get_parameter_or<double>("baro_update_rate", 50.0);
+  baro_update_period_us_ = (uint64_t) (1e6 / baro_update_rate_);
+  
+  diff_pressure_update_rate_ = node_->get_parameter_or<double>("diff_pressure_update_rate", 50.0);
+  diff_pressure_update_period_us_ = (uint64_t) (1e6 / diff_pressure_update_rate_);
+  
+  sonar_update_rate_ = node_->get_parameter_or<double>("sonar_update_rate", 50.0);
+  sonar_update_period_us_ = (uint64_t) (1e6 / sonar_update_rate_);
+  
+  rc_update_rate_ = node_->get_parameter_or<double>("rc_update_rate", 50.0);
+  rc_update_period_us_ = (uint64_t) (1e6 / rc_update_rate_);
+  
+  battery_update_rate_ = node_->get_parameter_or<double>("battery_update_rate", 5.0);
+  battery_update_period_us_ = (uint64_t) (1e6 / battery_update_rate_);
 
   mass_ = node_->get_parameter_or<double>("mass", 2.28);
   rho_ = node_->get_parameter_or<double>("rho", 1.225);
@@ -152,6 +183,7 @@ void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Worl
   prev_vel_3_ = GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(link_);
   last_time_ = GZ_COMPAT_GET_SIM_TIME(world_);
   next_imu_update_time_us_ = 0;
+  next_mag_update_time_us_ = 0;
 }
 
 // clock
@@ -228,6 +260,83 @@ bool SILBoard::imu_has_new_data()
   uint64_t now_us = clock_micros();
   if (now_us >= next_imu_update_time_us_) {
     next_imu_update_time_us_ = now_us + imu_update_period_us_;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool SILBoard::mag_has_new_data()
+{
+  uint64_t now_us = clock_micros();
+  if (now_us >= next_mag_update_time_us_) {
+    next_mag_update_time_us_ = now_us + mag_update_period_us_;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool SILBoard::gnss_has_new_data() 
+{
+  uint64_t now_us = clock_micros();
+  if (now_us >= next_gnss_update_time_us_) {
+    next_gnss_update_time_us_ = now_us + gnss_update_period_us_;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool SILBoard::baro_has_new_data() 
+{
+  uint64_t now_us = clock_micros();
+  if (now_us >= next_baro_update_time_us_) {
+    next_baro_update_time_us_ = now_us + baro_update_period_us_;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool SILBoard::diff_pressure_has_new_data() 
+{
+  uint64_t now_us = clock_micros();
+  if (now_us >= next_diff_pressure_update_time_us_) {
+    next_diff_pressure_update_time_us_ = now_us + diff_pressure_update_period_us_;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool SILBoard::sonar_has_new_data() 
+{
+  uint64_t now_us = clock_micros();
+  if (now_us >= next_sonar_update_time_us_) {
+    next_sonar_update_time_us_ = now_us + sonar_update_period_us_;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool SILBoard::rc_has_new_data() 
+{
+  uint64_t now_us = clock_micros();
+  if (now_us >= next_rc_update_time_us_) {
+    next_rc_update_time_us_ = now_us + rc_update_period_us_;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool SILBoard::battery_has_new_data() 
+{
+  uint64_t now_us = clock_micros();
+  if (now_us >= next_battery_update_time_us_) {
+    next_battery_update_time_us_ = now_us + battery_update_period_us_;
     return true;
   } else {
     return false;
@@ -676,7 +785,5 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss, rosflight_firmware
 
   return true;
 }
-
-bool SILBoard::gnss_has_new_data() { return true; }
 
 } // namespace rosflight_sim

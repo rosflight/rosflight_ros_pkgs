@@ -67,6 +67,13 @@ private:
   GazeboVector inertial_magnetic_field_;
 
   double imu_update_rate_ = 0;
+  double mag_update_rate_ = 0;
+  double gnss_update_rate_ = 0;
+  double baro_update_rate_ = 0;
+  double diff_pressure_update_rate_ = 0;
+  double sonar_update_rate_ = 0;
+  double rc_update_rate_ = 0;
+  double battery_update_rate_ = 0;
 
   long serial_delay_ns_ = 0;
   std::queue<std::tuple<long, uint8_t>> serial_delay_queue_;
@@ -139,7 +146,21 @@ private:
   // Time variables
   gazebo::common::Time boot_time_;
   uint64_t next_imu_update_time_us_ = 0;
+  uint64_t next_mag_update_time_us_ = 0;
+  uint64_t next_gnss_update_time_us_ = 0;
+  uint64_t next_baro_update_time_us_ = 0;
+  uint64_t next_diff_pressure_update_time_us_ = 0;
+  uint64_t next_sonar_update_time_us_ = 0;
+  uint64_t next_rc_update_time_us_ = 0;
+  uint64_t next_battery_update_time_us_ = 0;
   uint64_t imu_update_period_us_ = 0;
+  uint64_t mag_update_period_us_ = 0;
+  uint64_t gnss_update_period_us_ = 0;
+  uint64_t baro_update_period_us_ = 0;
+  uint64_t diff_pressure_update_period_us_ = 0;
+  uint64_t sonar_update_period_us_ = 0;
+  uint64_t rc_update_period_us_ = 0;
+  uint64_t battery_update_period_us_ = 0;
 
   /**
    * @brief Callback function to update RC values when new values are received.
@@ -266,7 +287,7 @@ public:
    * @brief Function required to be overridden, but not used by sim.
    * @return true if mag has new data.
    */
-  bool mag_has_new_data() override{return true;};
+  bool mag_has_new_data() override;
 
   /**
    * @brief Function used to check if a barometer is present. Currently returns true.
@@ -287,7 +308,7 @@ public:
    * @brief Function required to be overridden, but not used by sim.
    * @return true if baro has new data.
    */
-  bool baro_has_new_data() override{return true;};
+  bool baro_has_new_data() override;
 
   /**
    * @brief Checks if a pitot tube sensor is present. Returns true if sim is a fixedwing sim.
@@ -310,7 +331,7 @@ public:
    *
    * @return true if diff_pressure sensor has new data.
    */
-  bool diff_pressure_has_new_data() override{return true;};
+  bool diff_pressure_has_new_data() override;
 
   /**
    * @brief Function used to see if a sonar altitude sensor is present. Currently returns true.
@@ -334,7 +355,7 @@ public:
    *
    * @return true if sonar sensor has new data.
    */
-  bool sonar_has_new_data() override{return true;};
+  bool sonar_has_new_data() override;
 
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)
@@ -386,7 +407,7 @@ public:
    *
    * @return true if rc has new data.
    */
-  bool rc_has_new_data() override{return true;};
+  bool rc_has_new_data() override;
 
   // non-volatile memory
   /**
@@ -497,7 +518,7 @@ public:
    *
    * @return true if battery has new data.
    */
-  bool battery_has_new_data() override{return true;};
+  bool battery_has_new_data() override;
   /**
    * @brief Creates battery data based on sim model.
    *
