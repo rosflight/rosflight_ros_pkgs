@@ -284,7 +284,7 @@ public:
    */
   bool mag_read(float mag[3]) override;
   /**
-   * @brief Function required to be overridden, but not used by sim.
+   * @brief Checks to see if it has been enough time to warrant new data.
    * @return true if mag has new data.
    */
   bool mag_has_new_data() override;
@@ -305,7 +305,7 @@ public:
    */
   bool baro_read(float * pressure, float * temperature) override;
   /**
-   * @brief Function required to be overridden, but not used by sim.
+   * @brief Checks to see if it has been enough time to warrant new data.
    * @return true if baro has new data.
    */
   bool baro_has_new_data() override;
@@ -327,7 +327,7 @@ public:
    */
   bool diff_pressure_read(float * diff_pressure, float * temperature) override;
   /**
-   * @brief Function required to be overridden, but not used by sim.
+   * @brief Checks to see if it has been enough time to warrant new data.
    *
    * @return true if diff_pressure sensor has new data.
    */
@@ -351,7 +351,7 @@ public:
    */
   bool sonar_read(float * range) override;
   /**
-   * @brief Function required to be overridden, but not used by sim.
+   * @brief Checks to see if it has been enough time to warrant new data.
    *
    * @return true if sonar sensor has new data.
    */
@@ -403,7 +403,7 @@ public:
    */
   bool rc_lost() override;
   /**
-   * @brief Function used to determine if the rc has new data. Unused by sim.
+   * @brief Checks to see if it has been enough time to warrant new data.
    *
    * @return true if rc has new data.
    */
@@ -502,7 +502,7 @@ public:
    */
   bool gnss_read(rosflight_firmware::GNSSData * gnss, rosflight_firmware::GNSSFull * gnss_full) override;
   /**
-   * @brief Function used to check if gnss has new data to read. Currently returns true.
+   * @brief Checks to see if it has been enough time to warrant new data.
    *
    * @return true
    */
@@ -514,7 +514,7 @@ public:
    */
   bool battery_present() override;
   /**
-   * @brief Function used to determine if the battery sensor has new data. Unused by sim.
+   * @brief Checks to see if it has been enough time to warrant new data.
    *
    * @return true if battery has new data.
    */
