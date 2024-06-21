@@ -265,7 +265,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  bool mag_has_new_data() override{return false;};
+  bool mag_has_new_data() override{return true;};
 
   /**
    * @brief Function used to check if a barometer is present. Currently returns true.
@@ -284,7 +284,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  bool baro_has_new_data() override{return false;};
+  bool baro_has_new_data() override{return true;};
 
   /**
    * @brief Checks if a pitot tube sensor is present. Returns true if sim is a fixedwing sim.
@@ -303,7 +303,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  bool diff_pressure_has_new_data() override{return false;};
+  bool diff_pressure_has_new_data() override{return true;};
 
   /**
    * @brief Function used to see if a sonar altitude sensor is present. Currently returns true.
@@ -371,7 +371,7 @@ public:
    */
   bool rc_lost() override;
   
-  bool rc_has_new_data() override{return false;};
+  bool rc_has_new_data() override{return true;};
 
   // non-volatile memory
   /**
