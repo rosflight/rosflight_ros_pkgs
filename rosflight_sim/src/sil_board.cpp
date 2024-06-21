@@ -70,16 +70,6 @@ void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Worl
   auto remote_host = node_->get_parameter_or<std::string>("ROS_host", "localhost");
   int remote_port = node_->get_parameter_or<int>("ROS_port", 14520);
 
-  // IMU timer
-  // Sonar timer
-  // RC timer
-  // Baro timer
-  // Diff Pressure timer
-  // Mag timer
-  // Battery timer
-  // GNSS timer
-
-
   set_ports(bind_host, bind_port, remote_host, remote_port);
   gzmsg << "ROSflight SIL Conneced to " << remote_host << ":" << remote_port << " from "
         << bind_host << ":" << bind_port << "\n";
