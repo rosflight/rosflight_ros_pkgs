@@ -1,0 +1,17 @@
+<library path="src">
+  <class name="ROSflightGUI"
+         type="rqt_tuning_gui.rosflight_tuning_gui.ROSflightGUI"
+         base_class_type="rqt_gui_py::Plugin">
+    <description>
+	    Tuning GUI for ROSflight
+    </description>
+    <qtgui>
+      <group>
+        <label>ROSflight</label>
+      </group>
+      <label>ROSplane Tuning GUI</label>
+      <icon type="theme">system-help</icon>
+      <statustip>Super helpful GUI for tuning ROSplane.</statustip>
+    </qtgui>
+  </class>
+</library>
