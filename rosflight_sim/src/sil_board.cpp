@@ -708,7 +708,7 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss, rosflight_firmware
   gnss->vel_e = (int) std::round(-local_vel.Y() * 1e3);
   gnss->vel_d = (int) std::round(-local_vel.Z() * 1e3);
 
-  gnss->fix_type = rosflight_firmware::GNSSFixType::GNSS_FIX_TYPE_FIX;
+  gnss->fix_type = rosflight_firmware::GNSSFixType::GNSS_FIX_TYPE_3D_FIX;
   gnss->time_of_week = GZ_COMPAT_GET_SIM_TIME(world_).Double() * 1000;
   gnss->time = GZ_COMPAT_GET_SIM_TIME(world_).Double();
   gnss->nanos =
@@ -745,7 +745,7 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss, rosflight_firmware
   gnss_full->vel_e = (int) std::round(-local_vel.Y() * 1e3);
   gnss_full->vel_d = (int) std::round(-local_vel.Z() * 1e3);
 
-  gnss_full->fix_type = rosflight_firmware::GNSSFixType::GNSS_FIX_TYPE_FIX;
+  gnss_full->fix_type = rosflight_firmware::GNSSFixType::GNSS_FIX_TYPE_3D_FIX;
   gnss_full->time_of_week = GZ_COMPAT_GET_SIM_TIME(world_).Double() * 1000;
   gnss_full->num_sat = 15;
   // TODO
