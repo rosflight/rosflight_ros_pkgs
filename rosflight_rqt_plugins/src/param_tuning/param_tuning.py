@@ -16,7 +16,7 @@ from ament_index_python import get_resource
 
 class ParameterClient(Node):
     def __init__(self):
-        super().__init__('tuning_gui_parameter_client')
+        super().__init__('param_tuning_client')
 
         self.get_client = self.create_client(GetParameters, '/autopilot/get_parameters')
         while not self.get_client.wait_for_service(timeout_sec=1.0):
@@ -71,12 +71,12 @@ class ROSflightGUI(Plugin):
         # Create QWidget
         self._widget = QMainWindow()
         # Get path to UI file which should be in the "resource" folder of this package
-        _, path = get_resource('packages', 'rosplane_tuning')
-        ui_file = os.path.join(path, 'share', 'rosplane_tuning', 'resource', 'ParamTuning.ui')
+        _, path = get_resource('packages', 'rosflight_rqt_plugins')
+        ui_file = os.path.join(path, 'share', 'rosflight_rqt_plugins', 'resources', 'ParamTuning.ui')
         # Extend the widget with all attributes and children from UI file
         loadUi(ui_file, self._widget)
         # Give QObjects reasonable names
-        self._widget.setObjectName('ROSflightTuningUi')
+        self._widget.setObjectName('ROSflightParamTuning')
         # Show _widget.windowTitle on left-top of each plugin (when
         # it's set in _widget). This is useful when you open multiple
         # plugins at once. Also if you open multiple instances of your
