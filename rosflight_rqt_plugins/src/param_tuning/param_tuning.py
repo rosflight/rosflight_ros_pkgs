@@ -47,11 +47,11 @@ class ParameterClient(Node):
         return self.set_future.result()
 
 
-class ROSflightGUI(Plugin):
+class ParamTuning(Plugin):
     colorChanged = QtCore.pyqtSignal(QtGui.QColor)
 
     def __init__(self, context):
-        super(ROSflightGUI, self).__init__(context)
+        super(ParamTuning, self).__init__(context)
         # Give QObjects reasonable names
         self.setObjectName('ROSflightGUI')
         self._context = context

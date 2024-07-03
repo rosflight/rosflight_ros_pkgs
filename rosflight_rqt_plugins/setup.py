@@ -1,5 +1,5 @@
 import os
-from setuptools import find_packages, setup
+from setuptools import setup
 
 package_name = 'rosflight_rqt_plugins'
 
@@ -38,7 +38,7 @@ setup(
     # scripts here.
     entry_points={
         'console_scripts': [
-            'rqt_param_tuning = param_tuning.main:main'
+            'param_tuning = param_tuning.main:main'
         ],
     },
 )

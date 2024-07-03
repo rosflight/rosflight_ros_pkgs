@@ -1,5 +1,5 @@
-<library path="src/param_tuning">
-  <class name="ParamTuning" type="rqt_param_tuning.param_tuning.ParamTuning" base_class_type="rqt_gui_py::Plugin">
+<library path="src">
+  <class name="ParamTuning" type="param_tuning.param_tuning.ParamTuning" base_class_type="rqt_gui_py::Plugin">
     <description>
     Tuning GUI for ROSflight autopilot parameters.
     </description>
