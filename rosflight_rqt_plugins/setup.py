@@ -17,7 +17,7 @@ setup(
         (os.path.join('share', package_name), ['package.xml']),
         (os.path.join('share', package_name), ['plugin.xml']),
         (os.path.join('share', package_name, 'resources'), ['resources/ParamTuning.ui']),
-        (os.path.join('lib', package_name), ['scripts/rqt_param_tuning']),
+        (os.path.join('lib', package_name), ['scripts/param_tuning']),
     ],
     # This is important as well
     install_requires=['setuptools'],
@@ -34,11 +34,4 @@ setup(
     ],
     description='A collection of rqt plugins for ROSflight',
     license='BSD-3-Clause',
-    # Like the CMakeLists add_executable macro, you can add your python
-    # scripts here.
-    entry_points={
-        'console_scripts': [
-            'param_tuning = param_tuning.main:main'
-        ],
-    },
 )
