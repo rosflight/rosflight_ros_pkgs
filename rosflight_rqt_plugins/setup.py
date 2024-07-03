@@ -1,5 +1,4 @@
 import os
-from glob import glob
 from setuptools import find_packages, setup
 
 package_name = 'rosflight_rqt_plugins'
@@ -9,7 +8,7 @@ setup(
     version='1.0.0',
     # Packages to export
     package_dir={'': 'src'},
-    packages=find_packages(exclude=['test']),
+    packages=['param_tuning'],
     # Files we want to install, specifically launch files
     data_files=[
         # Install marker file in the package index
