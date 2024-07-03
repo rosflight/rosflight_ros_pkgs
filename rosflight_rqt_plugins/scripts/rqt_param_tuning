@@ -1,0 +1,7 @@
+#!/usr/bin/env python3
+
+import sys
+
+from param_tuning.main import main
+
+sys.exit(main())

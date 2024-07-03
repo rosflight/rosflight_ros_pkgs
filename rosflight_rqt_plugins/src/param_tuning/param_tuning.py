@@ -72,7 +72,7 @@ class ROSflightGUI(Plugin):
         self._widget = QMainWindow()
         # Get path to UI file which should be in the "resource" folder of this package
         _, path = get_resource('packages', 'rosplane_tuning')
-        ui_file = os.path.join(path, 'share', 'rosplane_tuning', 'resource', 'tuning_gui.ui')
+        ui_file = os.path.join(path, 'share', 'rosplane_tuning', 'resource', 'ParamTuning.ui')
         # Extend the widget with all attributes and children from UI file
         loadUi(ui_file, self._widget)
         # Give QObjects reasonable names
