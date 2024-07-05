@@ -16,7 +16,7 @@ setup(
         # Include package files
         (os.path.join('share', package_name), ['package.xml']),
         (os.path.join('share', package_name), ['plugin.xml']),
-        (os.path.join('share', package_name, 'resources'), ['resources/ParamTuning.ui']),
+        (os.path.join('share', package_name, 'resources'), ['resources/param_tuning.ui']),
         (os.path.join('lib', package_name), ['scripts/param_tuning']),
     ],
     # This is important as well
