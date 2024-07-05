@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>ParamTuning</string>
+   <string>Autopilot Parameter Tuning</string>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>
