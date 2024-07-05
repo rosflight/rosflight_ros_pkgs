@@ -21,30 +21,67 @@ class ParamTuningWidget(QWidget):
         # Temporary hard-coded configuration
         self.configuration = {
             'Roll Angle': {
-                'r_kp': {'value': 0.0, 'desc': 'Roll Angle P Gain'},
-                'r_kd': {'value': 0.0, 'desc': 'Roll Angle D Gain'},
+                'node_name': '/autopilot',
+                'params': {
+                    'r_kp': 'Roll Angle P Gain',
+                    'r_kd': 'Roll Angle D Gain',
+                }
             },
             'Pitch Angle': {
-                'p_kp': {'value': 0.0, 'desc': 'Pitch Angle P Gain'},
-                'p_kd': {'value': 0.0, 'desc': 'Pitch Angle D Gain'},
+                'node_name': '/autopilot',
+                'params': {
+                    'p_kp': 'Pitch Angle P Gain',
+                    'p_kd': 'Pitch Angle D Gain',
+                }
             },
             'Airspeed': {
-                'a_t_kp': {'value': 0.0, 'desc': 'Airspeed Throttle P Gain'},
-                'a_t_ki': {'value': 0.0, 'desc': 'Airspeed Throttle I Gain'},
+                'node_name': '/autopilot',
+                'params': {
+                    'a_kp': 'Airspeed P Gain',
+                    'a_ki': 'Airspeed I Gain',
+                }
             },
             'Course': {
-                'c_kp': {'value': 0.0, 'desc': 'Course P Gain'},
-                'c_ki': {'value': 0.0, 'desc': 'Course I Gain'},
+                'node_name': '/autopilot',
+                'params': {
+                    'c_kp': 'Course P Gain',
+                    'c_ki': 'Course I Gain',
+                }
             },
             'Altitude': {
-                'a_kp': {'value': 0.0, 'desc': 'Altitude P Gain'},
-                'a_ki': {'value': 0.0, 'desc': 'Altitude I Gain'},
+                'node_name': '/autopilot',
+                'params': {
+                    'a_kp': 'Altitude P Gain',
+                    'a_ki': 'Altitude I Gain',
+                }
+            },
+            'Line Following': {
+                'node_name': '/path_follower',
+                'params': {
+                    'l_kp': 'Line Following P Gain',
+                    'l_ki': 'Line Following I Gain',
+                }
+            },
+            'Orbit Following': {
+                'node_name': '/path_follower',
+                'params': {
+                    'o_kp': 'Orbit Following P Gain',
+                    'o_ki': 'Orbit Following I Gain',
+                }
+            },
+            'Fake Controller': {
+                'node_name': '/fake_controller',
+                'params': {
+                    'f_kp': 'Fake Controller P Gain',
+                    'f_ki': 'Fake Controller I Gain',
+                    'f_kd': 'Fake Controller D Gain',
+                }
             },
         }
 
         # Define table formatting
         self.tableHeaders = ['Parameter', 'Value', 'Description', 'Reset to Previous', 'Reset to Original']
-        self.tableWidths = [175, 125, 350, 250, 250]
+        self.tableWidths = [175, 125, 500, 250, 250]
 
         # Set up the widget
         # Group selection - QComboBox
@@ -66,10 +103,9 @@ class ParamTuningWidget(QWidget):
         for group in self.configuration:
             model = QStandardItemModel()
             model.setHorizontalHeaderLabels(self.tableHeaders)
-            for param in self.configuration[group]:
-                value = self.configuration[group][param]['value']
-                desc = self.configuration[group][param]['desc']
-                model.appendRow([QStandardItem(param), QStandardItem(str(value)), QStandardItem(desc)])
+            for param in self.configuration[group]['params']:
+                desc = self.configuration[group]['params'][param]
+                model.appendRow([QStandardItem(param), QStandardItem('0.0'), QStandardItem(desc)])
             self.models[group] = model
 
         # Load the first model into the table
@@ -78,18 +114,18 @@ class ParamTuningWidget(QWidget):
     def insertButtonsInTable(self):
         # Get a list of gains for the current group
         currentGroup = self.configuration[self.currentGroupKey]
-        currentGains = list(currentGroup.keys())
+        currentParams = list(currentGroup['params'].keys())
 
-        for i, gain in enumerate(currentGains):
+        for i, param in enumerate(currentParams):
             # Create reset to previous buttons
-            button = QPushButton(gain)
-            button.clicked.connect(lambda: print(self.currentGroupKey, ' "Reset to Previous" button clicked'))
+            button = QPushButton(param)
+            button.clicked.connect(lambda: print(self.currentGroupKey, '"Reset to Previous" button clicked'))
             index = self.paramTableView.model().index(i, 3)
             self.paramTableView.setIndexWidget(index, button)
 
             # Create reset to original buttons
-            button = QPushButton(gain)
-            button.clicked.connect(lambda: print(self.currentGroupKey, ' "Reset to Original" button clicked'))
+            button = QPushButton(param)
+            button.clicked.connect(lambda: print(self.currentGroupKey, '"Reset to Original" button clicked'))
             index = self.paramTableView.model().index(i, 4)
             self.paramTableView.setIndexWidget(index, button)
 
