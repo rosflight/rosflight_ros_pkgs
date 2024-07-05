@@ -35,7 +35,7 @@ Altitude:
     alt_ki: 'Altitude I Gain'
 
 Line Following:
-  node: '/line_follower'
+  node: '/path_follower'
   params:
     l_kp: 'Line Following P Gain'
     l_ki: 'Line Following I Gain'
