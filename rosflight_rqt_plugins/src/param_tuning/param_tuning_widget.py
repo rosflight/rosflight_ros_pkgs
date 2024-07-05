@@ -42,6 +42,10 @@ class ParamTuningWidget(QWidget):
             },
         }
 
+        # Define table formatting
+        self.tableHeaders = ['Parameter', 'Value', 'Description', 'Reset to Previous', 'Reset to Original']
+        self.tableWidths = [175, 125, 350, 250, 250]
+
         # Set up the widget
         # Group selection - QComboBox
         self.groupSelection.addItems(self.configuration.keys())
@@ -53,6 +57,7 @@ class ParamTuningWidget(QWidget):
         # Parameter table - QTableView
         self.setupTableModels()
         self.insertButtonsInTable()
+        self.applyTableFormatting()
 
     def setupTableModels(self):
         # Create a model for every group
@@ -60,8 +65,7 @@ class ParamTuningWidget(QWidget):
         self.currentGroupKey = list(self.configuration.keys())[0]
         for group in self.configuration:
             model = QStandardItemModel()
-            model.setHorizontalHeaderLabels(['Parameter', 'Value', 'Description',
-                                             'Reset to Previous', 'Reset to Original'])
+            model.setHorizontalHeaderLabels(self.tableHeaders)
             for param in self.configuration[group]:
                 value = self.configuration[group][param]['value']
                 desc = self.configuration[group][param]['desc']
@@ -88,6 +92,14 @@ class ParamTuningWidget(QWidget):
             button.clicked.connect(lambda: print(self.currentGroupKey, ' "Reset to Original" button clicked'))
             index = self.paramTableView.model().index(i, 4)
             self.paramTableView.setIndexWidget(index, button)
+
+    def applyTableFormatting(self):
+        # Set the column widths
+        for i, width in enumerate(self.tableWidths):
+            self.paramTableView.setColumnWidth(i, width)
+
+        # Hide the number row
+        self.paramTableView.verticalHeader().hide()
 
     def groupSelectionCallback(self, text):
         self.currentGroupKey = text
