@@ -6,9 +6,10 @@
     <qtgui>
       <group>
         <label>ROSflight</label>
+        <icon type="theme">folder</icon>
       </group>
-      <label>Autopilot Param Tuning</label>
-      <icon type="theme">system-help</icon>
+      <label>Autopilot Parameter Tuning</label>
+      <icon type="theme">accessories-text-editor</icon>
       <statustip>Super helpful GUI for tuning autopilots.</statustip>
     </qtgui>
   </class>
