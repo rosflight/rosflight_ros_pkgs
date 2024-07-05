@@ -49,16 +49,22 @@
         <widget class="QComboBox" name="groupSelection"/>
        </item>
        <item>
-        <widget class="QPushButton" name="publishButton">
-         <property name="text">
-          <string>Publish to ROS</string>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
-        </widget>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="loadButton">
+        <widget class="QPushButton" name="refreshButton">
          <property name="text">
-          <string>Load from file</string>
+          <string>Refresh</string>
          </property>
         </widget>
        </item>

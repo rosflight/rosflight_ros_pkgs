@@ -46,10 +46,8 @@ class ParamTuningWidget(QWidget):
         # Group selection - QComboBox
         self.groupSelection.addItems(self.configuration.keys())
         self.groupSelection.currentTextChanged.connect(self.groupSelectionCallback)
-        # Publish to ROS button - QPushButton
-        self.publishButton.clicked.connect(self.publishButtonCallback)
-        # Load from file button - QPushButton
-        self.loadButton.clicked.connect(self.loadButtonCallback)
+        # Refresh button - QPushButton
+        self.refreshButton.clicked.connect(self.refreshButtonCallback)
         # Save to file button - QPushButton
         self.saveButton.clicked.connect(self.saveButtonCallback)
         # Parameter table - QTableView
@@ -96,11 +94,8 @@ class ParamTuningWidget(QWidget):
         self.paramTableView.setModel(self.models[text])
         self.insertButtonsInTable()
 
-    def publishButtonCallback(self):
-        print('Publish button clicked')
-
-    def loadButtonCallback(self):
-        print('Load button clicked')
+    def refreshButtonCallback(self):
+        print('Refresh button clicked')
 
     def saveButtonCallback(self):
         print('Save button clicked')
