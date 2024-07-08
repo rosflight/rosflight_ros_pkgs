@@ -2,6 +2,7 @@ import os
 
 from ament_index_python import get_resource
 from python_qt_binding import loadUi
+from python_qt_binding.QtCore import pyqtSlot, QModelIndex
 from python_qt_binding.QtGui import QStandardItemModel, QStandardItem
 from python_qt_binding.QtWidgets import QWidget, QPushButton
 
@@ -42,8 +43,7 @@ class ParamTuningWidget(QWidget):
         # Parameter table - QTableView
         self.setupTableModels()
         self.insertButtonsInTable()
-        self.applyTableFormatting()
-        self.updateTableValues()
+        self.refreshTableValues()
 
     def setupTableModels(self):
         # Create a model for every group
@@ -59,6 +59,16 @@ class ParamTuningWidget(QWidget):
 
         # Load the first model into the table
         self.paramTableView.setModel(self.models[self.currentGroupKey])
+
+        # Set the column widths
+        for i, width in enumerate(self.tableWidths):
+            self.paramTableView.setColumnWidth(i, width)
+
+        # Hide the number row
+        self.paramTableView.verticalHeader().hide()
+
+        # Connect the model change signal
+        self.paramTableView.model().dataChanged.connect(self.onModelChange)
 
     def insertButtonsInTable(self):
         # Get a list of gains for the current group
@@ -78,15 +88,17 @@ class ParamTuningWidget(QWidget):
             index = self.paramTableView.model().index(i, 4)
             self.paramTableView.setIndexWidget(index, button)
 
-    def applyTableFormatting(self):
-        # Set the column widths
-        for i, width in enumerate(self.tableWidths):
-            self.paramTableView.setColumnWidth(i, width)
+    def changeTableValue(self, group, param, value):
+        for i in range(self.models[group].rowCount()):
+            if self.models[group].item(i, 0).text() == param:
+                self.models[group].item(i, 1).setText(str(value))
+                break
+        self.paramClient.set_param(self.config[group]['node'], param, value)
 
-        # Hide the number row
-        self.paramTableView.verticalHeader().hide()
+    def refreshTableValues(self):
+        # Temporarily disconnect the model change signal
+        self.paramTableView.model().dataChanged.disconnect(self.onModelChange)
 
-    def updateTableValues(self):
         # Get current values of the parameters
         node_name = self.config[self.currentGroupKey]['node']
         for i in range(self.models[self.currentGroupKey].rowCount()):
@@ -94,15 +106,35 @@ class ParamTuningWidget(QWidget):
             value = self.paramClient.get_param(node_name, param)
             self.models[self.currentGroupKey].item(i, 1).setText(str(value))
 
+        # Reconnect the model change signal
+        self.paramTableView.model().dataChanged.connect(self.onModelChange)
+
     def groupSelectionCallback(self, text):
         self.currentGroupKey = text
+
+        # Swap models and connect the model change signal to the new model
+        self.paramTableView.model().dataChanged.disconnect(self.onModelChange)
         self.paramTableView.setModel(self.models[text])
+        self.paramTableView.model().dataChanged.connect(self.onModelChange)
+
+        # Update table
         self.insertButtonsInTable()
-        self.updateTableValues()
+        self.refreshTableValues()
 
     def refreshButtonCallback(self):
-        self.updateTableValues()
+        self.refreshTableValues()
 
     def saveButtonCallback(self):
         print('Save button clicked')
 
+    @pyqtSlot(QModelIndex, QModelIndex)
+    def onModelChange(self, topLeft, bottomRight):
+        try:
+            value = float(topLeft.data())
+        except ValueError:
+            self.paramClient.print_warning('Invalid value type, please enter a number.')
+            self.refreshTableValues()
+            return
+        param = self.models[self.currentGroupKey].item(topLeft.row(), 0).text()
+        node_name = self.config[self.currentGroupKey]['node']
+        self.paramClient.set_param(node_name, param, value)

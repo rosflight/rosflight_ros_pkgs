@@ -50,3 +50,15 @@ class ParameterClient(Node):
                 self.get_logger().error(f'Failed to set {param_name} to {value}: {future.result().results[0].reason}')
         else:
             self.get_logger().error('Service call failed %r' % (future.exception(),))
+
+    def print_info(self, message: str):
+        self.get_logger().info(message)
+
+    def print_warning(self, message: str):
+        self.get_logger().warning(message)
+
+    def print_error(self, message: str):
+        self.get_logger().error(message)
+
+    def print_fatal(self, message: str):
+        self.get_logger().fatal(message)
