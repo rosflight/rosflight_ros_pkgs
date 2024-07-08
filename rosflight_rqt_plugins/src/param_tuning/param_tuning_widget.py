@@ -7,7 +7,7 @@ from python_qt_binding.QtWidgets import QWidget, QPushButton
 
 
 class ParamTuningWidget(QWidget):
-    def __init__(self, config, param_client):
+    def __init__(self, config: dict, param_client):
         # Initialize widget
         super(ParamTuningWidget, self).__init__()
         self.setObjectName('ParamTuningWidget')
@@ -19,7 +19,7 @@ class ParamTuningWidget(QWidget):
 
         # Define table formatting
         self.config = config
-        self.tableHeaders = ['Parameter', 'Value', 'Description', 'Reset to Previous', 'Reset to Original']
+        self.tableHeaders = ['Parameter', 'Value', 'Description', 'Reset to Previous', 'Reset to Initial']
         self.tableWidths = [175, 125, 500, 250, 250]
 
         # Set up the parameter client
