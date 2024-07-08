@@ -1,4 +1,5 @@
 import os
+import copy
 
 from ament_index_python import get_resource
 from python_qt_binding import loadUi
@@ -84,16 +85,12 @@ class ParamTuningWidget(QWidget):
 
             # Create reset to original buttons
             button = QPushButton(str(self.previousValues[(self.currentGroupKey, param)][0]))
-            button.clicked.connect(lambda: print(self.currentGroupKey, '"Reset to Original" button clicked'))
+            button.clicked.connect(
+                lambda _, g=self.currentGroupKey, index=i, p=param:
+                    self.models[g].item(index, 1).setText(str(self.previousValues[(g, p)][0]))
+            )
             index = self.paramTableView.model().index(i, 4)
             self.paramTableView.setIndexWidget(index, button)
-
-    def changeTableValue(self, group, param, value):
-        for i in range(self.models[group].rowCount()):
-            if self.models[group].item(i, 0).text() == param:
-                self.models[group].item(i, 1).setText(str(value))
-                break
-        self.paramClient.set_param(self.config[group]['node'], param, value)
 
     def refreshTableValues(self):
         # Temporarily disconnect the model change signal
