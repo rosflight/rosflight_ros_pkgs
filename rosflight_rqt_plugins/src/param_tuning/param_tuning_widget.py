@@ -13,6 +13,7 @@ class ParamTuningWidget(QWidget):
         # Initialize widget
         super(ParamTuningWidget, self).__init__()
         self.setObjectName('ParamTuningWidget')
+        self.addChangedValuesToHist = True
 
         # Load the UI file
         _, path = get_resource('packages', 'rosflight_rqt_plugins')
@@ -26,12 +27,12 @@ class ParamTuningWidget(QWidget):
 
         # Get the original values of the parameters
         self.paramClient = paramClient
-        self.previousValues = {}
+        self.valueStack = {}
         for group in config:
             node_name = config[group]['node']
             for param in config[group]['params']:
                 value = self.paramClient.get_param(node_name, param)
-                self.previousValues[(group, param)] = [value]
+                self.valueStack[(group, param)] = [value]
 
         # Set up the widget
         # Group selection - QComboBox
@@ -43,7 +44,7 @@ class ParamTuningWidget(QWidget):
         self.saveButton.clicked.connect(self.saveButtonCallback)
         # Parameter table - QTableView
         self.setupTableModels()
-        self.insertButtonsInTable()
+        self.createTableButtons()
         self.refreshTableValues()
 
     def setupTableModels(self):
@@ -71,26 +72,47 @@ class ParamTuningWidget(QWidget):
         # Connect the model change signal
         self.paramTableView.model().dataChanged.connect(self.onModelChange)
 
-    def insertButtonsInTable(self):
+    def createTableButtons(self):
         # Get a list of gains for the current group
         currentGroup = self.config[self.currentGroupKey]
         currentParams = list(currentGroup['params'].keys())
 
         for i, param in enumerate(currentParams):
             # Create reset to previous buttons
-            button = QPushButton(param)
-            button.clicked.connect(lambda: print(self.currentGroupKey, '"Reset to Previous" button clicked'))
+            previousButtonValue = self.valueStack[(self.currentGroupKey, param)][-2] \
+                if len(self.valueStack[(self.currentGroupKey, param)]) > 1 \
+                else self.valueStack[(self.currentGroupKey, param)][0]
+
+            button = QPushButton(str(previousButtonValue))
+            button.clicked.connect(
+                lambda _, g=self.currentGroupKey, index=i, p=param: self.resetPreviousButtonCallback(g, index, p)
+            )
             index = self.paramTableView.model().index(i, 3)
             self.paramTableView.setIndexWidget(index, button)
 
             # Create reset to original buttons
-            button = QPushButton(str(self.previousValues[(self.currentGroupKey, param)][0]))
+            button = QPushButton(str(self.valueStack[(self.currentGroupKey, param)][0]))
             button.clicked.connect(
-                lambda _, g=self.currentGroupKey, index=i, p=param:
-                    self.models[g].item(index, 1).setText(str(self.previousValues[(g, p)][0]))
+                lambda _, g=self.currentGroupKey, index=i, p=param: self.resetInitialButtonCallback(g, index, p)
             )
             index = self.paramTableView.model().index(i, 4)
             self.paramTableView.setIndexWidget(index, button)
+
+    def resetPreviousButtonCallback(self, group, row, param):
+        # Pop the last value from list, unless it is the last value
+        if len(self.valueStack[(group, param)]) > 1:
+            self.valueStack[(group, param)].pop()
+        value = self.valueStack[(group, param)][-1]
+
+        # Update the table
+        self.addChangedValuesToHist = False
+        self.models[group].item(row, 1).setText(str(value))
+        self.addChangedValuesToHist = True
+
+    def resetInitialButtonCallback(self, group, row, param):
+        self.models[group].item(row, 1).setText(str(self.valueStack[(group, param)][0]))
+        self.valueStack[(group, param)] = [self.valueStack[(group, param)][0]]
+        self.createTableButtons()
 
     def refreshTableValues(self):
         # Temporarily disconnect the model change signal
@@ -101,6 +123,13 @@ class ParamTuningWidget(QWidget):
         for i in range(self.models[self.currentGroupKey].rowCount()):
             param = self.models[self.currentGroupKey].item(i, 0).text()
             value = self.paramClient.get_param(node_name, param)
+
+            # If the value is different from the previous value, add it to the stack and update the buttons
+            if value != self.valueStack[(self.currentGroupKey, param)][-1]:
+                self.valueStack[(self.currentGroupKey, param)].append(value)
+                self.createTableButtons()
+
+            # Update the table
             self.models[self.currentGroupKey].item(i, 1).setText(str(value))
 
         # Reconnect the model change signal
@@ -115,7 +144,7 @@ class ParamTuningWidget(QWidget):
         self.paramTableView.model().dataChanged.connect(self.onModelChange)
 
         # Update table
-        self.insertButtonsInTable()
+        self.createTableButtons()
         self.refreshTableValues()
 
     def refreshButtonCallback(self):
@@ -126,12 +155,23 @@ class ParamTuningWidget(QWidget):
 
     @pyqtSlot(QModelIndex, QModelIndex)
     def onModelChange(self, topLeft, bottomRight):
+        # Check if the value is a number
         try:
             value = float(topLeft.data())
         except ValueError:
             self.paramClient.print_warning('Invalid value type, please enter a number.')
             self.refreshTableValues()
             return
+
+        # Set the new value
         param = self.models[self.currentGroupKey].item(topLeft.row(), 0).text()
         node_name = self.config[self.currentGroupKey]['node']
         self.paramClient.set_param(node_name, param, value)
+
+        # Add the new value to the previous values list
+        if self.addChangedValuesToHist:
+            self.valueStack[(self.currentGroupKey, param)].append(value)
+
+        # Update the buttons with the new previous value
+        # Creating all new buttons is inefficient, but it is the easiest and most consistent way to update the values
+        self.createTableButtons()
