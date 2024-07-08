@@ -20,10 +20,10 @@ class ParamTuning(Plugin):
             self._config = yaml.safe_load(file)
 
         # Initialize the ROS client
-        self._client = ParameterClient(self._config)
+        param_client = ParameterClient(self._config)
 
         # Initialize the widget
-        self._widget = ParamTuningWidget(self._config)
+        self._widget = ParamTuningWidget(self._config, param_client)
         if context.serial_number() > 1:
             self._widget.setWindowTitle(
                 self._widget.windowTitle() + (' (%d)' % context.serial_number()))

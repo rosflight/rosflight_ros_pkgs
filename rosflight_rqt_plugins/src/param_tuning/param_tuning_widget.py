@@ -7,7 +7,7 @@ from python_qt_binding.QtWidgets import QWidget, QPushButton
 
 
 class ParamTuningWidget(QWidget):
-    def __init__(self, config):
+    def __init__(self, config, param_client):
         # Initialize widget
         super(ParamTuningWidget, self).__init__()
         self.setObjectName('ParamTuningWidget')
@@ -21,6 +21,14 @@ class ParamTuningWidget(QWidget):
         self.config = config
         self.tableHeaders = ['Parameter', 'Value', 'Description', 'Reset to Previous', 'Reset to Original']
         self.tableWidths = [175, 125, 500, 250, 250]
+
+        # Set up the parameter client
+        self.param_client = param_client
+        self.originalValues = {}
+        for group in config:
+            node_name = config[group]['node']
+            for param in config[group]['params']:
+                self.originalValues[(group, param)] = self.param_client.get_param(node_name, param)
 
         # Set up the widget
         # Group selection - QComboBox
@@ -63,7 +71,7 @@ class ParamTuningWidget(QWidget):
             self.paramTableView.setIndexWidget(index, button)
 
             # Create reset to original buttons
-            button = QPushButton(param)
+            button = QPushButton(str(self.originalValues[(self.currentGroupKey, param)]))
             button.clicked.connect(lambda: print(self.currentGroupKey, '"Reset to Original" button clicked'))
             index = self.paramTableView.model().index(i, 4)
             self.paramTableView.setIndexWidget(index, button)

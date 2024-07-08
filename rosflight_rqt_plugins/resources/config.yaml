@@ -19,8 +19,8 @@ Pitch Angle:
 Airspeed:
   node: '/autopilot'
   params:
-    a_kp: 'Airspeed P Gain'
-    a_ki: 'Airspeed I Gain'
+    a_t_kp: 'Airspeed P Gain'
+    a_t_ki: 'Airspeed I Gain'
 
 Course:
   node: '/autopilot'
@@ -31,18 +31,16 @@ Course:
 Altitude:
   node: '/autopilot'
   params:
-    alt_kp: 'Altitude P Gain'
-    alt_ki: 'Altitude I Gain'
+    a_kp: 'Altitude P Gain'
+    a_ki: 'Altitude I Gain'
 
 Line Following:
   node: '/path_follower'
   params:
-    l_kp: 'Line Following P Gain'
-    l_ki: 'Line Following I Gain'
+    k_path: 'Line Following P Gain'
+    chi_infty: 'Line Following I Gain'
 
 Orbit Following:
   node: '/path_follower'
   params:
-    o_kp: 'Orbit Following P Gain'
-    o_ki: 'Orbit Following I Gain'
-    fake_param: 'Fake Param'
+    k_orbit: 'Orbit Following P Gain'
