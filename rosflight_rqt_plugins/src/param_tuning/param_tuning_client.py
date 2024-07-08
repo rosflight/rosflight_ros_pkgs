@@ -45,7 +45,7 @@ class ParameterClient(Node):
         rclpy.spin_until_future_complete(self, future)
         if future.result() is not None:
             if future.result().results[0].successful:
-                self.get_logger().info(f'Successfully set {param_name} to {value}')
+                self.get_logger().info(f'Set {node_name}/{param_name} to {value}')
             else:
                 self.get_logger().error(f'Failed to set {param_name} to {value}: {future.result().results[0].reason}')
         else:

@@ -56,7 +56,12 @@ class ParamTuningWidget(QWidget):
             model.setHorizontalHeaderLabels(self.tableHeaders)
             for param in self.config[group]['params']:
                 desc = self.config[group]['params'][param]
-                model.appendRow([QStandardItem(param), QStandardItem('0.0'), QStandardItem(desc)])
+                param_item = QStandardItem(param)
+                param_item.setEditable(False)
+                value_item = QStandardItem('0.0')
+                desc_item = QStandardItem(desc)
+                desc_item.setEditable(False)
+                model.appendRow([param_item, value_item, desc_item])
             self.models[group] = model
 
         # Load the first model into the table
