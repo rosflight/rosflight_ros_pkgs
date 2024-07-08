@@ -43,6 +43,7 @@ class ParamTuningWidget(QWidget):
         self.setupTableModels()
         self.insertButtonsInTable()
         self.applyTableFormatting()
+        self.updateTableValues()
 
     def setupTableModels(self):
         # Create a model for every group
@@ -85,13 +86,22 @@ class ParamTuningWidget(QWidget):
         # Hide the number row
         self.paramTableView.verticalHeader().hide()
 
+    def updateTableValues(self):
+        # Get current values of the parameters
+        node_name = self.config[self.currentGroupKey]['node']
+        for i in range(self.models[self.currentGroupKey].rowCount()):
+            param = self.models[self.currentGroupKey].item(i, 0).text()
+            value = self.paramClient.get_param(node_name, param)
+            self.models[self.currentGroupKey].item(i, 1).setText(str(value))
+
     def groupSelectionCallback(self, text):
         self.currentGroupKey = text
         self.paramTableView.setModel(self.models[text])
         self.insertButtonsInTable()
+        self.updateTableValues()
 
     def refreshButtonCallback(self):
-        print('Refresh button clicked')
+        self.updateTableValues()
 
     def saveButtonCallback(self):
         print('Save button clicked')
