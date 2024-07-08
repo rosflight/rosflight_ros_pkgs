@@ -7,28 +7,29 @@ from python_qt_binding.QtWidgets import QWidget, QPushButton
 
 
 class ParamTuningWidget(QWidget):
-    def __init__(self, config: dict, param_client):
+    def __init__(self, config: dict, paramClient):
         # Initialize widget
         super(ParamTuningWidget, self).__init__()
         self.setObjectName('ParamTuningWidget')
 
         # Load the UI file
         _, path = get_resource('packages', 'rosflight_rqt_plugins')
-        ui_file = os.path.join(path, 'share', 'rosflight_rqt_plugins', 'resources', 'param_tuning.ui')
-        loadUi(ui_file, self)
+        uiFile = os.path.join(path, 'share', 'rosflight_rqt_plugins', 'resources', 'param_tuning.ui')
+        loadUi(uiFile, self)
 
         # Define table formatting
         self.config = config
         self.tableHeaders = ['Parameter', 'Value', 'Description', 'Reset to Previous', 'Reset to Initial']
         self.tableWidths = [175, 125, 500, 250, 250]
 
-        # Set up the parameter client
-        self.param_client = param_client
-        self.originalValues = {}
+        # Get the original values of the parameters
+        self.paramClient = paramClient
+        self.previousValues = {}
         for group in config:
             node_name = config[group]['node']
             for param in config[group]['params']:
-                self.originalValues[(group, param)] = self.param_client.get_param(node_name, param)
+                value = self.paramClient.get_param(node_name, param)
+                self.previousValues[(group, param)] = [value]
 
         # Set up the widget
         # Group selection - QComboBox
@@ -71,7 +72,7 @@ class ParamTuningWidget(QWidget):
             self.paramTableView.setIndexWidget(index, button)
 
             # Create reset to original buttons
-            button = QPushButton(str(self.originalValues[(self.currentGroupKey, param)]))
+            button = QPushButton(str(self.previousValues[(self.currentGroupKey, param)][0]))
             button.clicked.connect(lambda: print(self.currentGroupKey, '"Reset to Original" button clicked'))
             index = self.paramTableView.model().index(i, 4)
             self.paramTableView.setIndexWidget(index, button)
