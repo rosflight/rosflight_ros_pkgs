@@ -1,3 +1,4 @@
+import argparse
 import yaml
 
 from rqt_gui_py.plugin import Plugin
@@ -15,8 +16,8 @@ class ParamTuning(Plugin):
         self._node = context.node
 
         # Load the configuration file
-        filepath = '/rosflight_ws/src/rosflight_ros_pkgs/rosflight_rqt_plugins/resources/config.yaml'
-        with open(filepath, 'r') as file:
+        args = self._parse_args(context.argv())
+        with open(args.filepath, 'r') as file:
             self._config = yaml.safe_load(file)
 
         # Initialize the ROS client
@@ -28,3 +29,13 @@ class ParamTuning(Plugin):
             self._widget.setWindowTitle(
                 self._widget.windowTitle() + (' (%d)' % context.serial_number()))
         context.add_widget(self._widget)
+
+    def _parse_args(self, argv):
+        parser = argparse.ArgumentParser(prog='param_tuning', add_help=False)
+        ParamTuning.add_arguments(parser)
+        return parser.parse_args(argv)
+
+    @staticmethod
+    def add_arguments(parser):
+        group = parser.add_argument_group('Options for param_tuning plugin')
+        group.add_argument('--filepath', type=str, help='Path to the .yaml configuration file')
