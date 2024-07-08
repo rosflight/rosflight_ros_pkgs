@@ -2,6 +2,7 @@ import argparse
 import yaml
 
 from rqt_gui_py.plugin import Plugin
+from python_qt_binding.QtWidgets import QFileDialog
 
 from .param_tuning_widget import ParamTuningWidget
 from .param_tuning_client import ParameterClient
@@ -17,6 +18,14 @@ class ParamTuning(Plugin):
 
         # Load the configuration file
         args = self._parse_args(context.argv())
+        if args.filepath is None:
+            options = QFileDialog.Options()
+            filename, _ = QFileDialog.getOpenFileName(None, 'Open Configuration File', '', 'YAML Files (*.yaml)',
+                                                      options=options)
+            if not filename:
+                self._node.get_logger().fatal('No configuration file selected, please provide a configuration file like'
+                                              ' rosflight_rqt_plugins/resources/example_config.yaml')
+                raise RuntimeError('No configuration file provided')
         with open(args.filepath, 'r') as file:
             self._config = yaml.safe_load(file)
 
