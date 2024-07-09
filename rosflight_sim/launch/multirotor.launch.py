@@ -32,7 +32,7 @@ def generate_launch_description():
     )
     z = LaunchConfiguration('z')
     z_launch_arg = DeclareLaunchArgument(
-        'z', default_value=TextSubstitution(text='0.1')
+        'z', default_value=TextSubstitution(text='0.2')
     )
     yaw = LaunchConfiguration('yaw')
     yaw_launch_arg = DeclareLaunchArgument(
@@ -48,12 +48,12 @@ def generate_launch_description():
     )
     verbose = LaunchConfiguration('verbose')
     verbose_launch_arg = DeclareLaunchArgument(
-        'verbose', default_value=TextSubstitution(text='false')
+        'verbose', default_value=TextSubstitution(text='true')
     )
     world_file = LaunchConfiguration('world_file')
     world_file_launch_arg = DeclareLaunchArgument(
         'world_file', default_value=TextSubstitution(text=os.path.join(
-            get_package_share_directory('rosflight_sim'), 'resources/empty-asphalt.world'
+            get_package_share_directory('rosflight_sim'), 'resources', 'runway.world'
         ))
     )
     tf_prefix = LaunchConfiguration('tf_prefix')
@@ -86,18 +86,18 @@ def generate_launch_description():
             'gui': gui,
             'verbose': verbose,
             'world': world_file,
-            'params_file': os.path.join(get_package_share_directory('rosflight_sim'), 'params/multirotor_dynamics.yaml'),
+            'params_file': os.path.join(get_package_share_directory('rosflight_sim'), 'params', 'multirotor_dynamics.yaml'),
         }.items()
     )
 
     # Render xacro file
-    xacro_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'), 'xacro/multirotor.urdf.xacro')
-    urdf_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'), 'resources/multirotor.urdf')
+    xacro_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'), 'xacro', 'multirotor.urdf.xacro')
+    urdf_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'), 'resources', 'multirotor.urdf')
     robot_description = xacro.process_file(
         xacro_filepath_string, mappings={
             'mesh_file_location': os.path.join(
                 get_package_share_directory('rosflight_sim'),
-                'resources/multirotor.dae'
+                'resources', 'multirotor.dae'
             )
         }
     ).toxml()
