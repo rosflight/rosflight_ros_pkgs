@@ -1,0 +1,65 @@
+# Example configuration file to set up the parameter tuning interface. All GUI elements are
+# populated based on this file. This example is written as if it was for use with ROSplane.
+#
+# {Name of parameter group}:
+#   node: '/{ROS_node_name}'
+#   params:
+#     {param_name}:
+#       description: '{Parameter Description}'
+#       scale: {Scale Factor to use in GUI} (optional, default is 1.0)
+#     ...
+
+Roll Angle:
+  node: '/autopilot'
+  params:
+    r_kp:
+      description: 'Roll Angle P Gain'
+    r_kd:
+      description: 'Roll Angle D Gain'
+
+Pitch Angle:
+  node: '/autopilot'
+  params:
+    p_kp:
+      description: 'Pitch Angle P Gain'
+    p_kd:
+      description:  'Pitch Angle D Gain'
+
+Airspeed:
+  node: '/autopilot'
+  params:
+    a_t_kp:
+      description:  'Airspeed P Gain'
+    a_t_ki:
+      description:  'Airspeed I Gain'
+
+Course:
+  node: '/autopilot'
+  params:
+    c_kp:
+      description:  'Course P Gain'
+    c_ki:
+      description: 'Course I Gain'
+
+Altitude:
+  node: '/autopilot'
+  params:
+    a_kp:
+      description:  'Altitude P Gain'
+    a_ki:
+      description: 'Altitude I Gain'
+
+Line Following:
+  node: '/path_follower'
+  params:
+    k_path:
+      description:  'Line Following K Gain'
+    chi_infty:
+      description:  'Max Approach Angle (degrees)'
+      scale: 57.2957795131
+
+Orbit Following:
+  node: '/path_follower'
+  params:
+    k_orbit:
+      description:  'Orbit Following K Gain'
