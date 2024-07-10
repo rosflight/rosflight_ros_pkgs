@@ -31,9 +31,8 @@ class ParamTuningWidget(QWidget):
         self.paramClient = paramClient
         self.valueStack = {}
         for group in config:
-            node_name = config[group]['node']
             for param in config[group]['params']:
-                value = self.paramClient.get_param(node_name, param)
+                value = self.paramClient.get_param(group, param)
                 self.valueStack[(group, param)] = [value]
 
         # Set up the widget
@@ -57,7 +56,7 @@ class ParamTuningWidget(QWidget):
             model = QStandardItemModel()
             model.setHorizontalHeaderLabels(self.tableHeaders)
             for param in self.config[group]['params']:
-                desc = self.config[group]['params'][param]
+                desc = self.config[group]['params'][param]['description']
                 param_item = QStandardItem(param)
                 param_item.setEditable(False)
                 value_item = QStandardItem('0.0')
@@ -126,10 +125,9 @@ class ParamTuningWidget(QWidget):
         self.paramTableView.model().dataChanged.disconnect(self.onModelChange)
 
         # Get current values of the parameters
-        node_name = self.config[self.currentGroupKey]['node']
         for i in range(self.models[self.currentGroupKey].rowCount()):
             param = self.models[self.currentGroupKey].item(i, 0).text()
-            value = self.paramClient.get_param(node_name, param)
+            value = self.paramClient.get_param(self.currentGroupKey, param)
 
             # If the value is different from the previous value, add it to the stack and update the buttons
             if value != self.valueStack[(self.currentGroupKey, param)][-1]:
@@ -179,13 +177,12 @@ class ParamTuningWidget(QWidget):
         # Create a dictionary formatted for ROS parameters, based on the current ROS parameters
         for group in self.config:
             param_dict = {}
-            node_name = self.config[group]['node']
             for i in range(self.models[group].rowCount()):
                 param_name = self.models[group].item(i, 0).text()
-                param_dict[param_name] = self.paramClient.get_param(node_name, param_name)
+                param_dict[param_name] = self.paramClient.get_param(group, param_name, False)
 
             # Add new items to dictionary, appending it if already exists
-            stripped_node_name = node_name.lstrip('/')
+            stripped_node_name = self.config[group]['node'].lstrip('/')
             if stripped_node_name in params:
                 params[stripped_node_name]['ros__parameters'].update(param_dict)
             else:
@@ -207,8 +204,7 @@ class ParamTuningWidget(QWidget):
 
         # Set the new value
         param = self.models[self.currentGroupKey].item(topLeft.row(), 0).text()
-        node_name = self.config[self.currentGroupKey]['node']
-        self.paramClient.set_param(node_name, param, value)
+        self.paramClient.set_param(self.currentGroupKey, param, value)
 
         # Add the new value to the previous values list
         if self.addChangedValuesToHist:
