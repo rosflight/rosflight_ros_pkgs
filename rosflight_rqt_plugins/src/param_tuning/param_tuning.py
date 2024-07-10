@@ -18,7 +18,7 @@ class ParamTuning(Plugin):
 
         # Load the configuration file
         args = self._parse_args(context.argv())
-        if args.filepath is None:
+        if args.config_filepath is None:
             options = QFileDialog.Options()
             filename, _ = QFileDialog.getOpenFileName(None, 'Open Configuration File', '', 'YAML Files (*.yaml)',
                                                       options=options)
@@ -26,14 +26,17 @@ class ParamTuning(Plugin):
                 self._node.get_logger().fatal('No configuration file selected, please provide a configuration file like'
                                               ' rosflight_rqt_plugins/resources/example_config.yaml')
                 raise RuntimeError('No configuration file provided')
-        with open(args.filepath, 'r') as file:
+        with open(args.config_filepath, 'r') as file:
             self._config = yaml.safe_load(file)
+
+        # Get the filepath to save params to
+        self._paramFilepath = args.param_filepath
 
         # Initialize the ROS client
         self._client = ParameterClient(self._config)
 
         # Initialize the widget
-        self._widget = ParamTuningWidget(self._config, self._client)
+        self._widget = ParamTuningWidget(self._config, self._client, self._paramFilepath)
         if context.serial_number() > 1:
             self._widget.setWindowTitle(
                 self._widget.windowTitle() + (' (%d)' % context.serial_number()))
@@ -47,4 +50,6 @@ class ParamTuning(Plugin):
     @staticmethod
     def add_arguments(parser):
         group = parser.add_argument_group('Options for param_tuning plugin')
-        group.add_argument('--filepath', type=str, help='Path to the .yaml configuration file')
+        group.add_argument('--config-filepath', type=str, help='Path to the .yaml GUI configuration file')
+        group.add_argument('--param-filepath', type=str, help='Path to the ROS .yaml parameter file, to save the'
+                                                              ' parameters to')

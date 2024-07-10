@@ -1,15 +1,17 @@
 import os
-import copy
+import yaml
 
 from ament_index_python import get_resource
 from python_qt_binding import loadUi
 from python_qt_binding.QtCore import pyqtSlot, QModelIndex
 from python_qt_binding.QtGui import QStandardItemModel, QStandardItem
-from python_qt_binding.QtWidgets import QWidget, QPushButton
+from python_qt_binding.QtWidgets import QWidget, QPushButton, QFileDialog
 
 
 class ParamTuningWidget(QWidget):
-    def __init__(self, config: dict, paramClient):
+    def __init__(self, config: dict, paramClient, paramFilepath):
+        self.paramFilePath = paramFilepath
+
         # Initialize widget
         super(ParamTuningWidget, self).__init__()
         self.setObjectName('ParamTuningWidget')
@@ -156,7 +158,42 @@ class ParamTuningWidget(QWidget):
         self.refreshTableValues()
 
     def saveButtonCallback(self):
-        print('Save button clicked')
+        # Request a filepath is a param filepath hasn't already been given
+        if self.paramFilePath is None:
+            options = QFileDialog.Options()
+            filepath, _ = QFileDialog.getSaveFileName(None, 'Save Parameters to ROS .yaml', '', 'YAML Files (*.yaml)',
+                                                      options=options)
+            if not filepath:
+                self.paramClient.print_warning('No file selected, parameters not saved.')
+                return
+        else:
+            filepath = self.paramFilePath
+
+        # Load the existing parameter file if it exists
+        if os.path.exists(filepath):
+            with open(filepath, 'r') as file:
+                params = yaml.safe_load(file)
+        else:
+            params = {}
+
+        # Create a dictionary formatted for ROS parameters, based on the current ROS parameters
+        for group in self.config:
+            param_dict = {}
+            node_name = self.config[group]['node']
+            for i in range(self.models[group].rowCount()):
+                param_name = self.models[group].item(i, 0).text()
+                param_dict[param_name] = self.paramClient.get_param(node_name, param_name)
+
+            # Add new items to dictionary, appending it if already exists
+            stripped_node_name = node_name.lstrip('/')
+            if stripped_node_name in params:
+                params[stripped_node_name]['ros__parameters'].update(param_dict)
+            else:
+                params[stripped_node_name] = {'ros__parameters': param_dict}
+
+        # Save the dictionary to the file
+        with open(filepath, 'w') as file:
+            yaml.dump(params, file)
 
     @pyqtSlot(QModelIndex, QModelIndex)
     def onModelChange(self, topLeft, bottomRight):

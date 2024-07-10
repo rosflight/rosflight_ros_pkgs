@@ -1,7 +1,10 @@
-# Name of parameter group:
-#   node: '/ROS_node_name'
+# Example configuration file to set up the parameter tuning interface. All GUI elements are
+# populated based on this file. This example is written as if it was for use with ROSplane.
+#
+# {Name of parameter group}:
+#   node: '/{ROS_node_name}'
 #   params:
-#     param_name: 'Parameter Description'
+#     {param_name}: '{Parameter Description}'
 #     ...
 
 Roll Angle:
