@@ -15,7 +15,7 @@ class ParamTuning(Plugin):
         self.setObjectName('ParamTuning')
 
         self._context = context
-        self._node = context.node  # TODO: Use this instead of making another node for the client
+        self._node = context.node
 
         # Load the configuration file
         args = self._parse_args(context.argv())
@@ -34,7 +34,7 @@ class ParamTuning(Plugin):
         self._paramFilepath = args.param_filepath
 
         # Initialize the ROS client
-        self._client = ParameterClient(self._config)
+        self._client = ParameterClient(self._config, self._node)
 
         # Initialize the widget
         self._widget = ParamTuningWidget(self._config, self._client, self._paramFilepath)

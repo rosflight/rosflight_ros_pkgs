@@ -5,10 +5,10 @@ from rcl_interfaces.srv import SetParameters, GetParameters
 from rosidl_runtime_py.utilities import get_message
 
 
-class ParameterClient(Node):
-    def __init__(self, config: dict):
-        super().__init__('param_tuning_client')
+class ParameterClient():
+    def __init__(self, config: dict, node: Node):
         self.config = config
+        self.node = node
 
         # Initialize parameter clients
         self.set_clients = {}
@@ -16,12 +16,12 @@ class ParameterClient(Node):
         for group in config:
             node_name = config[group]['node']
             if node_name not in self.set_clients:
-                self.set_clients[node_name] = self.create_client(SetParameters, f'{node_name}/set_parameters')
+                self.set_clients[node_name] = self.node.create_client(SetParameters, f'{node_name}/set_parameters')
                 while not self.set_clients[node_name].wait_for_service(timeout_sec=1.0):
-                    self.get_logger().info(f'{node_name}/set_parameters service not available, waiting...')
-                self.get_clients[node_name] = self.create_client(GetParameters, f'{node_name}/get_parameters')
+                    self.node.get_logger().info(f'{node_name}/set_parameters service not available, waiting...')
+                self.get_clients[node_name] = self.node.create_client(GetParameters, f'{node_name}/get_parameters')
                 while not self.get_clients[node_name].wait_for_service(timeout_sec=1.0):
-                    self.get_logger().info(f'{node_name}/get_parameters service not available, waiting...')
+                    self.node.get_logger().info(f'{node_name}/get_parameters service not available, waiting...')
 
         # Initialize topics subscribers for plotting
         self.plot_subscribers = {}
@@ -33,17 +33,17 @@ class ParameterClient(Node):
                     if topic_name not in self.plot_subscribers:
                         message_type = self.get_message_type(topic_name)
                         if message_type is None:
-                            self.get_logger().error(f'Failed to get message type for {topic_name},'
+                            self.node.get_logger().error(f'Failed to get message type for {topic_name},'
                                                     f' does the topic exist?')
                         else:
-                            self.plot_subscribers[topic_name] = self.create_subscription(
+                            self.plot_subscribers[topic_name] = self.node.create_subscription(
                                 message_type,
                                 topic_name,
                                 lambda msg, f=field_name: self.message_callback(msg, f),
                                 10)
 
     def get_message_type(self, topic_name: str):
-        topic_array = self.get_topic_names_and_types()
+        topic_array = self.node.get_topic_names_and_types()
         for topic in topic_array:
             if topic[0] == '/' + topic_name:
                 return get_message(topic[1][0])
@@ -64,17 +64,17 @@ class ParameterClient(Node):
         request.names = [param]
 
         future = self.get_clients[node_name].call_async(request)
-        rclpy.spin_until_future_complete(self, future)
+        rclpy.spin_until_future_complete(self.node, future)
         if future.result() is not None:
             if len(future.result().values) == 0:
-                self.get_logger().error(f'Parameter {param} not found')
+                self.node.get_logger().error(f'Parameter {param} not found')
                 return 0.0
             if future.result().values[0].type == ParameterType.PARAMETER_DOUBLE:
                 return future.result().values[0].double_value * scale
             else:
-                self.get_logger().error(f'Unsupported parameter type for {param}, only double is supported')
+                self.node.get_logger().error(f'Unsupported parameter type for {param}, only double is supported')
         else:
-            self.get_logger().error('Service call failed %r' % (future.exception(),))
+            self.node.get_logger().error('Service call failed %r' % (future.exception(),))
 
     def set_param(self, group: str, param: str, value: float, scaled: bool = True) -> None:
         if scaled and 'scale' in self.config[group]['params'][param]:
@@ -85,23 +85,23 @@ class ParameterClient(Node):
         parameter = Parameter(param, Parameter.Type.DOUBLE, value)
         request.parameters.append(parameter.to_parameter_msg())
         future = self.set_clients[node_name].call_async(request)
-        rclpy.spin_until_future_complete(self, future)
+        rclpy.spin_until_future_complete(self.node, future)
         if future.result() is not None:
             if future.result().results[0].successful:
-                self.get_logger().info(f'Set {node_name}/{param} to {value}')
+                self.node.get_logger().info(f'Set {node_name}/{param} to {value}')
             else:
-                self.get_logger().error(f'Failed to set {param} to {value}: {future.result().results[0].reason}')
+                self.node.get_logger().error(f'Failed to set {param} to {value}: {future.result().results[0].reason}')
         else:
-            self.get_logger().error('Service call failed %r' % (future.exception(),))
+            self.node.get_logger().error('Service call failed %r' % (future.exception(),))
 
     def print_info(self, message: str):
-        self.get_logger().info(message)
+        self.node.get_logger().info(message)
 
     def print_warning(self, message: str):
-        self.get_logger().warning(message)
+        self.node.get_logger().warning(message)
 
     def print_error(self, message: str):
-        self.get_logger().error(message)
+        self.node.get_logger().error(message)
 
     def print_fatal(self, message: str):
-        self.get_logger().fatal(message)
+        self.node.get_logger().fatal(message)
