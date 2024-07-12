@@ -4,8 +4,9 @@ import yaml
 from rqt_gui_py.plugin import Plugin
 from python_qt_binding.QtWidgets import QFileDialog
 
-from .param_tuning_widget import ParamTuningWidget
 from .param_tuning_client import ParameterClient
+from .param_tuning_plotter import ParamTuningPlotter
+from .param_tuning_widget import ParamTuningWidget
 
 class ParamTuning(Plugin):
 
@@ -40,6 +41,10 @@ class ParamTuning(Plugin):
         if context.serial_number() > 1:
             self._widget.setWindowTitle(
                 self._widget.windowTitle() + (' (%d)' % context.serial_number()))
+
+        # Initialize the plotter
+        self._plotter = ParamTuningPlotter(self._config, self._client, self._widget.layout().itemAtPosition(0, 0))
+
         context.add_widget(self._widget)
 
     def _parse_args(self, argv):

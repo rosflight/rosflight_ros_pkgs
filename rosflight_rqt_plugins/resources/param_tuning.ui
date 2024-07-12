@@ -26,7 +26,7 @@
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="mainVerticalLayout" stretch="0,0">
      <property name="spacing">
-      <number>12</number>
+      <number>5</number>
      </property>
      <property name="sizeConstraint">
       <enum>QLayout::SetDefaultConstraint</enum>
