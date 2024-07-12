@@ -2,7 +2,7 @@ import argparse
 import yaml
 
 from rqt_gui_py.plugin import Plugin
-from python_qt_binding.QtWidgets import QFileDialog
+from python_qt_binding.QtWidgets import QFileDialog, QVBoxLayout
 
 from .param_tuning_client import ParameterClient
 from .param_tuning_plotter import ParamTuningPlotter
@@ -43,7 +43,8 @@ class ParamTuning(Plugin):
                 self._widget.windowTitle() + (' (%d)' % context.serial_number()))
 
         # Initialize the plotter
-        self._plotter = ParamTuningPlotter(self._config, self._client, self._widget.layout().itemAtPosition(0, 0))
+        plotLayout = self._widget.findChild(QVBoxLayout, 'plotLayout')
+        self._plotter = ParamTuningPlotter(self._config, self._client, plotLayout)
 
         context.add_widget(self._widget)
 
