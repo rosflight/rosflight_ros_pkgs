@@ -15,7 +15,7 @@ class ParamTuning(Plugin):
         self.setObjectName('ParamTuning')
 
         self._context = context
-        self._node = context.node
+        self._node = context.node  # TODO: Use this instead of making another node for the client
 
         # Load the configuration file
         args = self._parse_args(context.argv())

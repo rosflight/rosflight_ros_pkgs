@@ -2,6 +2,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.parameter import ParameterType, Parameter
 from rcl_interfaces.srv import SetParameters, GetParameters
+from rosidl_runtime_py.utilities import get_message
 
 
 class ParameterClient(Node):
@@ -9,11 +10,11 @@ class ParameterClient(Node):
         super().__init__('param_tuning_client')
         self.config = config
 
+        # Initialize parameter clients
         self.set_clients = {}
         self.get_clients = {}
         for group in config:
             node_name = config[group]['node']
-
             if node_name not in self.set_clients:
                 self.set_clients[node_name] = self.create_client(SetParameters, f'{node_name}/set_parameters')
                 while not self.set_clients[node_name].wait_for_service(timeout_sec=1.0):
@@ -21,6 +22,27 @@ class ParameterClient(Node):
                 self.get_clients[node_name] = self.create_client(GetParameters, f'{node_name}/get_parameters')
                 while not self.get_clients[node_name].wait_for_service(timeout_sec=1.0):
                     self.get_logger().info(f'{node_name}/get_parameters service not available, waiting...')
+
+        ## Initialize topics subscribers for plotting
+        self.plot_subscribers = {}
+        for group in config:
+            if 'plot_topics' in config[group]:
+                for topic in config[group]['plot_topics']:
+                    topic_name = config[group]['plot_topics'][topic].split('/')[1]
+                    if topic_name not in self.plot_subscribers:
+                        message_type = self.get_message_type(topic_name)
+                        self.plot_subscribers[topic_name] = self.create_subscription(
+                            message_type,
+                            topic_name,
+                            lambda msg: print(msg),
+                            10)
+
+    def get_message_type(self, topic_name: str):
+        topic_array = self.get_topic_names_and_types()
+        for topic in topic_array:
+            if topic[0] == '/' + topic_name:
+                return get_message(topic[1][0])
+        return None
 
     def get_param(self, group: str, param: str, scaled: bool = True) -> float:
         if not scaled or 'scale' not in self.config[group]['params'][param]:
