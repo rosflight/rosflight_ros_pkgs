@@ -23,19 +23,24 @@ class ParameterClient(Node):
                 while not self.get_clients[node_name].wait_for_service(timeout_sec=1.0):
                     self.get_logger().info(f'{node_name}/get_parameters service not available, waiting...')
 
-        ## Initialize topics subscribers for plotting
+        # Initialize topics subscribers for plotting
         self.plot_subscribers = {}
         for group in config:
             if 'plot_topics' in config[group]:
                 for topic in config[group]['plot_topics']:
                     topic_name = config[group]['plot_topics'][topic].split('/')[1]
+                    field_name = config[group]['plot_topics'][topic].split('/')[2]
                     if topic_name not in self.plot_subscribers:
                         message_type = self.get_message_type(topic_name)
-                        self.plot_subscribers[topic_name] = self.create_subscription(
-                            message_type,
-                            topic_name,
-                            lambda msg: print(msg),
-                            10)
+                        if message_type is None:
+                            self.get_logger().error(f'Failed to get message type for {topic_name},'
+                                                    f' does the topic exist?')
+                        else:
+                            self.plot_subscribers[topic_name] = self.create_subscription(
+                                message_type,
+                                topic_name,
+                                lambda msg, f=field_name: self.message_callback(msg, f),
+                                10)
 
     def get_message_type(self, topic_name: str):
         topic_array = self.get_topic_names_and_types()
@@ -43,6 +48,10 @@ class ParameterClient(Node):
             if topic[0] == '/' + topic_name:
                 return get_message(topic[1][0])
         return None
+
+    def message_callback(self, msg, field_name: str):
+        value = getattr(msg, field_name)
+        print(value)
 
     def get_param(self, group: str, param: str, scaled: bool = True) -> float:
         if not scaled or 'scale' not in self.config[group]['params'][param]:
