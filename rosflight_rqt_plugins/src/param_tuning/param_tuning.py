@@ -1,6 +1,7 @@
 import argparse
 import yaml
 
+import rclpy
 from rqt_gui_py.plugin import Plugin
 from python_qt_binding.QtWidgets import QFileDialog, QVBoxLayout
 
@@ -61,3 +62,8 @@ class ParamTuning(Plugin):
         group.add_argument('--config-filepath', type=str, help='Path to the .yaml GUI configuration file')
         group.add_argument('--param-filepath', type=str, help='Path to the ROS .yaml parameter file, to save the'
                                                               ' parameters to')
+
+    def shutdown_plugin(self):
+        self._client.shutdown()
+        self._node.destroy_node()
+        rclpy.shutdown()

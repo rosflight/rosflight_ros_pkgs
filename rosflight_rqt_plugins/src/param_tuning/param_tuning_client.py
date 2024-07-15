@@ -156,3 +156,10 @@ class ParameterClient():
 
     def print_fatal(self, message: str) -> None:
         self._node.get_logger().fatal(message)
+
+    def shutdown(self) -> None:
+        for topic in self._plot_subscribers:
+            self._plot_subscribers[topic].destroy()
+        for client in self._set_clients:
+            self._set_clients[client].destroy()
+            self._get_clients[client].destroy()
