@@ -10,12 +10,12 @@ from python_qt_binding.QtWidgets import QWidget, QPushButton, QFileDialog
 
 class ParamTuningWidget(QWidget):
     def __init__(self, config: dict, paramClient, paramFilepath: str, x_length: float):
-        self.paramFilePath = paramFilepath
+        self._paramFilePath = paramFilepath
 
         # Initialize widget
         super(ParamTuningWidget, self).__init__()
         self.setObjectName('ParamTuningWidget')
-        self.addChangedValuesToHist = True
+        self._addChangedValuesToHist = True
 
         # Load the UI file
         _, path = get_resource('packages', 'rosflight_rqt_plugins')
@@ -23,149 +23,149 @@ class ParamTuningWidget(QWidget):
         loadUi(uiFile, self)
 
         # Define table formatting
-        self.config = config
-        self.tableHeaders = ['Parameter', 'Value', 'Description', 'Reset to Previous', 'Reset to Initial']
-        self.tableWidths = [175, 125, 500, 250, 250]
+        self._config = config
+        self._tableHeaders = ['Parameter', 'Value', 'Description', 'Reset to Previous', 'Reset to Initial']
+        self._tableWidths = [175, 125, 500, 250, 250]
 
         # Get the original values of the parameters
-        self.paramClient = paramClient
-        self.valueStack = {}
+        self._paramClient = paramClient
+        self._valueStack = {}
         for group in config:
             for param in config[group]['params']:
-                value = self.paramClient.get_param(group, param)
-                self.valueStack[(group, param)] = [value]
+                value = self._paramClient.get_param(group, param)
+                self._valueStack[(group, param)] = [value]
 
         # Set up the widget
         # Group selection - QComboBox
-        self.groupSelection.addItems(self.config.keys())
-        self.groupSelection.currentTextChanged.connect(self.groupSelectionCallback)
+        self.groupSelection.addItems(self._config.keys())
+        self.groupSelection.currentTextChanged.connect(self._groupSelectionCallback)
         # Refresh button - QPushButton
-        self.refreshButton.clicked.connect(self.refreshButtonCallback)
+        self.refreshButton.clicked.connect(self._refreshButtonCallback)
         # Save to file button - QPushButton
-        self.saveButton.clicked.connect(self.saveButtonCallback)
+        self.saveButton.clicked.connect(self._saveButtonCallback)
         # Parameter table - QTableView
-        self.setupTableModels()
-        self.createTableButtons()
-        self.refreshTableValues()
+        self._setupTableModels()
+        self._createTableButtons()
+        self._refreshTableValues()
 
-    def setupTableModels(self):
+    def _setupTableModels(self):
         # Create a model for every group
-        self.models = {}
-        self.currentGroupKey = list(self.config.keys())[0]
-        for group in self.config:
+        self._models = {}
+        self._currentGroupKey = list(self._config.keys())[0]
+        for group in self._config:
             model = QStandardItemModel()
-            model.setHorizontalHeaderLabels(self.tableHeaders)
-            for param in self.config[group]['params']:
-                desc = self.config[group]['params'][param]['description']
+            model.setHorizontalHeaderLabels(self._tableHeaders)
+            for param in self._config[group]['params']:
+                desc = self._config[group]['params'][param]['description']
                 param_item = QStandardItem(param)
                 param_item.setEditable(False)
                 value_item = QStandardItem('0.0')
                 desc_item = QStandardItem(desc)
                 desc_item.setEditable(False)
                 model.appendRow([param_item, value_item, desc_item])
-            self.models[group] = model
+            self._models[group] = model
 
         # Load the first model into the table
-        self.paramTableView.setModel(self.models[self.currentGroupKey])
+        self.paramTableView.setModel(self._models[self._currentGroupKey])
 
         # Set the column widths
-        for i, width in enumerate(self.tableWidths):
+        for i, width in enumerate(self._tableWidths):
             self.paramTableView.setColumnWidth(i, width)
 
         # Hide the number row
         self.paramTableView.verticalHeader().hide()
 
         # Connect the model change signal
-        self.paramTableView.model().dataChanged.connect(self.onModelChange)
+        self.paramTableView.model().dataChanged.connect(self._onModelChange)
 
-    def createTableButtons(self):
+    def _createTableButtons(self):
         # Get a list of gains for the current group
-        currentGroup = self.config[self.currentGroupKey]
+        currentGroup = self._config[self._currentGroupKey]
         currentParams = list(currentGroup['params'].keys())
 
         for i, param in enumerate(currentParams):
             # Create reset to previous buttons
-            previousButtonValue = self.valueStack[(self.currentGroupKey, param)][-2] \
-                if len(self.valueStack[(self.currentGroupKey, param)]) > 1 \
-                else self.valueStack[(self.currentGroupKey, param)][0]
+            previousButtonValue = self._valueStack[(self._currentGroupKey, param)][-2] \
+                if len(self._valueStack[(self._currentGroupKey, param)]) > 1 \
+                else self._valueStack[(self._currentGroupKey, param)][0]
 
             button = QPushButton(str(previousButtonValue))
             button.clicked.connect(
-                lambda _, g=self.currentGroupKey, index=i, p=param: self.resetPreviousButtonCallback(g, index, p)
+                lambda _, g=self._currentGroupKey, index=i, p=param: self._resetPreviousButtonCallback(g, index, p)
             )
             index = self.paramTableView.model().index(i, 3)
             self.paramTableView.setIndexWidget(index, button)
 
             # Create reset to original buttons
-            button = QPushButton(str(self.valueStack[(self.currentGroupKey, param)][0]))
+            button = QPushButton(str(self._valueStack[(self._currentGroupKey, param)][0]))
             button.clicked.connect(
-                lambda _, g=self.currentGroupKey, index=i, p=param: self.resetInitialButtonCallback(g, index, p)
+                lambda _, g=self._currentGroupKey, index=i, p=param: self._resetInitialButtonCallback(g, index, p)
             )
             index = self.paramTableView.model().index(i, 4)
             self.paramTableView.setIndexWidget(index, button)
 
-    def resetPreviousButtonCallback(self, group, row, param):
+    def _resetPreviousButtonCallback(self, group, row, param):
         # Pop the last value from list, unless it is the last value
-        if len(self.valueStack[(group, param)]) > 1:
-            self.valueStack[(group, param)].pop()
-        value = self.valueStack[(group, param)][-1]
+        if len(self._valueStack[(group, param)]) > 1:
+            self._valueStack[(group, param)].pop()
+        value = self._valueStack[(group, param)][-1]
 
         # Update the table
-        self.addChangedValuesToHist = False
-        self.models[group].item(row, 1).setText(str(value))
-        self.addChangedValuesToHist = True
+        self._addChangedValuesToHist = False
+        self._models[group].item(row, 1).setText(str(value))
+        self._addChangedValuesToHist = True
 
-    def resetInitialButtonCallback(self, group, row, param):
-        self.models[group].item(row, 1).setText(str(self.valueStack[(group, param)][0]))
-        self.valueStack[(group, param)] = [self.valueStack[(group, param)][0]]
-        self.createTableButtons()
+    def _resetInitialButtonCallback(self, group, row, param):
+        self._models[group].item(row, 1).setText(str(self._valueStack[(group, param)][0]))
+        self._valueStack[(group, param)] = [self._valueStack[(group, param)][0]]
+        self._createTableButtons()
 
-    def refreshTableValues(self):
+    def _refreshTableValues(self):
         # Temporarily disconnect the model change signal
-        self.paramTableView.model().dataChanged.disconnect(self.onModelChange)
+        self.paramTableView.model().dataChanged.disconnect(self._onModelChange)
 
         # Get current values of the parameters
-        for i in range(self.models[self.currentGroupKey].rowCount()):
-            param = self.models[self.currentGroupKey].item(i, 0).text()
-            value = self.paramClient.get_param(self.currentGroupKey, param)
+        for i in range(self._models[self._currentGroupKey].rowCount()):
+            param = self._models[self._currentGroupKey].item(i, 0).text()
+            value = self._paramClient.get_param(self._currentGroupKey, param)
 
             # If the value is different from the previous value, add it to the stack and update the buttons
-            if value != self.valueStack[(self.currentGroupKey, param)][-1]:
-                self.valueStack[(self.currentGroupKey, param)].append(value)
-                self.createTableButtons()
+            if value != self._valueStack[(self._currentGroupKey, param)][-1]:
+                self._valueStack[(self._currentGroupKey, param)].append(value)
+                self._createTableButtons()
 
             # Update the table
-            self.models[self.currentGroupKey].item(i, 1).setText(str(value))
+            self._models[self._currentGroupKey].item(i, 1).setText(str(value))
 
         # Reconnect the model change signal
-        self.paramTableView.model().dataChanged.connect(self.onModelChange)
+        self.paramTableView.model().dataChanged.connect(self._onModelChange)
 
-    def groupSelectionCallback(self, text):
-        self.currentGroupKey = text
+    def _groupSelectionCallback(self, text):
+        self._currentGroupKey = text
 
         # Swap models and connect the model change signal to the new model
-        self.paramTableView.model().dataChanged.disconnect(self.onModelChange)
-        self.paramTableView.setModel(self.models[text])
-        self.paramTableView.model().dataChanged.connect(self.onModelChange)
+        self.paramTableView.model().dataChanged.disconnect(self._onModelChange)
+        self.paramTableView.setModel(self._models[text])
+        self.paramTableView.model().dataChanged.connect(self._onModelChange)
 
         # Update table
-        self.createTableButtons()
-        self.refreshTableValues()
+        self._createTableButtons()
+        self._refreshTableValues()
 
-    def refreshButtonCallback(self):
-        self.refreshTableValues()
+    def _refreshButtonCallback(self):
+        self._refreshTableValues()
 
-    def saveButtonCallback(self):
+    def _saveButtonCallback(self):
         # Request a filepath is a param filepath hasn't already been given
-        if self.paramFilePath is None:
+        if self._paramFilePath is None:
             options = QFileDialog.Options()
             filepath, _ = QFileDialog.getSaveFileName(None, 'Save Parameters to ROS .yaml', '', 'YAML Files (*.yaml)',
                                                       options=options)
             if not filepath:
-                self.paramClient.print_warning('No file selected, parameters not saved.')
+                self._paramClient.print_warning('No file selected, parameters not saved.')
                 return
         else:
-            filepath = self.paramFilePath
+            filepath = self._paramFilePath
 
         # Load the existing parameter file if it exists
         if os.path.exists(filepath):
@@ -175,14 +175,14 @@ class ParamTuningWidget(QWidget):
             params = {}
 
         # Create a dictionary formatted for ROS parameters, based on the current ROS parameters
-        for group in self.config:
+        for group in self._config:
             param_dict = {}
-            for i in range(self.models[group].rowCount()):
-                param_name = self.models[group].item(i, 0).text()
-                param_dict[param_name] = self.paramClient.get_param(group, param_name, False)
+            for i in range(self._models[group].rowCount()):
+                param_name = self._models[group].item(i, 0).text()
+                param_dict[param_name] = self._paramClient.get_param(group, param_name, False)
 
             # Add new items to dictionary, appending it if already exists
-            stripped_node_name = self.config[group]['node'].lstrip('/')
+            stripped_node_name = self._config[group]['node'].lstrip('/')
             if stripped_node_name in params:
                 params[stripped_node_name]['ros__parameters'].update(param_dict)
             else:
@@ -193,23 +193,23 @@ class ParamTuningWidget(QWidget):
             yaml.dump(params, file)
 
     @pyqtSlot(QModelIndex, QModelIndex)
-    def onModelChange(self, topLeft, bottomRight):
+    def _onModelChange(self, topLeft, bottomRight):
         # Check if the value is a number
         try:
             value = float(topLeft.data())
         except ValueError:
-            self.paramClient.print_warning('Invalid value type, please enter a number.')
-            self.refreshTableValues()
+            self._paramClient.print_warning('Invalid value type, please enter a number.')
+            self._refreshTableValues()
             return
 
         # Set the new value
-        param = self.models[self.currentGroupKey].item(topLeft.row(), 0).text()
-        self.paramClient.set_param(self.currentGroupKey, param, value)
+        param = self._models[self._currentGroupKey].item(topLeft.row(), 0).text()
+        self._paramClient.set_param(self._currentGroupKey, param, value)
 
         # Add the new value to the previous values list
-        if self.addChangedValuesToHist:
-            self.valueStack[(self.currentGroupKey, param)].append(value)
+        if self._addChangedValuesToHist:
+            self._valueStack[(self._currentGroupKey, param)].append(value)
 
         # Update the buttons with the new previous value
         # Creating all new buttons is inefficient, but it is the easiest and most consistent way to update the values
-        self.createTableButtons()
+        self._createTableButtons()
