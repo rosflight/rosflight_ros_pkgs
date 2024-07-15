@@ -1,3 +1,4 @@
+import re
 import time
 from rclpy.node import Node
 from rclpy.parameter import ParameterType, Parameter
@@ -30,8 +31,18 @@ class ParameterClient():
         for group in config:
             if 'plot_topics' in config[group]:
                 for topic in config[group]['plot_topics']:
+                    # Get the topic name, field name, and optional index
                     topic_name = config[group]['plot_topics'][topic].split('/')[1]
-                    field_name = config[group]['plot_topics'][topic].split('/')[2]
+                    field = config[group]['plot_topics'][topic].split('/')[2]
+                    match = re.match(r"(\w+)\[(\d+)\]", field)
+                    if match:
+                        field_name = match.group(1)
+                        field_index = int(match.group(2))
+                    else: # No index
+                        field_name = field
+                        field_index = None
+
+                    # Create the subscribers
                     if topic_name not in self.plot_subscribers:
                         message_type = self.get_message_type(topic_name)
                         if message_type is None:
@@ -44,9 +55,9 @@ class ParameterClient():
                                 lambda msg, t=topic_name: self.message_callback(msg, t),
                                 10
                             )
-                            self.data_history[topic_name] = {field_name: []}
+                            self.data_history[topic_name] = {(field_name, field_index): []}
                     else:
-                        self.data_history[topic_name][field_name] = []
+                        self.data_history[topic_name][(field_name, field_index)] = []
 
     def get_message_type(self, topic_name: str):
         topic_array = self.node.get_topic_names_and_types()
@@ -56,17 +67,20 @@ class ParameterClient():
         return None
 
     def message_callback(self, msg, topic_name: str):
-        for field_name in self.data_history[topic_name]:
+        for field in self.data_history[topic_name]:
+            field_name = field[0]
+            field_index = field[1]
+
             # Add new values to array
-            msg_value = getattr(msg, field_name)
+            msg_value = getattr(msg, field_name) if field_index is None else getattr(msg, field_name)[field_index]
             msg_time = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
-            self.data_history[topic_name][field_name].append((msg_value, msg_time))
+            self.data_history[topic_name][(field_name, field_index)].append((msg_value, msg_time))
 
             # Remove old values
             curr_time = self.node.get_clock().now()
             curr_time = curr_time.to_msg().sec + curr_time.to_msg().nanosec * 1e-9
-            while curr_time - self.data_history[topic_name][field_name][0][1] > self.hist_duration:
-                self.data_history[topic_name][field_name].pop(0)
+            while curr_time - self.data_history[topic_name][(field_name, field_index)][0][1] > self.hist_duration:
+                self.data_history[topic_name][(field_name, field_index)].pop(0)
 
     def get_param(self, group: str, param: str, scaled: bool = True) -> float:
         if not scaled or 'scale' not in self.config[group]['params'][param]:

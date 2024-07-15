@@ -83,7 +83,7 @@ Altitude:
     y_label: 'Altitude (m)'
   plot_topics:
     Altitude Command: '/controller_command/h_c'
-#    Altitude Estimate: '/estimated_state/position[2]'
+    Altitude Estimate: '/estimated_state/position[2]'
 
 Line Following:
   node: '/path_follower'
