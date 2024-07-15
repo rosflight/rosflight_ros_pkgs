@@ -1,5 +1,6 @@
 import re
 import time
+from collections import deque
 from rclpy.node import Node
 from rclpy.parameter import ParameterType, Parameter
 from rcl_interfaces.srv import SetParameters, GetParameters
@@ -11,6 +12,8 @@ class ParameterClient():
         self._config = config
         self._node = node
         self._hist_duration = hist_duration
+        # Minimum time between data points accepted, to reduce amount of data to plot
+        self._min_delta_time = hist_duration / 250
 
         # Initialize parameter clients
         self._set_clients = {}
@@ -45,9 +48,9 @@ class ParameterClient():
                                 lambda msg, t=topic_name: self._message_callback(msg, t),
                                 10
                             )
-                            self._data_history[topic_name] = {(field_name, field_index): []}
+                            self._data_history[topic_name] = {(field_name, field_index): deque()}
                     else:
-                        self._data_history[topic_name][(field_name, field_index)] = []
+                        self._data_history[topic_name][(field_name, field_index)] = deque()
 
     def _split_topic_str(self, topic_str: str) -> tuple:
         topic_name = topic_str.split('/')[1]
@@ -70,20 +73,26 @@ class ParameterClient():
         return None
 
     def _message_callback(self, msg, topic_name: str) -> None:
+        msg_time = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+        curr_time = self._node.get_clock().now()
+        curr_time = curr_time.seconds_nanoseconds()[0] + curr_time.seconds_nanoseconds()[1] * 1e-9
+
+        # Skip storing message if time since last message is less than minimum delta time
+        first_array = next(iter(self._data_history[topic_name].values()))
+        if len(first_array) > 0 and msg_time - first_array[-1][1] < self._min_delta_time:
+            return
+
         for field in self._data_history[topic_name]:
             field_name = field[0]
             field_index = field[1]
 
             # Add new values to array
             msg_value = getattr(msg, field_name) if field_index is None else getattr(msg, field_name)[field_index]
-            msg_time = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
             self._data_history[topic_name][(field_name, field_index)].append((msg_value, msg_time))
 
             # Remove old values
-            curr_time = self._node.get_clock().now()
-            curr_time = curr_time.to_msg().sec + curr_time.to_msg().nanosec * 1e-9
             while curr_time - self._data_history[topic_name][(field_name, field_index)][0][1] > self._hist_duration:
-                self._data_history[topic_name][(field_name, field_index)].pop(0)
+                self._data_history[topic_name][(field_name, field_index)].popleft()
 
     def get_data(self, topic_str: str) -> tuple[list, list]:
         topic_name, field_name, field_index = self._split_topic_str(topic_str)
