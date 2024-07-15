@@ -14,6 +14,7 @@ class ParamTuning(Plugin):
     def __init__(self, context):
         super(ParamTuning, self).__init__(context)
         self.setObjectName('ParamTuning')
+        x_axis_length = 5.0
 
         self._context = context
         self._node = context.node
@@ -35,10 +36,10 @@ class ParamTuning(Plugin):
         self._paramFilepath = args.param_filepath
 
         # Initialize the ROS client
-        self._client = ParameterClient(self._config, self._node)
+        self._client = ParameterClient(self._config, self._node, x_axis_length * 1.5)
 
         # Initialize the widget
-        self._widget = ParamTuningWidget(self._config, self._client, self._paramFilepath)
+        self._widget = ParamTuningWidget(self._config, self._client, self._paramFilepath, x_axis_length)
         if context.serial_number() > 1:
             self._widget.setWindowTitle(
                 self._widget.windowTitle() + (' (%d)' % context.serial_number()))

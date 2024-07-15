@@ -6,7 +6,7 @@
 #   params:
 #     {param_name}:
 #       description: '{Parameter Description}'
-#       scale: {Scale Factor to use with GUI}  (optional, default is 1.0)
+#       scale: {Scale Factor to use with parameters}  (optional, default is 1.0)
 #     ...
 #   plot_axes:
 #     y_label: '{Y Axis Label}'  (x_axis is always 'Time (s)')
@@ -83,7 +83,7 @@ Altitude:
     y_label: 'Altitude (m)'
   plot_topics:
     Altitude Command: '/controller_command/h_c'
-    Altitude Estimate: '/estimated_state/h'
+#    Altitude Estimate: '/estimated_state/position[2]'
 
 Line Following:
   node: '/path_follower'

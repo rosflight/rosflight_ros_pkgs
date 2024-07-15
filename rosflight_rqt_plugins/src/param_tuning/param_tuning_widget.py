@@ -9,7 +9,7 @@ from python_qt_binding.QtWidgets import QWidget, QPushButton, QFileDialog
 
 
 class ParamTuningWidget(QWidget):
-    def __init__(self, config: dict, paramClient, paramFilepath):
+    def __init__(self, config: dict, paramClient, paramFilepath: str, x_length: float):
         self.paramFilePath = paramFilepath
 
         # Initialize widget

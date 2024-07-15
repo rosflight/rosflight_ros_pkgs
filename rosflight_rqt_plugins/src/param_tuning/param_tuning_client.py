@@ -1,5 +1,4 @@
 import time
-import rclpy
 from rclpy.node import Node
 from rclpy.parameter import ParameterType, Parameter
 from rcl_interfaces.srv import SetParameters, GetParameters
@@ -7,9 +6,10 @@ from rosidl_runtime_py.utilities import get_message
 
 
 class ParameterClient():
-    def __init__(self, config: dict, node: Node):
+    def __init__(self, config: dict, node: Node, hist_duration: float):
         self.config = config
         self.node = node
+        self.hist_duration = hist_duration
 
         # Initialize parameter clients
         self.set_clients = {}
@@ -26,6 +26,7 @@ class ParameterClient():
 
         # Initialize topics subscribers for plotting
         self.plot_subscribers = {}
+        self.data_history = {}
         for group in config:
             if 'plot_topics' in config[group]:
                 for topic in config[group]['plot_topics']:
@@ -35,13 +36,17 @@ class ParameterClient():
                         message_type = self.get_message_type(topic_name)
                         if message_type is None:
                             self.node.get_logger().error(f'Failed to get message type for {topic_name},'
-                                                    f' does the topic exist?')
+                                                         f' does the topic exist?')
                         else:
                             self.plot_subscribers[topic_name] = self.node.create_subscription(
                                 message_type,
                                 topic_name,
-                                lambda msg, f=field_name: self.message_callback(msg, f),
-                                10)
+                                lambda msg, t=topic_name: self.message_callback(msg, t),
+                                10
+                            )
+                            self.data_history[topic_name] = {field_name: []}
+                    else:
+                        self.data_history[topic_name][field_name] = []
 
     def get_message_type(self, topic_name: str):
         topic_array = self.node.get_topic_names_and_types()
@@ -50,9 +55,18 @@ class ParameterClient():
                 return get_message(topic[1][0])
         return None
 
-    def message_callback(self, msg, field_name: str):
-        value = getattr(msg, field_name)
-        print(value)
+    def message_callback(self, msg, topic_name: str):
+        for field_name in self.data_history[topic_name]:
+            # Add new values to array
+            msg_value = getattr(msg, field_name)
+            msg_time = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+            self.data_history[topic_name][field_name].append((msg_value, msg_time))
+
+            # Remove old values
+            curr_time = self.node.get_clock().now()
+            curr_time = curr_time.to_msg().sec + curr_time.to_msg().nanosec * 1e-9
+            while curr_time - self.data_history[topic_name][field_name][0][1] > self.hist_duration:
+                self.data_history[topic_name][field_name].pop(0)
 
     def get_param(self, group: str, param: str, scaled: bool = True) -> float:
         if not scaled or 'scale' not in self.config[group]['params'][param]:
