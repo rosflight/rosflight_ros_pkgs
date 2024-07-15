@@ -1,3 +1,4 @@
+import time
 import rclpy
 from rclpy.node import Node
 from rclpy.parameter import ParameterType, Parameter
@@ -64,7 +65,17 @@ class ParameterClient():
         request.names = [param]
 
         future = self.get_clients[node_name].call_async(request)
-        rclpy.spin_until_future_complete(self.node, future)
+
+        call_time = time.time()
+        callback_complete = False
+        while call_time + 5 > time.time():
+            if future.done():
+                callback_complete = True
+                break
+        if not callback_complete or future.result() is None:
+            self.node.get_logger().error(f'Failed to get {node_name}/{param} after 5 seconds')
+            return 0.0
+
         if future.result() is not None:
             if len(future.result().values) == 0:
                 self.node.get_logger().error(f'Parameter {param} not found')
@@ -85,7 +96,16 @@ class ParameterClient():
         parameter = Parameter(param, Parameter.Type.DOUBLE, value)
         request.parameters.append(parameter.to_parameter_msg())
         future = self.set_clients[node_name].call_async(request)
-        rclpy.spin_until_future_complete(self.node, future)
+
+        call_time = time.time()
+        callback_complete = False
+        while call_time + 5 > time.time():
+            if future.done():
+                callback_complete = True
+                break
+        if not callback_complete or future.result() is None:
+            self.node.get_logger().error(f'Failed to set {node_name}/{param} after 5 seconds')
+
         if future.result() is not None:
             if future.result().results[0].successful:
                 self.node.get_logger().info(f'Set {node_name}/{param} to {value}')

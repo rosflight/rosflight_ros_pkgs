@@ -8,6 +8,7 @@ from .param_tuning_client import ParameterClient
 from .param_tuning_plotter import ParamTuningPlotter
 from .param_tuning_widget import ParamTuningWidget
 
+
 class ParamTuning(Plugin):
 
     def __init__(self, context):
