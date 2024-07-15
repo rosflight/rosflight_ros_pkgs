@@ -9,13 +9,12 @@ from python_qt_binding.QtWidgets import QWidget, QPushButton, QFileDialog
 
 
 class ParamTuningWidget(QWidget):
-    def __init__(self, config: dict, paramClient, paramFilepath: str, x_length: float):
-        self._paramFilePath = paramFilepath
-
+    def __init__(self, config: dict, paramClient, paramFilepath: str):
         # Initialize widget
         super(ParamTuningWidget, self).__init__()
         self.setObjectName('ParamTuningWidget')
         self._addChangedValuesToHist = True
+        self._plotSwapCallback = lambda x: None
 
         # Load the UI file
         _, path = get_resource('packages', 'rosflight_rqt_plugins')
@@ -152,6 +151,9 @@ class ParamTuningWidget(QWidget):
         self._createTableButtons()
         self._refreshTableValues()
 
+        # Tell the plotter to swap the plot
+        self._plotSwapCallback(text)
+
     def _refreshButtonCallback(self):
         self._refreshTableValues()
 
@@ -213,3 +215,6 @@ class ParamTuningWidget(QWidget):
         # Update the buttons with the new previous value
         # Creating all new buttons is inefficient, but it is the easiest and most consistent way to update the values
         self._createTableButtons()
+
+    def registerPlotSwapCallback(self, callback: callable) -> None:
+        self._plotSwapCallback = callback

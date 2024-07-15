@@ -38,3 +38,6 @@ class ParamTuningPlotter(QWidget):
         self._ax.plot(x, y2, label='cos(x)')
         self._ax.legend(loc='upper right', fontsize=self._fontSize)
         self._canvas.draw()
+
+    def switchPlotGroup(self, group: str) -> None:
+        print(f'Switching plot to {group}')
