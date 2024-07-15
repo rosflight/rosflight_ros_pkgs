@@ -1,5 +1,4 @@
-import numpy as np
-import matplotlib.pyplot as plt
+import threading
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
@@ -33,38 +32,49 @@ class ParamTuningPlotter(QWidget):
         self._timer.timeout.connect(self._updatePlot)
         self._timer.start(int(1000 / plotRate))
 
+        # Thread for plotting, keeping GUI responsive
+        self._thread = threading.Thread(target=self._plot)
+        self._lock = threading.Lock()
+
     def _updatePlot(self):
-        if not self._plotInitialized:
-            self._canvas.figure.clear()
-            self._ax = self._canvas.figure.subplots()
-            self._ax.set_xlabel('Time (s)', fontsize=self._fontSize)
-            self._ax.set_ylabel(self._config[self._currentGroup]['plot_axes']['y_label'], fontsize=self._fontSize)
-            self._ax.tick_params(axis='both', labelsize=self._fontSize)
-            self._ax.grid(True)
-            self._lineObjects = {}
+        if not self._thread.is_alive():
+            self._thread = threading.Thread(target=self._plot)
+            self._thread.start()
 
-        for topic in self._config[self._currentGroup]['plot_topics']:
-            topic_str = self._config[self._currentGroup]['plot_topics'][topic]
-            x, y = self._paramClient.get_data(topic_str)
+    def _plot(self):
+        with self._lock:
+            if not self._plotInitialized:
+                self._canvas.figure.clear()
+                self._ax = self._canvas.figure.subplots()
+                self._ax.set_xlabel('Time (s)', fontsize=self._fontSize)
+                self._ax.set_ylabel(self._config[self._currentGroup]['plot_axes']['y_label'], fontsize=self._fontSize)
+                self._ax.tick_params(axis='both', labelsize=self._fontSize)
+                self._ax.grid(True)
+                self._lineObjects = {}
 
-            if topic not in self._lineObjects:
-                line, = self._ax.plot(x, y, label=topic)
-                self._lineObjects[topic] = line
-            else:
-                self._lineObjects[topic].set_data(x, y)
+            for topic in self._config[self._currentGroup]['plot_topics']:
+                topic_str = self._config[self._currentGroup]['plot_topics'][topic]
+                x, y = self._paramClient.get_data(topic_str)
 
-        if not self._plotInitialized:
-            self._ax.legend(loc='upper right', fontsize=self._fontSize)
+                if topic not in self._lineObjects:
+                    line, = self._ax.plot(x, y, label=topic)
+                    self._lineObjects[topic] = line
+                else:
+                    self._lineObjects[topic].set_data(x, y)
 
-        self._ax.relim()
-        self._ax.autoscale_view()
-        self._canvas.draw()
-        self._plotInitialized = True
+            if not self._plotInitialized:
+                self._ax.legend(loc='upper right', fontsize=self._fontSize)
+
+            self._ax.relim()
+            self._ax.autoscale_view()
+            self._canvas.draw()
+            self._plotInitialized = True
 
     def switchPlotGroup(self, group: str) -> None:
-        self._currentGroup = group
-        self._plotInitialized = False
-        self._updatePlot()
+        with self._lock:
+            self._currentGroup = group
+            self._plotInitialized = False
+            self._updatePlot()
 
     def shutdown(self):
         self._timer.stop()

@@ -1,5 +1,6 @@
 import re
 import time
+import threading
 from collections import deque
 from rclpy.node import Node
 from rclpy.parameter import ParameterType, Parameter
@@ -13,7 +14,9 @@ class ParameterClient():
         self._node = node
         self._hist_duration = hist_duration
         # Minimum time between data points accepted, to reduce amount of data to plot
-        self._min_delta_time = hist_duration / 250
+        self._min_delta_time = hist_duration / 200
+        # Threading lock, since get_data may be called by an external thread
+        self._lock = threading.Lock()
 
         # Initialize parameter clients
         self._set_clients = {}
@@ -73,36 +76,38 @@ class ParameterClient():
         return None
 
     def _message_callback(self, msg, topic_name: str) -> None:
-        msg_time = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
-        curr_time = self._node.get_clock().now()
-        curr_time = curr_time.seconds_nanoseconds()[0] + curr_time.seconds_nanoseconds()[1] * 1e-9
+        with self._lock:
+            msg_time = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+            curr_time = self._node.get_clock().now()
+            curr_time = curr_time.seconds_nanoseconds()[0] + curr_time.seconds_nanoseconds()[1] * 1e-9
 
-        # Skip storing message if time since last message is less than minimum delta time
-        first_array = next(iter(self._data_history[topic_name].values()))
-        if len(first_array) > 0 and msg_time - first_array[-1][1] < self._min_delta_time:
-            return
+            # Skip storing message if time since last message is less than minimum delta time
+            first_array = next(iter(self._data_history[topic_name].values()))
+            if len(first_array) > 0 and msg_time - first_array[-1][1] < self._min_delta_time:
+                return
 
-        for field in self._data_history[topic_name]:
-            field_name = field[0]
-            field_index = field[1]
+            for field in self._data_history[topic_name]:
+                field_name = field[0]
+                field_index = field[1]
 
-            # Add new values to array
-            msg_value = getattr(msg, field_name) if field_index is None else getattr(msg, field_name)[field_index]
-            self._data_history[topic_name][(field_name, field_index)].append((msg_value, msg_time))
+                # Add new values to array
+                msg_value = getattr(msg, field_name) if field_index is None else getattr(msg, field_name)[field_index]
+                self._data_history[topic_name][(field_name, field_index)].append((msg_value, msg_time))
 
-            # Remove old values
-            while curr_time - self._data_history[topic_name][(field_name, field_index)][0][1] > self._hist_duration:
-                self._data_history[topic_name][(field_name, field_index)].popleft()
+                # Remove old values
+                while curr_time - self._data_history[topic_name][(field_name, field_index)][0][1] > self._hist_duration:
+                    self._data_history[topic_name][(field_name, field_index)].popleft()
 
     def get_data(self, topic_str: str) -> tuple[list, list]:
-        topic_name, field_name, field_index = self._split_topic_str(topic_str)
-        x_data = []
-        y_data = []
-        for data in self._data_history[topic_name][(field_name, field_index)]:
-            x_data.append(data[1])
-            y_data.append(data[0])
+        with self._lock:
+            topic_name, field_name, field_index = self._split_topic_str(topic_str)
+            x_data = []
+            y_data = []
+            for data in self._data_history[topic_name][(field_name, field_index)]:
+                x_data.append(data[1])
+                y_data.append(data[0])
 
-        return x_data, y_data
+            return x_data, y_data
 
     def get_param(self, group: str, param: str, scaled: bool = True) -> float:
         if not scaled or 'scale' not in self._config[group]['params'][param]:
