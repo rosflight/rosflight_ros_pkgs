@@ -13,6 +13,7 @@ class ParamTuningWidget(QWidget):
         # Initialize widget
         super(ParamTuningWidget, self).__init__()
         self.setObjectName('ParamTuningWidget')
+        self._paramFilePath = paramFilepath
         self._addChangedValuesToHist = True
         self._plotSwapCallback = lambda x: None
 
