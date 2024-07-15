@@ -85,6 +85,16 @@ class ParameterClient():
             while curr_time - self._data_history[topic_name][(field_name, field_index)][0][1] > self._hist_duration:
                 self._data_history[topic_name][(field_name, field_index)].pop(0)
 
+    def get_data(self, topic_str: str) -> tuple[list, list]:
+        topic_name, field_name, field_index = self._split_topic_str(topic_str)
+        x_data = []
+        y_data = []
+        for data in self._data_history[topic_name][(field_name, field_index)]:
+            x_data.append(data[1])
+            y_data.append(data[0])
+
+        return x_data, y_data
+
     def get_param(self, group: str, param: str, scaled: bool = True) -> float:
         if not scaled or 'scale' not in self._config[group]['params'][param]:
             scale = 1.0

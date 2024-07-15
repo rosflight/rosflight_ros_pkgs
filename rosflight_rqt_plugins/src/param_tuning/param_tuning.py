@@ -36,7 +36,7 @@ class ParamTuning(Plugin):
         self._paramFilepath = args.param_filepath
 
         # Initialize the ROS client
-        self._client = ParameterClient(self._config, self._node, 15.0)
+        self._client = ParameterClient(self._config, self._node, 10)
 
         # Initialize the widget
         self._widget = ParamTuningWidget(self._config, self._client, self._paramFilepath)
@@ -65,5 +65,6 @@ class ParamTuning(Plugin):
 
     def shutdown_plugin(self):
         self._client.shutdown()
+        self._plotter.shutdown()
         self._node.destroy_node()
         rclpy.shutdown()
