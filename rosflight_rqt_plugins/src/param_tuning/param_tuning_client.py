@@ -16,8 +16,8 @@ class ParameterClient():
         self._record_data = True
         ros_time = node.get_clock().now()
         self._initial_time = ros_time.seconds_nanoseconds()[0] + ros_time.seconds_nanoseconds()[1] * 1e-9
-        # Threading lock, since get_data may be called by an external thread
-        self._lock = threading.Lock()
+        # Threading lock, since get_data may be called by an external thread during message processing
+        self._data_lock = threading.Lock()
 
         # Initialize parameter clients
         self._set_clients = {}
@@ -77,7 +77,7 @@ class ParameterClient():
         return None
 
     def _message_callback(self, msg, topic_name: str) -> None:
-        with self._lock:
+        with self._data_lock:
             if not self._record_data:
                 return
 
@@ -104,7 +104,7 @@ class ParameterClient():
                     self._data_history[topic_name][(field_name, field_index)].popleft()
 
     def get_data(self, topic_str: str) -> tuple[list, list]:
-        with self._lock:
+        with self._data_lock:
             topic_name, field_name, field_index = self._split_topic_str(topic_str)
             x_data = []
             y_data = []
@@ -132,6 +132,7 @@ class ParameterClient():
             if future.done():
                 callback_complete = True
                 break
+            time.sleep(0.05)
         if not callback_complete or future.result() is None:
             self._node.get_logger().error(f'Failed to get {node_name}/{param} after 5 seconds')
             return 0.0
@@ -148,6 +149,10 @@ class ParameterClient():
             self._node.get_logger().error('Service call failed %r' % (future.exception(),))
 
     def set_param(self, group: str, param: str, value: float, scaled: bool = True) -> None:
+        thread = threading.Thread(target=self._set_param, args=(group, param, value, scaled))
+        thread.start()
+
+    def _set_param(self, group: str, param: str, value: float, scaled: bool = True) -> None:
         if scaled and 'scale' in self._config[group]['params'][param]:
             value /= self._config[group]['params'][param]['scale']
 
@@ -163,6 +168,7 @@ class ParameterClient():
             if future.done():
                 callback_complete = True
                 break
+            time.sleep(0.05)
         if not callback_complete or future.result() is None:
             self._node.get_logger().error(f'Failed to set {node_name}/{param} after 5 seconds')
 
@@ -175,10 +181,12 @@ class ParameterClient():
             self._node.get_logger().error('Service call failed %r' % (future.exception(),))
 
     def set_data_hist_duration(self, duration: float) -> None:
-        self._hist_duration = duration
+        with self._data_lock:
+            self._hist_duration = duration
 
     def pause_data_collection(self, pause: bool) -> None:
-        self._record_data = not pause
+        with self._data_lock:
+            self._record_data = not pause
 
     def print_info(self, message: str) -> None:
         self._node.get_logger().info(message)
