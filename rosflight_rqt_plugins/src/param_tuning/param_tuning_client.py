@@ -37,8 +37,9 @@ class ParameterClient():
         self._data_history = {}
         for group in config:
             if 'plot_topics' in config[group]:
-                for topic in config[group]['plot_topics']:
-                    topic_name, field_name, field_index = self._split_topic_str(config[group]['plot_topics'][topic])
+                for plot_name in config[group]['plot_topics']:
+                    topic_name, field_name, field_index = \
+                        self._split_topic_str(config[group]['plot_topics'][plot_name]['topic'])
 
                     if topic_name not in self._plot_subscribers:
                         message_type = self._get_message_type(topic_name)
@@ -115,10 +116,10 @@ class ParameterClient():
             return x_data, y_data
 
     def get_param(self, group: str, param: str, scaled: bool = True) -> float:
-        if not scaled or 'scale' not in self._config[group]['params'][param]:
+        if not scaled:
             scale = 1.0
         else:
-            scale = self._config[group]['params'][param]['scale']
+            scale = self._config[group]['params'][param].get('scale', 1.0)
         node_name = self._config[group]['node']
 
         request = GetParameters.Request()
@@ -153,8 +154,8 @@ class ParameterClient():
         thread.start()
 
     def _set_param(self, group: str, param: str, value: float, scaled: bool = True) -> None:
-        if scaled and 'scale' in self._config[group]['params'][param]:
-            value /= self._config[group]['params'][param]['scale']
+        if scaled:
+            value /= self._config[group]['params'][param].get('scale', 1.0)
 
         node_name = self._config[group]['node']
         request = SetParameters.Request()

@@ -1,4 +1,5 @@
 import threading
+import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
@@ -53,15 +54,16 @@ class ParamTuningPlotter(QWidget):
                 self._lineObjects = {}
                 self._canvas.figure.subplots_adjust(left=0.05, right=0.98, top=0.98, bottom=0.05)
 
-            for topic in self._config[self._current_group]['plot_topics']:
-                topic_str = self._config[self._current_group]['plot_topics'][topic]
+            for plot_name in self._config[self._current_group]['plot_topics']:
+                topic_str = self._config[self._current_group]['plot_topics'][plot_name]['topic']
                 x, y = self._param_client.get_data(topic_str)
+                y = np.array(y) * self._config[self._current_group]['plot_topics'][plot_name].get('scale', 1.0)
 
-                if topic not in self._lineObjects:
-                    line, = self._ax.plot(x, y, label=topic)
-                    self._lineObjects[topic] = line
+                if plot_name not in self._lineObjects:
+                    line, = self._ax.plot(x, y, label=plot_name)
+                    self._lineObjects[plot_name] = line
                 else:
-                    self._lineObjects[topic].set_data(x, y)
+                    self._lineObjects[plot_name].set_data(x, y)
 
             if not self._plot_initialized:
                 self._ax.legend(loc='upper right', fontsize=self._font_size)
