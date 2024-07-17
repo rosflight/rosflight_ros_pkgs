@@ -56,7 +56,8 @@ Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node)
   declare_fixedwing_params();
   update_params_from_ROS();
   wind_ = Eigen::Vector3d::Zero();
-  forces_moments_pub_ = node_->create_publisher<geometry_msgs::msg::TwistStamped>("/forces_and_moments", 1);
+  forces_moments_pub_ =
+    node_->create_publisher<geometry_msgs::msg::TwistStamped>("/forces_and_moments", 1);
 }
 
 Fixedwing::~Fixedwing() = default;
@@ -148,7 +149,6 @@ void Fixedwing::declare_fixedwing_params()
   node_->declare_parameter("V_max", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("R_motor", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("I_0", rclcpp::PARAMETER_DOUBLE);
-
 }
 
 void Fixedwing::update_params_from_ROS()
@@ -440,21 +440,23 @@ Eigen::Matrix<double, 6, 1> Fixedwing::update_forces_and_torques(CurrentState x,
 
   double v_in = motor_.V_max * delta_.t;
 
-  double a = (prop_.CQ_0 *(rho_) *(pow((prop_.D_prop), 5.0)) / (pow((2 * M_PI), 2.0)));
-  double b = (prop_.CQ_1 *(rho_) *(pow((prop_.D_prop), 4.0)) / (2 * M_PI)) * Va 
-            + ((pow((motor_.KQ), 2.0)) /(motor_.R_motor));
-  double c = (prop_.CQ_2 *(rho_) *(pow((prop_.D_prop), 3.0)) * (pow((Va), 2.0))) 
-              - ((motor_.KQ)/(motor_.R_motor)) *v_in + ((motor_.KQ) *(motor_.I_0));
+  double a = (prop_.CQ_0 * (rho_) * (pow((prop_.D_prop), 5.0)) / (pow((2 * M_PI), 2.0)));
+  double b = (prop_.CQ_1 * (rho_) * (pow((prop_.D_prop), 4.0)) / (2 * M_PI)) * Va
+    + ((pow((motor_.KQ), 2.0)) / (motor_.R_motor));
+  double c = (prop_.CQ_2 * (rho_) * (pow((prop_.D_prop), 3.0)) * (pow((Va), 2.0)))
+    - ((motor_.KQ) / (motor_.R_motor)) * v_in + ((motor_.KQ) * (motor_.I_0));
 
-  double Omega_p = ((-b + sqrt((pow((b), 2.0)) - (4 *a *c))) / (2 *a));
+  double Omega_p = ((-b + sqrt((pow((b), 2.0)) - (4 * a * c))) / (2 * a));
 
-  double Prop_Force = ((rho_) *(pow((prop_.D_prop), 4.0)) *(((prop_.CT_0) *(pow((Omega_p), 2.0)))/ (4*(pow((M_PI), 2.0))))) 
-              + ((rho_) *(pow((prop_.D_prop), 3.0)) *(prop_.CT_1) *(Va) *(Omega_p)/(2 * M_PI)) 
-              + ((rho_) *(pow((prop_.D_prop), 2.0)) *(prop_.CT_2) *(pow((Va), 2.0)));
+  double Prop_Force = ((rho_) * (pow((prop_.D_prop), 4.0))
+                       * (((prop_.CT_0) * (pow((Omega_p), 2.0))) / (4 * (pow((M_PI), 2.0)))))
+    + ((rho_) * (pow((prop_.D_prop), 3.0)) * (prop_.CT_1) * (Va) * (Omega_p) / (2 * M_PI))
+    + ((rho_) * (pow((prop_.D_prop), 2.0)) * (prop_.CT_2) * (pow((Va), 2.0)));
 
-  double Prop_Torque = ((rho_) *(pow((prop_.D_prop), 5.0)) *((((prop_.CQ_0)/(4 *(pow((M_PI), 2.0))) *(pow((Omega_p), 2.0))))))
-              + ((rho_) *(pow((prop_.D_prop), 4.0)) *(prop_.CQ_1) *(Va) *(Omega_p)/(2 * M_PI))
-              + ((rho_) *(pow((prop_.D_prop), 3.0)) *(prop_.CQ_2) *(pow((Va), 2.0)));
+  double Prop_Torque = ((rho_) * (pow((prop_.D_prop), 5.0))
+                        * ((((prop_.CQ_0) / (4 * (pow((M_PI), 2.0))) * (pow((Omega_p), 2.0))))))
+    + ((rho_) * (pow((prop_.D_prop), 4.0)) * (prop_.CQ_1) * (Va) * (Omega_p) / (2 * M_PI))
+    + ((rho_) * (pow((prop_.D_prop), 3.0)) * (prop_.CQ_2) * (pow((Va), 2.0)));
 
   // Be sure that we have some significant airspeed before we run aerodynamics, and don't let NaNs get through
   if (Va > 1.0 && std::isfinite(Va)) {
@@ -497,7 +499,8 @@ Eigen::Matrix<double, 6, 1> Fixedwing::update_forces_and_torques(CurrentState x,
     forces(3) = 0.5 * (rho_) *Va * Va * wing_.S * wing_.b
         * (Cell_.O + Cell_.beta * beta + (Cell_.p * wing_.b * p) / (2.0 * Va)
            + (Cell_.r * wing_.b * r) / (2.0 * Va) + Cell_.delta_a * delta_curr.a
-           + Cell_.delta_r * delta_.r) - Prop_Torque;
+           + Cell_.delta_r * delta_.r)
+      - Prop_Torque;
 
     forces(4) = 0.5 * (rho_) *Va * Va * wing_.S * wing_.c
       * (Cm_.O + Cm_.alpha * alpha + (Cm_.q * wing_.c * q) / (2.0 * Va)
@@ -508,25 +511,25 @@ Eigen::Matrix<double, 6, 1> Fixedwing::update_forces_and_torques(CurrentState x,
          + (Cn_.r * wing_.b * r) / (2.0 * Va) + Cn_.delta_a * delta_curr.a
          + Cn_.delta_r * delta_.r);
   } else {
-  
+
     if (delta_.t == 0.0) {
       forces(0) = 0.0;
-    }
-    else {
+    } else {
       forces(0) = Prop_Force;
     }
-    
+
     forces(1) = 0.0;
     forces(2) = 0.0;
-    forces(3) = 0.0; // We do not simulate torque in the low speed conditions, this is because it usually means we are on the ground.
+    forces(3) =
+      0.0; // We do not simulate torque in the low speed conditions, this is because it usually means we are on the ground.
     forces(4) = 0.0;
     forces(5) = 0.0;
   }
 
   geometry_msgs::msg::TwistStamped msg;
-  
+
   rclcpp::Time now = node_->get_clock()->now();
-  
+
   msg.header.stamp = now;
 
   msg.twist.linear.x = forces(0);

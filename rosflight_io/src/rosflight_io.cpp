@@ -302,28 +302,32 @@ void ROSflightIO::handle_status_msg(const mavlink_message_t & msg)
 
   // armed state check
   if (prev_status_.armed != status_msg.armed) {
-    if (status_msg.armed) RCLCPP_WARN(this->get_logger(), "Autopilot ARMED");
+    if (status_msg.armed)
+      RCLCPP_WARN(this->get_logger(), "Autopilot ARMED");
     else
       RCLCPP_WARN(this->get_logger(), "Autopilot DISARMED");
   }
 
   // failsafe check
   if (prev_status_.failsafe != status_msg.failsafe) {
-    if (status_msg.failsafe) RCLCPP_ERROR(this->get_logger(), "Autopilot FAILSAFE");
+    if (status_msg.failsafe)
+      RCLCPP_ERROR(this->get_logger(), "Autopilot FAILSAFE");
     else
       RCLCPP_INFO(this->get_logger(), "Autopilot FAILSAFE RECOVERED");
   }
 
   // rc override check
   if (prev_status_.rc_override != status_msg.rc_override) {
-    if (status_msg.rc_override) RCLCPP_WARN(this->get_logger(), "RC override active");
+    if (status_msg.rc_override)
+      RCLCPP_WARN(this->get_logger(), "RC override active");
     else
       RCLCPP_WARN(this->get_logger(), "Returned to computer control");
   }
 
   // offboard control check
   if (prev_status_.offboard != status_msg.offboard) {
-    if (status_msg.offboard) RCLCPP_WARN(this->get_logger(), "Computer control active");
+    if (status_msg.offboard)
+      RCLCPP_WARN(this->get_logger(), "Computer control active");
     else
       RCLCPP_WARN(this->get_logger(), "Computer control lost");
   }
@@ -505,7 +509,9 @@ void ROSflightIO::handle_rosflight_output_raw_msg(const mavlink_message_t & msg)
 
   rosflight_msgs::msg::OutputRaw out_msg;
   out_msg.header.stamp = fcu_time_to_ros_time(std::chrono::microseconds(servo.stamp));
-  for (int i = 0; i < 14; i++) { out_msg.values[i] = servo.values[i]; }
+  for (int i = 0; i < 14; i++) {
+    out_msg.values[i] = servo.values[i];
+  }
 
   if (output_raw_pub_ == nullptr) {
     output_raw_pub_ = this->create_publisher<rosflight_msgs::msg::OutputRaw>("output_raw", 1);
@@ -781,7 +787,9 @@ void ROSflightIO::handle_hard_error_msg(const mavlink_message_t & msg)
                "Hard fault detected, with error code %u. The flight controller has rebooted.",
                error.error_code);
   RCLCPP_ERROR(this->get_logger(), "Hard fault was at: 0x%x", error.pc);
-  if (error.doRearm) { RCLCPP_ERROR(this->get_logger(), "The firmware has rearmed itself."); }
+  if (error.doRearm) {
+    RCLCPP_ERROR(this->get_logger(), "The firmware has rearmed itself.");
+  }
   RCLCPP_ERROR(this->get_logger(), "The flight controller has rebooted %u time%s.",
                error.reset_count, error.reset_count > 1 ? "s" : "");
   rosflight_msgs::msg::Error error_msg;
@@ -1015,7 +1023,9 @@ bool ROSflightIO::paramWriteSrvCallback(const std_srvs::srv::Trigger::Request::S
                                         const std_srvs::srv::Trigger::Response::SharedPtr & res)
 {
   res->success = mavrosflight_->param.write_params();
-  if (!res->success) { res->message = "Request rejected: write already in progress"; }
+  if (!res->success) {
+    res->message = "Request rejected: write already in progress";
+  }
 
   return true;
 }

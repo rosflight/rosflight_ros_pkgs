@@ -110,7 +110,9 @@ void CalibrateMag::run()
     return;
   }
 
-  while (calibrating_ && rclcpp::ok()) { rclcpp::spin_some(shared_from_this()); }
+  while (calibrating_ && rclcpp::ok()) {
+    rclcpp::spin_some(shared_from_this());
+  }
 
   if (!calibrating_) {
     // compute calibration
@@ -178,7 +180,9 @@ bool CalibrateMag::mag_callback(const sensor_msgs::msg::MagneticField::ConstShar
         Eigen::Vector3d measurement;
         measurement << mag->magnetic_field.x, mag->magnetic_field.y, mag->magnetic_field.z;
 
-        if (measurement != measurement_prev_) { measurements_.push_back(measurement); }
+        if (measurement != measurement_prev_) {
+          measurements_.push_back(measurement);
+        }
         measurement_prev_ = measurement;
       }
       measurement_throttle_++;
@@ -208,7 +212,9 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, in
     // and grabbing the first 9
     std::shuffle(meas.begin(), meas.end(), generator);
     EigenSTL::vector_Vector3d meas_sample;
-    for (unsigned j = 0; j < 9; j++) { meas_sample.push_back(meas[j]); }
+    for (unsigned j = 0; j < 9; j++) {
+      meas_sample.push_back(meas[j]);
+    }
 
     // fit ellipsoid to 9 random points
     Eigen::MatrixXd u = ellipsoidLS(meas_sample);
@@ -229,7 +235,9 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, in
     double I = a + b + c;
     double J = a * b + b * c + a * c - f * f - g * g - h * h;
 
-    if (4 * J - I * I <= 0) { continue; }
+    if (4 * J - I * I <= 0) {
+      continue;
+    }
 
     // eq. 15 of Renaudin and eqs. 1 and 4 of Li
     Eigen::MatrixXd Q(3, 3);
@@ -277,7 +285,9 @@ Eigen::MatrixXd CalibrateMag::ellipsoidRANSAC(EigenSTL::vector_Vector3d meas, in
     // save best inliers and their count
     if (inlier_count > inlier_count_best) {
       inliers_best.clear();
-      for (const auto & item : inliers) { inliers_best.push_back(item); }
+      for (const auto & item : inliers) {
+        inliers_best.push_back(item);
+      }
       inlier_count_best = inlier_count;
     }
   }
@@ -324,7 +334,9 @@ void CalibrateMag::eigSort(Eigen::MatrixXd & w, Eigen::MatrixXd & v)
 {
   // create index array
   int idx[w.cols()];
-  for (int i = 0; i < w.cols(); i++) { idx[i] = i; }
+  for (int i = 0; i < w.cols(); i++) {
+    idx[i] = i;
+  }
 
   // do a bubble sort and keep track of where values go with the index array
   int has_changed = 1; // true
@@ -407,7 +419,9 @@ Eigen::MatrixXd CalibrateMag::ellipsoidLS(EigenSTL::vector_Vector3d meas)
   // solve eigensystem in eq. 15
   Eigen::MatrixXd ES = C1.inverse() * (S11 - S12 * S22.inverse() * S12.transpose());
   Eigen::EigenSolver<Eigen::MatrixXd> eigensolver(ES);
-  if (eigensolver.info() != Eigen::Success) { abort(); }
+  if (eigensolver.info() != Eigen::Success) {
+    abort();
+  }
   Eigen::MatrixXd w = eigensolver.eigenvalues().real().transpose();
   Eigen::MatrixXd V = eigensolver.eigenvectors().real();
 
@@ -451,7 +465,9 @@ void CalibrateMag::magCal(Eigen::MatrixXd u, Eigen::MatrixXd & A, Eigen::MatrixX
 
   // eigendecomposition of Q according to eq. 22 of Renaudin
   Eigen::EigenSolver<Eigen::MatrixXd> eigensolver(Q);
-  if (eigensolver.info() != Eigen::Success) { abort(); }
+  if (eigensolver.info() != Eigen::Success) {
+    abort();
+  }
   Eigen::MatrixXd D = eigensolver.eigenvalues().real().asDiagonal();
   Eigen::MatrixXd V = eigensolver.eigenvectors().real();
 
