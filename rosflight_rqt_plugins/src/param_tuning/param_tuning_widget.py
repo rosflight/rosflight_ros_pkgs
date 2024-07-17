@@ -121,21 +121,24 @@ class ParamTuningWidget(QWidget):
         self._createTableButtons()
 
     def _refreshTableValues(self):
+        self._paramClient.print_info('Getting all parameters from ROS network...')
+
         # Temporarily disconnect the model change signal
         self.paramTableView.model().dataChanged.disconnect(self._onModelChange)
 
         # Get current values of the parameters
-        for i in range(self._models[self._currentGroupKey].rowCount()):
-            param = self._models[self._currentGroupKey].item(i, 0).text()
-            value = self._paramClient.get_param(self._currentGroupKey, param)
+        for group in self._config:
+            for i in range(self._models[group].rowCount()):
+                param = self._models[group].item(i, 0).text()
+                value = self._paramClient.get_param(group, param)
 
-            # If the value is different from the previous value, add it to the stack and update the buttons
-            if value != self._valueStack[(self._currentGroupKey, param)][-1]:
-                self._valueStack[(self._currentGroupKey, param)].append(value)
-                self._createTableButtons()
+                # If the value is different from the previous value, add it to the stack and update the buttons
+                if value != self._valueStack[(group, param)][-1]:
+                    self._valueStack[(group, param)].append(value)
+                    self._createTableButtons()
 
-            # Update the table
-            self._models[self._currentGroupKey].item(i, 1).setText(str(value))
+                # Update the table
+                self._models[group].item(i, 1).setText(str(value))
 
         # Reconnect the model change signal
         self.paramTableView.model().dataChanged.connect(self._onModelChange)
@@ -150,7 +153,6 @@ class ParamTuningWidget(QWidget):
 
         # Update table
         self._createTableButtons()
-        self._refreshTableValues()
 
         # Tell the plotter to swap the plot
         self._plotSwapCallback(text)
@@ -202,7 +204,13 @@ class ParamTuningWidget(QWidget):
             value = float(topLeft.data())
         except ValueError:
             self._paramClient.print_warning('Invalid value type, please enter a number.')
-            self._refreshTableValues()
+
+            # Restore the previous value
+            self.paramTableView.model().dataChanged.disconnect(self._onModelChange)
+            self.paramTableView.model().itemFromIndex(topLeft).setText(str(
+                self._valueStack[(self._currentGroupKey,
+                                  self._models[self._currentGroupKey].item(topLeft.row(), 0).text())][-1]))
+            self.paramTableView.model().dataChanged.connect(self._onModelChange)
             return
 
         # Set the new value
