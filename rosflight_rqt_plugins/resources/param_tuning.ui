@@ -83,7 +83,7 @@
          <item>
           <widget class="QLabel" name="time_axis_label">
            <property name="text">
-            <string>Time Axis Duration (s):</string>
+            <string>Time axis duration (s):</string>
            </property>
           </widget>
          </item>
@@ -108,15 +108,11 @@
          </item>
          <item>
           <widget class="QCheckBox" name="pause_plot_check_box">
-           <property name="text">
-            <string>Pause Plotting</string>
+           <property name="layoutDirection">
+            <enum>Qt::RightToLeft</enum>
            </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="reset_plot_button">
            <property name="text">
-            <string>Reset</string>
+            <string>Pause plotting</string>
            </property>
           </widget>
          </item>
