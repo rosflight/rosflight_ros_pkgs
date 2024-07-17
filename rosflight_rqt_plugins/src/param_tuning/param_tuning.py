@@ -45,7 +45,7 @@ class ParamTuning(Plugin):
                 self._widget.windowTitle() + (' (%d)' % context.serial_number()))
 
         # Initialize the plotter
-        plotLayout = self._widget.findChild(QVBoxLayout, 'plotLayout')
+        plotLayout = self._widget.findChild(QVBoxLayout, 'plot_layout')
         self._plotter = ParamTuningPlotter(self._config, self._client, plotLayout)
         self._widget.registerPlotSwapCallback(self._plotter.switchPlotGroup)
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ParamTuning</class>
- <widget class="QWidget" name="ParamTuning">
+ <class>param_tuning</class>
+ <widget class="QWidget" name="param_tuning">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -24,12 +24,12 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="buttonHorizontalLayout">
+    <layout class="QHBoxLayout" name="param_button_layout">
      <item>
-      <widget class="QComboBox" name="groupSelection"/>
+      <widget class="QComboBox" name="group_selection"/>
      </item>
      <item>
-      <spacer name="horizontalSpacer">
+      <spacer name="horizontal_spacer_0">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -42,14 +42,14 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="refreshButton">
+      <widget class="QPushButton" name="refresh_button">
        <property name="text">
         <string>Refresh</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="saveButton">
+      <widget class="QPushButton" name="save_button">
        <property name="text">
         <string>Save to file</string>
        </property>
@@ -62,9 +62,9 @@
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
-     <widget class="QTableView" name="paramTableView"/>
+     <widget class="QTableView" name="param_table_view"/>
      <widget class="QWidget" name="verticalLayoutWidget">
-      <layout class="QVBoxLayout" name="plotLayout"/>
+      <layout class="QVBoxLayout" name="plot_layout"/>
      </widget>
     </widget>
    </item>
