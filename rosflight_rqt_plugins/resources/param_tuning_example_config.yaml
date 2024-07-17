@@ -8,12 +8,12 @@
 #       description: '{Parameter description}'
 #       scale: {Scale factor to use with parameters}  (optional, default is 1.0)
 #     ...
-#   plot_axis_label: '{Y Axis Label}'  (x axis is always 'Time (s)')
 #   plot_topics: (optional, include if you want to plot data)
 #     {Plot name}:
 #       topic: '/{ROS_topic_name}/{field_name}'
 #       scale: {Scale factor to use with data}  (optional, default is 1.0)
 #     ...
+#   plot_axis_label: '{Y Axis Label}'  (x axis is always 'Time (s)')
 # ...
 
 
@@ -24,7 +24,6 @@ Roll Angle:
       description: 'Roll angle P gain'
     r_kd:
       description: 'Roll angle D gain'
-  plot_axis_label: 'Roll angle (deg)'
   plot_topics:
     Roll Command:
       topic: '/controller_internals/phi_c'
@@ -32,6 +31,7 @@ Roll Angle:
     Roll Estimate:
       topic: '/estimated_state/phi'
       scale: 57.2957795131
+  plot_axis_label: 'Roll angle (deg)'
 
 Pitch Angle:
   node: '/autopilot'
@@ -40,7 +40,6 @@ Pitch Angle:
       description: 'Pitch angle P gain'
     p_kd:
       description:  'Pitch angle D gain'
-  plot_axis_label: 'Pitch angle (deg)'
   plot_topics:
     Pitch Command:
       topic: '/controller_internals/theta_c'
@@ -48,6 +47,7 @@ Pitch Angle:
     Pitch Estimate:
       topic: '/estimated_state/theta'
       scale: 57.2957795131
+  plot_axis_label: 'Pitch angle (deg)'
 
 Airspeed:
   node: '/autopilot'
@@ -56,12 +56,12 @@ Airspeed:
       description:  'Airspeed P gain'
     a_t_ki:
       description:  'Airspeed I gain'
-  plot_axis_label: 'Airspeed (m/s)'
   plot_topics:
     Airspeed Command:
       topic: '/controller_command/va_c'
     Airspeed Estimate:
       topic: '/estimated_state/va'
+  plot_axis_label: 'Airspeed (m/s)'
 
 Course:
   node: '/autopilot'
@@ -70,7 +70,6 @@ Course:
       description:  'Course P gain'
     c_ki:
       description: 'Course I gain'
-  plot_axis_label: 'Course (deg)'
   plot_topics:
     Course Command:
       topic: '/controller_command/chi_c'
@@ -78,6 +77,7 @@ Course:
     Course Estimate:
       topic: '/estimated_state/chi'
       scale: 57.2957795131
+  plot_axis_label: 'Course (deg)'
 
 Altitude:
   node: '/autopilot'
@@ -86,13 +86,13 @@ Altitude:
       description:  'Altitude P gain'
     a_ki:
       description: 'Altitude I gain'
-  plot_axis_label: 'Altitude (m)'
   plot_topics:
     Altitude Command:
       topic: '/controller_command/h_c'
     Altitude Estimate:
       topic: '/estimated_state/position[2]'
       scale: -1.0
+  plot_axis_label: 'Altitude (m)'
 
 Line Following:
   node: '/path_follower'

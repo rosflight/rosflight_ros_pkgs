@@ -44,6 +44,11 @@ class ParamTuningPlotter(QWidget):
 
     def _plot(self):
         with self._lock:
+            if 'plot_topics' not in self._config[self._current_group]:
+                self._canvas.figure.clear()
+                self._canvas.draw()
+                return
+
             if not self._plot_initialized:
                 self._canvas.figure.clear()
                 self._ax = self._canvas.figure.subplots()
