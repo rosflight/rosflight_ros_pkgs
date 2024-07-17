@@ -14,6 +14,8 @@ class ParameterClient():
         self._node = node
         self._hist_duration = 10.0
         self._record_data = True
+        ros_time = node.get_clock().now()
+        self._initial_time = ros_time.seconds_nanoseconds()[0] + ros_time.seconds_nanoseconds()[1] * 1e-9
         # Threading lock, since get_data may be called by an external thread
         self._lock = threading.Lock()
 
@@ -79,9 +81,10 @@ class ParameterClient():
             if not self._record_data:
                 return
 
-            msg_time = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+            msg_time = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9 - self._initial_time
             curr_time = self._node.get_clock().now()
-            curr_time = curr_time.seconds_nanoseconds()[0] + curr_time.seconds_nanoseconds()[1] * 1e-9
+            curr_time = curr_time.seconds_nanoseconds()[0] + curr_time.seconds_nanoseconds()[1] * 1e-9 \
+                        - self._initial_time
 
             # Skip storing message if time since last message is less than minimum delta time
             first_array = next(iter(self._data_history[topic_name].values()))

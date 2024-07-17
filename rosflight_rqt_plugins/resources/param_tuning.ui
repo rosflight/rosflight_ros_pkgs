@@ -83,7 +83,7 @@
          <item>
           <widget class="QLabel" name="time_axis_label">
            <property name="text">
-            <string>Time axis duration (s):</string>
+            <string>Time axis duration:</string>
            </property>
           </widget>
          </item>
