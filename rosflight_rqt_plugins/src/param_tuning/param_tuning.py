@@ -36,7 +36,7 @@ class ParamTuning(Plugin):
         self._param_filepath = args.param_filepath
 
         # Initialize the ROS client
-        self._client = ParameterClient(self._config, self._node, 20)
+        self._client = ParameterClient(self._config, self._node)
 
         # Initialize the widget
         self._widget = ParamTuningWidget(self._config, self._client, self._param_filepath)
@@ -47,7 +47,8 @@ class ParamTuning(Plugin):
         # Initialize the plotter
         plot_layout = self._widget.findChild(QVBoxLayout, 'plot_layout')
         self._plotter = ParamTuningPlotter(self._config, self._client, plot_layout)
-        self._widget.register_plot_swap_callback(self._plotter.switchPlotGroup)
+        self._widget.register_plot_swap_callback(self._plotter.switch_plot_group)
+        self._widget.register_duration_change_callback(self._client.set_data_hist_duration)
 
         context.add_widget(self._widget)
 

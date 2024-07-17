@@ -71,7 +71,7 @@ class ParamTuningPlotter(QWidget):
             self._canvas.draw()
             self._plot_initialized = True
 
-    def switchPlotGroup(self, group: str) -> None:
+    def switch_plot_group(self, group: str) -> None:
         with self._lock:
             self._current_group = group
             self._plot_initialized = False

@@ -9,12 +9,10 @@ from rosidl_runtime_py.utilities import get_message
 
 
 class ParameterClient():
-    def __init__(self, config: dict, node: Node, hist_duration: float):
+    def __init__(self, config: dict, node: Node):
         self._config = config
         self._node = node
-        self._hist_duration = hist_duration
-        # Minimum time between data points accepted, to reduce amount of data to plot
-        self._min_delta_time = hist_duration / 250
+        self._hist_duration = 10.0
         # Threading lock, since get_data may be called by an external thread
         self._lock = threading.Lock()
 
@@ -83,7 +81,7 @@ class ParameterClient():
 
             # Skip storing message if time since last message is less than minimum delta time
             first_array = next(iter(self._data_history[topic_name].values()))
-            if len(first_array) > 0 and msg_time - first_array[-1][1] < self._min_delta_time:
+            if len(first_array) > 0 and msg_time - first_array[-1][1] < self._hist_duration / 250:
                 return
 
             for field in self._data_history[topic_name]:
@@ -168,6 +166,9 @@ class ParameterClient():
                 self._node.get_logger().error(f'Failed to set {param} to {value}: {future.result().results[0].reason}')
         else:
             self._node.get_logger().error('Service call failed %r' % (future.exception(),))
+
+    def set_data_hist_duration(self, duration: float) -> None:
+        self._hist_duration = duration
 
     def print_info(self, message: str) -> None:
         self._node.get_logger().info(message)

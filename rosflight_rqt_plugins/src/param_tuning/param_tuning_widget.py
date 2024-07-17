@@ -15,7 +15,8 @@ class ParamTuningWidget(QWidget):
         self.setObjectName('ParamTuningWidget')
         self._param_file_path = param_filepath
         self._add_changed_values_to_hist = True
-        self._plot_swap_callback = lambda x: None
+        self._external_plot_swap_callback = lambda x: None
+        self._external_duration_change_callback = lambda x: None
 
         # Load the UI file
         _, path = get_resource('packages', 'rosflight_rqt_plugins')
@@ -43,6 +44,8 @@ class ParamTuningWidget(QWidget):
         self.refresh_button.clicked.connect(self._refresh_button_callback)
         # Save to file button - QPushButton
         self.save_button.clicked.connect(self._save_button_callback)
+        # Duration spin box
+        self.time_duration_spin_box.valueChanged.connect(self._duration_spin_box_change_callback)
         # Parameter table - QTableView
         self._setupTableModels()
         self._create_table_buttons()
@@ -155,7 +158,7 @@ class ParamTuningWidget(QWidget):
         self._create_table_buttons()
 
         # Tell the plotter to swap the plot
-        self._plot_swap_callback(text)
+        self._external_plot_swap_callback(text)
 
     def _refresh_button_callback(self):
         self._refresh_table_values()
@@ -225,5 +228,12 @@ class ParamTuningWidget(QWidget):
         # Creating all new buttons is inefficient, but it is the easiest and most consistent way to update the values
         self._create_table_buttons()
 
+    def _duration_spin_box_change_callback(self, value):
+        self._external_duration_change_callback(float(value))
+
     def register_plot_swap_callback(self, callback: callable) -> None:
-        self._plot_swap_callback = callback
+        self._external_plot_swap_callback = callback
+
+    def register_duration_change_callback(self, callback: callable) -> None:
+        self._external_duration_change_callback = callback
+        callback(self.time_duration_spin_box.value())
