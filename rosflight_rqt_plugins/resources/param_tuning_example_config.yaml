@@ -8,12 +8,14 @@
 #       description: '{Parameter description}'
 #       scale: {Scale factor to use with parameters}  (optional, default is 1.0)
 #     ...
-#   plot_topics: (optional, include if you want to plot data)
+#   (Everything below this is optional if you don't want to plot data)
+#   plot_topics:
 #     {Plot name}:
 #       topic: '/{ROS_topic_name}/{field_name}'
 #       scale: {Scale factor to use with data}  (optional, default is 1.0)
 #     ...
 #   plot_axis_label: '{Y Axis Label}'  (x axis is always 'Time (s)')
+#   plot_axis_range: [min, max]  (optional, default is auto scaling)
 # ...
 
 
@@ -32,6 +34,7 @@ Roll Angle:
       topic: '/estimated_state/phi'
       scale: 57.2957795131
   plot_axis_label: 'Roll angle (deg)'
+  plot_axis_range: [-30, 30]
 
 Pitch Angle:
   node: '/autopilot'
@@ -48,6 +51,7 @@ Pitch Angle:
       topic: '/estimated_state/theta'
       scale: 57.2957795131
   plot_axis_label: 'Pitch angle (deg)'
+  plot_axis_range: [-30, 30]
 
 Airspeed:
   node: '/autopilot'
@@ -78,6 +82,7 @@ Course:
       topic: '/estimated_state/chi'
       scale: 57.2957795131
   plot_axis_label: 'Course (deg)'
+  plot_axis_range: [-180, 180]
 
 Altitude:
   node: '/autopilot'

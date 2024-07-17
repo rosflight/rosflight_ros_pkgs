@@ -59,6 +59,10 @@ class ParamTuningPlotter(QWidget):
                 self._lineObjects = {}
                 self._canvas.figure.subplots_adjust(left=0.05, right=0.98, top=0.98, bottom=0.05)
 
+                if 'plot_axis_range' in self._config[self._current_group]:
+                    min_value, max_value = self._config[self._current_group]['plot_axis_range']
+                    self._ax.set_ylim(min_value, max_value)
+
             for plot_name in self._config[self._current_group]['plot_topics']:
                 topic_str = self._config[self._current_group]['plot_topics'][plot_name]['topic']
                 x, y = self._param_client.get_data(topic_str)
