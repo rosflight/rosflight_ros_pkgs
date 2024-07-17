@@ -14,7 +14,7 @@ class ParameterClient():
         self._node = node
         self._hist_duration = hist_duration
         # Minimum time between data points accepted, to reduce amount of data to plot
-        self._min_delta_time = hist_duration / 150
+        self._min_delta_time = hist_duration / 250
         # Threading lock, since get_data may be called by an external thread
         self._lock = threading.Lock()
 

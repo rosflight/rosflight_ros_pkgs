@@ -36,7 +36,7 @@ class ParamTuning(Plugin):
         self._paramFilepath = args.param_filepath
 
         # Initialize the ROS client
-        self._client = ParameterClient(self._config, self._node, 10)
+        self._client = ParameterClient(self._config, self._node, 20)
 
         # Initialize the widget
         self._widget = ParamTuningWidget(self._config, self._client, self._paramFilepath)
