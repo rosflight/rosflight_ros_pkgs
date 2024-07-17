@@ -13,6 +13,7 @@ class ParameterClient():
         self._config = config
         self._node = node
         self._hist_duration = 10.0
+        self._record_data = True
         # Threading lock, since get_data may be called by an external thread
         self._lock = threading.Lock()
 
@@ -75,6 +76,9 @@ class ParameterClient():
 
     def _message_callback(self, msg, topic_name: str) -> None:
         with self._lock:
+            if not self._record_data:
+                return
+
             msg_time = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
             curr_time = self._node.get_clock().now()
             curr_time = curr_time.seconds_nanoseconds()[0] + curr_time.seconds_nanoseconds()[1] * 1e-9
@@ -169,6 +173,9 @@ class ParameterClient():
 
     def set_data_hist_duration(self, duration: float) -> None:
         self._hist_duration = duration
+
+    def pause_data_collection(self, pause: bool) -> None:
+        self._record_data = not pause
 
     def print_info(self, message: str) -> None:
         self._node.get_logger().info(message)
