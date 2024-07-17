@@ -83,7 +83,7 @@
          <item>
           <widget class="QLabel" name="time_axis_label">
            <property name="text">
-            <string>Time Axis Setting - Duration:</string>
+            <string>Time Axis Duration (s):</string>
            </property>
           </widget>
          </item>
@@ -109,7 +109,7 @@
          <item>
           <widget class="QCheckBox" name="pause_plot_check_box">
            <property name="text">
-            <string>Pause Scrolling</string>
+            <string>Pause Plotting</string>
            </property>
           </widget>
          </item>

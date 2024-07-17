@@ -51,7 +51,7 @@ class ParamTuningPlotter(QWidget):
                 self._ax.tick_params(axis='both', labelsize=self._font_size)
                 self._ax.grid(True)
                 self._lineObjects = {}
-                self._canvas.figure.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
+                self._canvas.figure.subplots_adjust(left=0.05, right=0.98, top=0.98, bottom=0.05)
 
             for topic in self._config[self._current_group]['plot_topics']:
                 topic_str = self._config[self._current_group]['plot_topics'][topic]
