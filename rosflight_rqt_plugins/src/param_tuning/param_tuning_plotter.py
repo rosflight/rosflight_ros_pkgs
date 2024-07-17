@@ -47,7 +47,7 @@ class ParamTuningPlotter(QWidget):
                 self._canvas.figure.clear()
                 self._ax = self._canvas.figure.subplots()
                 self._ax.set_xlabel('Time (s)', fontsize=self._font_size)
-                self._ax.set_ylabel(self._config[self._current_group]['plot_axes']['y_label'], fontsize=self._font_size)
+                self._ax.set_ylabel(self._config[self._current_group]['plot_axis_label'], fontsize=self._font_size)
                 self._ax.tick_params(axis='both', labelsize=self._font_size)
                 self._ax.grid(True)
                 self._lineObjects = {}
