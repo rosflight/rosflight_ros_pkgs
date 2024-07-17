@@ -33,21 +33,21 @@ class ParamTuning(Plugin):
             self._config = yaml.safe_load(file)
 
         # Get the filepath to save params to
-        self._paramFilepath = args.param_filepath
+        self._param_filepath = args.param_filepath
 
         # Initialize the ROS client
         self._client = ParameterClient(self._config, self._node, 20)
 
         # Initialize the widget
-        self._widget = ParamTuningWidget(self._config, self._client, self._paramFilepath)
+        self._widget = ParamTuningWidget(self._config, self._client, self._param_filepath)
         if context.serial_number() > 1:
             self._widget.setWindowTitle(
                 self._widget.windowTitle() + (' (%d)' % context.serial_number()))
 
         # Initialize the plotter
-        plotLayout = self._widget.findChild(QVBoxLayout, 'plot_layout')
-        self._plotter = ParamTuningPlotter(self._config, self._client, plotLayout)
-        self._widget.registerPlotSwapCallback(self._plotter.switchPlotGroup)
+        plot_layout = self._widget.findChild(QVBoxLayout, 'plot_layout')
+        self._plotter = ParamTuningPlotter(self._config, self._client, plot_layout)
+        self._widget.register_plot_swap_callback(self._plotter.switchPlotGroup)
 
         context.add_widget(self._widget)
 
