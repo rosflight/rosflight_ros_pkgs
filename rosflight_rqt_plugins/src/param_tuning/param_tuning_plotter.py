@@ -77,6 +77,12 @@ class ParamTuningPlotter(QWidget):
             self._plot_initialized = False
             self._update_plot()
 
+    def pause_plotting(self, pause: bool) -> None:
+        if pause:
+            self._timer.stop()
+        else:
+            self._timer.start()
+
     def shutdown(self):
         self._timer.stop()
         self._canvas.close()

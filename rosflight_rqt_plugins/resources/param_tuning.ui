@@ -107,16 +107,16 @@
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="lock_plot_check_box">
+          <widget class="QCheckBox" name="pause_plot_check_box">
            <property name="text">
-            <string>Lock Axis</string>
+            <string>Pause Scrolling</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="reset_plot_button">
            <property name="text">
-            <string>Reset Lock</string>
+            <string>Reset</string>
            </property>
           </widget>
          </item>

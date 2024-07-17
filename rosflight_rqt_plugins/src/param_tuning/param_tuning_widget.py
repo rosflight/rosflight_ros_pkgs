@@ -15,8 +15,11 @@ class ParamTuningWidget(QWidget):
         self.setObjectName('ParamTuningWidget')
         self._param_file_path = param_filepath
         self._add_changed_values_to_hist = True
+
+        # Define external callbacks
         self._external_plot_swap_callback = lambda x: None
         self._external_duration_change_callback = lambda x: None
+        self._external_pause_plot_callback = lambda x: None
 
         # Load the UI file
         _, path = get_resource('packages', 'rosflight_rqt_plugins')
@@ -46,6 +49,8 @@ class ParamTuningWidget(QWidget):
         self.save_button.clicked.connect(self._save_button_callback)
         # Duration spin box
         self.time_duration_spin_box.valueChanged.connect(self._duration_spin_box_change_callback)
+        # Paused checkbox
+        self.pause_plot_check_box.stateChanged.connect(self._pause_box_change_callback)
         # Parameter table - QTableView
         self._setupTableModels()
         self._create_table_buttons()
@@ -231,9 +236,17 @@ class ParamTuningWidget(QWidget):
     def _duration_spin_box_change_callback(self, value):
         self._external_duration_change_callback(float(value))
 
+    def _pause_box_change_callback(self, value):
+        value = True if value == 2 else False
+        self._external_pause_plot_callback(value)
+
     def register_plot_swap_callback(self, callback: callable) -> None:
         self._external_plot_swap_callback = callback
 
     def register_duration_change_callback(self, callback: callable) -> None:
         self._external_duration_change_callback = callback
         callback(self.time_duration_spin_box.value())
+
+    def register_pause_plot_callback(self, callback: callable) -> None:
+        self._external_pause_plot_callback = callback
+        callback(self.pause_plot_check_box.isChecked())

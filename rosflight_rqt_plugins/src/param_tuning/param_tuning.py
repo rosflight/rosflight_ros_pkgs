@@ -49,6 +49,7 @@ class ParamTuning(Plugin):
         self._plotter = ParamTuningPlotter(self._config, self._client, plot_layout)
         self._widget.register_plot_swap_callback(self._plotter.switch_plot_group)
         self._widget.register_duration_change_callback(self._client.set_data_hist_duration)
+        self._widget.register_pause_plot_callback(self._plotter.pause_plotting)
 
         context.add_widget(self._widget)
 
