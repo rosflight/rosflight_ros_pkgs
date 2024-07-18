@@ -5,61 +5,111 @@
 #   node: '/{ROS_node_name}'
 #   params:
 #     {param_name}:
-#       description: '{Parameter Description}'
-#       scale: {Scale Factor to use in GUI} (optional, default is 1.0)
+#       description: '{Parameter description}'
+#       scale: {Scale factor to use with parameters}  (optional, default is 1.0)
 #     ...
+#   (Everything below this is optional if you don't want to plot data)
+#   plot_topics:
+#     {Plot name}:
+#       topic: '/{ROS_topic_name}/{field_name}'
+#       scale: {Scale factor to use with data}  (optional, default is 1.0)
+#     ...
+#   plot_axis_label: '{Y Axis Label}'  (x axis is always 'Time (s)')
+#   plot_axis_range: [min, max]  (optional, default is auto scaling)
+# ...
+
 
 Roll Angle:
   node: '/autopilot'
   params:
     r_kp:
-      description: 'Roll Angle P Gain'
+      description: 'Roll angle P gain'
     r_kd:
-      description: 'Roll Angle D Gain'
+      description: 'Roll angle D gain'
+  plot_topics:
+    Roll Command:
+      topic: '/controller_internals/phi_c'
+      scale: 57.2957795131
+    Roll Estimate:
+      topic: '/estimated_state/phi'
+      scale: 57.2957795131
+  plot_axis_label: 'Roll angle (deg)'
+  plot_axis_range: [-30, 30]
 
 Pitch Angle:
   node: '/autopilot'
   params:
     p_kp:
-      description: 'Pitch Angle P Gain'
+      description: 'Pitch angle P gain'
     p_kd:
-      description:  'Pitch Angle D Gain'
+      description:  'Pitch angle D gain'
+  plot_topics:
+    Pitch Command:
+      topic: '/controller_internals/theta_c'
+      scale: 57.2957795131
+    Pitch Estimate:
+      topic: '/estimated_state/theta'
+      scale: 57.2957795131
+  plot_axis_label: 'Pitch angle (deg)'
+  plot_axis_range: [-30, 30]
 
 Airspeed:
   node: '/autopilot'
   params:
     a_t_kp:
-      description:  'Airspeed P Gain'
+      description:  'Airspeed P gain'
     a_t_ki:
-      description:  'Airspeed I Gain'
+      description:  'Airspeed I gain'
+  plot_topics:
+    Airspeed Command:
+      topic: '/controller_command/va_c'
+    Airspeed Estimate:
+      topic: '/estimated_state/va'
+  plot_axis_label: 'Airspeed (m/s)'
 
 Course:
   node: '/autopilot'
   params:
     c_kp:
-      description:  'Course P Gain'
+      description:  'Course P gain'
     c_ki:
-      description: 'Course I Gain'
+      description: 'Course I gain'
+  plot_topics:
+    Course Command:
+      topic: '/controller_command/chi_c'
+      scale: 57.2957795131
+    Course Estimate:
+      topic: '/estimated_state/chi'
+      scale: 57.2957795131
+  plot_axis_label: 'Course (deg)'
+  plot_axis_range: [-180, 180]
 
 Altitude:
   node: '/autopilot'
   params:
     a_kp:
-      description:  'Altitude P Gain'
+      description:  'Altitude P gain'
     a_ki:
-      description: 'Altitude I Gain'
+      description: 'Altitude I gain'
+  plot_topics:
+    Altitude Command:
+      topic: '/controller_command/h_c'
+    Altitude Estimate:
+      topic: '/estimated_state/position[2]'
+      scale: -1.0
+  plot_axis_label: 'Altitude (m)'
 
 Line Following:
   node: '/path_follower'
   params:
     k_path:
-      description:  'Line Following K Gain'
+      description:  'Line following K gain'
     chi_infty:
-      description:  'Max Approach Angle (degrees)'
+      description:  'Max approach angle (deg)'
       scale: 57.2957795131
 
 Orbit Following:
   node: '/path_follower'
   params:
     k_orbit:
-      description:  'Orbit Following K Gain'
+      description:  'Orbit following K gain'

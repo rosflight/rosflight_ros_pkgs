@@ -1,11 +1,14 @@
 import argparse
 import yaml
 
+import rclpy
 from rqt_gui_py.plugin import Plugin
-from python_qt_binding.QtWidgets import QFileDialog
+from python_qt_binding.QtWidgets import QFileDialog, QVBoxLayout
 
-from .param_tuning_widget import ParamTuningWidget
 from .param_tuning_client import ParameterClient
+from .param_tuning_plotter import ParamTuningPlotter
+from .param_tuning_widget import ParamTuningWidget
+
 
 class ParamTuning(Plugin):
 
@@ -30,16 +33,27 @@ class ParamTuning(Plugin):
             self._config = yaml.safe_load(file)
 
         # Get the filepath to save params to
-        self._paramFilepath = args.param_filepath
+        self._param_filepath = args.param_filepath
 
         # Initialize the ROS client
-        self._client = ParameterClient(self._config)
+        self._client = ParameterClient(self._config, self._node)
 
         # Initialize the widget
-        self._widget = ParamTuningWidget(self._config, self._client, self._paramFilepath)
+        self._widget = ParamTuningWidget(self._config, self._client, self._param_filepath)
         if context.serial_number() > 1:
             self._widget.setWindowTitle(
                 self._widget.windowTitle() + (' (%d)' % context.serial_number()))
+
+        # Initialize the plotter
+        plot_layout = self._widget.findChild(QVBoxLayout, 'plot_layout')
+        self._plotter = ParamTuningPlotter(self._config, self._client, plot_layout)
+        self._widget.register_plot_swap_callback(self._plotter.switch_plot_group)
+        self._widget.register_duration_change_callback(self._client.set_data_hist_duration)
+        def pause_plotting(pause: bool):
+            self._plotter.pause_plotting(pause)
+            self._client.pause_data_collection(pause)
+        self._widget.register_pause_plot_callback(pause_plotting)
+
         context.add_widget(self._widget)
 
     def _parse_args(self, argv):
@@ -53,3 +67,9 @@ class ParamTuning(Plugin):
         group.add_argument('--config-filepath', type=str, help='Path to the .yaml GUI configuration file')
         group.add_argument('--param-filepath', type=str, help='Path to the ROS .yaml parameter file, to save the'
                                                               ' parameters to')
+
+    def shutdown_plugin(self):
+        self._client.shutdown()
+        self._plotter.shutdown()
+        self._node.destroy_node()
+        rclpy.shutdown()
