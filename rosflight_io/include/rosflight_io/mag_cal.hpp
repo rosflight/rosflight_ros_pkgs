@@ -153,7 +153,8 @@ private:
   int measurement_skip_;     ///< Number of measurements to skip at the start of calibration.
   int measurement_throttle_; ///< Stores the number measurements already skipped.
   double inlier_thresh_;     ///< Threshold to consider a measurement an inlier in ellipsoidRANSAC.
-  Eigen::Vector3d measurement_prev_; ///< Stores previous measurement to ensure no duplicate measurements.
+  Eigen::Vector3d
+    measurement_prev_; ///< Stores previous measurement to ensure no duplicate measurements.
   EigenSTL::vector_Vector3d measurements_; ///< Stores all measurements.
 
   /**

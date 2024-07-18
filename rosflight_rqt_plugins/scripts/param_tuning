@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+
+import sys
+
+from param_tuning.param_tuning import ParamTuning
+from rqt_gui.main import Main
+
+plugin = 'param_tuning.param_tuning.ParamTuning'
+main = Main(filename=plugin)
+sys.exit(main.main(standalone=plugin, plugin_argument_provider=ParamTuning.add_arguments))

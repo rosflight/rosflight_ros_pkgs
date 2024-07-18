@@ -110,7 +110,9 @@ void Viz::magCallback(const sensor_msgs::msg::MagneticField::ConstSharedPtr & ms
     pts_msg.color.g = 1.0;
     pts_msg.color.b = 0.0;
 
-    for (const auto & item : pts_list_) { pts_msg.points.push_back(item); }
+    for (const auto & item : pts_list_) {
+      pts_msg.points.push_back(item);
+    }
 
     // publish point cloud
     pts_pub_->publish(pts_msg);

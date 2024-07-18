@@ -46,8 +46,8 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 
-#include <rclcpp/rclcpp.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
+#include <rclcpp/rclcpp.hpp>
 #include <rosflight_msgs/msg/detail/gnss_full__struct.hpp>
 #include <rosflight_msgs/msg/rc_raw.hpp>
 
@@ -86,7 +86,7 @@ private:
   double acc_bias_range_ = 0;
   double acc_bias_walk_stdev_ = 0;
 
-  double mass_ = 0;   // Use actual values since these are divisors.
+  double mass_ = 0; // Use actual values since these are divisors.
   double rho_ = 0;  // This will prevent a division by zero.
 
   double baro_bias_walk_stdev_ = 0;
@@ -500,7 +500,8 @@ public:
    *
    * @return true if successful.
    */
-  bool gnss_read(rosflight_firmware::GNSSData * gnss, rosflight_firmware::GNSSFull * gnss_full) override;
+  bool gnss_read(rosflight_firmware::GNSSData * gnss,
+                 rosflight_firmware::GNSSFull * gnss_full) override;
   /**
    * @brief Checks to see if it has been enough time to warrant new data.
    *

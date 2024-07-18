@@ -60,7 +60,9 @@ UDPBoard::~UDPBoard()
   io_service_.stop();
   socket_.close();
 
-  if (io_thread_.joinable()) { io_thread_.join(); }
+  if (io_thread_.joinable()) {
+    io_thread_.join();
+  }
 }
 
 void UDPBoard::set_ports(std::string bind_host, uint16_t bind_port, std::string remote_host,
@@ -120,7 +122,9 @@ uint8_t UDPBoard::serial_read()
 {
   MutexLock lock(read_mutex_);
 
-  if (read_queue_.empty()) { return 0; }
+  if (read_queue_.empty()) {
+    return 0;
+  }
 
   Buffer * buffer = read_queue_.front();
   uint8_t byte = buffer->consume_byte();
@@ -134,7 +138,9 @@ uint8_t UDPBoard::serial_read()
 
 void UDPBoard::async_read()
 {
-  if (!socket_.is_open()) { return; }
+  if (!socket_.is_open()) {
+    return;
+  }
 
   MutexLock lock(read_mutex_);
   socket_.async_receive_from(
@@ -154,10 +160,14 @@ void UDPBoard::async_read_end(const boost::system::error_code & error, size_t by
 
 void UDPBoard::async_write(bool check_write_state)
 {
-  if (check_write_state && write_in_progress_) { return; }
+  if (check_write_state && write_in_progress_) {
+    return;
+  }
 
   MutexLock lock(write_mutex_);
-  if (write_queue_.empty()) { return; }
+  if (write_queue_.empty()) {
+    return;
+  }
 
   write_in_progress_ = true;
   Buffer * buffer = write_queue_.front();

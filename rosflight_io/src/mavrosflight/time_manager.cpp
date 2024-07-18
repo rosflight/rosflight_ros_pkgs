@@ -86,7 +86,9 @@ void TimeManager::handle_mavlink_message(const mavlink_message_t & msg)
 
 std::chrono::nanoseconds TimeManager::fcu_time_to_system_time(std::chrono::nanoseconds fcu_time)
 {
-  if (!initialized_) { return std::chrono::nanoseconds(node_->get_clock()->now().nanoseconds()); }
+  if (!initialized_) {
+    return std::chrono::nanoseconds(node_->get_clock()->now().nanoseconds());
+  }
 
   std::chrono::nanoseconds ns = fcu_time + offset_ns_;
   if (ns < std::chrono::nanoseconds::zero()) {

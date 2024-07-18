@@ -1,0 +1,16 @@
+<library path="src">
+  <class name="ParamTuning" type="param_tuning.param_tuning.ParamTuning" base_class_type="rqt_gui_py::Plugin">
+    <description>
+    Tuning GUI for ROSflight autopilot parameters.
+    </description>
+    <qtgui>
+      <group>
+        <label>ROSflight</label>
+        <icon type="theme">folder</icon>
+      </group>
+      <label>Autopilot Parameter Tuning</label>
+      <icon type="theme">accessories-text-editor</icon>
+      <statustip>Super helpful GUI for tuning autopilots.</statustip>
+    </qtgui>
+  </class>
+</library>

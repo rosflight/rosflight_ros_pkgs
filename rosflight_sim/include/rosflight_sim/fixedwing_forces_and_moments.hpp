@@ -36,9 +36,9 @@
 #define ROSFLIGHT_SIM_FIXEDWING_FORCES_AND_MOMENTS_H
 
 #include <eigen3/Eigen/Dense>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rosflight_sim/mav_forces_and_moments.hpp>
-#include <geometry_msgs/msg/twist_stamped.hpp>
 
 namespace rosflight_sim
 {
@@ -71,7 +71,7 @@ private:
     double alpha0;
   } wing_;
 
-  // Propeller Coefficients 
+  // Propeller Coefficients
   struct PropCoeff
   {
     double D_prop;
@@ -82,8 +82,8 @@ private:
     double CQ_1;
     double CQ_2;
   } prop_;
-  
-  // Motor Coefficients 
+
+  // Motor Coefficients
   struct MotorCoeff
   {
     double KV;
@@ -142,7 +142,7 @@ private:
   * for any missing parameters.
   */
   void update_params_from_ROS();
-  
+
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr forces_moments_pub_;
 
 public:

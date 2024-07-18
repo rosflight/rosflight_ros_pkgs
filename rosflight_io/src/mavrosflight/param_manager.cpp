@@ -63,7 +63,9 @@ ParamManager::ParamManager(MavlinkComm * const comm, rclcpp::Node * const node)
 
 ParamManager::~ParamManager()
 {
-  if (first_param_received_) { delete[] received_; }
+  if (first_param_received_) {
+    delete[] received_;
+  }
 }
 
 void ParamManager::handle_mavlink_message(const mavlink_message_t & msg)
@@ -127,7 +129,9 @@ bool ParamManager::write_params()
 
 void ParamManager::register_param_listener(ParamListenerInterface * listener)
 {
-  if (listener == nullptr) { return; }
+  if (listener == nullptr) {
+    return;
+  }
 
   bool already_registered = false;
   for (auto & item : listeners_) {
@@ -137,12 +141,16 @@ void ParamManager::register_param_listener(ParamListenerInterface * listener)
     }
   }
 
-  if (!already_registered) { listeners_.push_back(listener); }
+  if (!already_registered) {
+    listeners_.push_back(listener);
+  }
 }
 
 void ParamManager::unregister_param_listener(ParamListenerInterface * listener)
 {
-  if (listener == nullptr) { return; }
+  if (listener == nullptr) {
+    return;
+  }
 
   for (int i = 0; i < (int) listeners_.size(); i++) {
     if (listener == listeners_[i]) {
@@ -210,7 +218,9 @@ void ParamManager::request_params()
     request_param_list();
   } else {
     for (int i = 0; i < num_params_; i++) {
-      if (!received_[i]) { request_param(i); }
+      if (!received_[i]) {
+        request_param(i);
+      }
     }
   }
 }
@@ -240,7 +250,9 @@ void ParamManager::handle_param_value_msg(const mavlink_message_t & msg)
     first_param_received_ = true;
     num_params_ = param.param_count;
     received_ = new bool[num_params_];
-    for (int i = 0; i < num_params_; i++) { received_[i] = false; }
+    for (int i = 0; i < num_params_; i++) {
+      received_[i] = false;
+    }
   }
 
   // ensure null termination of name
@@ -257,7 +269,9 @@ void ParamManager::handle_param_value_msg(const mavlink_message_t & msg)
 
     // increase the param count
     received_count_++;
-    if (received_count_ == num_params_) { got_all_params_ = true; }
+    if (received_count_ == num_params_) {
+      got_all_params_ = true;
+    }
 
     for (auto & listener : listeners_) {
       listener->on_new_param_received(name, params_[name].getValue());
@@ -286,7 +300,9 @@ void ParamManager::handle_command_ack_msg(const mavlink_message_t & msg)
         RCLCPP_INFO(node_->get_logger(), "Param write succeeded");
         unsaved_changes_ = false;
 
-        for (auto & listener : listeners_) { listener->on_params_saved_change(unsaved_changes_); }
+        for (auto & listener : listeners_) {
+          listener->on_params_saved_change(unsaved_changes_);
+        }
       } else {
         RCLCPP_INFO(node_->get_logger(),
                     "Param write failed - maybe disarm the aircraft and try again?");

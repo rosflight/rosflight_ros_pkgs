@@ -89,11 +89,17 @@ void Param::requestSet(double value, mavlink_message_t * msg)
 
 bool Param::handleUpdate(const mavlink_param_value_t & msg)
 {
-  if (msg.param_index != index_) { return false; }
+  if (msg.param_index != index_) {
+    return false;
+  }
 
-  if (msg.param_type != type_) { return false; }
+  if (msg.param_type != type_) {
+    return false;
+  }
 
-  if (set_in_progress_ && msg.param_value == expected_raw_value_) { set_in_progress_ = false; }
+  if (set_in_progress_ && msg.param_value == expected_raw_value_) {
+    set_in_progress_ = false;
+  }
 
   if (msg.param_value != getRawValue()) {
     setFromRawValue(msg.param_value);
