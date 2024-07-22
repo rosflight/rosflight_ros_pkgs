@@ -1,0 +1,125 @@
+# Example configuration file to set up the parameter tuning interface. All GUI elements are
+# populated based on this file. This example is written as if it was for use with ROSplane.
+#
+# {Name of parameter group}:
+#   node: '/{ROS_node_name}'
+#   params:
+#     {param_name}:
+#       description: '{Parameter description}'
+#       scale: {Scale factor to use with parameters}  (optional, default is 1.0)
+#     ...
+#   (Everything below this is optional if you don't want to plot data)
+#   plot_topics:
+#     {Plot name}:
+#       topic: '/{ROS_topic_name}/{field_name}'
+#       scale: {Scale factor to use with data}  (optional, default is 1.0)
+#     ...
+#   plot_axis_label: '{Y Axis Label}'  (x axis is always 'Time (s)')
+#   plot_axis_range: [min, max]  (optional, default is auto scaling)
+# ...
+
+
+North Position:
+  node: '/autopilot'
+  params:
+    u_n_kp:
+      description: 'North position P gain'
+    u_n_ki:
+      description: 'North position I gain'
+    u_n_kd:
+      description: 'North position D gain'
+  plot_topics:
+    North State:
+      topic: '/state/position[0]'
+      scale: 1.0
+    North Command:
+      topic: '/high_level_command/cmd1'
+      scale: 1.0
+  plot_axis_label: 'Roll angle (deg)'
+  plot_axis_range: [-30, 30]
+
+East Position:
+  node: '/autopilot'
+  params:
+    u_e_kp:
+      description: 'East position P gain'
+    u_e_ki:
+      description: 'East position I gain'
+    u_e_kd:
+      description: 'East position D gain'
+  plot_topics:
+    East State:
+      topic: '/state/position[1]'
+      scale: 1.0
+  plot_axis_label: 'Roll angle (deg)'
+  plot_axis_range: [-30, 30]
+
+Down Position:
+  node: '/autopilot'
+  params:
+    u_d_kp:
+      description: 'Down position P gain'
+    u_d_ki:
+      description: 'Down position I gain'
+    u_d_kd:
+      description: 'Down position D gain'
+  plot_topics:
+    Down State:
+      topic: '/state/position[2]'
+      scale: 1.0
+    Down Command:
+      topic: '/high_level_command/cmd3'
+      scale: 1.0
+  plot_axis_label: 'Roll angle (deg)'
+  plot_axis_range: [-60, 1]
+
+Roll Angle:
+  node: '/autopilot'
+  params:
+    phi_kp:
+      description: 'Roll P gain'
+    phi_ki:
+      description: 'Roll I gain'
+    phi_kd:
+      description: 'Roll D gain'
+  plot_topics:
+    Roll State:
+      topic: '/state/phi'
+      scale: 57.2957795131
+    Roll Command:
+      topic: '/high_level_command/phi_c'
+      scale: 57.2957795131
+  plot_axis_label: 'Roll angle (deg)'
+  plot_axis_range: [-30, 30]
+
+Pitch Angle:
+  node: '/autopilot'
+  params:
+    theta_kp:
+      description: 'Theta P gain'
+    theta_ki:
+      description: 'Theta I gain'
+    theta_kd:
+      description: 'Theta D gain'
+  plot_topics:
+    Pitch State:
+      topic: '/state/theta'
+      scale: 1.0
+  plot_axis_label: 'Pitch angle (deg)'
+  plot_axis_range: [-30, 30]
+
+Yaw Angle:
+  node: '/autopilot'
+  params:
+    psi_kp:
+      description: 'Yaw P gain'
+    psi_ki:
+      description: 'Yaw I gain'
+    psi_kd:
+      description: 'Yaw D gain'
+  plot_topics:
+    Yaw State:
+      topic: '/state/psi'
+      scale: 1.0
+  plot_axis_label: 'Yaw angle (deg)'
+  plot_axis_range: [-30, 30]
