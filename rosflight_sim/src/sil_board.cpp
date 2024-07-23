@@ -573,6 +573,13 @@ void SILBoard::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
     "/forces_and_moments", 1, std::bind(&SILBoard::forces_callback, this, std::placeholders::_1));
 }
 
+void SILBoard::pwm_init_multi(const float *rate, uint32_t channels)
+{
+  // Only call it once, since we don't set the rate for each channel differently in the SIM board.
+  // This works since the pwm_init doesn't use the arguments passed to it (in the SIL board)
+  pwm_init(0, 0);
+}
+
 void SILBoard::forces_callback(const geometry_msgs::msg::TwistStamped & msg)
 {
 
@@ -599,6 +606,14 @@ void SILBoard::pwm_write(uint8_t channel, float value)
 {
   pwm_outputs_[channel] = 1000 + (uint16_t) (1000 * value);
 }
+
+void SILBoard::pwm_write_multi(float *value, uint32_t channels)
+{
+  for (int i=0; i<(int) channels; ++i) {
+    pwm_write(i, value[i]);
+  }
+}
+
 void SILBoard::pwm_disable()
 {
   for (int i = 0; i < 14; i++) {
