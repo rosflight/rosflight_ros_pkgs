@@ -2,23 +2,9 @@
 """
 vimfly - vim keybindings for your multirotor!
 
-Teleoperated flying from your keyboard. Command u, v, psidot, and altitude.
+Teleoperated flying from your keyboard.
+Keys are mapped to each channel of the RCRaw message.
 
-The following keybindings are used:
-    - a: lower altitude
-    - s: higher altitude
-    - d: CCW (-psidot)
-    - f: CW (+psidot)
-    - h: Left (-v)
-    - j: Backward (-u)
-    - k: Forward (+u)
-    - l: Right (+v)
-
-Connect to rosflight_io command topic (SIL/HW) or roscopter_sim Gazebo command
-topic.
-
-
-https://xkcd.com/1823/
 """
 import pygame
 import rclpy
