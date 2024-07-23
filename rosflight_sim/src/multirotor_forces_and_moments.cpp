@@ -139,6 +139,10 @@ Multirotor::Multirotor(rclcpp::Node::SharedPtr node)
   }
 
   wind_ = Eigen::Vector3d::Zero();
+
+  forces_moments_pub_ =
+    node_->create_publisher<geometry_msgs::msg::TwistStamped>("/forces_and_moments", 1);
+
   prev_time_ = -1;
 }
 
@@ -216,6 +220,22 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
 
   // Apply ground effect and thrust
   forces(2) += output_forces_and_torques(3) - ground_effect;
+  
+  geometry_msgs::msg::TwistStamped msg;
+
+  rclcpp::Time now = node_->get_clock()->now();
+
+  msg.header.stamp = now;
+
+  msg.twist.linear.x = forces(0);
+  msg.twist.linear.y = forces(1);
+  msg.twist.linear.z = forces(2);
+
+  msg.twist.angular.x = forces(3);
+  msg.twist.angular.y = forces(4);
+  msg.twist.angular.z = forces(5);
+
+  forces_moments_pub_->publish(msg);
 
   return forces;
 }

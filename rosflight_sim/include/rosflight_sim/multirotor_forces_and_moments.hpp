@@ -38,6 +38,8 @@
 #include <eigen3/Eigen/Dense>
 #include <rclcpp/rclcpp.hpp>
 
+#include <geometry_msgs/msg/twist_stamped.hpp>
+
 #include <rosflight_sim/mav_forces_and_moments.hpp>
 
 namespace rosflight_sim
@@ -104,6 +106,8 @@ public:
    */
   explicit Multirotor(rclcpp::Node::SharedPtr node);
   ~Multirotor();
+
+  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr forces_moments_pub_;
 
   /**
    * @brief Calculates forces and moments based on current state and aerodynamic forces.
