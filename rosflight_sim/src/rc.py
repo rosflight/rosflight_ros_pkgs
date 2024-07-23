@@ -155,7 +155,7 @@ class RC(Node):
             self.get_logger().info('No joystick (or display) detected, using simulated joystick')
             self.transmitter_detected = False
         
-        self.declare_parameter('use_vimfly', True)
+        self.declare_parameter('use_vimfly', False)
         self.use_vimfly = self.get_parameter('use_vimfly').get_parameter_value().bool_value
 
         if self.use_vimfly and not self.transmitter_detected:
