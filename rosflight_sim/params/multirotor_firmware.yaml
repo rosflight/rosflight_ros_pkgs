@@ -1,3 +1,8 @@
+- {name: RC_NUM_CHN, type: 6, value: 8}
 - {name: ARM_CHANNEL, type: 6, value: 4}
-- {name: MIXER, type: 6, value: 1}
+- {name: RC_THR_OVRD_CHN, type: 6, value: 5} # Set pilot override channel for throttle control.
+- {name: RC_ATT_OVRD_CHN, type: 6, value: 6} # Set pilot override channel for attitude control.
+- {name: MIXER, type: 6, value: 2}
 - {name: FAILSAFE_THR, type: 9, value: 0.0}
+- {name: MIN_THROTTLE, type: 6, value: 0}    # Don't take minimum of RC and offboard at all times
+  # - {name: RC_ATT_CTRL_CHN, type: 6, value: 7}
