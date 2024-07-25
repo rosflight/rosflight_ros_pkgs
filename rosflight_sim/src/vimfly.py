@@ -38,12 +38,12 @@ class VimFly:
         self.thrust_start_time = self.node.get_clock().now()
 
         self.armed = 1000 # Unarmed
-        self.ARM_DEBOUNCE_THRESHOLD = 0.250
+        self.ARM_DEBOUNCE_THRESHOLD = 0.500
         self.arm_debouncing = [False]
         self.arm_start_time = self.node.get_clock().now()
 
         self.RC_override = 2000 # Start under manual control
-        self.RC_OVERRIDE_DEBOUNCE_THRESHOLD = 0.250
+        self.RC_OVERRIDE_DEBOUNCE_THRESHOLD = 0.500
         self.RC_override_debouncing = [False]
         self.RC_override_start_time = self.node.get_clock().now()
 

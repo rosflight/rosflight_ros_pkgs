@@ -157,7 +157,8 @@ class RC(Node):
         
         self.declare_parameter('use_vimfly', False)
         self.use_vimfly = self.get_parameter('use_vimfly').get_parameter_value().bool_value
-
+        
+        # Intercept if using VimFly.
         if self.use_vimfly and not self.transmitter_detected:
             self.get_logger().info('Using VimFly...')
             self.vim_fly = VimFly()
@@ -165,7 +166,6 @@ class RC(Node):
         
         self.rc_publisher = self.create_publisher(RCRaw, 'RC', 10)
         self.timer = self.create_timer(1.0 / 50, self.timer_callback)
-
 
         # Transmitter detected, initialize joystick
         if self.transmitter_detected:
@@ -187,7 +187,7 @@ class RC(Node):
                 self.transmitter_detected = False
 
         # Transmitter not detected, use simulated joystick
-        if not self.transmitter_detected and not self.use_vimfly:
+        if not self.transmitter_detected:
             self.THROTTLE_CHANNEL = 2
             self.ARM_SWITCH_CHANNEL = 4
             self.OVERRIDE_CHANNEL = 5
