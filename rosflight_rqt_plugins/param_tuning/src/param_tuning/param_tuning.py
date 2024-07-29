@@ -27,7 +27,7 @@ class ParamTuning(Plugin):
                                                       options=options)
             if not filename:
                 self._node.get_logger().fatal('No configuration file selected, please provide a configuration file like'
-                                              ' rosflight_rqt_plugins/resources/example_config.yaml')
+                                              ' rosflight_rqt_plugins/param_tuning/resources/example_config.yaml')
                 raise RuntimeError('No configuration file provided')
             
             args.config_filepath = filename

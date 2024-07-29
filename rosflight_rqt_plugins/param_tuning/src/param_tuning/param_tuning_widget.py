@@ -22,8 +22,8 @@ class ParamTuningWidget(QWidget):
         self._external_pause_plot_callback = lambda x: None
 
         # Load the UI file
-        _, path = get_resource('packages', 'rosflight_rqt_plugins')
-        ui_file = os.path.join(path, 'share', 'rosflight_rqt_plugins', 'resources', 'param_tuning.ui')
+        _, path = get_resource('packages', 'param_tuning')
+        ui_file = os.path.join(path, 'share', 'param_tuning', 'resources', 'param_tuning.ui')
         loadUi(ui_file, self)
 
         # Define table formatting
