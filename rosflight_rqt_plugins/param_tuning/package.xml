@@ -1,5 +1,5 @@
 <package format="3">
-  <name>rosflight_rqt_plugins</name>
+  <name>param_tuning</name>
   <version>1.0.0</version>
   <description>Contains plugins that are used by rqt-based GCS in the ROSflight ecosystem.</description>
   <maintainer email="bsuther2@byu.edu">Brandon Sutherland</maintainer>
