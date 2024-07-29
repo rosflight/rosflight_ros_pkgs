@@ -8,7 +8,7 @@ setup(
     version='1.0.0',
     # Packages to export
     package_dir={'': 'src'},
-    packages=['param_tuning'],
+    packages=['param_tuning', 'map_view'],
     # Files we want to install, specifically launch files
     data_files=[
         # Install marker file in the package index
@@ -18,6 +18,7 @@ setup(
         (os.path.join('share', package_name), ['plugin.xml']),
         (os.path.join('share', package_name, 'resources'), ['resources/param_tuning.ui']),
         (os.path.join('lib', package_name), ['scripts/param_tuning']),
+        (os.path.join('lib', package_name), ['scripts/map_view']),
     ],
     # This is important as well
     install_requires=['setuptools'],
