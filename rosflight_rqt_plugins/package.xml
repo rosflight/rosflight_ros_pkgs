@@ -5,6 +5,7 @@
   <maintainer email="bsuther2@byu.edu">Brandon Sutherland</maintainer>
   <license>BSD</license>
 
+  <build_depend>libmarble-dev</build_depend>
   <exec_depend>ament_index_python</exec_depend>
   <exec_depend>python_qt_binding</exec_depend>
   <exec_depend>rqt_gui</exec_depend>
