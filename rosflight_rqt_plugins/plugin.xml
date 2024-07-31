@@ -9,22 +9,8 @@
         <icon type="theme">folder</icon>
       </group>
       <label>Autopilot Parameter Tuning</label>
-      <icon type="theme">utilities-system-monitor</icon>
-      <statustip>GUI for tuning autopilots.</statustip>
-    </qtgui>
-  </class>
-
-  <class name="MapView" type="map_view.map_view.MapView" base_class_type="rqt_gui_py::Plugin">
-    <description>
-    A aerial map view for planning and monitoring missions in ROSflight.
-    </description>
-    <qtgui>
-      <group>
-        <label>ROSflight</label>
-        <icon type="theme">folder</icon>
-      </group>
-      <label>Map View</label>
-      <statustip>Map for monitoring and planning missions.</statustip>
+      <icon type="theme">accessories-text-editor</icon>
+      <statustip>Super helpful GUI for tuning autopilots.</statustip>
     </qtgui>
   </class>
 </library>
