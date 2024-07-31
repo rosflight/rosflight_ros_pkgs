@@ -2,13 +2,9 @@
 
 import sys
 
+from map_view.map_view import MapView
 from rqt_gui.main import Main
 
-
-def add_arguments(parser):
-    group = parser.add_argument_group('Options for map_view plugin')
-    #group.add_argument('topic', nargs='?', help='The topic name to subscribe to')
-
-
-main = Main()
-sys.exit(main.main(sys.argv, standalone='map_view', plugin_argument_provider=add_arguments))
+plugin = 'map_view.map_view.MapView'
+main = Main(filename=plugin)
+sys.exit(main.main(standalone=plugin, plugin_argument_provider=MapView.add_arguments))
