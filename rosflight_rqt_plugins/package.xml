@@ -5,16 +5,20 @@
   <maintainer email="bsuther2@byu.edu">Brandon Sutherland</maintainer>
   <license>BSD</license>
 
-  <build_depend>libmarble-dev</build_depend>
-  <exec_depend>ament_index_python</exec_depend>
-  <exec_depend>python_qt_binding</exec_depend>
-  <exec_depend>rqt_gui</exec_depend>
-  <exec_depend>rqt_gui_py</exec_depend>
-  <exec_depend>python3-numpy</exec_depend>
-  <exec_depend>python3-matplotlib</exec_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <depend>libmarble-dev</depend>
+  <depend>ament_index_python</depend>
+  <depend>python_qt_binding</depend>
+  <depend>rqt_gui</depend>
+  <depend>rqt_gui_py</depend>
+  <depend>rqt_gui_cpp</depend>
+  <depend>qt_gui_cpp</depend>
+  <depend>python3-numpy</depend>
+  <depend>python3-matplotlib</depend>
 
   <export>
-    <build_type>ament_python</build_type>
+    <build_type>ament_cmake</build_type>
     <rqt_gui plugin="${prefix}/plugin.xml" />
   </export>
 
