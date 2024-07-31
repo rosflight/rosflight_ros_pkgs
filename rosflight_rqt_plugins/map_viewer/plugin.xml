@@ -1,0 +1,15 @@
+<library path="map_view">
+  <class name="MapView" type="map_view::MapView" base_class_type="rqt_gui_cpp::Plugin">
+    <description>
+    A aerial map view for planning and monitoring missions in ROSflight.
+    </description>
+    <qtgui>
+      <group>
+        <label>ROSflight</label>
+        <icon type="theme">folder</icon>
+      </group>
+      <label>Map View</label>
+      <statustip>Map for monitoring and planning missions.</statustip>
+    </qtgui>
+  </class>
+</library>
