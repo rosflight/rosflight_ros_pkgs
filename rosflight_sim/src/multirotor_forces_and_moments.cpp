@@ -35,7 +35,6 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
-#include <rclcpp/parameter_value.hpp>
 #include <rosflight_sim/multirotor_forces_and_moments.hpp>
 
 namespace rosflight_sim
@@ -153,15 +152,18 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
     // Use model with V_max
     double v_in = V_max * motor.command;
 
+    double Va_norm = Va.norm();
+    if (Va_norm < 0.1) {
+      Va_norm = 0.1;
+    }
+
     double a = (motor.prop.CQ_0 * (rho) * (pow((motor.prop.diam), 5.0)) / (pow((2 * M_PI), 2.0)));
-    double b = (motor.prop.CQ_1 * (rho) * (pow((motor.prop.diam), 4.0)) / (2 * M_PI)) * Va.norm() // FIXME: The Va.norm() is actually just the portion parrallel to the prop's thrust.
+    double b = (motor.prop.CQ_1 * (rho) * (pow((motor.prop.diam), 4.0)) / (2 * M_PI)) * Va_norm // FIXME: The Va.norm() is actually just the portion parrallel to the prop's thrust.
       + ((pow((motor.KQ), 2.0)) / (motor.R));
     double c = (motor.prop.CQ_2 * (rho) * (pow((motor.prop.diam), 3.0)) * (pow(Va.norm(), 2.0)))
       - ((motor.KQ) / (motor.R)) * v_in + ((motor.KQ) * (motor.I_0));
 
     double prop_speed = ((-b + sqrt((pow((b), 2.0)) - (4 * a * c))) / (2 * a));
-
-    // std::cout << "angle: " << motor.radial_angle << "\n";
 
     // Calculate the advance ratio.
     double advance_ratio = (2. * M_PI * Va.norm())/(prop_speed*motor.prop.diam);
@@ -172,11 +174,8 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
     
     double motor_roll_torque = -motor_thrust*motor.dist*sinf(motor.radial_angle);
     double motor_pitch_torque = motor_thrust*motor.dist*cosf(motor.radial_angle);
-    
-    // std::cout << "motor_roll_torque " << motor_roll_torque << "\n";
 
     double CQ = motor.prop.CQ_2*pow(advance_ratio, 2) + motor.prop.CQ_1*advance_ratio + motor.prop.CQ_0;
-    // std::cout << "CQ " << CQ << "\n";
     
     // The torque produced by the propeller spinning.
     double prop_torque = motor.direction * CQ * (rho*pow(motor.prop.diam, 5))/(4*pow(M_PI,2)) * pow(prop_speed, 2); // TODO: Do you need this?
@@ -191,6 +190,17 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
   
   Eigen::Vector3d body_forces;
   body_forces << 0.0, 0.0, -total_thrust;
+
+  double Cd = 0.05;
+
+  Eigen::Matrix3d drag_matrix;
+  drag_matrix << -total_thrust*Cd, 0.0, 0.0,
+                 0.0, -total_thrust*Cd, 0.0,
+                 0.0, 0.0, 0.0;
+
+  Eigen::Vector3d drag_forces = drag_matrix * x.vel;
+
+  body_forces += drag_forces;
   
   Eigen::Vector3d body_torques;
   body_torques << total_roll_torque, total_pitch_torque, -total_yaw_torque;
@@ -198,10 +208,6 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
   Eigen::Matrix<double, 6, 1> forces;
   forces.block<3,1>(0,0) = body_forces;
   forces.block<3,1>(3,0) = body_torques;
-
-  std::cout << forces << std::endl;
-
-  // TODO: Apply drag.
 
   // TODO: Apply ground effect
   
