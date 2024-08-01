@@ -26,7 +26,7 @@
     CQ_0 : 0.005230
     CQ_1 : 0.004970
     CQ_2 : -0.01664
-    KV : 145         # Motor speed constant from datasheet in RPM/V
+    KV : 145.0         # Motor speed constant from datasheet in RPM/V
     KQ : 0.06586     # ((1 /KV_rpm_per_volt) * 60 / (2 * M_PI))
                      # Back-emf constant, KV in V-s/rad, Motor torque constant, KQ in N-m/A
     V_max : 44.4     # voltage for 12s battery at 3.7 volts per cell
