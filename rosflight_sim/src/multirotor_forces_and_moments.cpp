@@ -47,9 +47,9 @@ Multirotor::Multirotor(rclcpp::Node::SharedPtr node)
 {
   declare_multirotor_params();
 
-  std::vector<double> rotor_positions(3 * num_rotors_);
-  std::vector<double> rotor_vector_normal(3 * num_rotors_);
-  std::vector<long> rotor_rotation_directions(num_rotors_);
+
+  num_rotors_ = node_->get_parameter("num_rotors").as_int();
+
 
   /* Load Rotor Configuration */
   motors_.resize(num_rotors_);
@@ -135,22 +135,19 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
   // Get airspeed vector for drag force calculation (rotate wind into body frame and add to inertial velocity)
   Eigen::Vector3d Va = x.vel + x.rot.inverse() * wind_;
 
-  // TODO: Wrap this whole thing in a loop for each motor.
-  
-  // The motor's straight line distance from the center of mass.
-  double motor_dist;
-  // The motor's radial angle from the body north unit vector in radians,
-  // for example: quad copter x frame this is 45,135,225,315, except in radians. 
-  double motor_radial_angle;
-  // The direction that the motor spins, (-1 is clockwise and 1 is counter clocwise, looking from above vehicle).
-  int motor_direction;
-  // The motor_command from 0 to 1.
-  double motor_command;
-
   double total_thrust = 0.0;
   double total_roll_torque = 0.0;
   double total_pitch_torque = 0.0;
   double total_yaw_torque = 0.0;
+
+  for (int i = 0; i < num_rotors_; i++) {
+
+    double motor_cmd = (act_cmds[i] - 1000)/1000.0;
+
+    std::cout << "motor_cmd: " << motor_cmd << "\n";
+
+    motors_[i].command = motor_cmd;
+  }
 
   for (Motor motor : motors_) {
     // Calculate prop_speed
@@ -158,7 +155,7 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
     double v_in = V_max * motor.command;
 
     double a = (motor.prop.CQ_0 * (rho) * (pow((motor.prop.diam), 5.0)) / (pow((2 * M_PI), 2.0)));
-    double b = (motor.prop.CQ_1 * (rho) * (pow((motor.prop.diam), 4.0)) / (2 * M_PI)) * Va.norm()
+    double b = (motor.prop.CQ_1 * (rho) * (pow((motor.prop.diam), 4.0)) / (2 * M_PI)) * Va.norm() // FIXME: The Va.norm() is actually just the portion parrallel to the prop's thrust.
       + ((pow((motor.KQ), 2.0)) / (motor.R));
     double c = (motor.prop.CQ_2 * (rho) * (pow((motor.prop.diam), 3.0)) * (pow(Va.norm(), 2.0)))
       - ((motor.KQ) / (motor.R)) * v_in + ((motor.KQ) * (motor.I_0));
@@ -172,15 +169,15 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
 
     double motor_thrust = CT * (rho * pow(motor.prop.diam, 4))/(4*pow(M_PI,2)) * pow(prop_speed, 2);
     
-    double motor_roll_torque = motor_thrust*motor_dist*sinf(motor_radial_angle);
-    double motor_pitch_torque = motor_thrust*motor_dist*cosf(motor_radial_angle);
+    double motor_roll_torque = motor_thrust*motor.dist*sinf(motor.radial_angle);
+    double motor_pitch_torque = motor_thrust*motor.dist*cosf(motor.radial_angle);
 
     double CQ = motor.prop.CQ_2*pow(advance_ratio, 2) + motor.prop.CQ_1*advance_ratio + motor.prop.CQ_0;
     
     // The torque produced by the propeller spinning.
-    double prop_torque = motor_direction * CQ * (rho*pow(motor.prop.diam, 5))/(4*pow(M_PI,2)) * pow(prop_speed, 2); // TODO: Do you need this?
+    double prop_torque = motor.direction * CQ * (rho*pow(motor.prop.diam, 5))/(4*pow(M_PI,2)) * pow(prop_speed, 2); // TODO: Do you need this?
 
-    double motor_yaw_torque = motor_thrust*motor_dist*cosf(motor_radial_angle);
+    double motor_yaw_torque = motor_thrust*motor.dist*cosf(motor.radial_angle);
 
     total_thrust += motor_thrust;
     total_roll_torque += motor_roll_torque;
