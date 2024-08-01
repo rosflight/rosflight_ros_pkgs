@@ -74,7 +74,7 @@ def generate_launch_description():
         'ros_log_level', default_value=TextSubstitution(text='info')
     )
 
-    aircraft = 'skyhunter' # default aircraft
+    aircraft = 'anaconda' # default aircraft
 
     for arg in sys.argv:
         if arg.startswith("aircraft:="):
