@@ -4,9 +4,7 @@
 /multirotor/rosflight_sil:
   ros__parameters:
     # Common Global Physical Parameters
-    linear_mu: 0.05
-    angular_mu: 0.0005
-    ground_effect: [ -55.3516, 181.8265, -203.9874, 85.3735, -7.6619 ]
+    rho: 1.225
 
     # Dynamics
     num_rotors: 4
@@ -14,15 +12,26 @@
                       -0.1907,  0.205, -0.0762,
                       -0.1907, -0.205, -0.0762,
                        0.1926, -0.230, -0.0762 ]
-
-    rotor_vector_normal: [ -0.02674078,  0.0223925,  -0.99939157,
-                            0.02553726,  0.02375588, -0.99939157,
-                            0.02553726, -0.02375588, -0.99939157,
-                           -0.02674078, -0.0223925,  -0.99939157 ]
-
+    
+    rotor_dists: [.25, .25, .25, .25]
+    rotor_radial_angles: [45., 135., 225., 315.]
     rotor_rotation_directions: [ -1, 1, -1, 1 ]
-    rotor_max_thrust: 14.961
-    rotor_F: [ 1.5e-5, -0.024451, 9.00225 ]
-    rotor_T: [ 2.22e-7,-3.51e-4,  0.12531 ]
-    rotor_tau_up: 0.2164
-    rotor_tau_down: 0.1644
+    
+    # Prop Model
+    # Thrust
+    CT_0: 0.1196850
+    CT_1: 0.0399995
+    CT_2: -0.400139
+
+    # Torque
+    CQ_0: 0.0097976
+    CQ_1: -0.012271
+    CQ_2: -0.014743
+
+    # Diameter (m)
+    D_prop: 0.381
+
+    V_max : 24.0                  # voltage for 6s battery at 4 volts per cell
+    R_motor : 0.042               # ohms
+    I_0 : 1.5                     # no-load (zero torque) current (A)
+    KQ : 0.01705                  #((1 /(KV_rpm_per_volt)) *60) / (2 *M_PI) Back-emf constant, KV in V-s/rad, Motor torque constant, KQ in N-m/A

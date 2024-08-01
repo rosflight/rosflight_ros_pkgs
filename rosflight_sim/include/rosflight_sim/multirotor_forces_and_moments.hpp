@@ -3,6 +3,7 @@
  *
  * Copyright (c) 2017 Daniel Koch, James Jackson and Gary Ellingson, BYU MAGICC Lab.
  * Copyright (c) 2023 Brandon Sutherland, AeroVironment Inc.
+ * Copyright (c) 2024 Ian Reid, BYU MAGICC Lab.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +36,7 @@
 #ifndef ROSFLIGHT_SIM_MULTIROTOR_FORCES_AND_MOMENTS_H
 #define ROSFLIGHT_SIM_MULTIROTOR_FORCES_AND_MOMENTS_H
 
+#include <cstdint>
 #include <eigen3/Eigen/Dense>
 #include <rclcpp/rclcpp.hpp>
 
@@ -56,24 +58,40 @@ class Multirotor : public MAVForcesAndMoments
 private:
   rclcpp::Node::SharedPtr node_;
   Eigen::Vector3d wind_;
-
-  double prev_time_;
-
-  struct Rotor
+  
+  struct Prop
   {
-    double max;
-    std::vector<double> F_poly;
-    std::vector<double> T_poly;
-    double tau_up; // time constants for response
-    double tau_down;
+    // Prop thrust constant coeffs.
+    double CT_0;
+    double CT_1;
+    double CT_2;
+    
+    // Prop torque constant coeffs.
+    double CQ_0;
+    double CQ_1;
+    double CQ_2;
+
+    double diam;
   };
 
   struct Motor
   {
-    Rotor rotor;
-    Eigen::Vector3d position;
-    Eigen::Vector3d normal;
-    int direction; // 1 for CW -1 for CCW
+    double dist;
+    // The motor's radial angle from the body north unit vector in radians,
+    // for example: quad copter x frame this is 45,135,225,315, except in radians. 
+    double radial_angle;
+    // The direction that the motor spins, (-1 is clockwise and 1 is counter clocwise, looking from above vehicle).
+    int64_t direction;
+    // The current command for the motor, from 0 to 1
+    double command;
+    // Resistance of motor.
+    double R;
+    // Torque constant of motor. FIXME: is this the right name?
+    double KQ;
+    // No load current draw of motor.  FIXME: is this the right name?
+    double I_0;
+    // Prop data
+    Prop prop;
   };
 
   int num_rotors_;
