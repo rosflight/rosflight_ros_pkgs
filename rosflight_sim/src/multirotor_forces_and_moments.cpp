@@ -32,6 +32,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cmath>
 #include <cstdint>
 #include <iostream>
 #include <rclcpp/parameter_value.hpp>
@@ -80,7 +81,7 @@ Multirotor::Multirotor(rclcpp::Node::SharedPtr node)
   for (int i = 0; i < num_rotors_; i++) {
     Motor motor = motor_characteristics;
     motor.dist = dists[i];
-    motor.radial_angle = angles[i];
+    motor.radial_angle = angles[i] * M_PI / 180.0;
     motor.direction = rotation_dirs[i];
     motor.command = 0.0;
     motors_[i] = motor;
@@ -144,8 +145,6 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
 
     double motor_cmd = (act_cmds[i] - 1000)/1000.0;
 
-    std::cout << "motor_cmd: " << motor_cmd << "\n";
-
     motors_[i].command = motor_cmd;
   }
 
@@ -162,6 +161,8 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
 
     double prop_speed = ((-b + sqrt((pow((b), 2.0)) - (4 * a * c))) / (2 * a));
 
+    // std::cout << "angle: " << motor.radial_angle << "\n";
+
     // Calculate the advance ratio.
     double advance_ratio = (2. * M_PI * Va.norm())/(prop_speed*motor.prop.diam);
 
@@ -169,36 +170,36 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
 
     double motor_thrust = CT * (rho * pow(motor.prop.diam, 4))/(4*pow(M_PI,2)) * pow(prop_speed, 2);
     
-    double motor_roll_torque = motor_thrust*motor.dist*sinf(motor.radial_angle);
+    double motor_roll_torque = -motor_thrust*motor.dist*sinf(motor.radial_angle);
     double motor_pitch_torque = motor_thrust*motor.dist*cosf(motor.radial_angle);
+    
+    // std::cout << "motor_roll_torque " << motor_roll_torque << "\n";
 
     double CQ = motor.prop.CQ_2*pow(advance_ratio, 2) + motor.prop.CQ_1*advance_ratio + motor.prop.CQ_0;
+    // std::cout << "CQ " << CQ << "\n";
     
     // The torque produced by the propeller spinning.
     double prop_torque = motor.direction * CQ * (rho*pow(motor.prop.diam, 5))/(4*pow(M_PI,2)) * pow(prop_speed, 2); // TODO: Do you need this?
 
-    double motor_yaw_torque = motor_thrust*motor.dist*cosf(motor.radial_angle);
-
-    total_thrust += motor_thrust;
+    total_thrust += motor_thrust; // Okay
     total_roll_torque += motor_roll_torque;
     total_pitch_torque += motor_pitch_torque;
-    total_yaw_torque += motor_yaw_torque;
+    total_yaw_torque += prop_torque; // Okay
   }
 
   // Rotate from body to inertial frame.
   
   Eigen::Vector3d body_forces;
-  body_forces << 0.0, 0.0, total_thrust;
+  body_forces << 0.0, 0.0, -total_thrust;
   
   Eigen::Vector3d body_torques;
-  body_torques << total_roll_torque, total_pitch_torque, total_yaw_torque;
-
-  Eigen::Vector3d inertial_forces = x.rot.inverse() * body_forces;
-  Eigen::Vector3d inertial_torques = x.rot.inverse() * body_torques;
+  body_torques << total_roll_torque, total_pitch_torque, -total_yaw_torque;
 
   Eigen::Matrix<double, 6, 1> forces;
-  forces.block<3,1>(0,0) = inertial_forces;
-  forces.block<3,1>(3,0) = inertial_torques;
+  forces.block<3,1>(0,0) = body_forces;
+  forces.block<3,1>(3,0) = body_torques;
+
+  std::cout << forces << std::endl;
 
   // TODO: Apply drag.
 
