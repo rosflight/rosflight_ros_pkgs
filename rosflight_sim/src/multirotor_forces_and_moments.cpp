@@ -35,7 +35,6 @@
 #include <cmath>
 #include <cstdint>
 
-#include <rclcpp/parameter_value.hpp>
 #include <rosflight_sim/multirotor_forces_and_moments.hpp>
 
 namespace rosflight_sim
@@ -43,14 +42,10 @@ namespace rosflight_sim
 Multirotor::Multirotor(rclcpp::Node::SharedPtr node)
     : node_(std::move(node))
     , num_rotors_(0)
-    , linear_mu_(0)
-    , angular_mu_(0)
 {
   declare_multirotor_params();
 
-
   num_rotors_ = node_->get_parameter("num_rotors").as_int();
-
 
   /* Load Rotor Configuration */
   motors_.resize(num_rotors_);
@@ -98,8 +93,6 @@ Multirotor::~Multirotor() = default;
 
 void Multirotor::declare_multirotor_params()
 {
-  // node_->declare_parameter("mass", rclcpp::PARAMETER_DOUBLE);
-
   node_->declare_parameter("num_rotors", rclcpp::PARAMETER_INTEGER);
 
   node_->declare_parameter("CT_0", rclcpp::PARAMETER_DOUBLE);
@@ -124,6 +117,8 @@ void Multirotor::declare_multirotor_params()
   node_->declare_parameter("A_c", rclcpp::PARAMETER_DOUBLE);
 
   node_->declare_parameter("CD_induced", rclcpp::PARAMETER_DOUBLE);
+  
+  node_->declare_parameter("ground_effect", rclcpp::PARAMETER_DOUBLE_ARRAY);
 }
 
 Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x,
@@ -131,10 +126,6 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
 {
   // The maximum voltage of the battery.
   double V_max = node_->get_parameter("V_max").as_double();
-
-  // double KQ = node_->get_parameter("KQ").as_double();
-  // double R_motor = node_->get_parameter("R_motor").as_double();
-  // double I_0 = node_->get_parameter("I_0").as_double();
   
   double rho = node_->get_parameter("rho").as_double();
 
@@ -241,7 +232,16 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
   forces.block<3,1>(0,0) = body_forces;
   forces.block<3,1>(3,0) = body_torques;
 
-  // TODO: Apply ground effect
+  // Apply Ground Effect
+  std::vector<double> ground_effect_coeffs = node_->get_parameter("ground_effect").as_double_array();
+
+  double ground_effect_force = max(0.0, ground_effect_coeffs[0]*pow(-x.pos.z(), 4) +
+                                        ground_effect_coeffs[1]*pow(-x.pos.z(), 3) +
+                                        ground_effect_coeffs[2]*pow(-x.pos.z(), 2) +
+                                        ground_effect_coeffs[3]*-x.pos.z() +
+                                        ground_effect_coeffs[4]);
+
+  forces(2) -= ground_effect_force;
   
   geometry_msgs::msg::TwistStamped msg;
 

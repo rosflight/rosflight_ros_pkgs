@@ -86,9 +86,9 @@ private:
     double command;
     // Resistance of motor.
     double R;
-    // Torque constant of motor. FIXME: is this the right name?
+    // Torque constant of motor.
     double KQ;
-    // No load current draw of motor.  FIXME: is this the right name?
+    // No load current draw of motor.
     double I_0;
     // Prop data
     Prop prop;
@@ -96,21 +96,6 @@ private:
 
   int num_rotors_;
   std::vector<Motor> motors_;
-
-  double linear_mu_;
-  double angular_mu_;
-  std::vector<double> ground_effect_;
-
-  Eigen::MatrixXd rotor_position_;
-  Eigen::MatrixXd rotor_plane_normal_;
-  Eigen::VectorXd rotor_rotation_direction_;
-
-  Eigen::MatrixXd force_allocation_matrix_;
-  Eigen::MatrixXd torque_allocation_matrix_;
-  Eigen::VectorXd desired_forces_;
-  Eigen::VectorXd desired_torques_;
-  Eigen::VectorXd actual_forces_;
-  Eigen::VectorXd actual_torques_;
 
   /**
    * @brief Declares ROS parameters. Must be called in the constructor.
