@@ -30,8 +30,16 @@
 
     # Diameter (m)
     D_prop: 0.381
-
+    
+    # Motor Specs
     V_max : 24.0                  # voltage for 6s battery at 4 volts per cell
     R_motor : 0.042               # ohms
     I_0 : 1.5                     # no-load (zero torque) current (A)
-    KQ : 0.028937                  #((1 /(KV_rpm_per_volt)) *60) / (2 *M_PI) Back-emf constant, KV in V-s/rad, Motor torque constant, KQ in N-m/A
+    KQ : 0.028937                 #((1 /(KV_rpm_per_volt)) *60) / (2 *M_PI) Back-emf constant, KV in V-s/rad, Motor torque constant, KQ in N-m/A
+
+    # Drag Model
+    CD: 2.05                      # Coeffecient of drag for a rough cube face on into flow.
+    A_c: 0.04                     # Crossectional Area to use in Drag.
+
+    # Induced Drag Model
+    CD_induced: 0.05

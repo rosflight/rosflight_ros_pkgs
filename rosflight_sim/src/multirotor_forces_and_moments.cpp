@@ -35,6 +35,7 @@
 #include <cmath>
 #include <cstdint>
 
+#include <rclcpp/parameter_value.hpp>
 #include <rosflight_sim/multirotor_forces_and_moments.hpp>
 
 namespace rosflight_sim
@@ -117,7 +118,12 @@ void Multirotor::declare_multirotor_params()
   node_->declare_parameter("rotor_rotation_directions", rclcpp::PARAMETER_INTEGER_ARRAY);
 
   node_->declare_parameter("D_prop", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("rho", rclcpp::PARAMETER_DOUBLE); // TODO: make sure these have default parameters.
+  node_->declare_parameter("rho", rclcpp::PARAMETER_DOUBLE);
+
+  node_->declare_parameter("CD", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("A_c", rclcpp::PARAMETER_DOUBLE);
+
+  node_->declare_parameter("CD_induced", rclcpp::PARAMETER_DOUBLE);
 }
 
 Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x,
@@ -199,15 +205,15 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
     total_yaw_torque += prop_torque; // Okay
   }
 
-  double cross_sectional_area = 0.04; // m^2
-  double C_d = 2.0;
+  double cross_sectional_area = node_->get_parameter("A_c").as_double(); // m^2
+  double CD = node_->get_parameter("CD").as_double();
  
   // Rotate from body to inertial frame.
   
   Eigen::Vector3d body_forces;
   body_forces << 0.0, 0.0, -total_thrust;
 
-  double drag = 0.5 * rho * cross_sectional_area * C_d * pow(Va.norm(), 2);
+  double drag = 0.5 * rho * cross_sectional_area * CD * pow(Va.norm(), 2);
 
   Eigen::Vector3d drag_force = drag * Va / Va.norm();
 
@@ -217,16 +223,16 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
 
   body_forces -= drag_force;
 
-  double Cd = 0.05;
+  double CD_induced = node_->get_parameter("CD_induced").as_double();
 
   Eigen::Matrix3d drag_matrix;
-  drag_matrix << -total_thrust*Cd, 0.0, 0.0,
-                 0.0, -total_thrust*Cd, 0.0,
+  drag_matrix << -total_thrust*CD_induced, 0.0, 0.0,
+                 0.0, -total_thrust*CD_induced, 0.0,
                  0.0, 0.0, 0.0;
 
-  Eigen::Vector3d drag_forces = drag_matrix * x.vel;
+  Eigen::Vector3d induced_drag_force = drag_matrix * x.vel;
 
-  body_forces += drag_forces;
+  body_forces += induced_drag_force;
   
   Eigen::Vector3d body_torques;
   body_torques << total_roll_torque, total_pitch_torque, -total_yaw_torque;
