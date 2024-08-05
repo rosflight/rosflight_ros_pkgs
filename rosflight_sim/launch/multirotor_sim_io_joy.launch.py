@@ -7,16 +7,25 @@ Description: ROS2 launch file used to launch multirotor SIL, rosflight_io, and r
 """
 
 import os
+import sys
 
 from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
 def generate_launch_description():
     """This is a launch file that runs the bare minimum requirements fly a multirotor in gazebo"""
+
+    use_vimfly = False
+
+    for arg in sys.argv:
+        if arg.startswith("use_vimfly:="):
+            use_vimfly = arg.split(":=")[1]
+            use_vimfly = use_vimfly.lower() == 'true'
 
     # Start simulator
     simulator_launch_include = IncludeLaunchDescription(
@@ -44,6 +53,9 @@ def generate_launch_description():
         executable='rc.py',
         remappings=[
             ('/RC', '/multirotor/RC')
+        ],
+        parameters=[ 
+            {'use_vimfly': use_vimfly}
         ]
     )
 

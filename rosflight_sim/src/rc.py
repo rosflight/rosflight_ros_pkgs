@@ -55,12 +55,15 @@ Authors: James Jackson, Daniel Koch, Brandon Sutherland, Ian Reid
 
 from enum import Enum
 
+from numpy import true_divide
 import pygame
 import rclpy
 from rclpy.node import Node
 from std_srvs.srv import Trigger
 
 from rosflight_msgs.msg import RCRaw
+
+from vimfly import VimFly
 
 
 # define output RC channels
@@ -141,8 +144,6 @@ config['Boxer'][Channel.SW4] = lambda j: 0
 class RC(Node):
     def __init__(self):
         super().__init__('rc')
-        self.rc_publisher = self.create_publisher(RCRaw, 'RC', 10)
-        self.timer = self.create_timer(1.0 / 50, self.timer_callback)
 
         # Initialize pygame, checking if a joystick is connected
         try:
@@ -153,6 +154,18 @@ class RC(Node):
         except:
             self.get_logger().info('No joystick (or display) detected, using simulated joystick')
             self.transmitter_detected = False
+        
+        self.declare_parameter('use_vimfly', False)
+        self.use_vimfly = self.get_parameter('use_vimfly').get_parameter_value().bool_value
+        
+        # Intercept if using VimFly.
+        if self.use_vimfly and not self.transmitter_detected:
+            self.get_logger().info('Using VimFly...')
+            self.vim_fly = VimFly()
+            return
+        
+        self.rc_publisher = self.create_publisher(RCRaw, 'RC', 10)
+        self.timer = self.create_timer(1.0 / 50, self.timer_callback)
 
         # Transmitter detected, initialize joystick
         if self.transmitter_detected:
