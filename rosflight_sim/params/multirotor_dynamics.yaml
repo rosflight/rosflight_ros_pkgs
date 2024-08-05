@@ -34,4 +34,4 @@
     V_max : 24.0                  # voltage for 6s battery at 4 volts per cell
     R_motor : 0.042               # ohms
     I_0 : 1.5                     # no-load (zero torque) current (A)
-    KQ : 0.01705                  #((1 /(KV_rpm_per_volt)) *60) / (2 *M_PI) Back-emf constant, KV in V-s/rad, Motor torque constant, KQ in N-m/A
+    KQ : 0.028937                  #((1 /(KV_rpm_per_volt)) *60) / (2 *M_PI) Back-emf constant, KV in V-s/rad, Motor torque constant, KQ in N-m/A

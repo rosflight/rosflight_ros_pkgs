@@ -34,7 +34,7 @@
 
 #include <cmath>
 #include <cstdint>
-#include <iostream>
+
 #include <rosflight_sim/multirotor_forces_and_moments.hpp>
 
 namespace rosflight_sim
@@ -152,23 +152,32 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
     // Use model with V_max
     double v_in = V_max * motor.command;
 
-    double Va_norm = Va.norm();
-    if (Va_norm < 0.1) {
-      Va_norm = 0.1;
+    // Take true angle and only compare the portion parrallel to the body z-axis.
+    Eigen::Vector3d body_z;
+    body_z << 0.0, 0.0, 1.0;
+
+    double Va_along_z = abs(Va.dot(body_z));
+
+    if (Va_along_z < 0.001) {
+      Va_along_z = 0.001;
     }
 
     double a = (motor.prop.CQ_0 * (rho) * (pow((motor.prop.diam), 5.0)) / (pow((2 * M_PI), 2.0)));
-    double b = (motor.prop.CQ_1 * (rho) * (pow((motor.prop.diam), 4.0)) / (2 * M_PI)) * Va_norm // FIXME: The Va.norm() is actually just the portion parrallel to the prop's thrust.
+    double b = (motor.prop.CQ_1 * (rho) * (pow((motor.prop.diam), 4.0)) / (2 * M_PI)) * Va_along_z
       + ((pow((motor.KQ), 2.0)) / (motor.R));
-    double c = (motor.prop.CQ_2 * (rho) * (pow((motor.prop.diam), 3.0)) * (pow(Va.norm(), 2.0)))
-      - ((motor.KQ) / (motor.R)) * v_in + ((motor.KQ) * (motor.I_0));
+    double c = (motor.prop.CQ_2 * (rho) * (pow((motor.prop.diam), 3.0)) * (pow(Va_along_z, 2.0)))
+      - ((motor.KQ) / (motor.R)) * v_in + ((motor.KQ) * (motor.I_0)); // COULD BE OUR CULPRIT
 
     double prop_speed = ((-b + sqrt((pow((b), 2.0)) - (4 * a * c))) / (2 * a));
 
     // Calculate the advance ratio.
-    double advance_ratio = (2. * M_PI * Va.norm())/(prop_speed*motor.prop.diam);
+    double advance_ratio = (2. * M_PI * Va_along_z)/(prop_speed*motor.prop.diam);
 
     double CT = motor.prop.CT_2*pow(advance_ratio, 2) + motor.prop.CT_1*advance_ratio + motor.prop.CT_0;
+
+    if (CT <= 0.0) {
+      CT = 0.0001;
+    }
 
     double motor_thrust = CT * (rho * pow(motor.prop.diam, 4))/(4*pow(M_PI,2)) * pow(prop_speed, 2);
     
@@ -176,6 +185,10 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
     double motor_pitch_torque = motor_thrust*motor.dist*cosf(motor.radial_angle);
 
     double CQ = motor.prop.CQ_2*pow(advance_ratio, 2) + motor.prop.CQ_1*advance_ratio + motor.prop.CQ_0;
+    
+    if (CQ <= 0.0) {
+      CQ = 0.0001;
+    }
     
     // The torque produced by the propeller spinning.
     double prop_torque = motor.direction * CQ * (rho*pow(motor.prop.diam, 5))/(4*pow(M_PI,2)) * pow(prop_speed, 2); // TODO: Do you need this?
@@ -186,10 +199,23 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
     total_yaw_torque += prop_torque; // Okay
   }
 
+  double cross_sectional_area = 0.04; // m^2
+  double C_d = 2.0;
+ 
   // Rotate from body to inertial frame.
   
   Eigen::Vector3d body_forces;
   body_forces << 0.0, 0.0, -total_thrust;
+
+  double drag = 0.5 * rho * cross_sectional_area * C_d * pow(Va.norm(), 2);
+
+  Eigen::Vector3d drag_force = drag * Va / Va.norm();
+
+  if (Va.norm() < 0.001) {
+    drag_force << 0.0, 0.0, 0.0;
+  }
+
+  body_forces -= drag_force;
 
   double Cd = 0.05;
 
