@@ -173,7 +173,7 @@ void ROSflightSIL::OnUpdate(const gazebo::common::UpdateInfo & _info)
 
   forces_ = mav_dynamics_->update_forces_and_torques(state, board_.get_outputs());
 
-  // apply the forces and torques to the joint (apply in NWU)
+  // apply the forces and torques to the joint (apply in NWU) FORCES ARE IN NED AND MUST BE CONVERTED TO NWU.
   GazeboVector force = vec3_to_gazebo_from_eigen(NWU_to_NED * forces_.block<3, 1>(0, 0));
   GazeboVector torque = vec3_to_gazebo_from_eigen(NWU_to_NED * forces_.block<3, 1>(3, 0));
   link_->AddRelativeForce(force);
