@@ -188,7 +188,7 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
     }
     
     // The torque produced by the propeller spinning.
-    double prop_torque = motor.direction * CQ * (rho*pow(motor.prop.diam, 5))/(4*pow(M_PI,2)) * pow(prop_speed, 2); // TODO: Do you need this?
+    double prop_torque = motor.direction * CQ * (rho*pow(motor.prop.diam, 5))/(4*pow(M_PI,2)) * pow(prop_speed, 2);
 
     total_thrust += motor_thrust; // Okay
     total_roll_torque += motor_roll_torque;
