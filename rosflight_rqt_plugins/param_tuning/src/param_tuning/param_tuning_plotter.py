@@ -17,13 +17,6 @@ class ParamTuningPlotter(QWidget):
         self._canvas = FigureCanvasQTAgg(Figure())
         layout.addWidget(self._canvas)
 
-        # Get current font size (not sure if this is needed on non-HiDPI screens?)
-        default_font: QFont = QApplication.font()
-        if default_font.pointSize() > 0:
-            self._font_size = default_font.pointSize() * 2
-        elif default_font.pixelSize() > 0:
-            self._font_size = default_font.pixelSize() * 2
-
         # Plot parameters
         self._current_group = list(self._config.keys())[0]
         self._plot_initialized = False
@@ -52,9 +45,9 @@ class ParamTuningPlotter(QWidget):
             if not self._plot_initialized:
                 self._canvas.figure.clear()
                 self._ax = self._canvas.figure.subplots()
-                self._ax.set_xlabel('Time (s)', fontsize=self._font_size)
-                self._ax.set_ylabel(self._config[self._current_group]['plot_axis_label'], fontsize=self._font_size)
-                self._ax.tick_params(axis='both', labelsize=self._font_size)
+                self._ax.set_xlabel('Time (s)')
+                self._ax.set_ylabel(self._config[self._current_group]['plot_axis_label'])
+                self._ax.tick_params(axis='both')
                 self._ax.grid(True)
                 self._lineObjects = {}
                 self._canvas.figure.subplots_adjust(left=0.05, right=0.98, top=0.98, bottom=0.05)
@@ -75,7 +68,7 @@ class ParamTuningPlotter(QWidget):
                     self._lineObjects[plot_name].set_data(x, y)
 
             if not self._plot_initialized:
-                self._ax.legend(loc='upper right', fontsize=self._font_size)
+                self._ax.legend(loc='upper right')
 
             self._ax.relim()
             self._ax.autoscale_view()
