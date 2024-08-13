@@ -196,6 +196,7 @@ install(
 
 install(PROGRAMS
   src/rc.py
+  src/vimfly.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
