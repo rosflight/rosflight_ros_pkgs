@@ -9,6 +9,7 @@
         <icon type="theme">folder</icon>
       </group>
       <label>Map View</label>
+      <icon type="theme">image-x-generic</icon>
       <statustip>Map for monitoring and planning missions.</statustip>
     </qtgui>
   </class>
