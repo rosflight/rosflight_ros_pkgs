@@ -18,7 +18,7 @@ public:
   virtual void shutdownPlugin();
 
 private:
-  Ui::MapViewWidget ui_;
+  Ui::MapView ui_;
   QWidget* widget_;
 };
 }  // namespace rosflight_rqt_plugins

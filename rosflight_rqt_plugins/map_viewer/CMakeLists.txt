@@ -27,6 +27,7 @@ find_package(rclpy REQUIRED)
 find_package(qt_gui_cpp REQUIRED)
 find_package(rqt_gui_cpp REQUIRED)
 find_package(Qt5Widgets REQUIRED)
+find_package(Marble REQUIRED)
 
 set(map_view_SRCS
   src/map_view/map_view.cpp
@@ -59,6 +60,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   ${qt_gui_cpp_TARGETS}
   ${rqt_gui_cpp_TARGETS}
   Qt5::Widgets
+  Marble
 )
 
 install(

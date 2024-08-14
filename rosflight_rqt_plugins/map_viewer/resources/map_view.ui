@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MapViewWidget</class>
- <widget class="QWidget" name="map_view">
+ <class>MapView</class>
+ <widget class="QWidget" name="MapViewWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -10,28 +10,29 @@
     <height>500</height>
    </rect>
   </property>
-  <property name="sizePolicy">
-   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-    <horstretch>0</horstretch>
-    <verstretch>0</verstretch>
-   </sizepolicy>
-  </property>
   <property name="windowTitle">
-   <string>Autopilot Parameter Tuning</string>
-  </property>
-  <property name="autoFillBackground">
-   <bool>false</bool>
+   <string>Autopilot Map Viewer</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QPushButton" name="the_button">
-     <property name="text">
-      <string>Push Da Button</string>
+    <widget class="Marble::MarbleWidget" name="MarbleWidget" native="true">
+     <property name="toolTip">
+      <string>The Earth</string>
+     </property>
+     <property name="whatsThis">
+      <string>The Marble widget displays a virtual globe.</string>
      </property>
     </widget>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Marble::MarbleWidget</class>
+   <extends>QWidget</extends>
+   <header>marble/MarbleWidget.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

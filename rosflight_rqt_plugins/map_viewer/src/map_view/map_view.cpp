@@ -1,4 +1,5 @@
 #include <pluginlib/class_list_macros.hpp>
+#include <marble/MarbleWidget.h>
 
 #include "map_view/map_view.hpp"
 
@@ -13,13 +14,17 @@ MapView::MapView()
 
 void MapView::initPlugin(qt_gui_cpp::PluginContext& context)
 {
-  widget_ = new QWidget();
-  ui_.setupUi(widget_);
-
   if (context.serialNumber() > 1)
   {
     widget_->setWindowTitle(widget_->windowTitle() + " (" + QString::number(context.serialNumber()) + ")");
   }
+
+  widget_ = new QWidget();
+  ui_.setupUi(widget_);
+  ui_.MarbleWidget->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
+  ui_.MarbleWidget->setProjection(Marble::Mercator);
+  ui_.MarbleWidget->centerOn(-122.0795, 37.4000, false); // OSRF
+  ui_.MarbleWidget->setDistance(0.05);
   context.addWidget(widget_);
 }
 
