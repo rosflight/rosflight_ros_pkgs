@@ -6,14 +6,24 @@ namespace map_view
 {
 
 MapView::MapView()
+  : rqt_gui_cpp::Plugin()
 {
   setObjectName("MapView");
 }
 
-void MapView::initPlugin(qt_gui_cpp::PluginContext& context) {}
+void MapView::initPlugin(qt_gui_cpp::PluginContext& context)
+{
+  widget_ = new QWidget();
+  ui_.setupUi(widget_);
+
+  if (context.serialNumber() > 1)
+  {
+    widget_->setWindowTitle(widget_->windowTitle() + " (" + QString::number(context.serialNumber()) + ")");
+  }
+  context.addWidget(widget_);
+}
+
 void MapView::shutdownPlugin() {}
-void MapView::saveSettings(qt_gui_cpp::Settings& plugin_settings, qt_gui_cpp::Settings& instance_settings) const {}
-void MapView::restoreSettings(const qt_gui_cpp::Settings& plugin_settings, const qt_gui_cpp::Settings& instance_settings) {}
 
 } // namespace rosflight_rqt_plugins
 

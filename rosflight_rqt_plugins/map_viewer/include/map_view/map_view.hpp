@@ -2,6 +2,9 @@
 #define MAP_VIEW_HPP
 
 #include <rqt_gui_cpp/plugin.h>
+#include <QWidget>
+
+#include <ui_map_view.h>
 
 namespace map_view
 {
@@ -13,8 +16,10 @@ public:
   MapView();
   virtual void initPlugin(qt_gui_cpp::PluginContext& context);
   virtual void shutdownPlugin();
-  virtual void saveSettings(qt_gui_cpp::Settings& plugin_settings, qt_gui_cpp::Settings& instance_settings) const;
-  virtual void restoreSettings(const qt_gui_cpp::Settings& plugin_settings, const qt_gui_cpp::Settings& instance_settings);
+
+private:
+  Ui::MapViewWidget ui_;
+  QWidget* widget_;
 };
 }  // namespace rosflight_rqt_plugins
 

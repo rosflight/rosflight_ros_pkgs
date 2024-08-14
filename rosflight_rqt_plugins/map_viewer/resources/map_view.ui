@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>map_view</class>
+ <class>MapViewWidget</class>
  <widget class="QWidget" name="map_view">
   <property name="geometry">
    <rect>
