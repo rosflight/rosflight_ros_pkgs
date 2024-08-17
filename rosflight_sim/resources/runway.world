@@ -38,6 +38,12 @@
       <uri>model://sun</uri>
     </include>
 
+    <include>
+      <uri>model://house_3</uri>
+      <pose>0 1000.00 0 0 0</pose> 
+      <size>20000 20000</size>     
+    </include>
+    
     <model name="ground_plane">
       <static>true</static>
       <link name="link">
@@ -95,3 +101,4 @@
     </model>
   </world>
 </sdf>
+
