@@ -48,7 +48,6 @@
 
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <rosflight_msgs/msg/detail/gnss_full__struct.hpp>
 #include <rosflight_msgs/msg/rc_raw.hpp>
 
 #include <rosflight_sim/gz_compat.hpp>

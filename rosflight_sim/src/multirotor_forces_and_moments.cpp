@@ -190,10 +190,10 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
     // The torque produced by the propeller spinning.
     double prop_torque = motor.direction * CQ * (rho*pow(motor.prop.diam, 5))/(4*pow(M_PI,2)) * pow(prop_speed, 2);
 
-    total_thrust += motor_thrust; // Okay
+    total_thrust += motor_thrust;
     total_roll_torque += motor_roll_torque;
     total_pitch_torque += motor_pitch_torque;
-    total_yaw_torque += prop_torque; // Okay
+    total_yaw_torque += prop_torque;
   }
 
   double cross_sectional_area = node_->get_parameter("A_c").as_double(); // m^2
