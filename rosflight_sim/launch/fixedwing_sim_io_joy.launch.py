@@ -7,6 +7,7 @@ Description: ROS2 launch file used to launch fixedwing SIL, rosflight_io, and rc
 """
 
 import os
+import sys
 
 from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
@@ -17,6 +18,13 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     """This is a launch file that runs the bare minimum requirements fly a fixedwing in gazebo"""
+    
+    use_vimfly = False
+
+    for arg in sys.argv:
+        if arg.startswith("use_vimfly:="):
+            use_vimfly = arg.split(":=")[1]
+            use_vimfly = use_vimfly.lower() == 'true'
 
     # Start simulator
     simulator_launch_include = IncludeLaunchDescription(
@@ -44,6 +52,9 @@ def generate_launch_description():
         executable='rc.py',
         remappings=[
             ('/RC', '/fixedwing/RC')
+        ],
+        parameters=[ 
+            {'use_vimfly': use_vimfly}
         ]
     )
 

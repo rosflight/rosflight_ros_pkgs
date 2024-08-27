@@ -179,6 +179,7 @@ class ParamTuningWidget(QWidget):
                 return
         else:
             filepath = self._param_file_path
+        self._param_client.print_info(f'Saving parameters to filepath: {filepath}')
 
         # Load the existing parameter file if it exists
         if os.path.exists(filepath):
