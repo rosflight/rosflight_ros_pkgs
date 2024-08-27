@@ -93,6 +93,7 @@ void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Worl
   acc_bias_walk_stdev_ = node_->get_parameter_or<double>("acc_bias_walk_stdev", 0.00001);
 
   mag_stdev_ = node_->get_parameter_or<double>("mag_stdev", 3000/1e9); // from nano tesla to tesla
+  k_mag_ = node_->get_parameter_or<double>("k_mag", 7.0);
 
   baro_stdev_ = node_->get_parameter_or<double>("baro_stdev", 4.0);
   baro_bias_range_ = node_->get_parameter_or<double>("baro_bias_range", 500);
@@ -111,6 +112,10 @@ void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Worl
 
   mag_update_rate_ = node_->get_parameter_or<double>("mag_update_rate", 50.0);
   mag_update_period_us_ = (uint64_t) (1e6 / mag_update_rate_);
+
+  GZ_COMPAT_SET_X(mag_gauss_markov_eta_, 0.0);
+  GZ_COMPAT_SET_Y(mag_gauss_markov_eta_, 0.0);
+  GZ_COMPAT_SET_Z(mag_gauss_markov_eta_, 0.0);
 
   gnss_update_rate_ = node_->get_parameter_or<double>("gnss_update_rate", 10.0);
   gnss_update_period_us_ = (uint64_t) (1e6 / gnss_update_rate_);
@@ -142,6 +147,11 @@ void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Worl
   horizontal_gnss_stdev_ = node_->get_parameter_or<double>("horizontal_gnss_stdev", 0.21);
   vertical_gnss_stdev_ = node_->get_parameter_or<double>("vertical_gnss_stdev", 0.4);
   gnss_velocity_stdev_ = node_->get_parameter_or<double>("gnss_velocity_stdev", 0.01);
+  k_gnss_ = node_->get_parameter_or<double>("k_gnss", 1.0/1100);
+  
+  GZ_COMPAT_SET_X(gnss_gauss_markov_eta_, 0.0);
+  GZ_COMPAT_SET_Y(gnss_gauss_markov_eta_, 0.0);
+  GZ_COMPAT_SET_Z(gnss_gauss_markov_eta_, 0.0);
 
   // Configure Noise
   normal_distribution_ = std::normal_distribution<double>(0.0, 1.0);

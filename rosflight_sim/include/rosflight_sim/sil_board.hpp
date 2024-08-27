@@ -94,7 +94,7 @@ private:
 
   double mag_stdev_ = 0;
   ignition::math::Vector3d mag_gauss_markov_eta_;
-  double k_mag_ = 7.0;
+  double k_mag_ = 0;
 
   double airspeed_bias_walk_stdev_ = 0;
   double airspeed_stdev_ = 0;
@@ -108,7 +108,7 @@ private:
   double vertical_gnss_stdev_ = 0;
   double gnss_velocity_stdev_ = 0;
   ignition::math::Vector3d gnss_gauss_markov_eta_;
-  double k_gnss_ = 1.0/1100;
+  double k_gnss_ = 0;
 
   double f_x = 0;
   double f_y = 0;
