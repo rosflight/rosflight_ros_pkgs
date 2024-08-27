@@ -133,14 +133,6 @@ void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Worl
   mass_ = node_->get_parameter_or<double>("mass", 2.28);
   rho_ = node_->get_parameter_or<double>("rho", 1.225);
 
-  // Calculate Magnetic Field Vector (for mag simulation)
-  auto inclination = node_->get_parameter_or<double>("inclination", 1.139436457);
-  auto declination = node_->get_parameter_or<double>("declination", 0.1857972802);
-
-  GZ_COMPAT_SET_Z(inertial_magnetic_field_, sin(-inclination));
-  GZ_COMPAT_SET_X(inertial_magnetic_field_, cos(-inclination) * cos(-declination));
-  GZ_COMPAT_SET_Y(inertial_magnetic_field_, cos(-inclination) * sin(-declination));
-
   // Get the desired altitude at the ground (for baro and LLA)
 
   origin_altitude_ = node_->get_parameter_or<double>("origin_altitude", 1387.0);
@@ -228,7 +220,7 @@ void SILBoard::sensors_init()
   // Gazebo coordinates is NWU and Earth's magnetic field is defined in NED, hence the negative signs
   auto inclination_ = node_->get_parameter_or<double>("inclination", 1.139436457);
   auto declination_ = node_->get_parameter_or<double>("declination", 0.1857972802);
-  double total_intensity = 50716.3 / 1e9; // nanoTesla converted to tesla.
+  double total_intensity = node_->get_parameter_or<double>("total_intensity", 50716.3 / 1e9); // nanoTesla converted to tesla.
   
   GZ_COMPAT_SET_Z(inertial_magnetic_field_, sin(-inclination_));
   GZ_COMPAT_SET_X(inertial_magnetic_field_, cos(-inclination_) * cos(-declination_));
