@@ -134,8 +134,9 @@ void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Worl
   rho_ = node_->get_parameter_or<double>("rho", 1.225);
 
   // Calculate Magnetic Field Vector (for mag simulation)
-  auto inclination = node_->get_parameter_or<double>("inclination", 1.139436457 - 0.5*0.0174533);
-  auto declination = node_->get_parameter_or<double>("declination", 0.1857972802 - 0.5*0.0174533);
+  auto inclination = node_->get_parameter_or<double>("inclination", 1.139436457);
+  auto declination = node_->get_parameter_or<double>("declination", 0.1857972802);
+
   GZ_COMPAT_SET_Z(inertial_magnetic_field_, sin(-inclination));
   GZ_COMPAT_SET_X(inertial_magnetic_field_, cos(-inclination) * cos(-declination));
   GZ_COMPAT_SET_Y(inertial_magnetic_field_, cos(-inclination) * sin(-declination));
@@ -432,7 +433,7 @@ bool SILBoard::mag_read(float mag[3])
   GazeboPose I_to_B = GZ_COMPAT_GET_WORLD_POSE(link_);
 
   GazeboVector y_mag =
-    GZ_COMPAT_GET_ROT(I_to_B).RotateVectorReverse(inertial_magnetic_field_) + mag_gauss_markov_eta_;
+    GZ_COMPAT_GET_ROT(I_to_B).RotateVector(inertial_magnetic_field_) + mag_gauss_markov_eta_;
   
   GazeboVector noise;
   GZ_COMPAT_SET_X(noise, mag_stdev_ * normal_distribution_(noise_generator_));
