@@ -365,7 +365,6 @@ private:
    * @brief "command" topic subscription callback.
    *
    * This function is called anytime rosflight_io receives a message on the "command" topic.
-   * It saturates the commands and sends them over MAVLink to the firmware.
    *
    * @param msg Populated ROSflight Command message.
    */
@@ -576,21 +575,6 @@ private:
    * @return ROS time object of current ROS time.
    */
   rclcpp::Time fcu_time_to_ros_time(std::chrono::nanoseconds fcu_time);
-
-  template<class T>
-  /**
-   * @brief Saturates values to not exceed specified range.
-   * @tparam T Object type to perform saturation with. Needs to have greater than and less than
-   * comparators.
-   * @param value Value to saturate.
-   * @param min Lower bound of saturation range.
-   * @param max Upper bound of saturation range.
-   * @return Saturated value.
-   */
-  inline T saturate(T value, T min, T max)
-  {
-    return value < min ? min : (value > max ? max : value);
-  }
 
   /// "command" ROS topic subscription.
   rclcpp::Subscription<rosflight_msgs::msg::Command>::SharedPtr command_sub_;
