@@ -92,9 +92,9 @@ private:
   double baro_stdev_ = 0;
   double baro_bias_range_ = 0;
 
-  double mag_bias_walk_stdev_ = 0;
   double mag_stdev_ = 0;
-  double mag_bias_range_ = 0;
+  ignition::math::Vector3d mag_gauss_markov_eta_;
+  double k_mag_ = 0;
 
   double airspeed_bias_walk_stdev_ = 0;
   double airspeed_stdev_ = 0;
@@ -104,9 +104,11 @@ private:
   double sonar_max_range_ = 0;
   double sonar_min_range_ = 0;
 
-  double horizontal_gps_stdev_ = 0;
-  double vertical_gps_stdev_ = 0;
-  double gps_velocity_stdev_ = 0;
+  double horizontal_gnss_stdev_ = 0;
+  double vertical_gnss_stdev_ = 0;
+  double gnss_velocity_stdev_ = 0;
+  ignition::math::Vector3d gnss_gauss_markov_eta_;
+  double k_gnss_ = 0;
 
   double f_x = 0;
   double f_y = 0;
