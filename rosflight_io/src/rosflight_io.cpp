@@ -957,20 +957,6 @@ void ROSflightIO::commandCallback(const rosflight_msgs::msg::Command::ConstShare
   float z = msg->z;
   float F = msg->f;
 
-  switch (mode) {
-    case MODE_PASS_THROUGH:
-      x = saturate(x, -1.0f, 1.0f);
-      y = saturate(y, -1.0f, 1.0f);
-      z = saturate(z, -1.0f, 1.0f);
-      F = saturate(F, 0.0f, 1.0f);
-      break;
-    case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
-      F = saturate(F, 0.0f, 1.0f);
-      break;
-    default:
-      break;
-  }
-
   mavlink_message_t mavlink_msg;
   mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg, mode, ignore, x, y, z, F);
   mavrosflight_->comm.send_message(mavlink_msg);
