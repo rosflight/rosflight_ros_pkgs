@@ -468,13 +468,13 @@ bool SILBoard::baro_read(float * pressure, float * temperature)
     * (float) pow((1 - 2.25694e-5 * alt), 5.2553); // Add these parameters to the parameters.
 
   // Add noise
-  // y_baro += baro_stdev_ * normal_distribution_(noise_generator_);
+  y_baro += baro_stdev_ * normal_distribution_(noise_generator_);
 
   // Perform bias walk
-  // baro_bias_ += baro_bias_walk_stdev_ * normal_distribution_(noise_generator_);
+  baro_bias_ += baro_bias_walk_stdev_ * normal_distribution_(noise_generator_);
 
   // Add bias walk
-  // y_baro += baro_bias_;
+  y_baro += baro_bias_;
 
   (*pressure) = (float) y_baro;
   (*temperature) = 27.0f + 273.15f;
