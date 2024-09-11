@@ -101,7 +101,7 @@ Visualization Manager:
       Value: true
     - Class: rviz_default_plugins/Marker
       Enabled: true
-      Marker Topic: /viz/cloud
+      Topic: /viz/cloud
       Name: Mag Measurements
       Namespaces:
         "": true

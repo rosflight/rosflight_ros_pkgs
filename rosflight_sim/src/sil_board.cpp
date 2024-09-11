@@ -35,6 +35,7 @@
 
 #include "rosflight_sim/gz_compat.hpp"
 #include <chrono>
+#include <cmath>
 #include <fstream>
 #include <rclcpp/logging.hpp>
 #include <rosflight_sim/sil_board.hpp>
@@ -91,9 +92,8 @@ void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Worl
   acc_bias_range_ = node_->get_parameter_or<double>("acc_bias_range", 0.6);
   acc_bias_walk_stdev_ = node_->get_parameter_or<double>("acc_bias_walk_stdev", 0.00001);
 
-  mag_stdev_ = node_->get_parameter_or<double>("mag_stdev", 0.10);
-  mag_bias_range_ = node_->get_parameter_or<double>("mag_bias_range", 0.10);
-  mag_bias_walk_stdev_ = node_->get_parameter_or<double>("mag_bias_walk_stdev", 0.001);
+  mag_stdev_ = node_->get_parameter_or<double>("mag_stdev", 3000/1e9); // from nano tesla to tesla
+  k_mag_ = node_->get_parameter_or<double>("k_mag", 7.0);
 
   baro_stdev_ = node_->get_parameter_or<double>("baro_stdev", 4.0);
   baro_bias_range_ = node_->get_parameter_or<double>("baro_bias_range", 500);
@@ -112,6 +112,10 @@ void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Worl
 
   mag_update_rate_ = node_->get_parameter_or<double>("mag_update_rate", 50.0);
   mag_update_period_us_ = (uint64_t) (1e6 / mag_update_rate_);
+
+  GZ_COMPAT_SET_X(mag_gauss_markov_eta_, 0.0);
+  GZ_COMPAT_SET_Y(mag_gauss_markov_eta_, 0.0);
+  GZ_COMPAT_SET_Z(mag_gauss_markov_eta_, 0.0);
 
   gnss_update_rate_ = node_->get_parameter_or<double>("gnss_update_rate", 10.0);
   gnss_update_period_us_ = (uint64_t) (1e6 / gnss_update_rate_);
@@ -134,22 +138,20 @@ void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Worl
   mass_ = node_->get_parameter_or<double>("mass", 2.28);
   rho_ = node_->get_parameter_or<double>("rho", 1.225);
 
-  // Calculate Magnetic Field Vector (for mag simulation)
-  auto inclination = node_->get_parameter_or<double>("inclination", 1.139436457);
-  auto declination = node_->get_parameter_or<double>("declination", 0.1857972802);
-  GZ_COMPAT_SET_Z(inertial_magnetic_field_, sin(-inclination));
-  GZ_COMPAT_SET_X(inertial_magnetic_field_, cos(-inclination) * cos(-declination));
-  GZ_COMPAT_SET_Y(inertial_magnetic_field_, cos(-inclination) * sin(-declination));
-
   // Get the desired altitude at the ground (for baro and LLA)
 
   origin_altitude_ = node_->get_parameter_or<double>("origin_altitude", 1387.0);
   origin_latitude_ = node_->get_parameter_or<double>("origin_latitude", 40.2463724);
   origin_longitude_ = node_->get_parameter_or<double>("origin_longitude", -111.6474138);
 
-  horizontal_gps_stdev_ = node_->get_parameter_or<double>("horizontal_gps_stdev", 0.21);
-  vertical_gps_stdev_ = node_->get_parameter_or<double>("vertical_gps_stdev", 0.4);
-  gps_velocity_stdev_ = node_->get_parameter_or<double>("gps_velocity_stdev", 0.01);
+  horizontal_gnss_stdev_ = node_->get_parameter_or<double>("horizontal_gnss_stdev", 0.21);
+  vertical_gnss_stdev_ = node_->get_parameter_or<double>("vertical_gnss_stdev", 0.4);
+  gnss_velocity_stdev_ = node_->get_parameter_or<double>("gnss_velocity_stdev", 0.01);
+  k_gnss_ = node_->get_parameter_or<double>("k_gnss", 1.0/1100);
+  
+  GZ_COMPAT_SET_X(gnss_gauss_markov_eta_, 0.0);
+  GZ_COMPAT_SET_Y(gnss_gauss_markov_eta_, 0.0);
+  GZ_COMPAT_SET_Z(gnss_gauss_markov_eta_, 0.0);
 
   // Configure Noise
   normal_distribution_ = std::normal_distribution<double>(0.0, 1.0);
@@ -164,9 +166,6 @@ void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Worl
   GZ_COMPAT_SET_X(acc_bias_, acc_bias_range_ * uniform_distribution_(bias_generator_));
   GZ_COMPAT_SET_Y(acc_bias_, acc_bias_range_ * uniform_distribution_(bias_generator_));
   GZ_COMPAT_SET_Z(acc_bias_, acc_bias_range_ * uniform_distribution_(bias_generator_));
-  GZ_COMPAT_SET_X(mag_bias_, mag_bias_range_ * uniform_distribution_(bias_generator_));
-  GZ_COMPAT_SET_Y(mag_bias_, mag_bias_range_ * uniform_distribution_(bias_generator_));
-  GZ_COMPAT_SET_Z(mag_bias_, mag_bias_range_ * uniform_distribution_(bias_generator_));
   baro_bias_ = baro_bias_range_ * uniform_distribution_(bias_generator_);
   airspeed_bias_ = airspeed_bias_range_ * uniform_distribution_(bias_generator_);
 
@@ -229,12 +228,15 @@ void SILBoard::sensors_init()
   GZ_COMPAT_SET_Z(acc_bias_, acc_bias_range_ * uniform_distribution_(bias_generator_));
 
   // Gazebo coordinates is NWU and Earth's magnetic field is defined in NED, hence the negative signs
-  auto inclination_ = node_->get_parameter_or<double>("inclination", 1.139436457 - 0.0*0.0174533); // TODO: make parameters.
-  auto declination_ = node_->get_parameter_or<double>("declination", 0.1857972802 + 0.0*0.0174533);
-  double total_intensity = 50716.3; // nanoTesla
-  GZ_COMPAT_SET_Z(inertial_magnetic_field_, sin(-inclination_)*total_intensity);
-  GZ_COMPAT_SET_X(inertial_magnetic_field_, cos(-inclination_) * cos(-declination_) * total_intensity);
-  GZ_COMPAT_SET_Y(inertial_magnetic_field_, cos(-inclination_) * sin(-declination_) * total_intensity);
+  auto inclination_ = node_->get_parameter_or<double>("inclination", 1.139436457);
+  auto declination_ = node_->get_parameter_or<double>("declination", 0.1857972802);
+  double total_intensity = node_->get_parameter_or<double>("total_intensity", 50716.3 / 1e9); // nanoTesla converted to tesla.
+  
+  GZ_COMPAT_SET_Z(inertial_magnetic_field_, sin(-inclination_));
+  GZ_COMPAT_SET_X(inertial_magnetic_field_, cos(-inclination_) * cos(-declination_));
+  GZ_COMPAT_SET_Y(inertial_magnetic_field_, cos(-inclination_) * sin(-declination_));
+  inertial_magnetic_field_ = inertial_magnetic_field_.Normalized();
+  inertial_magnetic_field_ *= total_intensity;
 
   using SC = gazebo::common::SphericalCoordinates;
   using Ang = ignition::math::Angle;
@@ -428,26 +430,18 @@ void SILBoard::imu_not_responding_error()
 
 bool SILBoard::mag_read(float mag[3])
 {
+  float T_s = 1.0/mag_update_rate_;
+  
   GazeboPose I_to_B = GZ_COMPAT_GET_WORLD_POSE(link_);
+
+  GazeboVector y_mag =
+    GZ_COMPAT_GET_ROT(I_to_B).RotateVector(inertial_magnetic_field_) + mag_gauss_markov_eta_;
+  
   GazeboVector noise;
   GZ_COMPAT_SET_X(noise, mag_stdev_ * normal_distribution_(noise_generator_));
   GZ_COMPAT_SET_Y(noise, mag_stdev_ * normal_distribution_(noise_generator_));
   GZ_COMPAT_SET_Z(noise, mag_stdev_ * normal_distribution_(noise_generator_));
-
-  // bias Walk for bias
-  GZ_COMPAT_SET_X(mag_bias_,
-                  GZ_COMPAT_GET_X(mag_bias_)
-                    + mag_bias_walk_stdev_ * normal_distribution_(noise_generator_));
-  GZ_COMPAT_SET_Y(mag_bias_,
-                  GZ_COMPAT_GET_Y(mag_bias_)
-                    + mag_bias_walk_stdev_ * normal_distribution_(noise_generator_));
-  GZ_COMPAT_SET_Z(mag_bias_,
-                  GZ_COMPAT_GET_Z(mag_bias_)
-                    + mag_bias_walk_stdev_ * normal_distribution_(noise_generator_));
-
-  // combine parts to create a measurement
-  GazeboVector y_mag =
-    GZ_COMPAT_GET_ROT(I_to_B).RotateVectorReverse(inertial_magnetic_field_) + mag_bias_ + noise;
+  mag_gauss_markov_eta_ = std::exp(-k_mag_*T_s) * mag_gauss_markov_eta_ + T_s*noise;
 
   // Convert measurement to NED
   mag[0] = (float) GZ_COMPAT_GET_X(y_mag);
@@ -711,22 +705,27 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss,
   using Vec3 = ignition::math::Vector3d;
   using Coord = gazebo::common::SphericalCoordinates::CoordinateType;
 
+  double T_s = 1.0/gnss_update_rate_;
+
   GazeboPose local_pose = GZ_COMPAT_GET_WORLD_POSE(link_);
-  Vec3 pos_noise(horizontal_gps_stdev_ * normal_distribution_(noise_generator_),
-                 horizontal_gps_stdev_ * normal_distribution_(noise_generator_),
-                 vertical_gps_stdev_ * normal_distribution_(noise_generator_));
-  Vec3 local_pos = GZ_COMPAT_GET_POS(local_pose) + pos_noise;
+  Vec3 local_pos = GZ_COMPAT_GET_POS(local_pose) + gnss_gauss_markov_eta_;
+
+  Vec3 pos_noise(horizontal_gnss_stdev_ * normal_distribution_(noise_generator_),
+                 horizontal_gnss_stdev_ * normal_distribution_(noise_generator_),
+                 vertical_gnss_stdev_ * normal_distribution_(noise_generator_));
+  gnss_gauss_markov_eta_ = std::exp(-k_gnss_*T_s) * gnss_gauss_markov_eta_ + T_s*pos_noise;
+
 
   Vec3 local_vel = GZ_COMPAT_GET_WORLD_LINEAR_VEL(link_);
-  Vec3 vel_noise(gps_velocity_stdev_ * normal_distribution_(noise_generator_),
-                 gps_velocity_stdev_ * normal_distribution_(noise_generator_),
-                 gps_velocity_stdev_ * normal_distribution_(noise_generator_));
+  Vec3 vel_noise(gnss_velocity_stdev_ * normal_distribution_(noise_generator_),
+                 gnss_velocity_stdev_ * normal_distribution_(noise_generator_),
+                 gnss_velocity_stdev_ * normal_distribution_(noise_generator_));
   local_vel += vel_noise;
 
   Vec3 ecef_pos = sph_coord_.PositionTransform(local_pos, Coord::LOCAL, Coord::ECEF);
   Vec3 ecef_vel = sph_coord_.VelocityTransform(local_vel, Coord::LOCAL, Coord::ECEF);
   Vec3 lla = sph_coord_.PositionTransform(local_pos, Coord::LOCAL, Coord::SPHERICAL);
-
+  
   gnss->lat = (int) std::round(rad2Deg(lla.X()) * 1e7);
   gnss->lon = (int) std::round(rad2Deg(lla.Y()) * 1e7);
   gnss->height = (int) std::round(lla.Z() * 1e3);
@@ -743,8 +742,8 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss,
   gnss->nanos =
     (uint64_t) std::round((GZ_COMPAT_GET_SIM_TIME(world_).Double() - (double) gnss->time) * 1e9);
 
-  gnss->h_acc = (int) std::round(horizontal_gps_stdev_ * 1000.0);
-  gnss->v_acc = (int) std::round(vertical_gps_stdev_ * 1000.0);
+  gnss->h_acc = (int) std::round(horizontal_gnss_stdev_ * 1000.0);
+  gnss->v_acc = (int) std::round(vertical_gnss_stdev_ * 1000.0);
 
   gnss->ecef.x = (int) std::round(ecef_pos.X() * 100);
   gnss->ecef.y = (int) std::round(ecef_pos.Y() * 100);
@@ -753,7 +752,7 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss,
   gnss->ecef.vx = (int) std::round(ecef_vel.X() * 100);
   gnss->ecef.vy = (int) std::round(ecef_vel.Y() * 100);
   gnss->ecef.vz = (int) std::round(ecef_vel.Z() * 100);
-  gnss->ecef.s_acc = (int) std::round(gps_velocity_stdev_ * 100);
+  gnss->ecef.s_acc = (int) std::round(gnss_velocity_stdev_ * 100);
 
   gnss->rosflight_timestamp = clock_micros();
 
@@ -761,7 +760,7 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss,
   using Vec3 = ignition::math::Vector3d;
   using Coord = gazebo::common::SphericalCoordinates::CoordinateType;
 
-  // TODO: Do a better job of simulating the wander of GPS
+  // TODO: Do a better job of simulating the wander of GNSS
   
   auto now = std::chrono::system_clock::now();
   auto now_c = std::chrono::system_clock::to_time_t(now);
@@ -789,13 +788,12 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss,
   gnss_full->fix_type = rosflight_firmware::GNSSFixType::GNSS_FIX_TYPE_3D_FIX;
   gnss_full->time_of_week = GZ_COMPAT_GET_SIM_TIME(world_).Double() * 1000;
   gnss_full->num_sat = 15;
-
   // TODO
   gnss_full->t_acc = 0;
   gnss_full->nano = 0;
 
-  gnss_full->h_acc = (int) std::round(horizontal_gps_stdev_ * 1000.0);
-  gnss_full->v_acc = (int) std::round(vertical_gps_stdev_ * 1000.0);
+  gnss_full->h_acc = (int) std::round(horizontal_gnss_stdev_ * 1000.0);
+  gnss_full->v_acc = (int) std::round(vertical_gnss_stdev_ * 1000.0);
 
   // Again, TODO switch to using ENU convention per REP
   double vn = local_vel.X();
