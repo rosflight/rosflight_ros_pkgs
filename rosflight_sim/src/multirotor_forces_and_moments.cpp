@@ -153,10 +153,12 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
     Eigen::Vector3d body_z;
     body_z << 0.0, 0.0, 1.0;
 
-    double Va_along_z = abs(Va.dot(body_z));
+    double Va_along_z = (-Va).dot(body_z);
 
-    if (Va_along_z < 0.001) {
-      Va_along_z = 0.001;
+    // Saturate the airspeed to zero. The model therefore assumes that air flowing backwards
+    // through the propeller has the same effect (on CT and CQ) as stationary air.
+    if (Va_along_z < 0.0) {
+      Va_along_z = 0.0;
     }
 
     double a = (motor.prop.CQ_0 * (rho) * (pow((motor.prop.diam), 5.0)) / (pow((2 * M_PI), 2.0)));
@@ -167,8 +169,19 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
 
     double prop_speed = ((-b + sqrt((pow((b), 2.0)) - (4 * a * c))) / (2 * a));
 
+    // Protect against singularities
+    if (abs(prop_speed) < 0.0001) {
+      prop_speed += 0.001;
+    }
+
     // Calculate the advance ratio.
     double advance_ratio = (2. * M_PI * Va_along_z)/(prop_speed*motor.prop.diam);
+
+    // Saturate the advance ratio at zero. The model therefore assumes that air flowing backwards
+    // through the propeller has the same effect (on CT and CQ) as stationary air.
+    if (advance_ratio < 0.0) {
+      advance_ratio = 0.0;
+    }
 
     double CT = motor.prop.CT_2*pow(advance_ratio, 2) + motor.prop.CT_1*advance_ratio + motor.prop.CT_0;
 
