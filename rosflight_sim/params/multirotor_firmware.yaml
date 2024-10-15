@@ -1,8 +1,26 @@
 - {name: RC_NUM_CHN, type: 6, value: 8}
 - {name: ARM_CHANNEL, type: 6, value: 4}
 - {name: RC_THR_OVRD_CHN, type: 6, value: 5} # Set pilot override channel for throttle control.
-- {name: RC_ATT_OVRD_CHN, type: 6, value: 6} # Set pilot override channel for attitude control.
-- {name: MIXER, type: 6, value: 2}
+- {name: RC_ATT_OVRD_CHN, type: 6, value: 5} # Set pilot override channel for attitude control.
+- {name: RC_ATT_CTRL_CHN, type: 6, value: 6}
+- {name: MIXER, type: 6, value: 13}
 - {name: FAILSAFE_THR, type: 9, value: 0.0}
 - {name: MIN_THROTTLE, type: 6, value: 0}    # Don't take minimum of RC and offboard at all times
-  # - {name: RC_ATT_CTRL_CHN, type: 6, value: 7}
+- {name: NUM_MOTORS, type: 6, value: 4}
+- {name: VEHICLE_MASS, type: 9, value: 3.50}
+- {name: MOTOR_RESISTANCE, type: 9, value: 0.085}
+- {name: AIR_DENSITY, type: 9, value: 1.225}
+- {name: MOTOR_KV, type: 9, value: 0.02894}
+- {name: NO_LOAD_CURRENT, type: 9, value: 1.01}
+- {name: PROP_DIAMETER, type: 9, value: 0.381}
+- {name: PROP_CT, type: 9, value: 0.075}
+- {name: PROP_CQ, type: 9, value: 0.0045}
+- {name: VOLT_MAX, type: 9, value: 25.0}
+- {name: MOTOR_0_POS, type: 9, value: 0.25}
+- {name: MOTOR_1_POS, type: 9, value: 0.25}
+- {name: MOTOR_2_POS, type: 9, value: 0.25}
+- {name: MOTOR_3_POS, type: 9, value: 0.25}
+- {name: MOTOR_0_PSI, type: 9, value: 0.7854}
+- {name: MOTOR_1_PSI, type: 9, value: 2.3562}
+- {name: MOTOR_2_PSI, type: 9, value: 3.9269}
+- {name: MOTOR_3_PSI, type: 9, value: 5.4978}
