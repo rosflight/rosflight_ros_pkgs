@@ -32,6 +32,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(rosflight_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(eigen_stl_containers REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
 
 
@@ -119,7 +120,7 @@ install(
 include_directories(include
   ${ament_INCLUDE_DIRS}
   ${rclcpp_INLCUDE_DIRS}
-  ${Eigen_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
   ${GAZEBO_INCLUDE_DIRS}
   ${SDFormat_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
@@ -146,6 +147,7 @@ ament_target_dependencies(rosflight_sil_plugin
   nav_msgs
   rosflight_msgs
   gazebo_ros
+  Eigen3
 )
 ament_export_targets(rosflight_sil_pluginTargets HAS_LIBRARY_TARGET)
 ament_export_dependencies(

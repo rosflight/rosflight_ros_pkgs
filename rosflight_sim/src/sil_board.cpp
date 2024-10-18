@@ -42,6 +42,8 @@
 
 #include <iostream>
 
+// TODO: SWAP ALL TO EIGEN INSTEAD OF GAZEBO.
+
 namespace rosflight_sim
 {
 SILBoard::SILBoard()
@@ -228,14 +230,26 @@ void SILBoard::sensors_init()
   GZ_COMPAT_SET_Z(acc_bias_, acc_bias_range_ * uniform_distribution_(bias_generator_));
 
   // Gazebo coordinates is NWU and Earth's magnetic field is defined in NED, hence the negative signs
-  auto inclination_ = node_->get_parameter_or<double>("inclination", 1.139436457);
-  auto declination_ = node_->get_parameter_or<double>("declination", 0.1857972802);
+  auto inclination_ = node_->get_parameter_or<double>("inclination", 65.2798 * M_PI/180.0);
+  auto declination_ = node_->get_parameter_or<double>("declination", 10.6295 * M_PI/180.0);
   double total_intensity = node_->get_parameter_or<double>("total_intensity", 50716.3 / 1e9); // nanoTesla converted to tesla.
   
-  GZ_COMPAT_SET_Z(inertial_magnetic_field_, sin(-inclination_));
-  GZ_COMPAT_SET_X(inertial_magnetic_field_, cos(-inclination_) * cos(-declination_));
-  GZ_COMPAT_SET_Y(inertial_magnetic_field_, cos(-inclination_) * sin(-declination_));
-  inertial_magnetic_field_ = inertial_magnetic_field_.Normalized();
+  Eigen::Vector3f inertial_mag = Eigen::Vector3f::UnitX();
+
+  Eigen::Matrix3f mag_inclination_rotation;
+  mag_inclination_rotation = Eigen::AngleAxisf(-inclination_, Eigen::Vector3f::UnitY());
+  
+  Eigen::Matrix3f mag_declination_rotation;
+  mag_declination_rotation = Eigen::AngleAxisf(declination_, Eigen::Vector3f::UnitZ());
+  
+  // Find the magnetic field intenisty described in the inertial frame by rotating the frame.
+  Eigen::Matrix3f mag_rotation = mag_declination_rotation*mag_inclination_rotation;
+
+  inertial_mag = mag_rotation*inertial_mag;
+  GZ_COMPAT_SET_X(inertial_magnetic_field_, inertial_mag(0));
+  GZ_COMPAT_SET_Y(inertial_magnetic_field_, inertial_mag(1));
+  GZ_COMPAT_SET_Z(inertial_magnetic_field_, inertial_mag(2));
+  normailized_inertial_magnetic_field_ = inertial_magnetic_field_;
   inertial_magnetic_field_ *= total_intensity;
 
   using SC = gazebo::common::SphericalCoordinates;
@@ -397,16 +411,16 @@ bool SILBoard::imu_read(float accel[3], float * temperature, float gyro[3], uint
                     GZ_COMPAT_GET_Z(y_gyro) + gyro_stdev_ * normal_distribution_(noise_generator_));
   }
 
-  // bias Walk for bias
-  GZ_COMPAT_SET_X(gyro_bias_,
-                  GZ_COMPAT_GET_X(gyro_bias_)
-                    + gyro_bias_walk_stdev_ * normal_distribution_(noise_generator_));
-  GZ_COMPAT_SET_Y(gyro_bias_,
-                  GZ_COMPAT_GET_Y(gyro_bias_)
-                    + gyro_bias_walk_stdev_ * normal_distribution_(noise_generator_));
-  GZ_COMPAT_SET_Z(gyro_bias_,
-                  GZ_COMPAT_GET_Z(gyro_bias_)
-                    + gyro_bias_walk_stdev_ * normal_distribution_(noise_generator_));
+  // // bias Walk for bias
+  // GZ_COMPAT_SET_X(gyro_bias_,
+  //                 GZ_COMPAT_GET_X(gyro_bias_)
+  //                   + gyro_bias_walk_stdev_ * normal_distribution_(noise_generator_));
+  // GZ_COMPAT_SET_Y(gyro_bias_,
+  //                 GZ_COMPAT_GET_Y(gyro_bias_)
+  //                   + gyro_bias_walk_stdev_ * normal_distribution_(noise_generator_));
+  // GZ_COMPAT_SET_Z(gyro_bias_,
+  //                 GZ_COMPAT_GET_Z(gyro_bias_)
+  //                   + gyro_bias_walk_stdev_ * normal_distribution_(noise_generator_));
 
   // Apply Constant Bias
   GZ_COMPAT_SET_X(y_gyro, GZ_COMPAT_GET_X(y_gyro) + GZ_COMPAT_GET_X(gyro_bias_));
@@ -431,11 +445,17 @@ void SILBoard::imu_not_responding_error()
 bool SILBoard::mag_read(float mag[3])
 {
   float T_s = 1.0/mag_update_rate_;
-  
-  GazeboPose I_to_B = GZ_COMPAT_GET_WORLD_POSE(link_);
 
-  GazeboVector y_mag =
-    GZ_COMPAT_GET_ROT(I_to_B).RotateVector(inertial_magnetic_field_) + mag_gauss_markov_eta_;
+  GazeboQuaternion q_I_NWU = GZ_COMPAT_GET_ROT(GZ_COMPAT_GET_WORLD_POSE(link_));
+
+  Eigen::Quaternionf eig_quat(GZ_COMPAT_GET_W(q_I_NWU), GZ_COMPAT_GET_X(q_I_NWU), -GZ_COMPAT_GET_Y(q_I_NWU),
+                              -GZ_COMPAT_GET_Z(q_I_NWU));
+
+  Eigen::Vector3f inertial_mag;
+  inertial_mag << inertial_magnetic_field_.X(), inertial_magnetic_field_.Y(), inertial_magnetic_field_.Z();
+
+  Eigen::Vector3f y_mag =
+    eig_quat.toRotationMatrix().transpose()*inertial_mag + Eigen::Vector3f(mag_gauss_markov_eta_.X(), mag_gauss_markov_eta_.Y(), mag_gauss_markov_eta_.Z()); // TODO: add mag_gauss_markov_eta_ back in.
   
   GazeboVector noise;
   GZ_COMPAT_SET_X(noise, mag_stdev_ * normal_distribution_(noise_generator_));
@@ -443,10 +463,9 @@ bool SILBoard::mag_read(float mag[3])
   GZ_COMPAT_SET_Z(noise, mag_stdev_ * normal_distribution_(noise_generator_));
   mag_gauss_markov_eta_ = std::exp(-k_mag_*T_s) * mag_gauss_markov_eta_ + T_s*noise;
 
-  // Convert measurement to NED
-  mag[0] = (float) GZ_COMPAT_GET_X(y_mag);
-  mag[1] = (float) -GZ_COMPAT_GET_Y(y_mag);
-  mag[2] = (float) -GZ_COMPAT_GET_Z(y_mag);
+  mag[0] = y_mag(0);
+  mag[1] = y_mag(1);
+  mag[2] = y_mag(2);
 
   return true;
 }
@@ -777,7 +796,7 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss,
   gnss_full->lat = (int) std::round(rad2Deg(lla.X()) * 1e7);
   gnss_full->lon = (int) std::round(rad2Deg(lla.Y()) * 1e7);
   gnss_full->height = (int) std::round(lla.Z() * 1e3);
-  gnss_full->height_msl = gnss_full->height; // TODO
+  gnss_full->height_msl = gnss_full->height; // TODO: Finish
 
   // For now, we have defined the Gazebo Local Frame as NWU.  This should be
   // fixed in a future commit
@@ -795,7 +814,7 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss,
   gnss_full->h_acc = (int) std::round(horizontal_gnss_stdev_ * 1000.0);
   gnss_full->v_acc = (int) std::round(vertical_gnss_stdev_ * 1000.0);
 
-  // Again, TODO switch to using ENU convention per REP
+  // Again, TODO: switch to using ENU convention per REP
   double vn = local_vel.X();
   double ve = -local_vel.Y();
   double ground_speed = std::sqrt(vn * vn + ve * ve);

@@ -46,6 +46,8 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 
+#include <eigen3/Eigen/Dense>
+
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rosflight_msgs/msg/rc_raw.hpp>
@@ -64,6 +66,8 @@ class SILBoard : public UDPBoard
 {
 private:
   GazeboVector inertial_magnetic_field_;
+
+  GazeboVector normailized_inertial_magnetic_field_;
 
   double imu_update_rate_ = 0;
   double mag_update_rate_ = 0;
