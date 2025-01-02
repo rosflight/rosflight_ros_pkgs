@@ -37,12 +37,12 @@
 #define ROSFLIGHT_SIM_MULTIROTOR_FORCES_AND_MOMENTS_H
 
 #include <cstdint>
+
 #include <eigen3/Eigen/Dense>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include <geometry_msgs/msg/twist_stamped.hpp>
-
-#include <rosflight_sim/mav_forces_and_moments.hpp>
+#include "rosflight_sim/mav_forces_and_moments.hpp"
 
 namespace rosflight_sim
 {

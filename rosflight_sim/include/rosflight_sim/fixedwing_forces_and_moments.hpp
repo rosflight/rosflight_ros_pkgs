@@ -36,9 +36,10 @@
 #define ROSFLIGHT_SIM_FIXEDWING_FORCES_AND_MOMENTS_H
 
 #include <eigen3/Eigen/Dense>
-#include <geometry_msgs/msg/twist_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <rosflight_sim/mav_forces_and_moments.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
+
+#include "rosflight_sim/mav_forces_and_moments.hpp"
 
 namespace rosflight_sim
 {

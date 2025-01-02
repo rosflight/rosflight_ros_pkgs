@@ -35,7 +35,7 @@
 #include <cmath>
 #include <cstdint>
 
-#include <rosflight_sim/multirotor_forces_and_moments.hpp>
+#include "rosflight_sim/multirotor_forces_and_moments.hpp"
 
 namespace rosflight_sim
 {

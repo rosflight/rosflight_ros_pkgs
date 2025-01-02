@@ -33,9 +33,11 @@
  */
 
 #include <cmath>
+
 #include <rclcpp/logging.hpp>
 #include <rclcpp/parameter_value.hpp>
-#include <rosflight_sim/fixedwing_forces_and_moments.hpp>
+
+#include "rosflight_sim/fixedwing_forces_and_moments.hpp"
 
 namespace rosflight_sim
 {
