@@ -123,6 +123,7 @@ include_directories(include
   ${GAZEBO_INCLUDE_DIRS}
   ${SDFormat_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
+  simulators
 )
 link_directories(${GAZEBO_LIBRARY_DIRS})
 
@@ -181,12 +182,12 @@ install(
 )
 
 install(
-  DIRECTORY xacro
+  DIRECTORY simulators/gazebo/xacro
   DESTINATION share/${PROJECT_NAME}
 )
 
 install(
-  DIRECTORY resources
+  DIRECTORY simulators/gazebo/resources
   DESTINATION share/${PROJECT_NAME}
 )
 
