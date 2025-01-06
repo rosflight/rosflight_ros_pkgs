@@ -3,6 +3,7 @@
  *
  * Copyright (c) 2017 Daniel Koch, James Jackson and Gary Ellingson, BYU MAGICC Lab.
  * Copyright (c) 2023 Brandon Sutherland, AeroVironment Inc.
+ * Copyright (c) 2024 Ian Reid, BYU MAGICC Lab.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,53 +33,56 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
-#define ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
-
-#include <stdexcept>
-#include <chrono>
-
-#include <geometry_msgs/msg/vector3.hpp>
-#include <nav_msgs/msg/odometry.hpp>
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp/executors.hpp>
-
-#include "mavlink/mavlink.h"
-#include "rosflight.h"
-#include "rosflight_sim/fixedwing_forces_and_moments.hpp"
-#include "rosflight_sim/mav_forces_and_moments.hpp"
-#include "rosflight_sim/multirotor_forces_and_moments.hpp"
 #include "rosflight_sim/sil_board.hpp"
+#include "rosflight_sim/sil_board_ros.hpp"
 
 namespace rosflight_sim
 {
-/**
- * @brief This class serves as the simulation loop manager. It contains a service 
- * that initializes one iteration of SIL simulation.
- */
-class ROSflightSIL : public rclcpp::Node
+
+SILBoardROS::SILBoardROS()
+  : rclcpp::Node("sil_board")
+{}
+
+void SILBoardROS::initialize_members()
 {
-public:
-  ROSflightSIL();
+  auto node_ptr = shared_from_this();
+  board_ = std::make_shared<SILBoard>(node_ptr);
 
-private:
-  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr run_SIL_iteration_srvs_;
+  comm_ = std::make_shared<rosflight_firmware::Mavlink>(*board_);
+  firmware_ = std::make_shared<rosflight_firmware::ROSflight>(*board_, *comm_);
 
-  // Service clients
-  rclcpp::CallbackGroup::SharedPtr client_cb_group_;
-  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr firmware_run_client_;
-  // TODO: Add the service type
-  rclcpp::Client<>::SharedPtr forces_and_moments_client_;
-  rclcpp::Client<>::SharedPtr dynamics_client_;
+  // Initialize the firmware
+  firmware_->init();
+}
 
-  /**
-   * @brief Iterates the simulation once by calling services belonging to the 
-   * SILboard, the Dynamics, and the Forces and Moments nodes
-   */
-  bool iterate_simulation(const std_srvs::srv::Trigger::Request::SharedPtr & req,
-                          const std_srvs::srv::Trigger::Response::SharedPtr & res);
-};
+bool SILBoardROS::run_firmware(const std_srvs::srv::Trigger::Request::SharedPtr & req,  
+                               const std_srvs::srv::Trigger::Response::SharedPtr & res)
+{
+  if (!is_initialized) {
+    initialize_members();
+    is_initialized = true;
+  }
+
+  // TODO: In the original rosflight_sil, they called run twice "to make sure that functions that don't get run when we have imu get run".
+  // What functions are these, and do we still need to call it twice?
+  firmware_->run();
+  firmware_->run();
+
+  // Package response and return
+  res.success = true;
+  return true;
+}
 
 } // namespace rosflight_sim
 
-#endif // ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
+// TODO: If we want to do zero copy transfer, remove this main function. For now it will remain
+int main(int argc, char** argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<SILBoardROS>();
+
+  rclcpp::spin(node);
+
+  return 0;
+}
+

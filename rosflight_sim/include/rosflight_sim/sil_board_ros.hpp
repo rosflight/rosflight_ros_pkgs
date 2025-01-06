@@ -32,53 +32,60 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
-#define ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
+#ifndef ROSFLIGHT_SIM_SIL_BOARD_ROS_H
+#define ROSFLIGHT_SIM_SIL_BOARD_ROS_H
 
-#include <stdexcept>
-#include <chrono>
+#include <cmath>
+#include <cstdbool>
+#include <cstddef>
+#include <cstdint>
 
-#include <geometry_msgs/msg/vector3.hpp>
-#include <nav_msgs/msg/odometry.hpp>
+#include <gazebo/common/common.hh>
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp/executors.hpp>
 
-#include "mavlink/mavlink.h"
-#include "rosflight.h"
-#include "rosflight_sim/fixedwing_forces_and_moments.hpp"
-#include "rosflight_sim/mav_forces_and_moments.hpp"
-#include "rosflight_sim/multirotor_forces_and_moments.hpp"
-#include "rosflight_sim/sil_board.hpp"
+#include "rosflight_msgs/msg/rc_raw.hpp"
+#include "rosflight_sim/udp_board.hpp"
+#include "sensor_interface.hpp"
+#include "sensors.h"
 
 namespace rosflight_sim
 {
 /**
- * @brief This class serves as the simulation loop manager. It contains a service 
- * that initializes one iteration of SIL simulation.
+ * @brief ROSflight firmware board implementation for simulator. This class handles sensors,
+ * actuators, and FCU clock and memory for the firmware. It also adds a simulated serial delay. It
+ * inherits from UDP board, which establishes a communication link over UDP.
  */
-class ROSflightSIL : public rclcpp::Node
+class SILBoardROS : public rclcpp::Node
 {
 public:
-  ROSflightSIL();
+  SILBoardROS();
 
 private:
-  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr run_SIL_iteration_srvs_;
-
-  // Service clients
-  rclcpp::CallbackGroup::SharedPtr client_cb_group_;
-  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr firmware_run_client_;
-  // TODO: Add the service type
-  rclcpp::Client<>::SharedPtr forces_and_moments_client_;
-  rclcpp::Client<>::SharedPtr dynamics_client_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr firmware_run_srvs_;
 
   /**
-   * @brief Iterates the simulation once by calling services belonging to the 
-   * SILboard, the Dynamics, and the Forces and Moments nodes
+   * @brief Calls firmware.run()
    */
-  bool iterate_simulation(const std_srvs::srv::Trigger::Request::SharedPtr & req,
-                          const std_srvs::srv::Trigger::Response::SharedPtr & res);
+  bool run_firmware(const std_srvs::srv:Trigger::Request::SharedPtr & req,
+                    const std_srvs::srv:Trigger::Response::SharedPtr & res);
+
+  /**
+   * @brief Initializes the board and the firmware. Since the SIL board needs a reference to the 
+   * containing node, the node must be instantiated before passing the reference to the board. This is
+   * why this initialization code is not done in the construtor.
+   */
+  void initialize_members();
+
+
+  // Components of the firmware
+  std::shared_ptr<SilBoard> board_;
+  std::shared_ptr<rosflight_firmware::Mavlink> comm_;
+  std::shared_ptr<rosflight_firmware::ROSflight> firmware_;
+
+  bool is_initialized = false;
 };
 
 } // namespace rosflight_sim
 
-#endif // ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
+#endif // ROSFLIGHT_SIM_SIL_BOARD_ROS_H
+
