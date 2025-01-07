@@ -36,6 +36,11 @@
 namespace rosflight_sim
 {
 
+GazeboPlugin::GazeboPlugin(std::function<void()> on_update_callback)
+  : gazebo::ModelPlugin()
+  , on_update_callback_ptr_(on_update_callback)
+{}
+
 GazeboPlugin::~GazeboPlugin() { GZ_COMPAT_DISCONNECT_WORLD_UPDATE_BEGIN(updateConnection_); }
 
 void GazeboPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
@@ -45,7 +50,7 @@ void GazeboPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   world_ = model_->GetWorld();
 
   /*
-   * Connect the Plugin to the Robot and Save pointers to the various elements in the simulation
+   * Connect the Plugin to the Robot and save pointers to the various elements in the simulation
    */
   if (_sdf->HasElement("linkName")) {
     link_name_ = _sdf->GetElement("linkName")->Get<std::string>();
@@ -65,28 +70,57 @@ void GazeboPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
     gzerr << "[rosflight_sim] Please specify a value for parameter \"mavType\".\n";
   }
 
+  // Declare the initial pose for the reset method
+  initial_pose_ = GZ_COMPAT_GET_WORLD_COG_POSE(link_);
+
   declare_SIL_params();
-
-  if (mav_type_ == "multirotor") {
-    mav_dynamics_ = new Multirotor(node_);
-  } else if (mav_type_ == "fixedwing") {
-    mav_dynamics_ = new Fixedwing(node_);
-  } else {
-    gzthrow("unknown or unsupported mav type\n")
-  }
-
-  // Initialize the Firmware
-  board_.gazebo_setup(link_, world_, model_, node_, mav_type_);
-  firmware_.init();
 
   // Connect the update function to the simulation
   updateConnection_ =
-    gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&ROSflightSIL::OnUpdate, this, _1));
-
-  initial_pose_ = GZ_COMPAT_GET_WORLD_COG_POSE(link_);
-
-  truth_NED_pub_ = node_->create_publisher<nav_msgs::msg::Odometry>("truth/NED", 1);
-  truth_NWU_pub_ = node_->create_publisher<nav_msgs::msg::Odometry>("truth/NWU", 1);
+    gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&GazeboPlugin::OnUpdate, this, _1));
 }
 
+void GazeboPlugin::declare_SIL_params()
+{
+  node_->declare_parameter("gazebo_host", rclcpp::PARAMETER_STRING);
+  node_->declare_parameter("gazebo_port", rclcpp::PARAMETER_INTEGER);
+  node_->declare_parameter("ROS_host", rclcpp::PARAMETER_STRING);
+  node_->declare_parameter("ROS_port", rclcpp::PARAMETER_INTEGER);
+
+  node_->declare_parameter("serial_delay_ns", rclcpp::PARAMETER_INTEGER);
+}
+
+void GazeboPlugin::OnUpdate(const gazebo::common::UpdateInfo & _info)
+{
+  // TODO: should we add the _info.simTime.Double() to the callback ptr? 
+  on_update_callback_ptr_();
+}
+
+void GazeboPlugin::Reset()
+{
+  link_->SetWorldPose(initial_pose_);
+  link_->ResetPhysicsStates();
+}
+
+Eigen::Vector3d GazeboPlugin::vec3_to_eigen_from_gazebo(GazeboVector vec)
+{
+  Eigen::Vector3d out;
+  out << GZ_COMPAT_GET_X(vec), GZ_COMPAT_GET_Y(vec), GZ_COMPAT_GET_Z(vec);
+  return out;
+}
+
+GazeboVector GazeboPlugin::vec3_to_gazebo_from_eigen(Eigen::Vector3d vec)
+{
+  GazeboVector out(vec(0), vec(1), vec(2));
+  return out;
+}
+
+Eigen::Matrix3d GazeboPlugin::rotation_to_eigen_from_gazebo(GazeboQuaternion quat)
+{
+  Eigen::Quaterniond eig_quat(GZ_COMPAT_GET_W(quat), GZ_COMPAT_GET_X(quat), GZ_COMPAT_GET_Y(quat),
+                              GZ_COMPAT_GET_Z(quat));
+  return eig_quat.toRotationMatrix();
+}
+
+GZ_REGISTER_MODEL_PLUGIN(GazeboPlugin)
 } // rosflight_sim
