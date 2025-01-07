@@ -32,57 +32,24 @@
  */
 
 
-#ifndef ROSFLIGHT_SIM_GAZEBO_SENSORS_H
-#define ROSFLIGHT_SIM_GAZEBO_SENSORS_H
-
-#include <gazebo/common/Plugin.hh>
-#include <gazebo/common/common.hh>
-#include <gazebo/gazebo.hh>
-#include <gazebo/physics/physics.hh>
-#include <gazebo_ros/node.hpp>
+#ifndef ROSFLIGHT_SIM_STANDALONE_SENSORS_H
+#define ROSFLIGHT_SIM_STANDALONE_SENSORS_H
 
 #include "rosflight_sim/sensor_interface.hpp"
-#include "gazebo_sim/include/gz_compat.hpp"
 
 namespace rosflight_sim
 {
 
-class GazeboSensors : public SensorInterface
+class StandaloneSensors : public SensorInterface
 {
-private:
-  // Gazebo objects
-  GazeboVector gravity_;
-  // TODO: initialize these
-  gazebo::physics::WorldPtr world_;
-  gazebo::physics::ModelPtr model_;
-  gazebo::physics::LinkPtr link_;
-
-  GazeboVector inertial_magnetic_field_;
-
 public:
-  GazeboSensors();
-
-  /*
-   *  @brief Initializes the sensors within Gazebo using the provided sensor parameters
-  */
-  void sensors_init() override;
-
-  /*
-   * @brief Returns the sensor measurement simulated from the current state
-  */
-  bool imu_read(float accel[3], float * temperature, float gyro[3], uint64_t * time_us) override;
-  bool mag_read(float mag[3]) override;
-  bool baro_read(float * pressure, float * temperature) override;
-  bool gnss_read(rosflight_firmware::GNSSData * gnss,
-                         rosflight_firmware::GNSSFull * gnss_full) override;
-  bool sonar_read(float * range) override;
-  bool diff_pressure_read(float * diff_pressure, float * temperature) override;
-  bool battery_read(float * voltage, float * current) override;
+  StandaloneSensors();
 
   /*
    * @brief Computes a new sensor measurement from the current state
   */
-  void imu_update(rosflight_msgs::msg::State state, bool motors_spinning) override;
+  void imu_update(rosflight_msgs::msg::State state, geometry_msgs::msg::TwistStamped forces) override;
+  void imu_temperature_update(rosflight_msgs::msg::State state) override;
   void mag_update(rosflight_msgs::msg::State state) override;
   void baro_update(rosflight_msgs::msg::State state) override;
   void gnss_update(rosflight_msgs::msg::State state) override;
@@ -90,22 +57,37 @@ public:
   void diff_pressure_update(rosflight_msgs::msg::State state) override;
   void battery_update(rosflight_msgs::msg::State state) override;
 
+private:
+  // Sensor noise
+  std::default_random_engine bias_generator_;
+  std::default_random_engine noise_generator_;
+  std::normal_distribution<double> normal_distribution_;
+  std::uniform_real_distribution<double> uniform_distribution_;
+
+  Eigen::Vector3d mag_gauss_markov_eta_[3] = Eigen::Vector3d::Zeros();
+  Eigen::Vector3d inertial_magnetic_field_;
+
+  double rho_ = 1.225;
+
+  // Bias
+  double gyro_bias_[3] = {0, 0, 0};
+  double acc_bias_[3] = {0, 0, 0};
+  double mag_bias_[3] = {0, 0, 0};
+  double baro_bias_ = 0;
+  double airspeed_bias_ = 0;
+
   /**
-   * @brief Initializes the firmware with ROS parameters and Gazebo data types.
-   *
-   * @param link Gazebo link pointer, provided by ModelPlugin::Load function
-   * @param world Gazebo world pointer, provided by ModelPlugin::Load function
-   * @param model Gazebo model pointer, provided by ModelPlugin::Load function
-   * @param node ROS node pointer, provided by ModelPlugin::Load function
-   * @param mav_type Simulation type
+   *  @brief Declares all of the parameters with the ROS2 parameter system. Called during initialization
    */
-  void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
-                    gazebo::physics::ModelPtr model, rclcpp::Node::SharedPtr node,
-                    std::string mav_type);
-  inline const int * get_outputs() const { return pwm_outputs_; }
-  gazebo::common::SphericalCoordinates sph_coord_;
+  void declare_parameters();
+
+  /**
+   * @brief Initializes the noise generators and the biases for the sensors
+   */
+  void initialize_sensors();
+
 };
 
 } // rosflight_sim
 
-#endif // ROSFLIGHT_SIM_GAZEBO_SENSORS_H
+#endif // ROSFLIGHT_SIM_STANDALONE_SENSORS_H

@@ -60,10 +60,14 @@ void SILBoard::init_board() {
 
   // Set up the udp connection
   // TODO: rename these to simulation_host instead of gazebo
+  // TODO: Also set up parameter change callback
   auto bind_host = node_->get_parameter_or<std::string>("gazebo_host", "localhost");
   int bind_port = node_->get_parameter_or<int>("gazebo_port", 14525);
   auto remote_host = node_->get_parameter_or<std::string>("ROS_host", "localhost");
   int remote_port = node_->get_parameter_or<int>("ROS_port", 14520);
+
+  // Get communication delay parameters, in nanoseconds
+  serial_delay_ns_ = node_->get_parameter_or<long>("serial_delay_ns", 0.006 * 1e9);
 
   set_ports(bind_host, bind_port, remote_host, remote_port);
   gzmsg << "ROSflight SIL Conneced to " << remote_host << ":" << remote_port << " from "
@@ -303,6 +307,8 @@ bool SILBoard::imu_read(float accel[3], float * temperature, float gyro[3], uint
   gyro[1] = imu_data_.angular_velocity.y;
   gyro[2] = imu_data_.angular_velocity.z;
 
+  // TODO: Should we read it this way or just pull the information from the time manager 
+  // (i.e. the time the data was recorded or the time that we read it?)
   (*time_us) = imu_data_.header.stamp.sec + imu_data_.header.stamp.nanosec * 1e-9;
   return true;
 }
@@ -502,6 +508,7 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss,
 {
   // The commented out data doesn't get used by ROSflightIO
   // TODO: Just kidding it does.... Let's change the GNSS messages.
+  // We need to update these messages, consolidate them, and only keep info we need 
   // gnss->lat = gnss_data_.lat;
   // gnss->lon = gnss_data_.lon;
   // gnss->height = gnss_.height;

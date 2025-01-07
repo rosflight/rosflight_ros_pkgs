@@ -35,6 +35,8 @@
 #ifndef ROSFLIGHT_SIM_SENSOR_INTERFACE_H
 #define ROSFLIGHT_SIM_SENSOR_INTERFACE_H
 
+#include <eigen3/Eigen/Core>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include "rosflight_msgs/msg/state.hpp"
@@ -48,64 +50,8 @@ class SensorInterface : public rclcpp::Node
 public:
   SensorInterface();
 
-  /*
-   * @brief Computes a new sensor measurement from the current state
-  */
-  virtual void imu_update(rosflight_msgs::msg::State state, bool motors_spinning);
-  virtual void mag_update(rosflight_msgs::msg::State state);
-  virtual void baro_update(rosflight_msgs::msg::State state);
-  virtual void gnss_update(rosflight_msgs::msg::State state);
-  virtual void sonar_update(rosflight_msgs::msg::State state);
-  virtual void diff_pressure_update(rosflight_msgs::msg::State state);
-  virtual void battery_update(rosflight_msgs::msg::State state);
-
 protected:
-  // Sensor noise characteristics
-  std::default_random_engine bias_generator_;
-  std::default_random_engine noise_generator_;
-  std::normal_distribution<double> normal_distribution_;
-  std::uniform_real_distribution<double> uniform_distribution_;
-
-  // TODO: Make it so these can be configured via json
-  // Noise characteristics
-  double gyro_stdev_ = 0;
-  double gyro_bias_walk_stdev_ = 0;
-  double gyro_bias_range_ = 0;
-
-  double acc_stdev_ = 0;
-  double acc_bias_range_ = 0;
-  double acc_bias_walk_stdev_ = 0;
-
-  double baro_bias_walk_stdev_ = 0;
-  double baro_stdev_ = 0;
-  double baro_bias_range_ = 0;
-
-  double mag_stdev_ = 0;
-  double mag_gauss_markov_eta_[3] = {0, 0, 0};
-  double k_mag_ = 0;
-
-  double airspeed_bias_walk_stdev_ = 0;
-  double airspeed_stdev_ = 0;
-  double airspeed_bias_range_ = 0;
-
-  double sonar_stdev_ = 0;
-  double sonar_max_range_ = 0;
-  double sonar_min_range_ = 0;
-
-  double horizontal_gnss_stdev_ = 0;
-  double vertical_gnss_stdev_ = 0;
-  double gnss_velocity_stdev_ = 0;
-  double gnss_gauss_markov_eta_[3] = {0, 0, 0};
-  double k_gnss_ = 0;
-
-  double mass_ = 0;
-  double rho_ = 0;
-  double origin_latitude_ = 0;
-  double origin_longitude_ = 0;
-  double origin_altitude_ = 0;
-
   // Sensor characteristics
-  // TODO: configure these via JSON
   float imu_update_frequency_;
   float mag_update_frequency_;
   float baro_update_frequency_;
@@ -114,22 +60,30 @@ protected:
   float diff_pressure_update_frequency_;
   float battery_update_frequency_;
 
-  // Bias
-  double gyro_bias_[3] = {0, 0, 0};
-  double acc_bias_[3] = {0, 0, 0};
-  double mag_bias_[3] = {0, 0, 0};
-  double baro_bias_ = 0;
-  double airspeed_bias_ = 0;
-
 private:
+  /*
+   * @brief Computes a new sensor measurement from the current state
+  */
+  virtual sensor_msgs::msg::Imu imu_update(const rosflight_msgs::msg::State & state, const geometry_msgs::msg::TwistStamped & forces);
+  virtual sensor_msgs::msg::Temperature imu_temperature_update(const rosflight_msgs::msg::State & state);
+  virtual sensor_msgs::msg::MagneticField mag_update(const rosflight_msgs::msg::State & state);
+  virtual rosflight_msgs::msg::Barometer baro_update(const rosflight_msgs::msg::State & state);
+  virtual rosflight_msgs::msg::GNSS gnss_update(const rosflight_msgs::msg::State & state);
+  virtual rosflight_msgs::msg::GNSSFull gnss_full_update(const rosflight_msgs::msg::State & state);
+  virtual sensor_msgs::msg::Range sonar_update(const rosflight_msgs::msg::State & state);
+  virtual rosflight_msgs::msg::Airspeed diff_pressure_update(const rosflight_msgs::msg::State & state);
+  virtual rosflight_msgs::msg::BatteryStatus battery_update(const rosflight_msgs::msg::State & state);
+
   // ROS2 interfaces
-  rclcpp::Publisher<>::SharedPtr imu_pub_;
-  rclcpp::Publisher<>::SharedPtr mag_pub_;
-  rclcpp::Publisher<>::SharedPtr baro_pub_;
-  rclcpp::Publisher<>::SharedPtr gnss_pub_;
-  rclcpp::Publisher<>::SharedPtr diff_pressure_pub_;
-  rclcpp::Publisher<>::SharedPtr sonar_pub_;
-  rclcpp::Publisher<>::SharedPtr battery_pub_;
+  rclcpp::Publisher<sensor_msgs:msg::Imu>::SharedPtr imu_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::Temperature>::SharedPtr imu_temperature_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::MagneticField>::SharedPtr mag_pub_;
+  rclcpp::Publisher<rosflight_msgs::msg::Barometer>::SharedPtr baro_pub_;
+  rclcpp::Publisher<rosflight_msgs::msg::GNSS>::SharedPtr gnss_pub_;
+  rclcpp::Publisher<rosflight_msgs::msg::GNSSFull>::SharedPtr gnss_full_pub_;
+  rclcpp::Publisher<rosflight_msgs::msg::Airspeed>::SharedPtr diff_pressure_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr sonar_pub_;
+  rclcpp::Publisher<rosflight_msgs::msg::BatteryStatus>::SharedPtr battery_pub_;
 
   rclcpp::TimerBase::SharedPtr imu_timer_;
   rclcpp::TimerBase::SharedPtr mag_timer_;
@@ -138,6 +92,11 @@ private:
   rclcpp::TimerBase::SharedPtr diff_pressure_timer_;
   rclcpp::TimerBase::SharedPtr sonar_timer_;
   rclcpp::TimerBase::SharedPtr battery_timer_;
+
+  rclcpp::Subscription<rosflight_msgs::msg::SimState>::SharedPtr state_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr forces_sub_;
+  rosflight_msgs::msg::SimState current_state_;
+  geometry_msgs::msg::TwistStamped current_forces_;
 
     /**
    *  @brief Declares all of the parameters with the ROS2 parameter system. Called during initialization
@@ -175,6 +134,15 @@ private:
   void sonar_publish();
   void battery_sim();
 
+  /**
+   * @brief Subscription to the truth state. Used to create sensor information.
+   */
+  void sim_state_callback(const rosflight_msgs::msg::SimState & msg);
+
+  /**
+   * @brief Subscription to the forces and moments. Used to create sensor information.
+   */
+  void forces_moments_callback(const geometry_msgs::msg::TwistStamped & msg);
 };
 
 } // rosflight_sim

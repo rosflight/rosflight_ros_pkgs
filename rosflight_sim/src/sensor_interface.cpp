@@ -44,6 +44,21 @@ SensorInterface::SensorInterface()
   parameter_callback_handle_ = this->add_on_set_parameters_callback(
       std::bind(&SensorInterface::parameters_callback, this, std::placeholders::_1));
 
+  // Subscriptions
+  state_sub_ = this->create_subscription<rosflight_msgs::msg::SimState>("sim_state", 1,
+      std::bind(&SensorInterface::sim_state_callback, this, std::placeholders::_1));
+
+  // Initialize publishers
+  imu_data_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("simulated_sensors/imu/data", 1);
+  imu_temperature_pub_ = this->create_publisher<sensor_msgs::msg::Temperature>("simulated_sensors/imu/temperature", 1);
+  mag_pub_ = this->create_publisher<sensor_msgs::msg::MagneticField>("simulated_sensors/mag", 1);
+  baro_pub_ = this->create_publisher<rosflight_msgs::msg::Barometer>("simulated_sensors/baro", 1);
+  gnss_pub_ = this->create_publisher<rosflight_msgs::msg::GNSS>("simulated_sensors/gnss", 1);
+  gnss_full_pub_ = this->create_publisher<rosflight_msgs::msg::GNSSFull>("simulated_sensors/gnss_full", 1);
+  diff_pressure_pub_ = this->create_publisher<rosflight_msgs::msg::Airspeed>("simulated_sensors/diff_pressure", 1);
+  sonar_pub_ = this->create_publisher<sensor_msgs::msg::Range>("simulated_sensors/sonar", 1);
+  battery_pub_ = this->create_publisher<rosflight_msgs::msg::BatteryStatus>("simulated_sensors/battery", 1);
+
   // Initialize timers with the frequencies from the parameters
   imu_update_frequency_ = this->get_double("imu_update_frequency");
   mag_update_frequency_ = this->get_double("mag_update_frequency");
@@ -187,20 +202,65 @@ void SensorInterface::reset_timers()
   }
 }
 
+void sim_state_callback(const rosflight_msgs::msg::SimState & msg)
+{
+  current_state_ = msg;
+}
+
+void forces_moments_callback(const geometry_msgs::msg::TwistStamped & msg)
+{
+  current_forces_ = msg;
+}
 
 void SensorInterface::imu_publish()
 {
-  
+  sensor_msgs::msg::Imu msg = imu_update(current_state_);
   imu_pub_->publish(msg);
+
+  sensor_msgs::msg::Temperature temp_msg = imu_temperature_update(current_state);
+  imu_temperature_pub_->publish(msg);
+}
+
+void SensorInterface::mag_publish()
+{
+  sensor_msgs::msg::MagneticField msg = mag_update(current_state_);
+  mag_pub_->publish(msg);
+}
+
+void SensorInterface::baro_publish()
+{
+  sensor_msgs::msg::Barometer msg = baro_update(current_state_);
+  baro_pub_->publish(msg);
+}
+
+void SensorInterface::gnss_publish()
+{
+  rosflight_msgs::msg::GNSS msg = gnss_update(current_state_);
+  gnss_pub_->publish(msg);
+}
+
+void SensorInterface::gnss_full_publish()
+{
+  rosflight_msgs::msg::GNSSFull msg = gnss_full_update(current_state_);
+  gnss_full_pub_->publish(msg);
+}
+
+void SensorInterface::diff_pressure_publish()
+{
+  rosflight_msgs::msg::Airspeed msg = diff_pressure_update(current_state_);
+  diff_pressure_pub_->publish(msg);
+}
+
+void SensorInterface::sonar_publish()
+{
+  sensor_msgs::msg::Range msg = sonar_update(current_state_);
+  sonar_pub_->publish(msg);
+}
+
+void SensorInterface::battery_publish()
+{
+  rosflight_msgs::msg::BatteryStatus msg = battery_update(current_state_);
+  battery_pub_->publish(msg);
 }
 
 } // rosflight_sim
-
-int main(int argc, char** argv)
-{
-  // TODO: this won't compile since simulator interface is an abstract class
-  // We'll probably have to move this main function to the folder for each simulator, so they can construct their own class.
-  rclcpp::init(agrc, argv);
-  rclcpp::spin(std::make_shared<rosflight_sim::SimulatorInterface>());
-  return 0;
-}
