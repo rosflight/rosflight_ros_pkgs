@@ -54,9 +54,7 @@ SILBoard::SILBoard(rclcpp::Node::SharedPtr node)
 {}
 
 void SILBoard::init_board() {
-  // TODO: Time Manager
-  //boot_time_ = GZ_COMPAT_GET_SIM_TIME(world_);
-  boot_time_ = 0.0;
+  boot_time_ = node_->now();
 
   // Set up the udp connection
   // TODO: rename these to simulation_host instead of gazebo
@@ -79,16 +77,15 @@ constexpr double rad2Deg(double x) { return 180.0 / M_PI * x; }
 constexpr double deg2Rad(double x) { return M_PI / 180.0 * x; }
 
 // clock
-// TODO: Time manager 
 uint32_t SILBoard::clock_millis()
 {
-  uint32_t millis = (uint32_t) ((GZ_COMPAT_GET_SIM_TIME(world_) - boot_time_).Double() * 1e3);
+  uint32_t millis = (uint32_t) (node_->now() - boot_time_).nanoseconds() * 1e-6;
   return millis;
 }
 
 uint64_t SILBoard::clock_micros()
 {
-  uint64_t micros = (uint64_t) ((GZ_COMPAT_GET_SIM_TIME(world_) - boot_time_).Double() * 1e6);
+  uint32_t millis = (uint32_t) (node_->now() - boot_time_).nanoseconds() * 1e-3;
   return micros;
 }
 

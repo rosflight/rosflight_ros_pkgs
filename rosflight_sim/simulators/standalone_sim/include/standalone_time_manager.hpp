@@ -31,59 +31,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ROSFLIGHT_SIM_TIME_MANAGER_H
-#define ROSFLIGHT_SIM_TIME_MANAGER_H
+#ifndef ROSFLIGHT_SIM_STANDALONE_TIME_MANAGER_H
+#define ROSFLIGHT_SIM_STANDALONE_TIME_MANAGER_H
 
-#include <chrono>
-
-#include <rclcpp/rclcpp.hpp>
-#include <rosgraph_msgs/msg/clock.hpp>
+#include "rosflight_sim/time_manager_interface.hpp"
 
 namespace rosflight_sim
 {
 
-class TimeManagerInterface : public rclcpp::Node
+class StandaloneTimeManager : TimeManagerInterface
 {
 public:
-  TimeManagerInterface();
-
-  std::chrono::microseconds get_clock_duration_us() { return clock_duration_us_; }
+  StandaloneTimeManager();
 
 private:
-  rclcpp::TimerBase::SharedPtr sim_clock_timer_;
-  rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr sim_time_pubber_;
+  // Persistent variables 
+  unsigned long int seconds_;
+  unsigned int nanoseconds_;
 
-  std::chrono::microseconds clock_duration_us_;
-
-  bool node_initialized_ = false;
-
-  virtual void update_time() = 0;
-  virtual unsigned long int get_seconds() = 0;
-  virtual unsigned int get_nanoseconds() = 0;
-
-  /**
-   *  @brief Declares all of the parameters with the ROS2 parameter system. Called during initialization
-   */
-  void declare_parameters();
-
-  /**
-   * ROS2 parameter system interface. This connects ROS2 parameters with the defined update callback,
-   * parametersCallback.
-   */
-  OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
-
-  /**
-   * Callback for when parameters are changed using ROS2 parameter system.
-   * This takes all new changed params and updates the appropriate parameters in the params_ object.
-   * @param parameters Set of updated parameters.
-   * @return Service result object that tells the requester the result of the param update.
-   */
-  rcl_interfaces::msg::SetParametersResult
-  parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
-
-  void set_timers();
+  void update_time() override;
+  unsigned long int get_seconds() override { return seconds_; }
+  unsigned int get_nanoseconds() override { return nanoseconds_; }
 };
 
 }   // rosflight_sim
 
-#endif    // ROSFLIGHT_SIM_TIME_MANAGER_H
+#endif    // ROSFLIGHT_SIM_STANDALONE_TIME_MANAGER_H
+

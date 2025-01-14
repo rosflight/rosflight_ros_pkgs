@@ -92,10 +92,7 @@ private:
   int pwm_outputs_[14] = {0}; // assumes maximum of 14 channels
 
   // Time variables
-  // TODO: time manager
-  // When implemented time manager, move this functionlity to the sensor interface class so we can 
-  // configure all of the sensor information via JSON, and so it is all in one place.
-  gazebo::common::Time boot_time_;
+  rclcpp::Time boot_time_;
 
   bool new_imu_data_available_ = false;
   bool new_imu_temperature_data_available_ = false;

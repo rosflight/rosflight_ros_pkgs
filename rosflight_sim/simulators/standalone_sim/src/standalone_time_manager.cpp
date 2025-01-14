@@ -31,59 +31,35 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ROSFLIGHT_SIM_TIME_MANAGER_H
-#define ROSFLIGHT_SIM_TIME_MANAGER_H
-
-#include <chrono>
-
-#include <rclcpp/rclcpp.hpp>
-#include <rosgraph_msgs/msg/clock.hpp>
+#include "rosflight_sim/standalone_time_manager.hpp"
 
 namespace rosflight_sim
 {
 
-class TimeManagerInterface : public rclcpp::Node
+StandaloneTimeManager::StandaloneTimeManager()
+  : TimeManagerInterface()
+  , seconds_(0)
+  , nanoseconds_(0)
+{}
+
+void StandaloneTimeManager::update_time()
 {
-public:
-  TimeManagerInterface();
-
-  std::chrono::microseconds get_clock_duration_us() { return clock_duration_us_; }
-
-private:
-  rclcpp::TimerBase::SharedPtr sim_clock_timer_;
-  rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr sim_time_pubber_;
-
-  std::chrono::microseconds clock_duration_us_;
-
-  bool node_initialized_ = false;
-
-  virtual void update_time() = 0;
-  virtual unsigned long int get_seconds() = 0;
-  virtual unsigned int get_nanoseconds() = 0;
-
-  /**
-   *  @brief Declares all of the parameters with the ROS2 parameter system. Called during initialization
-   */
-  void declare_parameters();
-
-  /**
-   * ROS2 parameter system interface. This connects ROS2 parameters with the defined update callback,
-   * parametersCallback.
-   */
-  OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
-
-  /**
-   * Callback for when parameters are changed using ROS2 parameter system.
-   * This takes all new changed params and updates the appropriate parameters in the params_ object.
-   * @param parameters Set of updated parameters.
-   * @return Service result object that tells the requester the result of the param update.
-   */
-  rcl_interfaces::msg::SetParametersResult
-  parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
-
-  void set_timers();
-};
+  nanoseconds_ += get_clock_duration_us() * 1e3;
+  if (nanoseconds_ > 1e9) {
+    seconds_ += 1;
+    nanoseconds_ -= 1e9;
+  }
+}
 
 }   // rosflight_sim
 
-#endif    // ROSFLIGHT_SIM_TIME_MANAGER_H
+// TODO: If we want to do zero copy transfer, remove this main function. For now it will remain
+int main(int argc, char** argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<StandaloneTimeManager>();
+
+  rclcpp::spin(node);
+
+  return 0;
+}
