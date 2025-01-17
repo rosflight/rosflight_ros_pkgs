@@ -32,7 +32,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <chrono>
+
 #include "rosflight_sim/rosflight_sil.hpp"
+
+using namespace std::chrono_literals;
 
 namespace rosflight_sim
 {
@@ -46,20 +50,20 @@ ROSflightSIL::ROSflightSIL()
 
   // Initialize the timer if the parameter is set to be so
   if (this->get_parameter("use_timer").as_bool()) {
-    auto sim_time_frequency = std::static_cast<std::chrono::milliseconds>(1.0 / this->get_parameter("simulation_loop_frequency").as_double());
-    simulation_loop_timer_ = this->create_timer(this, this->get_clock(), sim_loop_time_us, std::bind(&ROSflightSIL::take_simulation_step, this));
+    auto sim_loop_time_us = std::chrono::microseconds(static_cast<long>(1.0 / this->get_parameter("simulation_loop_frequency").as_double() * 1e6));
+    simulation_loop_timer_ = rclcpp::create_timer(this, this->get_clock(), sim_loop_time_us, std::bind(&ROSflightSIL::take_simulation_step, this));
   }
 
   // Initialize the service 
-  run_SIL_iteration_srvs_ = this->create_service<>(
+  run_SIL_iteration_srvs_ = this->create_service<std_srvs::srv::Trigger>(
       "rosflight_sil/iterate_simulation", std::bind(&ROSflightSIL::iterate_simulation, this,
                                                     std::placeholders::_1, std::placeholders::_2));
 
   // Initialize the service clients that will be used
   client_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   firmware_run_client_ = this->create_client<std_srvs::srv::Trigger>("sil_board/run", rmw_qos_profile_services_default, client_cb_group_);
-  forces_and_moments_client_ = this->create_client<>("forces_and_moments/run", rmw_qos_profile_services_default, client_cb_group_);
-  dynamics_client_ = this->create_client<>("dynamics/apply_forces_and_moments", rmw_qos_profile_services_default, client_cb_group_);
+  forces_and_moments_client_ = this->create_client<std_srvs::srv::Trigger>("forces_and_moments/run", rmw_qos_profile_services_default, client_cb_group_);
+  dynamics_client_ = this->create_client<std_srvs::srv::Trigger>("dynamics/apply_forces_and_moments", rmw_qos_profile_services_default, client_cb_group_);
 }
 
 void ROSflightSIL::declare_parameters()
@@ -68,6 +72,8 @@ void ROSflightSIL::declare_parameters()
   // Determines if the sim should be run off a timer or not. Set to false if you want to call a service manually to iterate the firmware 
   // section of the simulation
   this->declare_parameter("use_timer", true);
+  this->declare_parameter("service_exists_timeout_ms", 10);
+  this->declare_parameter("service_result_timeout_ms", 10);
 }
 
 rcl_interfaces::msg::SetParametersResult
@@ -91,30 +97,37 @@ void ROSflightSIL::reset_timers()
   if (this->get_parameter("use_timer").as_bool()) {
     simulation_loop_timer_->cancel();
 
-    auto sim_time_frequency = std::static_cast<std::chrono::milliseconds>(1.0 / this->get_parameter("simulation_loop_frequency").as_double());
-    simulation_loop_timer_ = this->create_timer(this, this->get_clock(), sim_loop_time_us, std::bind(&ROSflightSIL::take_simulation_step, this));
+    auto sim_loop_time_us = std::chrono::microseconds(static_cast<long>(1.0 / this->get_parameter("simulation_loop_frequency").as_double() * 1e6));
+    simulation_loop_timer_ = rclcpp::create_timer(this, this->get_clock(), sim_loop_time_us, std::bind(&ROSflightSIL::take_simulation_step, this));
   }
 }
 
-bool iterate_simulation(const std_srvs::srv::Trigger::Request::SharedPtr & req,
+bool ROSflightSIL::iterate_simulation(const std_srvs::srv::Trigger::Request::SharedPtr & req,
                         const std_srvs::srv::Trigger::Response::SharedPtr & res)
 {
-  take_simulation_step();
+  res->success = take_simulation_step();
 
   return true;
 }
 
-void take_simulation_step()
+bool ROSflightSIL::take_simulation_step()
 {
-  auto service_wait_for_exist = 10ms;   // TODO: too short?
-  auto service_wait_for_result = 10ms;  // TODO: too short?
+  // Run the simulation loop
+  bool ret = false;
+  ret |= call_firmware();
+  ret |= call_forces_and_moments();
+  ret |= call_propagate_dynamics();
 
-  // Run a simulation loop
+  return ret;
+}
 
-  // Run the firmware 
+bool ROSflightSIL::call_firmware()
+{
+  auto service_wait_for_exist = std::chrono::milliseconds(this->get_parameter("service_exists_timeout_ms").as_int());
+  auto service_wait_for_result = std::chrono::milliseconds(this->get_parameter("service_result_timeout_ms").as_int());
 
-  auto req = std::make_shared<std_srvs::srv::Trigger::Request>();
   // Check to see if service exists
+  auto req = std::make_shared<std_srvs::srv::Trigger::Request>();
   if (!firmware_run_client_->wait_for_service(service_wait_for_exist)) {
     RCLCPP_WARN_STREAM(this->get_logger(), "sil_board/run service not available! Aborting simulation iteration");
     return false;
@@ -135,10 +148,16 @@ void take_simulation_step()
     return false;
   }
 
-  // Compute forces and moments
+  return true;
+}
 
-  auto req = std::make_shared<std_srvs::srv::Trigger::Request>();
+bool ROSflightSIL::call_forces_and_moments()
+{
+  auto service_wait_for_exist = std::chrono::milliseconds(this->get_parameter("service_exists_timeout_ms").as_int());
+  auto service_wait_for_result = std::chrono::milliseconds(this->get_parameter("service_result_timeout_ms").as_int());
+
   // Check to see if service exists
+  auto req = std::make_shared<std_srvs::srv::Trigger::Request>();
   if (!forces_and_moments_client_->wait_for_service(service_wait_for_exist)) {
     RCLCPP_WARN_STREAM(this->get_logger(), "forces_and_moments/run service not available! Aborting simulation iteration");
     return false;
@@ -159,10 +178,16 @@ void take_simulation_step()
     return false;
   }
 
-  // Propagate dynamics
+  return true;
+}
 
-  auto req = std::make_shared<std_srvs::srv::Trigger::Request>();
+bool ROSflightSIL::call_propagate_dynamics()
+{
+  auto service_wait_for_exist = std::chrono::milliseconds(this->get_parameter("service_exists_timeout_ms").as_int());
+  auto service_wait_for_result = std::chrono::milliseconds(this->get_parameter("service_result_timeout_ms").as_int());
+
   // Check to see if service exists
+  auto req = std::make_shared<std_srvs::srv::Trigger::Request>();
   if (!dynamics_client_->wait_for_service(service_wait_for_exist)) {
     RCLCPP_WARN_STREAM(this->get_logger(), "dynamics/apply_forces_and_moments service not available! Aborting simulation iteration");
     return false;
@@ -182,6 +207,8 @@ void take_simulation_step()
     RCLCPP_WARN_STREAM(this->get_logger(), "dynamics/apply_forces_and_moments service client timed out! Aborting simulation iteration");
     return false;
   }
+
+  return true;
 }
 
 } // namespace rosflight_sim

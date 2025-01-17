@@ -35,20 +35,11 @@
 #ifndef ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
 #define ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
 
-#include <stdexcept>
 #include <chrono>
 
-#include <geometry_msgs/msg/vector3.hpp>
-#include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/executors.hpp>
-
-#include "mavlink/mavlink.h"
-#include "rosflight.h"
-#include "rosflight_sim/fixedwing_forces_and_moments.hpp"
-#include "rosflight_sim/mav_forces_and_moments.hpp"
-#include "rosflight_sim/multirotor_forces_and_moments.hpp"
-#include "rosflight_sim/sil_board.hpp"
+#include <std_srvs/srv/trigger.hpp>
 
 namespace rosflight_sim
 {
@@ -71,9 +62,8 @@ private:
   // Service clients
   rclcpp::CallbackGroup::SharedPtr client_cb_group_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr firmware_run_client_;
-  // TODO: Add the service type
-  rclcpp::Client<>::SharedPtr forces_and_moments_client_;
-  rclcpp::Client<>::SharedPtr dynamics_client_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr forces_and_moments_client_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr dynamics_client_;
 
   /**
    * @brief Iterates the simulation once by calling services belonging to the 
@@ -81,8 +71,6 @@ private:
    */
   bool iterate_simulation(const std_srvs::srv::Trigger::Request::SharedPtr & req,
                           const std_srvs::srv::Trigger::Response::SharedPtr & res);
-
-  void take_simulation_step();
 
   /**
    *  @brief Declares all of the parameters with the ROS2 parameter system. Called during initialization
@@ -105,6 +93,10 @@ private:
   parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
 
   void reset_timers();
+  bool call_firmware();
+  bool call_forces_and_moments();
+  bool call_propagate_dynamics();
+  bool take_simulation_step();
 
 };
 
