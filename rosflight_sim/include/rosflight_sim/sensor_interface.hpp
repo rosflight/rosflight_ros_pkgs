@@ -98,7 +98,7 @@ private:
   rosflight_msgs::msg::SimState current_state_;
   geometry_msgs::msg::TwistStamped current_forces_;
 
-    /**
+  /**
    *  @brief Declares all of the parameters with the ROS2 parameter system. Called during initialization
    */
   void declare_parameters();
