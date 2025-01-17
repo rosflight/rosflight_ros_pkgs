@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "rosflight_sim/standalone_time_manager.hpp"
+#include "standalone_time_manager.hpp"
 
 namespace rosflight_sim
 {
@@ -44,7 +44,7 @@ StandaloneTimeManager::StandaloneTimeManager()
 
 void StandaloneTimeManager::update_time()
 {
-  nanoseconds_ += get_clock_duration_us() * 1e3;
+  nanoseconds_ += get_clock_duration_us().count() * 1e3;
   if (nanoseconds_ > 1e9) {
     seconds_ += 1;
     nanoseconds_ -= 1e9;
@@ -57,7 +57,7 @@ void StandaloneTimeManager::update_time()
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<StandaloneTimeManager>();
+  auto node = std::make_shared<rosflight_sim::StandaloneTimeManager>();
 
   rclcpp::spin(node);
 

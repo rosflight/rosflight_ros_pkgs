@@ -39,7 +39,7 @@
 namespace rosflight_sim
 {
 
-class StandaloneTimeManager : TimeManagerInterface
+class StandaloneTimeManager : public TimeManagerInterface
 {
 public:
   StandaloneTimeManager();

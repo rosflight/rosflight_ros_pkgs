@@ -81,7 +81,8 @@ private:
   rcl_interfaces::msg::SetParametersResult
   parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
 
-  void set_timers();
+  void set_timers(double default_pub_rate_us, double real_time_multiplier);
+  void publish_sim_time();
 };
 
 }   // rosflight_sim

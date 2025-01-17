@@ -30,9 +30,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
-#include "rosflight_sim/time_manager.hpp"
 #include <chrono>
+
+#include "rosflight_sim/time_manager_interface.hpp"
 
 namespace rosflight_sim
 {
@@ -46,9 +46,12 @@ TimeManagerInterface::TimeManagerInterface()
     std::bind(&TimeManagerInterface::parameters_callback, this, std::placeholders::_1));
 
   // Create publisher
-  sim_time_pubber_ = this->create_publisher<rosgraph_msgs::msg::Clock>("clock", 1);
+  auto qos = rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data);
+  sim_time_pubber_ = this->create_publisher<rosgraph_msgs::msg::Clock>("clock", qos);
 
-  set_timers();
+  double default_pub_rate_us = this->get_parameter("default_pub_rate_us").as_double();
+  double real_time_multiplier = this->get_parameter("real_time_multiplier").as_double();
+  set_timers(default_pub_rate_us, real_time_multiplier);
 
   node_initialized_ = true;
 }
@@ -65,23 +68,39 @@ TimeManagerInterface::parameters_callback(const std::vector<rclcpp::Parameter> &
 {
   rcl_interfaces::msg::SetParametersResult result;
   result.successful = false;
-  result.reason = "One of the parameters is not a parameter of ROSflightSIL.";
+  result.reason = "Time manager is not yet initialized.";
+
+  double default_pub_rate_us = this->get_parameter("default_pub_rate_us").as_double();
+  double real_time_multiplier = this->get_parameter("real_time_multiplier").as_double();
 
   if (node_initialized_) {
+    // Update the timer parameters
+    for (auto param : parameters) {
+      if (param.get_name() == "default_pub_rate_us") {
+        default_pub_rate_us = param.as_double();
+      } else if (param.get_name() == "real_time_multiplier") {
+        real_time_multiplier = param.as_double();
+      }
+    }
+
+    // Restart the timer
     sim_clock_timer_->cancel();
-    set_timers();
+    set_timers(default_pub_rate_us, real_time_multiplier);
+
+    result.successful = true;
+    result.reason = "Successfully set time_manager parameter";
   }
 
   return result;
 }
 
-void TimeManagerInterface::set_timers()
+void TimeManagerInterface::set_timers(double default_pub_rate_us, double real_time_multiplier)
 {
   // Note that this is specifically a wall timer, so it runs off of system time
-  // and publishes every 100 microseconds (given that the real time multiplier is 1)
-  clock_duration_us_ = static_cast<std::chrono::microseconds>(
-    this->get_parameter("default_pub_rate_us").as_double() / this->get_parameter("real_time_multiplier").as_double());
-  sim_clock_timer_ = rclcpp::create_wall_timer(clock_duration_us, std::bind(&TimeManagerInterface::publish_sim_time));
+  // and publishes according to the node parameters
+  clock_duration_us_ = std::chrono::microseconds(
+    static_cast<long int>(default_pub_rate_us / real_time_multiplier));
+  sim_clock_timer_ = this->create_wall_timer(clock_duration_us_, std::bind(&TimeManagerInterface::publish_sim_time, this));
 }
 
 void TimeManagerInterface::publish_sim_time()
