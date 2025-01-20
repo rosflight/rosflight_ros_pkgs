@@ -35,26 +35,21 @@
 #ifndef ROSFLIGHT_SIM_SIL_BOARD_H
 #define ROSFLIGHT_SIM_SIL_BOARD_H
 
-#include <cmath>
-#include <cstdbool>
-#include <cstddef>
-#include <cstdint>
+#include <queue>
 
-#include <gazebo/common/common.hh>
 #include <rclcpp/rclcpp.hpp>
-#include <std_msgs/msg/imu.hpp>
-#include <std_msgs/msg/temperature.hpp>
-#include <std_msgs/msg/magnetic_field.hpp>
-#include <std_msgs/msg/range.hpp>
+#include <sensor_msgs/msg/imu.hpp>
+#include <sensor_msgs/msg/temperature.hpp>
+#include <sensor_msgs/msg/magnetic_field.hpp>
+#include <sensor_msgs/msg/range.hpp>
 
 #include "rosflight_msgs/msg/airspeed.hpp"
 #include "rosflight_msgs/msg/barometer.hpp"
+#include "rosflight_msgs/msg/battery_status.hpp"
 #include "rosflight_msgs/msg/gnss.hpp"
 #include "rosflight_msgs/msg/gnss_full.hpp"
 #include "rosflight_msgs/msg/rc_raw.hpp"
 #include "rosflight_sim/udp_board.hpp"
-#include "sensors.h"
-#include "sensor_interface.hpp"
 
 namespace rosflight_sim
 {
@@ -76,7 +71,7 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::MagneticField>::SharedPtr mag_data_sub_;
   rclcpp::Subscription<rosflight_msgs::msg::Barometer>::SharedPtr baro_data_sub_;
   rclcpp::Subscription<rosflight_msgs::msg::GNSS>::SharedPtr gnss_data_sub_;
-  rclcpp::Subscription<rosflight_msgs::msg::GNSSFull>::SharedPtr gnss_full_data_sub_;
+  // rclcpp::Subscription<rosflight_msgs::msg::GNSSFull>::SharedPtr gnss_full_data_sub_;
   rclcpp::Subscription<rosflight_msgs::msg::Airspeed>::SharedPtr diff_pressure_data_sub_;
   rclcpp::Subscription<sensor_msgs::msg::Range>::SharedPtr sonar_data_sub_;
   rclcpp::Subscription<rosflight_msgs::msg::BatteryStatus>::SharedPtr battery_data_sub_;
@@ -108,7 +103,7 @@ private:
   bool mag_present_ = false;
   bool baro_present_ = false;
   bool gnss_present_ = false;
-  bool dif pressure_present_ = false;
+  bool diff_pressure_present_ = false;
   bool sonar_present_ = false;
   bool battery_present_ = false;
 
@@ -130,14 +125,14 @@ private:
    */
   void RC_callback(const rosflight_msgs::msg::RCRaw & msg);
   // Subscription callbacks
-  void imu_data_callback();
-  void imu_temperature_data_callback();
-  void mag_data_callback();
-  void baro_data_callback();
-  void gnss_data_callback();
-  void diff_pressure_data_callback();
-  void sonar_data_callback();
-  void battery_data_callback();
+  void imu_data_callback(const sensor_msgs::msg::Imu & msg);
+  void imu_temperature_data_callback(const sensor_msgs::msg::Temperature & msg);
+  void mag_data_callback(const sensor_msgs::msg::MagneticField & msg);
+  void baro_data_callback(const rosflight_msgs::msg::Barometer & msg);
+  void gnss_data_callback(const rosflight_msgs::msg::GNSS & msg);
+  void diff_pressure_data_callback(const rosflight_msgs::msg::Airspeed & msg);
+  void sonar_data_callback(const sensor_msgs::msg::Range & msg);
+  void battery_data_callback(const rosflight_msgs::msg::BatteryStatus & msg);
 
   /**
    * @brief Checks the current pwm value for throttle to see if the motor pwm is above minimum, and that
@@ -159,6 +154,8 @@ private:
   uint8_t backup_memory_[BACKUP_SRAM_SIZE] = {0};
 
 public:
+  SILBoard(rclcpp::Node::SharedPtr node);
+
   // setup
   /**
    * @brief Sets up board with initial values and state.

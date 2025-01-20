@@ -44,13 +44,8 @@
 namespace rosflight_sim
 {
 SILBoard::SILBoard(rclcpp::Node::SharedPtr node)
-    : UDPBoard()
-    // , bias_generator_(std::chrono::system_clock::now().time_since_epoch().count()) // Uncomment if you would like to
-                                                                                      // have bias biases for the sensors
-                                                                                      // on each flight. Delete next line.
-    , bias_generator_(0)
-    , noise_generator_(std::chrono::system_clock::now().time_since_epoch().count())
-    , node_(node)
+  : UDPBoard()
+  , node_(node)
 {}
 
 void SILBoard::init_board() {
@@ -68,9 +63,8 @@ void SILBoard::init_board() {
   serial_delay_ns_ = node_->get_parameter_or<long>("serial_delay_ns", 0.006 * 1e9);
 
   set_ports(bind_host, bind_port, remote_host, remote_port);
-  gzmsg << "ROSflight SIL Conneced to " << remote_host << ":" << remote_port << " from "
-        << bind_host << ":" << bind_port << "\n";
-
+  RCLCPP_INFO_STREAM(node_->get_logger(), "ROSflight SIL Conneced to " << remote_host
+    << ":" << remote_port << " from " << bind_host << ":" << bind_port << "\n");
 }
 
 constexpr double rad2Deg(double x) { return 180.0 / M_PI * x; }
@@ -85,7 +79,7 @@ uint32_t SILBoard::clock_millis()
 
 uint64_t SILBoard::clock_micros()
 {
-  uint32_t millis = (uint32_t) (node_->now() - boot_time_).nanoseconds() * 1e-3;
+  uint32_t micros = (uint32_t) (node_->now() - boot_time_).nanoseconds() * 1e-3;
   return micros;
 }
 
@@ -117,31 +111,31 @@ uint16_t SILBoard::serial_bytes_available()
 void SILBoard::sensors_init()
 {
   // Initialize subscribers
-  imu_data_sub_ = node_->create_subscription<sensor_msgs::msg::Imu>("simulated_sensors/imu/data",
+  imu_data_sub_ = node_->create_subscription<sensor_msgs::msg::Imu>("simulated_sensors/imu/data", 1,
       std::bind(&SILBoard::imu_data_callback, this, std::placeholders::_1));
 
-  imu_temperature_data_sub_ = node_->create_subscription<sensor_msgs::msg::Imu>("simulated_sensors/imu/temperature",
+  imu_temperature_data_sub_ = node_->create_subscription<sensor_msgs::msg::Temperature>("simulated_sensors/imu/temperature", 1,
       std::bind(&SILBoard::imu_temperature_data_callback, this, std::placeholders::_1));
 
-  mag_data_sub_ = node_->create_subscription<sensor_msgs::msg::MagneticField>("simulated_sensors/mag",
+  mag_data_sub_ = node_->create_subscription<sensor_msgs::msg::MagneticField>("simulated_sensors/mag", 1,
       std::bind(&SILBoard::mag_data_callback, this, std::placeholders::_1));
 
-  baro_data_sub_ = node_->create_subscription<rosflight_msgs::msg::Barometer>("simulated_sensors/baro",
+  baro_data_sub_ = node_->create_subscription<rosflight_msgs::msg::Barometer>("simulated_sensors/baro", 1,
       std::bind(&SILBoard::baro_data_callback, this, std::placeholders::_1));
 
-  gnss_data_sub_ = node_->create_subscription<rosflight_msgs::msg::GNSS>("simulated_sensors/gnss",
+  gnss_data_sub_ = node_->create_subscription<rosflight_msgs::msg::GNSS>("simulated_sensors/gnss", 1,
       std::bind(&SILBoard::gnss_data_callback, this, std::placeholders::_1));
 
-  gnss_full_data_sub_ = node_->create_subscription<rosflight_msgs::msg::GNSSFull>("simulated_sensors/gnss_full",
-      std::bind(&SILBoard::gnss_data_callback, this, std::placeholders::_1));
+  // gnss_full_data_sub_ = node_->create_subscription<rosflight_msgs::msg::GNSSFull>("simulated_sensors/gnss_full", 1,
+  //     std::bind(&SILBoard::gnss_data_callback, this, std::placeholders::_1));
 
-  diff_pressure_data_sub_ = node_->create_subscription<rosflight_msgs::msg::Airspeed>("simulated_sensors/diff_pressure",
+  diff_pressure_data_sub_ = node_->create_subscription<rosflight_msgs::msg::Airspeed>("simulated_sensors/diff_pressure", 1,
       std::bind(&SILBoard::diff_pressure_data_callback, this, std::placeholders::_1));
 
-  sonar_data_sub_ = node_->create_subscription<sensor_msgs::msg::Range>("simulated_sensors/sonar",
+  sonar_data_sub_ = node_->create_subscription<sensor_msgs::msg::Range>("simulated_sensors/sonar", 1,
       std::bind(&SILBoard::sonar_data_callback, this, std::placeholders::_1));
 
-  battery_data_sub_ = node_->create_subscription<rosflight_msgs::msg::BatteryStatus>("simulated_sensors/battery",
+  battery_data_sub_ = node_->create_subscription<rosflight_msgs::msg::BatteryStatus>("simulated_sensors/battery", 1,
       std::bind(&SILBoard::battery_data_callback, this, std::placeholders::_1));
 }
 
@@ -180,11 +174,18 @@ void SILBoard::gnss_data_callback(const rosflight_msgs::msg::GNSS & msg)
   gnss_present_ = true;
 }
 
-void SILBoard::gnss_full_data_callback(const rosflight_msgs::msg::GNSSFull & msg)
+// void SILBoard::gnss_full_data_callback(const rosflight_msgs::msg::GNSSFull & msg)
+// {
+//   gnss_full_data_ = msg;
+//   new_gnss_full_data_available_ = true;
+//   gnss_present_ = true;
+// }
+
+void SILBoard::diff_pressure_data_callback(const rosflight_msgs::msg::Airspeed & msg)
 {
-  gnss_full_data_ = msg;
-  new_gnss_full_data_available_ = true;
-  gnss_present_ = true;
+  diff_pressure_data_ = msg;
+  new_diff_pressure_data_available_ = true;
+  diff_pressure_present_ = true;
 }
 
 void SILBoard::sonar_data_callback(const sensor_msgs::msg::Range & msg)
@@ -341,7 +342,7 @@ bool SILBoard::diff_pressure_read(float * diff_pressure, float * temperature)
 bool SILBoard::sonar_read(float * range)
 {
   (*range) = sonar_data_.range;
-  return true
+  return true;
 }
 
 bool SILBoard::battery_read(float * voltage, float * current)
@@ -514,10 +515,10 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss,
   // gnss->vel_e = gnss_data_.velocity[1];
   // gnss->vel_d = gnss_data_.velocity[2];
 
-  gnss->fix_type = std::static_cast<rosflight_firmware::GNSSFixType>(gnss_data_.fix);
+  gnss->fix_type = static_cast<rosflight_firmware::GNSSFixType>(gnss_data_.fix);
   // gnss->time_of_week = gnss_.time_of_week;
   gnss->time = gnss_data_.header.stamp.sec;
-  gnss->nanos = gnss_data_.header.stamp.nanos;
+  gnss->nanos = gnss_data_.header.stamp.nanosec;
 
   gnss->h_acc = gnss_data_.horizontal_accuracy;
   gnss->v_acc = gnss_data_.vertical_accuracy;
@@ -533,40 +534,40 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss,
 
   gnss->rosflight_timestamp = (gnss_data_.header.stamp.sec + gnss_data_.header.stamp.nanosec * 1e-9) * 1000;  // Convert to millis
 
-  gnss_full->year = gnss_full_.year;
-  gnss_full->month = gnss_full_.month;
-  gnss_full->day = gnss_full_.day;
-  gnss_full->hour = gnss_full_.hour;
-  gnss_full->min = gnss_full_.min;
-  gnss_full->sec = gnss_full_.sec;
-  gnss_full->valid = gnss_full_.valid;
+  gnss_full->year = gnss_full_data_.year;
+  gnss_full->month = gnss_full_data_.month;
+  gnss_full->day = gnss_full_data_.day;
+  gnss_full->hour = gnss_full_data_.hour;
+  gnss_full->min = gnss_full_data_.min;
+  gnss_full->sec = gnss_full_data_.sec;
+  gnss_full->valid = gnss_full_data_.valid;
 
-  gnss_full->lat = gnss_full_.lat;
-  gnss_full->lon = gnss_full_.lon;
-  gnss_full->height = gnss_full_.height;
-  gnss_full->height_msl = gnss_full_.height_msl;
+  gnss_full->lat = gnss_full_data_.lat;
+  gnss_full->lon = gnss_full_data_.lon;
+  gnss_full->height = gnss_full_data_.height;
+  gnss_full->height_msl = gnss_full_data_.height_msl;
 
   // For now, we have defined the Gazebo Local Frame as NWU.  This should be
   // fixed in a future commit
-  gnss_full.vel_n = gnss_full_.vel_n;
-  gnss_full.vel_e = gnss_full_.vel_e;
-  gnss_full.vel_d = gnss_full_.vel_d;
+  gnss_full->vel_n = gnss_full_data_.vel_n;
+  gnss_full->vel_e = gnss_full_data_.vel_e;
+  gnss_full->vel_d = gnss_full_data_.vel_d;
 
-  gnss_full.fix_type = gnss_full_.fix_type;
-  gnss_full.time_of_week = gnss_full_.time_of_week;
-  gnss_full.num_sat = gnss_full_.num_sat;
+  gnss_full->fix_type = gnss_full_data_.fix_type;
+  gnss_full->time_of_week = gnss_full_data_.time_of_week;
+  gnss_full->num_sat = gnss_full_data_.num_sat;
   // TODO
-  gnss_full.t_acc = gnss_full_.t_acc;
-  gnss_full.nano = gnss_full_.nano;
+  gnss_full->t_acc = gnss_full_data_.t_acc;
+  gnss_full->nano = gnss_full_data_.nano;
 
-  gnss_full.h_acc = gnss_full_.h_acc;
-  gnss_full.v_acc = gnss_full_.v_acc;
+  gnss_full->h_acc = gnss_full_data_.h_acc;
+  gnss_full->v_acc = gnss_full_data_.v_acc;
 
-  gnss_full.g_speed = gnss_full_.g_speed;
+  gnss_full->g_speed = gnss_full_data_.g_speed;
 
-  gnss_full.head_mot = gnss_full_.head_mot;
-  gnss_full.p_dop = gnss_full_.p_dop;
-  gnss_full.rosflight_timestamp = (gnss_full_data_.header.stamp.sec + gnss_full_data_.header.stamp.nanosec * 1e-9) * 1000;  // Convert to millis
+  gnss_full->head_mot = gnss_full_data_.head_mot;
+  gnss_full->p_dop = gnss_full_data_.p_dop;
+  gnss_full->rosflight_timestamp = (gnss_full_data_.header.stamp.sec + gnss_full_data_.header.stamp.nanosec * 1e-9) * 1000;  // Convert to millis
 
   return true;
 }

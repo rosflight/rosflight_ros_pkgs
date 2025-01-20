@@ -35,18 +35,10 @@
 #ifndef ROSFLIGHT_SIM_SIL_BOARD_ROS_H
 #define ROSFLIGHT_SIM_SIL_BOARD_ROS_H
 
-#include <cmath>
-#include <cstdbool>
-#include <cstddef>
-#include <cstdint>
-
-#include <gazebo/common/common.hh>
 #include <rclcpp/rclcpp.hpp>
+#include <std_srvs/srv/trigger.hpp>
 
-#include "rosflight_msgs/msg/rc_raw.hpp"
-#include "rosflight_sim/udp_board.hpp"
-#include "sensor_interface.hpp"
-#include "sensors.h"
+#include "rosflight_sim/sil_board.hpp"
 
 namespace rosflight_sim
 {
@@ -66,8 +58,8 @@ private:
   /**
    * @brief Calls firmware.run()
    */
-  bool run_firmware(const std_srvs::srv:Trigger::Request::SharedPtr & req,
-                    const std_srvs::srv:Trigger::Response::SharedPtr & res);
+  bool run_firmware(const std_srvs::srv::Trigger::Request::SharedPtr & req,
+                    const std_srvs::srv::Trigger::Response::SharedPtr & res);
 
   /**
    * @brief Initializes the board and the firmware. Since the SIL board needs a reference to the 
@@ -78,7 +70,7 @@ private:
 
 
   // Components of the firmware
-  std::shared_ptr<SilBoard> board_;
+  std::shared_ptr<SILBoard> board_;
   std::shared_ptr<rosflight_firmware::Mavlink> comm_;
   std::shared_ptr<rosflight_firmware::ROSflight> firmware_;
 

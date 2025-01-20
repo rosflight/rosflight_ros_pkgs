@@ -33,7 +33,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "rosflight_sim/sil_board.hpp"
+#include "rosflight_sim/rosflight_firmware/include/rosflight.h"
 #include "rosflight_sim/sil_board_ros.hpp"
 
 namespace rosflight_sim
@@ -41,12 +41,16 @@ namespace rosflight_sim
 
 SILBoardROS::SILBoardROS()
   : rclcpp::Node("sil_board")
-{}
+{
+  firmware_run_srvs_ = this->create_service<std_srvs::srv::Trigger>("sil_board/run", 
+    std::bind(&SILBoardROS::run_firmware, this, std::placeholders::_1, std::placeholders::_2));
+}
 
 void SILBoardROS::initialize_members()
 {
   auto node_ptr = shared_from_this();
   board_ = std::make_shared<SILBoard>(node_ptr);
+  board_->init_board();
 
   comm_ = std::make_shared<rosflight_firmware::Mavlink>(*board_);
   firmware_ = std::make_shared<rosflight_firmware::ROSflight>(*board_, *comm_);
@@ -69,7 +73,7 @@ bool SILBoardROS::run_firmware(const std_srvs::srv::Trigger::Request::SharedPtr 
   firmware_->run();
 
   // Package response and return
-  res.success = true;
+  res->success = true;
   return true;
 }
 
@@ -79,7 +83,7 @@ bool SILBoardROS::run_firmware(const std_srvs::srv::Trigger::Request::SharedPtr 
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<SILBoardROS>();
+  auto node = std::make_shared<rosflight_sim::SILBoardROS>();
 
   rclcpp::spin(node);
 

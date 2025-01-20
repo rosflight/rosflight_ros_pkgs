@@ -19,6 +19,7 @@ find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 # find_package(geometry_msgs REQUIRED)
 # find_package(nav_msgs REQUIRED)
 find_package(rosflight_msgs REQUIRED)
@@ -82,11 +83,10 @@ add_library(rosflight_firmware
   include/rosflight_sim/rosflight_firmware/src/command_manager.cpp
   include/rosflight_sim/rosflight_firmware/src/sensors.cpp
   include/rosflight_sim/rosflight_firmware/src/comm_manager.cpp
-
   include/rosflight_sim/rosflight_firmware/comms/mavlink/mavlink.cpp
-
   include/rosflight_sim/rosflight_firmware/lib/turbomath/turbomath.cpp
 )
+target_include_directories(rosflight_firmware PRIVATE ${FIRMWARE_INCLUDE_DIRS})
 target_link_libraries(rosflight_firmware Eigen3::Eigen)
 target_compile_definitions(rosflight_firmware PUBLIC
   GIT_VERSION_HASH=0x${GIT_VERSION_HASH}
@@ -114,9 +114,12 @@ include_directories(include
   #${GAZEBO_INCLUDE_DIRS}
   ${SDFormat_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
-  simulators
 )
 #link_directories(${GAZEBO_LIBRARY_DIRS})
+
+##################
+##  Executables ##
+##################
 
 # Time Manager
 add_executable(time_manager_standalone
@@ -125,22 +128,37 @@ add_executable(time_manager_standalone
 target_include_directories(time_manager_standalone
   PRIVATE 
     include
-    simulators/standalone_sim/include
-    ${ament_INCLUDE_DIRS})
+    simulators/standalone_sim/include)
+ament_target_dependencies(time_manager_standalone rclcpp)
 install(
   TARGETS time_manager_standalone
   DESTINATION lib/${PROJECT_NAME})
-ament_target_dependencies(time_manager_standalone rclcpp)
 
 # ROSflightSIL
 add_executable(rosflight_sil
   src/rosflight_sil.cpp)
 target_include_directories(rosflight_sil
   PRIVATE include)
+ament_target_dependencies(rosflight_sil rclcpp std_srvs)
 install(
   TARGETS rosflight_sil
   DESTINATION lib/${PROJECT_NAME})
-ament_target_dependencies(rosflight_sil rclcpp std_srvs)
+
+# SILBoard
+add_executable(sil_board
+  src/sil_board_ros.cpp
+  src/sil_board.cpp
+  src/udp_board.cpp)
+target_link_libraries(sil_board
+  rosflight_firmware
+  ${Boost_LIBRARIES})
+target_include_directories(sil_board
+  PRIVATE
+    include)
+ament_target_dependencies(sil_board rclcpp sensor_msgs std_srvs rosflight_msgs)
+install(
+  TARGETS sil_board
+  DESTINATION lib/${PROJECT_NAME})
 
 
 # add_library(rosflight_sil_plugin SHARED

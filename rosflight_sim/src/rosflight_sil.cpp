@@ -113,12 +113,11 @@ bool ROSflightSIL::iterate_simulation(const std_srvs::srv::Trigger::Request::Sha
 bool ROSflightSIL::take_simulation_step()
 {
   // Run the simulation loop
-  bool ret = false;
-  ret |= call_firmware();
-  ret |= call_forces_and_moments();
-  ret |= call_propagate_dynamics();
+  if (!call_firmware()) { return false; }
+  if (!call_forces_and_moments()) { return false; }
+  if (!call_propagate_dynamics()) { return false; }
 
-  return ret;
+  return true;
 }
 
 bool ROSflightSIL::call_firmware()
