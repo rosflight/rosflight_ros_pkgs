@@ -636,10 +636,12 @@ void ROSflightIO::handle_named_command_struct_msg(const mavlink_message_t & msg)
   }
 
   command_msg.ignore = command.ignore;
-  command_msg.x = command.x;
-  command_msg.y = command.y;
-  command_msg.z = command.z;
-  command_msg.f = command.F;
+  command_msg.qx = command.qx;
+  command_msg.qy = command.qy;
+  command_msg.qz = command.qz;
+  command_msg.fx = command.Fx;
+  command_msg.fy = command.Fy;
+  command_msg.fz = command.Fz;
   named_command_struct_pubs_[name]->publish(command_msg);
 }
 
@@ -952,13 +954,15 @@ void ROSflightIO::commandCallback(const rosflight_msgs::msg::Command::ConstShare
   auto mode = (OFFBOARD_CONTROL_MODE) msg->mode;
   auto ignore = (OFFBOARD_CONTROL_IGNORE) msg->ignore;
 
-  float x = msg->x;
-  float y = msg->y;
-  float z = msg->z;
-  float F = msg->f;
+  float Qx = msg->qx;
+  float Qy = msg->qy;
+  float Qz = msg->qz;
+  float Fx = msg->fx;
+  float Fy = msg->fy;
+  float Fz = msg->fz;
 
   mavlink_message_t mavlink_msg;
-  mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg, mode, ignore, x, y, z, F);
+  mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg, mode, ignore, Qx, Qy, Qz, Fx, Fy, Fz);
   mavrosflight_->comm.send_message(mavlink_msg);
 }
 

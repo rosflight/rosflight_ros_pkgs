@@ -204,12 +204,6 @@ public:
    */
   void sensors_init() override;
   /**
-   * @brief Function used to check if a imu is present. Currently always returns true.
-   *
-   * @return true
-   */
-  bool imu_present() override;
-  /**
    * @brief Checks if there is new IMU data ready to be processed.
    *
    * @return true if unprocessed IMU data exists.
@@ -519,6 +513,7 @@ public:
   void battery_current_set_multiplier(double multiplier) override;
 
   // TODO: implement these if necessary
+  bool imu_present() override;
   uint16_t sensors_errors_count() override { return 0; }
   uint16_t sensors_init_message_count() override { return 0; }
   bool sensors_init_message_good(uint16_t i) override { return true; }
