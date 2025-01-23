@@ -243,12 +243,6 @@ public:
    * @brief Initializes all the sensors within Gazebo, using provided sensor parameters.
    */
   void sensors_init() override;
-  /**
-   * @brief Function used to return number of unhealthy sensors. Currently returns 0.
-   *
-   * @return 0
-   */
-  uint16_t num_sensor_errors() override;
 
   /**
    * @brief Checks if there is new IMU data ready to be processed.
@@ -574,6 +568,13 @@ public:
                     std::string mav_type);
   inline const int * get_outputs() const { return pwm_outputs_; }
   gazebo::common::SphericalCoordinates sph_coord_;
+
+  // TODO: implement these if necessary
+  bool imu_present() override { return true; }
+  uint16_t sensors_errors_count() override { return 0; }
+  uint16_t sensors_init_message_count() override { return 0; }
+  bool sensors_init_message_good(uint16_t i) override { return true; }
+  uint16_t sensors_init_message(char *message, uint16_t size, uint16_t i) { return 0; }
 };
 
 } // namespace rosflight_sim

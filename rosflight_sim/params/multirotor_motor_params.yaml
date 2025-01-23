@@ -1,0 +1,10 @@
+- {name: NUM_MOTORS, type: 6, value: 4}
+- {name: VEHICLE_MASS, type: 9, value: 3.50}
+- {name: MOTOR_RESISTANCE, type: 9, value: 0.085}
+- {name: AIR_DENSITY, type: 9, value: 1.225}
+- {name: MOTOR_KV, type: 9, value: 0.02894}
+- {name: NO_LOAD_CURRENT, type: 9, value: 1.01}
+- {name: PROP_DIAMETER, type: 9, value: 0.381}
+- {name: PROP_CT, type: 9, value: 0.075}
+- {name: PROP_CQ, type: 9, value: 0.0045}
+- {name: VOLT_MAX, type: 9, value: 25.0}

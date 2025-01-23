@@ -248,8 +248,6 @@ void SILBoard::sensors_init()
   sph_coord_.SetHeadingOffset(Ang(M_PI / 2.0));
 }
 
-uint16_t SILBoard::num_sensor_errors() { return 0; }
-
 bool SILBoard::imu_has_new_data()
 {
   uint64_t now_us = clock_micros();
