@@ -31,13 +31,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "standalone_sim/include/standalone_sensors.hpp"
+#include "standalone_sensors.hpp"
 
 namespace rosflight_sim
 {
 
 StandaloneSensors::StandaloneSensors()
   : SensorInterface()
+  // , bias_generator_(std::chrono::system_clock::now().time_since_epoch().count()) // Uncomment if you would like to
+                                                                                    // have bias biases for the sensors
+                                                                                    // on each flight. Delete next line.
+  , bias_generator_(0)
+  , noise_generator_(std::chrono::system_clock::now().time_since_epoch().count())
 {
   declare_parameters();
 
@@ -49,7 +54,7 @@ void StandaloneSensors::declare_parameters()
   // TODO: These params need to be updated with empirically derived values, using the latest
   //   hardware (i.e. not the cheap boards with the cheap sensors)
 
-  // Get Sensor Parameters
+  // declare sensor parameters
   this->declare_parameter("gyro_stdev", 0.0226);
   this->declare_parameter("gyro_bias_range", 0.25);
   this->declare_parameter("gyro_bias_walk_stdev", 0.00001);
@@ -58,14 +63,14 @@ void StandaloneSensors::declare_parameters()
   this->declare_parameter("acc_bias_range", 0.6);
   this->declare_parameter("acc_bias_walk_stdev", 0.00001);
 
-  this->declare_parameter("mag_stdev", 3000/1e9); // from nano tesla to tesla
+  this->declare_parameter("mag_stdev", 3000.0/1e9); // from nano tesla to tesla
   this->declare_parameter("k_mag", 7.0);
   this->declare_parameter("inclination", 1.139436457);
   this->declare_parameter("declination", 0.1857972802);
   this->declare_parameter("total_intensity", 50716.3 / 1e9);  // nanoTesla converted to tesla.
 
   this->declare_parameter("baro_stdev", 4.0);
-  this->declare_parameter("baro_bias_range", 500);
+  this->declare_parameter("baro_bias_range", 500.0);
   this->declare_parameter("baro_bias_walk_stdev", 0.1);
 
   this->declare_parameter("airspeed_stdev", 1.15);
@@ -90,27 +95,27 @@ void StandaloneSensors::declare_parameters()
   this->declare_parameter("mass", 2.25);
 }
 
-void initialize_sensors()
+void StandaloneSensors::initialize_sensors()
 {
   // Configure noise
   normal_distribution_ = std::normal_distribution<double>(0.0, 1.0);
   uniform_distribution_ = std::uniform_real_distribution<double>(-1.0, 1.0);
 
   // Initialize biases
-  double gyro_bias_range = this->get_parameter("gyro_bias_range");
-  double acc_bias_range = this->get_parameter("acc_bias_range");
+  double gyro_bias_range = this->get_parameter("gyro_bias_range").as_double();
+  double acc_bias_range = this->get_parameter("acc_bias_range").as_double();
   for (int i=0; i<3; ++i) {
     gyro_bias_[i] = gyro_bias_range * uniform_distribution_(bias_generator_);
     acc_bias_[i] = acc_bias_range * uniform_distribution_(bias_generator_);
   }
 
-  baro_bias_ = this->get_parameter("baro_bias_range") * uniform_distribution_(bias_generator_);
-  airspeed_bias_ = this->get_parameter("airspeed_bias_range") * uniform_distribution_(bias_generator_);
+  baro_bias_ = this->get_parameter("baro_bias_range").as_double() * uniform_distribution_(bias_generator_);
+  airspeed_bias_ = this->get_parameter("airspeed_bias_range").as_double() * uniform_distribution_(bias_generator_);
 
   // Initialize magnetometer
-  double inclination = this->get_parameter("inclination");
-  double declination = this->get_parameter("declination");
-  double total_intensity = this->get_parameter("total_intensity");
+  double inclination = this->get_parameter("inclination").as_double();
+  double declination = this->get_parameter("declination").as_double();
+  double total_intensity = this->get_parameter("total_intensity").as_double();
   inertial_magnetic_field_ << cos(inclination) * cos(declination)
                            , cos(inclination) * sin(declination)
                            , sin(inclination);                     // In NED coordinates
@@ -139,24 +144,33 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
   geometry_msgs::msg::TransformStamped q_inertial_to_body;
   q_inertial_to_body.transform.rotation = state.pose.rotation;
 
-  Eigen::Vector3d velocity(state.velocity);
-  Eigen::Vector3d acceleration(state.acceleration);
+  Eigen::Vector3d gravity = Eigen::Vector3d::Zero();
+  gravity[2] = this->get_parameter("gravity").as_double();
+
+  Eigen::Vector3d velocity, acceleration;
+  velocity << state.velocity[0], state.velocity[1], state.velocity[2];
+  acceleration << state.acceleration[0], state.acceleration[1], state.acceleration[2];
+  acceleration = acceleration - gravity;
 
   Eigen::Vector3d y_acc;
+
   // this is James's egregious hack to overcome wild imu while sitting on the ground
   // TODO: Check the directions of these rotations. It seemed like the previous implementation did the reverse of this.
   if (velocity.norm() < 0.05) {
-    tf2::doTransform(gravity_, y_acc, q_inertial_to_body);
+    tf2::doTransform(gravity, y_acc, q_inertial_to_body);
   } else if (abs(state.pose.translation.z) < 0.3) {
-    tf2::doTransform(state.acceleration - gravity_, y_acc, q_inertial_to_body);
+    tf2::doTransform(acceleration, y_acc, q_inertial_to_body);
   } else {
     double mass = this->get_parameter("mass").as_double();
     y_acc << forces.twist.linear.x / mass,
-           , forces.twist.linear.y / mass,
-           , forces.twist.linear.z / mass;
+             forces.twist.linear.y / mass,
+             forces.twist.linear.z / mass;
   }
 
-  // TODO: figure out how to determine if the aircraft's motors are spinning
+  // Determine if the aircraft is armed
+  rosflight_msgs::msg::Status current_status = get_current_status();
+  bool motors_spinning = current_status.armed;
+
   double acc_stdev = this->get_parameter("acc_stdev").as_double(); 
   double acc_bias_walk_stdev = this->get_parameter("acc_bias_walk_stdev").as_double(); 
   for (int i=0; i<3; ++i) {
@@ -169,13 +183,14 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
     acc_bias_[i] += acc_bias_walk_stdev * normal_distribution_(noise_generator_);
     y_acc[i] += acc_bias_[i];
   }
-
   // Package acceleration into the output message
+
   out_msg.linear_acceleration.x = y_acc[0];
   out_msg.linear_acceleration.y = y_acc[1];
   out_msg.linear_acceleration.z = y_acc[2];
 
-  Eigen::Vector3d y_gyro(state.angular_velocity);
+  Eigen::Vector3d y_gyro;
+  y_gyro << state.angular_velocity[0], state.angular_velocity[1], state.angular_velocity[2];
 
   double gyro_stdev = this->get_parameter("gyro_stdev").as_double(); 
   double gyro_bias_walk_stdev = this->get_parameter("gyro_bias_walk_stdev").as_double(); 
@@ -195,13 +210,11 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
   out_msg.angular_velocity.y = y_gyro[1];
   out_msg.angular_velocity.z = y_gyro[2];
 
-  // TODO: time manager
-  out_msg.header.stamp = clock_micros();
-
+  out_msg.header.stamp = this->now();
   return out_msg;
 }
 
-sensor_msgs::msg::Temperature StandaloneSensors::imu_temperature_update(const rosflight_msgs::msg::State & state)
+sensor_msgs::msg::Temperature StandaloneSensors::imu_temperature_update(const rosflight_msgs::msg::SimState & state)
 {
   sensor_msgs::msg::Temperature temp;
   temp.temperature = 27.0;   // In deg C (as in message spec)
@@ -219,12 +232,13 @@ sensor_msgs::msg::MagneticField StandaloneSensors::mag_update(const rosflight_ms
   y_mag += mag_gauss_markov_eta_;
   
   // Increment the Gauss-Markov noise
+  double mag_stdev = this->get_parameter("mag_stdev").as_double();
   Eigen::Vector3d noise;
-  noise << mag_stdev_ * normal_distribution_(noise_generator_)
-         , mag_stdev_ * normal_distribution_(noise_generator_)
-         , mag_stdev_ * normal_distribution_(noise_generator_);
+  noise << mag_stdev * normal_distribution_(noise_generator_)
+         , mag_stdev * normal_distribution_(noise_generator_)
+         , mag_stdev * normal_distribution_(noise_generator_);
 
-  float T_s = 1.0/mag_update_frequency_;
+  float T_s = 1.0/get_mag_update_frequency();
   
   double k_mag = this->get_parameter("k_mag").as_double(); 
   mag_gauss_markov_eta_ = std::exp(-k_mag*T_s) * mag_gauss_markov_eta_ + T_s*noise;
@@ -235,13 +249,14 @@ sensor_msgs::msg::MagneticField StandaloneSensors::mag_update(const rosflight_ms
   out_msg.magnetic_field.y = y_mag[1];
   out_msg.magnetic_field.z = y_mag[2];
 
+  out_msg.header.stamp = this->now();
   return out_msg;
 }
 
 rosflight_msgs::msg::Barometer StandaloneSensors::baro_update(const rosflight_msgs::msg::SimState & state)
 {
   // Invert measurement model for pressure and temperature
-  double alt = -state.pose.translation.z + origin_altitude_;
+  double alt = -state.pose.translation.z + this->get_parameter("origin_altitude").as_double();
 
   // Convert to the true pressure reading
   double y_baro = 101325.0f
@@ -261,10 +276,11 @@ rosflight_msgs::msg::Barometer StandaloneSensors::baro_update(const rosflight_ms
   y_baro += baro_bias_;
 
   // Package the return message
-  rosflight_msg::msg::Barometer out_msg;
+  rosflight_msgs::msg::Barometer out_msg;
   out_msg.pressure = (float) y_baro;
   out_msg.temperature = 27.0f + 273.15f;
 
+  out_msg.header.stamp = this->now();
   return out_msg;
 }
 
@@ -381,12 +397,19 @@ rosflight_msgs::msg::GNSS StandaloneSensors::gnss_update(const rosflight_msgs::m
   return out_msg;
 }
 
+// TODO: Placeholder code until we can redefine the gnss messages
+rosflight_msgs::msg::GNSSFull StandaloneSensors::gnss_full_update(const rosflight_msgs::msg::SimState & state)
+{
+  rosflight_msgs::msg::GNSSFull out_msg;
+  return out_msg;
+}
+
 sensor_msgs::msg::Range StandaloneSensors::sonar_update(const rosflight_msgs::msg::SimState & state)
 {
   double alt = -state.pose.translation.z;
   double sonar_min_range = this->get_parameter("sonar_min_range").as_double();
   double sonar_max_range = this->get_parameter("sonar_max_range").as_double();
-  double sonar_stdev = this->get_parameter("sonar_stdev_").as_double();
+  double sonar_stdev = this->get_parameter("sonar_stdev").as_double();
 
   sensor_msgs::msg::Range out_msg; 
   if (alt < sonar_min_range) {
@@ -397,13 +420,15 @@ sensor_msgs::msg::Range StandaloneSensors::sonar_update(const rosflight_msgs::ms
     out_msg.range = (float) (alt + sonar_stdev * normal_distribution_(noise_generator_));
   }
 
+  out_msg.header.stamp = this->now();
   return out_msg;
 }
 
 rosflight_msgs::msg::Airspeed StandaloneSensors::diff_pressure_update(const rosflight_msgs::msg::SimState & state)
 {
   // Calculate Airspeed
-  Eigen::Vector3d velocity(state.air_velocity);
+  Eigen::Vector3d velocity;
+  velocity << state.air_velocity[0], state.air_velocity[1], state.air_velocity[2];
   double Va = velocity.norm();
 
   // Invert Airpseed to get sensor measurement
@@ -423,13 +448,32 @@ rosflight_msgs::msg::Airspeed StandaloneSensors::diff_pressure_update(const rosf
   rosflight_msgs::msg::Airspeed out_msg;
   out_msg.differential_pressure = (float) y_as;
   out_msg.temperature = 27.0 + 273.15;
+
+  out_msg.header.stamp = this->now();
+  return out_msg;
 }
 
-void StandaloneSensors::battery_update(const rosflight_msgs::msg::SimState & state)
+rosflight_msgs::msg::BatteryStatus StandaloneSensors::battery_update(const rosflight_msgs::msg::SimState & state)
 {
-  battery_voltage_ = 15 * battery_voltage_multiplier_;
-  battery_current_ = 1 * battery_current_multiplier_;
-}
+  rosflight_msgs::msg::BatteryStatus out_msg;
 
+  // Send without battery and current multipliers. These will get added in the sil board
+  out_msg.voltage = 15;
+  out_msg.current = 1;
+
+  out_msg.header.stamp = this->now();
+  return out_msg;
+}
 
 } // rosflight_sim
+
+int main(int argc, char** argv)
+{
+  rclcpp::init(argc, argv);
+
+  auto node = std::make_shared<rosflight_sim::StandaloneSensors>();
+  rclcpp::spin(node);
+  rclcpp::shutdown();
+
+  return 0;
+}

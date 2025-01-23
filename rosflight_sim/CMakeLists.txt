@@ -18,9 +18,11 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
-# find_package(geometry_msgs REQUIRED)
+#find_package(tf2 REQUIRED)
+find_package(tf2_eigen REQUIRED)
 # find_package(nav_msgs REQUIRED)
 find_package(rosflight_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -158,6 +160,20 @@ target_include_directories(sil_board
 ament_target_dependencies(sil_board rclcpp sensor_msgs std_srvs rosflight_msgs)
 install(
   TARGETS sil_board
+  DESTINATION lib/${PROJECT_NAME})
+
+# Standalone Sensors
+add_executable(standalone_sensors
+  src/sensor_interface.cpp
+  simulators/standalone_sim/src/standalone_sensors.cpp)
+target_include_directories(standalone_sensors
+  PRIVATE
+    include
+    simulators/standalone_sim/include)
+target_link_libraries(standalone_sensors Eigen3::Eigen)
+ament_target_dependencies(standalone_sensors rclcpp sensor_msgs rosflight_msgs geometry_msgs tf2_eigen) 
+install(
+  TARGETS standalone_sensors
   DESTINATION lib/${PROJECT_NAME})
 
 

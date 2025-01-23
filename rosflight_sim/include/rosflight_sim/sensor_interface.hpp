@@ -35,12 +35,20 @@
 #ifndef ROSFLIGHT_SIM_SENSOR_INTERFACE_H
 #define ROSFLIGHT_SIM_SENSOR_INTERFACE_H
 
-#include <eigen3/Eigen/Core>
-#include <geometry_msgs/msg/twist_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
+#include <sensor_msgs/msg/imu.hpp>
+#include <sensor_msgs/msg/temperature.hpp>
+#include <sensor_msgs/msg/magnetic_field.hpp>
+#include <sensor_msgs/msg/range.hpp>
 
-#include "rosflight_msgs/msg/state.hpp"
-#include "sensors.h"
+#include "rosflight_msgs/msg/airspeed.hpp"
+#include "rosflight_msgs/msg/barometer.hpp"
+#include "rosflight_msgs/msg/battery_status.hpp"
+#include "rosflight_msgs/msg/gnss.hpp"
+#include "rosflight_msgs/msg/gnss_full.hpp"
+#include "rosflight_msgs/msg/sim_state.hpp"
+#include "rosflight_msgs/msg/status.hpp"
 
 namespace rosflight_sim
 {
@@ -51,31 +59,32 @@ public:
   SensorInterface();
 
 protected:
-  // Sensor characteristics
-  float imu_update_frequency_;
-  float mag_update_frequency_;
-  float baro_update_frequency_;
-  float gnss_update_frequency_;
-  float sonar_update_frequency_;
-  float diff_pressure_update_frequency_;
-  float battery_update_frequency_;
+  float get_imu_update_frequency() { return imu_update_frequency_; }
+  float get_mag_update_frequency() { return mag_update_frequency_; }
+  float get_baro_update_frequency() { return baro_update_frequency_; }
+  float get_gnss_update_frequency() { return gnss_update_frequency_; }
+  float get_sonar_update_frequency() { return sonar_update_frequency_; }
+  float get_diff_pressure_update_frequency() { return diff_pressure_update_frequency_; }
+  float get_battery_update_frequency() { return battery_update_frequency_; }
+
+  rosflight_msgs::msg::Status get_current_status() { return current_status_; }
 
 private:
   /*
    * @brief Computes a new sensor measurement from the current state
   */
-  virtual sensor_msgs::msg::Imu imu_update(const rosflight_msgs::msg::State & state, const geometry_msgs::msg::TwistStamped & forces);
-  virtual sensor_msgs::msg::Temperature imu_temperature_update(const rosflight_msgs::msg::State & state);
-  virtual sensor_msgs::msg::MagneticField mag_update(const rosflight_msgs::msg::State & state);
-  virtual rosflight_msgs::msg::Barometer baro_update(const rosflight_msgs::msg::State & state);
-  virtual rosflight_msgs::msg::GNSS gnss_update(const rosflight_msgs::msg::State & state);
-  virtual rosflight_msgs::msg::GNSSFull gnss_full_update(const rosflight_msgs::msg::State & state);
-  virtual sensor_msgs::msg::Range sonar_update(const rosflight_msgs::msg::State & state);
-  virtual rosflight_msgs::msg::Airspeed diff_pressure_update(const rosflight_msgs::msg::State & state);
-  virtual rosflight_msgs::msg::BatteryStatus battery_update(const rosflight_msgs::msg::State & state);
+  virtual sensor_msgs::msg::Imu imu_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::TwistStamped & forces) = 0;
+  virtual sensor_msgs::msg::Temperature imu_temperature_update(const rosflight_msgs::msg::SimState & state) = 0;
+  virtual sensor_msgs::msg::MagneticField mag_update(const rosflight_msgs::msg::SimState & state) = 0;
+  virtual rosflight_msgs::msg::Barometer baro_update(const rosflight_msgs::msg::SimState & state) = 0;
+  virtual rosflight_msgs::msg::GNSS gnss_update(const rosflight_msgs::msg::SimState & state) = 0;
+  virtual rosflight_msgs::msg::GNSSFull gnss_full_update(const rosflight_msgs::msg::SimState & state) = 0;
+  virtual sensor_msgs::msg::Range sonar_update(const rosflight_msgs::msg::SimState & state) = 0;
+  virtual rosflight_msgs::msg::Airspeed diff_pressure_update(const rosflight_msgs::msg::SimState & state) = 0;
+  virtual rosflight_msgs::msg::BatteryStatus battery_update(const rosflight_msgs::msg::SimState & state) = 0;
 
   // ROS2 interfaces
-  rclcpp::Publisher<sensor_msgs:msg::Imu>::SharedPtr imu_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_data_pub_;
   rclcpp::Publisher<sensor_msgs::msg::Temperature>::SharedPtr imu_temperature_pub_;
   rclcpp::Publisher<sensor_msgs::msg::MagneticField>::SharedPtr mag_pub_;
   rclcpp::Publisher<rosflight_msgs::msg::Barometer>::SharedPtr baro_pub_;
@@ -93,8 +102,19 @@ private:
   rclcpp::TimerBase::SharedPtr sonar_timer_;
   rclcpp::TimerBase::SharedPtr battery_timer_;
 
+  // Sensor characteristics
+  float imu_update_frequency_;
+  float mag_update_frequency_;
+  float baro_update_frequency_;
+  float gnss_update_frequency_;
+  float sonar_update_frequency_;
+  float diff_pressure_update_frequency_;
+  float battery_update_frequency_;
+
+  rclcpp::Subscription<rosflight_msgs::msg::Status>::SharedPtr status_sub_;
   rclcpp::Subscription<rosflight_msgs::msg::SimState>::SharedPtr state_sub_;
   rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr forces_sub_;
+  rosflight_msgs::msg::Status current_status_;
   rosflight_msgs::msg::SimState current_state_;
   geometry_msgs::msg::TwistStamped current_forces_;
 
@@ -116,12 +136,18 @@ private:
    * @return Service result object that tells the requester the result of the param update.
    */
   rcl_interfaces::msg::SetParametersResult
-  parametersCallback(const std::vector<rclcpp::Parameter> & parameters);
+  parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
 
   /**
    * @brief Resets the timers if the timer frequency parameter has changed
    */
-  void reset_timers();
+  void reset_imu_timer(double frequency);
+  void reset_mag_timer(double frequency);
+  void reset_baro_timer(double frequency);
+  void reset_gnss_timer(double frequency);
+  void reset_diff_pressure_timer(double frequency);
+  void reset_sonar_timer(double frequency);
+  void reset_battery_timer(double frequency);
 
   /**
    * @brief Timer callback to publish imu data
@@ -132,7 +158,7 @@ private:
   void gnss_publish();
   void diff_pressure_publish();
   void sonar_publish();
-  void battery_sim();
+  void battery_publish();
 
   /**
    * @brief Subscription to the truth state. Used to create sensor information.
@@ -143,6 +169,10 @@ private:
    * @brief Subscription to the forces and moments. Used to create sensor information.
    */
   void forces_moments_callback(const geometry_msgs::msg::TwistStamped & msg);
+  /**
+   * @brief Subscription to the rosflight board status. Used to create sensor information.
+   */
+  void status_callback(const rosflight_msgs::msg::Status & msg);
 };
 
 } // rosflight_sim

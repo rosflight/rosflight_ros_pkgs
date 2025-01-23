@@ -33,4 +33,4 @@ set(INCLUDE_DIRS
 )
 link_directories(${GAZEBO_LIBRARY_DIRS})
 
-# TODO: keep going here... Maybe it makes the most sense to have different rosflight_sil (i.e. main) files each with their own cmake?
+

@@ -35,7 +35,14 @@
 #ifndef ROSFLIGHT_SIM_STANDALONE_SENSORS_H
 #define ROSFLIGHT_SIM_STANDALONE_SENSORS_H
 
+#include <random>
+
+#include <Eigen/Core>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <tf2_eigen/tf2_eigen.hpp>
+
 #include "rosflight_sim/sensor_interface.hpp"
+#include "rosflight_msgs/msg/sim_state.hpp"
 
 namespace rosflight_sim
 {
@@ -48,14 +55,15 @@ public:
   /*
    * @brief Computes a new sensor measurement from the current state
   */
-  void imu_update(rosflight_msgs::msg::State state, geometry_msgs::msg::TwistStamped forces) override;
-  void imu_temperature_update(rosflight_msgs::msg::State state) override;
-  void mag_update(rosflight_msgs::msg::State state) override;
-  void baro_update(rosflight_msgs::msg::State state) override;
-  void gnss_update(rosflight_msgs::msg::State state) override;
-  void sonar_update(rosflight_msgs::msg::State state) override;
-  void diff_pressure_update(rosflight_msgs::msg::State state) override;
-  void battery_update(rosflight_msgs::msg::State state) override;
+  sensor_msgs::msg::Imu imu_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::TwistStamped & forces) override;
+  sensor_msgs::msg::Temperature imu_temperature_update(const rosflight_msgs::msg::SimState & state) override;
+  sensor_msgs::msg::MagneticField mag_update(const rosflight_msgs::msg::SimState & state) override;
+  rosflight_msgs::msg::Barometer baro_update(const rosflight_msgs::msg::SimState & state) override;
+  rosflight_msgs::msg::GNSS gnss_update(const rosflight_msgs::msg::SimState & state) override;
+  rosflight_msgs::msg::GNSSFull gnss_full_update(const rosflight_msgs::msg::SimState & state) override;
+  sensor_msgs::msg::Range sonar_update(const rosflight_msgs::msg::SimState & state) override;
+  rosflight_msgs::msg::Airspeed diff_pressure_update(const rosflight_msgs::msg::SimState & state) override;
+  rosflight_msgs::msg::BatteryStatus battery_update(const rosflight_msgs::msg::SimState & state) override;
 
 private:
   // Sensor noise
@@ -64,7 +72,7 @@ private:
   std::normal_distribution<double> normal_distribution_;
   std::uniform_real_distribution<double> uniform_distribution_;
 
-  Eigen::Vector3d mag_gauss_markov_eta_[3] = Eigen::Vector3d::Zeros();
+  Eigen::Vector3d mag_gauss_markov_eta_ = Eigen::Vector3d::Zero();
   Eigen::Vector3d inertial_magnetic_field_;
 
   double rho_ = 1.225;

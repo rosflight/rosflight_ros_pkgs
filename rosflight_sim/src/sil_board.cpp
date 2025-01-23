@@ -347,8 +347,8 @@ bool SILBoard::sonar_read(float * range)
 
 bool SILBoard::battery_read(float * voltage, float * current)
 {
-  (*voltage) = battery_data_.voltage;
-  (*current) = battery_data_.current;
+  (*voltage) = battery_data_.voltage * battery_voltage_multiplier_;
+  (*current) = battery_data_.current * battery_current_multiplier_;
   return true;
 }
 
