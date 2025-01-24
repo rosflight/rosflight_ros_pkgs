@@ -40,6 +40,8 @@ set(srv_files
   "srv/ParamFile.srv"
   "srv/ParamGet.srv"
   "srv/ParamSet.srv"
+  "srv/RunFirmware.srv"
+  "srv/RunForcesMoments.srv"
   )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
