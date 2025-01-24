@@ -41,6 +41,9 @@
 #include <rclcpp/executors.hpp>
 #include <std_srvs/srv/trigger.hpp>
 
+#include <rosflight_msgs/srv/run_firmware.hpp>
+#include <rosflight_msgs/srv/run_forces_moments.hpp>
+
 namespace rosflight_sim
 {
 /**
@@ -61,8 +64,8 @@ private:
 
   // Service clients
   rclcpp::CallbackGroup::SharedPtr client_cb_group_;
-  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr firmware_run_client_;
-  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr forces_and_moments_client_;
+  rclcpp::Client<rosflight_msgs::srv::RunFirmware>::SharedPtr firmware_run_client_;
+  rclcpp::Client<rosflight_msgs::srv::RunForcesMoments>::SharedPtr forces_and_moments_client_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr dynamics_client_;
 
   /**
@@ -98,6 +101,8 @@ private:
   bool call_propagate_dynamics();
   bool take_simulation_step();
 
+  std::array<int, 14> pwm_outputs_ = {0};
+  bool pwm_outputs_valid_ = false;
 };
 
 } // namespace rosflight_sim

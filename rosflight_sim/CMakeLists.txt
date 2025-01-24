@@ -141,7 +141,7 @@ add_executable(rosflight_sil
   src/rosflight_sil.cpp)
 target_include_directories(rosflight_sil
   PRIVATE include)
-ament_target_dependencies(rosflight_sil rclcpp std_srvs)
+ament_target_dependencies(rosflight_sil rclcpp std_srvs rosflight_msgs)
 install(
   TARGETS rosflight_sil
   DESTINATION lib/${PROJECT_NAME})
@@ -157,7 +157,7 @@ target_link_libraries(sil_board
 target_include_directories(sil_board
   PRIVATE
     include)
-ament_target_dependencies(sil_board rclcpp sensor_msgs std_srvs rosflight_msgs)
+ament_target_dependencies(sil_board rclcpp sensor_msgs rosflight_msgs)
 install(
   TARGETS sil_board
   DESTINATION lib/${PROJECT_NAME})

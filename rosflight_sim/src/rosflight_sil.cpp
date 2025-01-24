@@ -61,8 +61,8 @@ ROSflightSIL::ROSflightSIL()
 
   // Initialize the service clients that will be used
   client_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  firmware_run_client_ = this->create_client<std_srvs::srv::Trigger>("sil_board/run", rmw_qos_profile_services_default, client_cb_group_);
-  forces_and_moments_client_ = this->create_client<std_srvs::srv::Trigger>("forces_and_moments/run", rmw_qos_profile_services_default, client_cb_group_);
+  firmware_run_client_ = this->create_client<rosflight_msgs::srv::RunFirmware>("sil_board/run", rmw_qos_profile_services_default, client_cb_group_);
+  forces_and_moments_client_ = this->create_client<rosflight_msgs::srv::RunForcesMoments>("forces_and_moments/run", rmw_qos_profile_services_default, client_cb_group_);
   dynamics_client_ = this->create_client<std_srvs::srv::Trigger>("dynamics/apply_forces_and_moments", rmw_qos_profile_services_default, client_cb_group_);
 }
 
@@ -126,7 +126,7 @@ bool ROSflightSIL::call_firmware()
   auto service_wait_for_result = std::chrono::milliseconds(this->get_parameter("service_result_timeout_ms").as_int());
 
   // Check to see if service exists
-  auto req = std::make_shared<std_srvs::srv::Trigger::Request>();
+  auto req = std::make_shared<rosflight_msgs::srv::RunFirmware::Request>();
   if (!firmware_run_client_->wait_for_service(service_wait_for_exist)) {
     RCLCPP_WARN_STREAM(this->get_logger(), "sil_board/run service not available! Aborting simulation iteration");
     return false;
@@ -135,13 +135,21 @@ bool ROSflightSIL::call_firmware()
   // Send service request and wait for response
   auto result_future = firmware_run_client_->async_send_request(req);
   std::future_status status = result_future.wait_for(service_wait_for_result);   // Guarantees graceful finish
+  
+  // Set pwm outputs valid flag to false
+  pwm_outputs_valid_ = false;
 
   // Check if everything finished properly
   if (status == std::future_status::ready) {
-    if (!result_future.get()->success) {
+    rosflight_msgs::srv::RunFirmware::Response::SharedPtr response = result_future.get();
+
+    if (!response->success) {
       RCLCPP_WARN_STREAM(this->get_logger(), "Failed to run sil_board/run service! Aborting simulation iteration");
       return false;
     }
+
+    pwm_outputs_ = response->pwm_outputs;
+    pwm_outputs_valid_ = true;
   } else {
     RCLCPP_WARN_STREAM(this->get_logger(), "sil_board/run service client timed out! Aborting simulation iteration");
     return false;
@@ -156,7 +164,10 @@ bool ROSflightSIL::call_forces_and_moments()
   auto service_wait_for_result = std::chrono::milliseconds(this->get_parameter("service_result_timeout_ms").as_int());
 
   // Check to see if service exists
-  auto req = std::make_shared<std_srvs::srv::Trigger::Request>();
+  auto req = std::make_shared<rosflight_msgs::srv::RunForcesMoments::Request>();
+  req->pwm_outputs = pwm_outputs_;
+  req->valid = pwm_outputs_valid_;
+
   if (!forces_and_moments_client_->wait_for_service(service_wait_for_exist)) {
     RCLCPP_WARN_STREAM(this->get_logger(), "forces_and_moments/run service not available! Aborting simulation iteration");
     return false;

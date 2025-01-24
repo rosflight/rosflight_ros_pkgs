@@ -460,15 +460,6 @@ bool SILBoard::memory_write(const void * src, size_t len)
   return true;
 }
 
-bool SILBoard::motors_spinning()
-{
-  if (pwm_outputs_[2] > 1100) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
 bool SILBoard::backup_memory_read(void * dest, size_t len)
 {
   if (len <= BACKUP_SRAM_SIZE) {

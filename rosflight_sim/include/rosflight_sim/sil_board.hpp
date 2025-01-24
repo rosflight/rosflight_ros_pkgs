@@ -84,7 +84,7 @@ private:
 
   // TODO: figure out where to define the mav_type_. Previously it was defined by Gazebo I believe
   std::string mav_type_;
-  int pwm_outputs_[14] = {0}; // assumes maximum of 14 channels
+  std::array<int, 14> pwm_outputs_ = {0}; // assumes maximum of 14 channels
 
   // Time variables
   rclcpp::Time boot_time_;
@@ -133,14 +133,6 @@ private:
   void diff_pressure_data_callback(const rosflight_msgs::msg::Airspeed & msg);
   void sonar_data_callback(const sensor_msgs::msg::Range & msg);
   void battery_data_callback(const rosflight_msgs::msg::BatteryStatus & msg);
-
-  /**
-   * @brief Checks the current pwm value for throttle to see if the motor pwm is above minimum, and that
-   * the motors should be spinning.
-   *
-   * @return true if throttle pwm is greater than 1100, false if less than or equal to.
-   */
-  bool motors_spinning();
 
   // TODO: These values don't seem to be used anywhere...
   // GazeboVector prev_vel_1_;
@@ -511,6 +503,8 @@ public:
    * @param multiplier Current calibration constant
    */
   void battery_current_set_multiplier(double multiplier) override;
+
+  inline const std::array<int, 14>& get_outputs() const { return pwm_outputs_; }
 
   // TODO: implement these if necessary
   bool imu_present() override;

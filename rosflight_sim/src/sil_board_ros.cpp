@@ -42,7 +42,7 @@ namespace rosflight_sim
 SILBoardROS::SILBoardROS()
   : rclcpp::Node("sil_board")
 {
-  firmware_run_srvs_ = this->create_service<std_srvs::srv::Trigger>("sil_board/run", 
+  firmware_run_srvs_ = this->create_service<rosflight_msgs::srv::RunFirmware>("sil_board/run", 
     std::bind(&SILBoardROS::run_firmware, this, std::placeholders::_1, std::placeholders::_2));
 }
 
@@ -59,8 +59,8 @@ void SILBoardROS::initialize_members()
   firmware_->init();
 }
 
-bool SILBoardROS::run_firmware(const std_srvs::srv::Trigger::Request::SharedPtr & req,  
-                               const std_srvs::srv::Trigger::Response::SharedPtr & res)
+bool SILBoardROS::run_firmware(const rosflight_msgs::srv::RunFirmware::Request::SharedPtr & req,  
+                               const rosflight_msgs::srv::RunFirmware::Response::SharedPtr & res)
 {
   if (!is_initialized) {
     initialize_members();
@@ -73,6 +73,7 @@ bool SILBoardROS::run_firmware(const std_srvs::srv::Trigger::Request::SharedPtr 
   firmware_->run();
 
   // Package response and return
+  res->pwm_outputs = board_->get_outputs();
   res->success = true;
   return true;
 }
