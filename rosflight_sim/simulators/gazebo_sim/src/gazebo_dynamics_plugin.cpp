@@ -31,19 +31,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "gazebo_sim/include/gazebo_plugin.hpp"
+#include "gazebo_dynamics_plugin.hpp"
 
 namespace rosflight_sim
 {
 
-GazeboPlugin::GazeboPlugin(std::function<void()> on_update_callback)
+GazeboDynamicsPlugin::GazeboDynamicsPlugin()
   : gazebo::ModelPlugin()
-  , on_update_callback_ptr_(on_update_callback)
 {}
 
-GazeboPlugin::~GazeboPlugin() { GZ_COMPAT_DISCONNECT_WORLD_UPDATE_BEGIN(updateConnection_); }
+GazeboDynamicsPlugin::~GazeboDynamicsPlugin() { 
+  GZ_COMPAT_DISCONNECT_WORLD_UPDATE_BEGIN(updateConnection_);
+  rclcpp::shutdown();
+  if (spin_thread_.joinable()) {
+    spin_thread_.join();
+  }
+}
 
-void GazeboPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
+void GazeboDynamicsPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
 {
   node_ = gazebo_ros::Node::Get(_sdf);
   model_ = _model;
@@ -62,6 +67,14 @@ void GazeboPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
     gzthrow("[ROSflight_SIL] Couldn't find specified link \"" << link_name_ << "\".")
   }
 
+  // Now that we have the link, instantiate the dynamics object and spin it
+  gazebo_dynamics_ptr_ = std::make_shared<rosflight_sim::GazeboDynamics>(link_, link_name_);
+  spin_thread_ = std::thread([this]() {
+    rclcpp::executors::SingleThreadedExecutor ex;
+    ex.add_node(gazebo_dynamics_ptr_);
+    ex.spin();
+  });
+
   /* Load Params from Gazebo Server */
   if (_sdf->HasElement("mavType")) {
     mav_type_ = _sdf->GetElement("mavType")->Get<std::string>();
@@ -77,10 +90,10 @@ void GazeboPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
   // Connect the update function to the simulation
   updateConnection_ =
-    gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&GazeboPlugin::OnUpdate, this, _1));
+    gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&GazeboDynamicsPlugin::OnUpdate, this, _1));
 }
 
-void GazeboPlugin::declare_SIL_params()
+void GazeboDynamicsPlugin::declare_SIL_params()
 {
   node_->declare_parameter("gazebo_host", rclcpp::PARAMETER_STRING);
   node_->declare_parameter("gazebo_port", rclcpp::PARAMETER_INTEGER);
@@ -90,37 +103,36 @@ void GazeboPlugin::declare_SIL_params()
   node_->declare_parameter("serial_delay_ns", rclcpp::PARAMETER_INTEGER);
 }
 
-void GazeboPlugin::OnUpdate(const gazebo::common::UpdateInfo & _info)
+void GazeboDynamicsPlugin::OnUpdate(const gazebo::common::UpdateInfo & _info)
 {
-  // TODO: should we add the _info.simTime.Double() to the callback ptr? 
-  on_update_callback_ptr_();
+  // TODO: Do anything here?
 }
 
-void GazeboPlugin::Reset()
+void GazeboDynamicsPlugin::Reset()
 {
   link_->SetWorldPose(initial_pose_);
   link_->ResetPhysicsStates();
 }
 
-Eigen::Vector3d GazeboPlugin::vec3_to_eigen_from_gazebo(GazeboVector vec)
+Eigen::Vector3d GazeboDynamicsPlugin::vec3_to_eigen_from_gazebo(GazeboVector vec)
 {
   Eigen::Vector3d out;
   out << GZ_COMPAT_GET_X(vec), GZ_COMPAT_GET_Y(vec), GZ_COMPAT_GET_Z(vec);
   return out;
 }
 
-GazeboVector GazeboPlugin::vec3_to_gazebo_from_eigen(Eigen::Vector3d vec)
+GazeboVector GazeboDynamicsPlugin::vec3_to_gazebo_from_eigen(Eigen::Vector3d vec)
 {
   GazeboVector out(vec(0), vec(1), vec(2));
   return out;
 }
 
-Eigen::Matrix3d GazeboPlugin::rotation_to_eigen_from_gazebo(GazeboQuaternion quat)
+Eigen::Matrix3d GazeboDynamicsPlugin::rotation_to_eigen_from_gazebo(GazeboQuaternion quat)
 {
   Eigen::Quaterniond eig_quat(GZ_COMPAT_GET_W(quat), GZ_COMPAT_GET_X(quat), GZ_COMPAT_GET_Y(quat),
                               GZ_COMPAT_GET_Z(quat));
   return eig_quat.toRotationMatrix();
 }
 
-GZ_REGISTER_MODEL_PLUGIN(GazeboPlugin)
+GZ_REGISTER_MODEL_PLUGIN(GazeboDynamicsPlugin)
 } // rosflight_sim

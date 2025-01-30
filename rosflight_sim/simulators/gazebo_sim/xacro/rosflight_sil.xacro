@@ -18,11 +18,11 @@
       parent_frame_id="${namespace}/base_link"/>
   </xacro:macro>
 
-  <!-- Macro to add a rosflight_sil plugin. -->
+  <!-- Macro to add a gazebo_dynamics plugin. -->
   <xacro:macro name="rosflight_sil_plugin"
                params="namespace parent_link mav_type parent_frame_id">
     <gazebo>
-      <plugin filename="librosflight_sil_plugin.so" name="rosflight_sil">
+      <plugin filename="libgazebo_dynamics_plugin.so" name="dynamics">
         <linkName>${parent_link}</linkName>
         <namespace>${namespace}</namespace>
         <mavType>${mav_type}</mavType>

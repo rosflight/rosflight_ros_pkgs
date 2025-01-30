@@ -36,7 +36,8 @@
 #define ROSFLIGHT_SIM_SENSOR_INTERFACE_H
 
 #include <rclcpp/rclcpp.hpp>
-#include <geometry_msgs/msg/twist_stamped.hpp>
+#include <geometry_msgs/msg/wrench_stamped.hpp>
+#include <geometry_msgs/msg/vector3_stamped.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/temperature.hpp>
 #include <sensor_msgs/msg/magnetic_field.hpp>
@@ -73,14 +74,14 @@ private:
   /*
    * @brief Computes a new sensor measurement from the current state
   */
-  virtual sensor_msgs::msg::Imu imu_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::TwistStamped & forces) = 0;
+  virtual sensor_msgs::msg::Imu imu_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::WrenchStamped & forces) = 0;
   virtual sensor_msgs::msg::Temperature imu_temperature_update(const rosflight_msgs::msg::SimState & state) = 0;
   virtual sensor_msgs::msg::MagneticField mag_update(const rosflight_msgs::msg::SimState & state) = 0;
   virtual rosflight_msgs::msg::Barometer baro_update(const rosflight_msgs::msg::SimState & state) = 0;
   virtual rosflight_msgs::msg::GNSS gnss_update(const rosflight_msgs::msg::SimState & state) = 0;
   virtual rosflight_msgs::msg::GNSSFull gnss_full_update(const rosflight_msgs::msg::SimState & state) = 0;
   virtual sensor_msgs::msg::Range sonar_update(const rosflight_msgs::msg::SimState & state) = 0;
-  virtual rosflight_msgs::msg::Airspeed diff_pressure_update(const rosflight_msgs::msg::SimState & state) = 0;
+  virtual rosflight_msgs::msg::Airspeed diff_pressure_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::Vector3Stamped & wind) = 0;
   virtual rosflight_msgs::msg::BatteryStatus battery_update(const rosflight_msgs::msg::SimState & state) = 0;
 
   // ROS2 interfaces
@@ -113,10 +114,12 @@ private:
 
   rclcpp::Subscription<rosflight_msgs::msg::Status>::SharedPtr status_sub_;
   rclcpp::Subscription<rosflight_msgs::msg::SimState>::SharedPtr state_sub_;
-  rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr forces_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::Vector3Stamped>::SharedPtr wind_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::WrenchStamped>::SharedPtr forces_sub_;
   rosflight_msgs::msg::Status current_status_;
   rosflight_msgs::msg::SimState current_state_;
-  geometry_msgs::msg::TwistStamped current_forces_;
+  geometry_msgs::msg::Vector3Stamped current_wind_;
+  geometry_msgs::msg::WrenchStamped current_forces_;
 
   /**
    *  @brief Declares all of the parameters with the ROS2 parameter system. Called during initialization
@@ -164,11 +167,14 @@ private:
    * @brief Subscription to the truth state. Used to create sensor information.
    */
   void sim_state_callback(const rosflight_msgs::msg::SimState & msg);
-
+  /**
+   * @brief Subscription to the truth state. Used to create sensor information.
+   */
+  void wind_callback(const geometry_msgs::msg::Vector3Stamped & msg);
   /**
    * @brief Subscription to the forces and moments. Used to create sensor information.
    */
-  void forces_moments_callback(const geometry_msgs::msg::TwistStamped & msg);
+  void forces_moments_callback(const geometry_msgs::msg::WrenchStamped & msg);
   /**
    * @brief Subscription to the rosflight board status. Used to create sensor information.
    */

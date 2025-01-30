@@ -36,8 +36,12 @@
 #define ROSFLIGHT_SIM_SENSOR_INTERFACE_H
 
 #include <rclcpp/rclcpp.hpp>
+#include <geometry_msgs/msg/vector3_stamped.hpp>
+#include <geometry_msgs/msg/wrench_stamped.hpp>
+#include <std_srvs/srv/trigger.hpp>
 
-#include "sensors.h"
+#include "rosflight_msgs/msg/sim_forces_moments.hpp"
+#include "rosflight_msgs/msg/sim_state.hpp"
 
 namespace rosflight_sim
 {
@@ -47,13 +51,24 @@ class DynamicsInterface : public rclcpp::Node
 public:
   DynamicsInterface();
 
+  inline const geometry_msgs::msg::WrenchStamped get_forces_moments() const { return forces_moments_; }
+
 private:
   virtual void apply_forces_and_torques() = 0;
+  virtual rosflight_msgs::msg::SimState compute_truth() = 0;
 
   // ROS2 interfaces
-  rclcpp::Publisher<>::SharedPtr truth_state_pub_;
+  rclcpp::Publisher<rosflight_msgs::msg::SimState>::SharedPtr truth_state_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::Vector3Stamped>::SharedPtr wind_truth_pub_;
 
-  rclcpp::Service<>::SharedPtr dynamics_update_srvs_;
+  rclcpp::Subscription<geometry_msgs::msg::WrenchStamped>::SharedPtr forces_moments_sub_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr dynamics_update_srvs_;
+
+  geometry_msgs::msg::WrenchStamped forces_moments_;
+
+  bool apply_forces_publish_truth(const std_srvs::srv::Trigger::Request::SharedPtr & req,
+                                  const std_srvs::srv::Trigger::Response::SharedPtr & res);
+  void forces_callback(const geometry_msgs::msg::WrenchStamped & msg);
 
     /**
    *  @brief Declares all of the parameters with the ROS2 parameter system. Called during initialization
@@ -73,8 +88,10 @@ private:
    * @return Service result object that tells the requester the result of the param update.
    */
   rcl_interfaces::msg::SetParametersResult
-  parametersCallback(const std::vector<rclcpp::Parameter> & parameters);
+  parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
 
 };
+
+}
 
 #endif // ROSFLIGHT_SIM_SENSOR_INTERFACE_H

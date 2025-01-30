@@ -55,14 +55,14 @@ public:
   /*
    * @brief Computes a new sensor measurement from the current state
   */
-  sensor_msgs::msg::Imu imu_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::TwistStamped & forces) override;
+  sensor_msgs::msg::Imu imu_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::WrenchStamped & forces) override;
   sensor_msgs::msg::Temperature imu_temperature_update(const rosflight_msgs::msg::SimState & state) override;
   sensor_msgs::msg::MagneticField mag_update(const rosflight_msgs::msg::SimState & state) override;
   rosflight_msgs::msg::Barometer baro_update(const rosflight_msgs::msg::SimState & state) override;
   rosflight_msgs::msg::GNSS gnss_update(const rosflight_msgs::msg::SimState & state) override;
   rosflight_msgs::msg::GNSSFull gnss_full_update(const rosflight_msgs::msg::SimState & state) override;
   sensor_msgs::msg::Range sonar_update(const rosflight_msgs::msg::SimState & state) override;
-  rosflight_msgs::msg::Airspeed diff_pressure_update(const rosflight_msgs::msg::SimState & state) override;
+  rosflight_msgs::msg::Airspeed diff_pressure_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::Vector3Stamped & wind) override;
   rosflight_msgs::msg::BatteryStatus battery_update(const rosflight_msgs::msg::SimState & state) override;
 
 private:

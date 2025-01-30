@@ -313,7 +313,7 @@ bool SILBoard::imu_read(float accel[3], float * temperature, float gyro[3], uint
 
 void SILBoard::imu_not_responding_error()
 {
-  RCLCPP_ERROR(node_->get_logger(), "[gazebo_rosflight_sil] imu not responding");
+  RCLCPP_ERROR(node_->get_logger(), "[sil_board] imu not responding");
 }
 
 bool SILBoard::mag_read(float mag[3])

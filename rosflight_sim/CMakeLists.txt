@@ -171,85 +171,37 @@ target_include_directories(standalone_sensors
     include
     simulators/standalone_sim/include)
 target_link_libraries(standalone_sensors Eigen3::Eigen)
-ament_target_dependencies(standalone_sensors rclcpp sensor_msgs rosflight_msgs geometry_msgs tf2_eigen) 
+ament_target_dependencies(standalone_sensors rclcpp sensor_msgs rosflight_msgs geometry_msgs tf2_eigen)
 install(
   TARGETS standalone_sensors
   DESTINATION lib/${PROJECT_NAME})
 
-
-# add_library(rosflight_sil_plugin SHARED
-#   src/rosflight_sil.cpp
-#   src/sil_board.cpp
-#   src/udp_board.cpp
-#   src/multirotor_forces_and_moments.cpp
-#   src/fixedwing_forces_and_moments.cpp
-# )
-# target_link_libraries(rosflight_sil_plugin
-#   rosflight_firmware
-#   ${rclcpp_INLCUDE_DIRS}
-#   ${ament_INCLUDE_DIRS}
-#   ${GAZEBO_LIBRARIES}
-#   ${Boost_LIBRARIES}
-# )
-# ament_target_dependencies(rosflight_sil_plugin
-#   rclcpp
-#   geometry_msgs
-#   nav_msgs
-#   rosflight_msgs
-#   gazebo_ros
-# )
-# ament_export_targets(rosflight_sil_pluginTargets HAS_LIBRARY_TARGET)
-# ament_export_dependencies(
-#   rclcpp
-#   geometry_msgs
-#   nav_msgs
-#   rosflight_msgs
-#   gazebo_ros
-# )
-# 
-# install(
-#   TARGETS rosflight_sil_plugin
-#   EXPORT rosflight_sil_pluginTargets
-#   LIBRARY DESTINATION lib
-#   ARCHIVE DESTINATION lib
-#   RUNTIME DESTINATION bin
-#   INCLUDES DESTINATION include
-# )
-
+# Gazebo dynamics
+add_subdirectory(simulators/gazebo_sim)
 
 #############
 ## Install ##
 #############
 
-# install(
-#   DIRECTORY include/${PROJECT_NAME}
-#   DESTINATION include/${PROJECT_NAME}
-# )
-# 
-# install(
-#   DIRECTORY launch
-#   DESTINATION share/${PROJECT_NAME}
-# )
-# 
-# install(
-#   DIRECTORY simulators/gazebo/xacro
-#   DESTINATION share/${PROJECT_NAME}
-# )
-# 
-# install(
-#   DIRECTORY simulators/gazebo/resources
-#   DESTINATION share/${PROJECT_NAME}
-# )
-# 
-# install(
-#   DIRECTORY params
-#   DESTINATION share/${PROJECT_NAME}
-# )
-# 
-# install(PROGRAMS
-#   src/rc.py
-#   src/vimfly.py
-#   DESTINATION lib/${PROJECT_NAME}
-# )
+install(
+  DIRECTORY params
+  DESTINATION share/${PROJECT_NAME}
+)
+
+install(
+  DIRECTORY include/rosflight_sim
+  DESTINATION include/${PROJECT_NAME}
+)
+
+install(
+  DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
+install(PROGRAMS
+  src/rc.py
+  src/vimfly.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 ament_package()

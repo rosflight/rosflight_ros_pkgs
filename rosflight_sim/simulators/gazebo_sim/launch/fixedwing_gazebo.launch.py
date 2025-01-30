@@ -49,7 +49,7 @@ def generate_launch_description():
     )
     verbose = LaunchConfiguration('verbose')
     verbose_launch_arg = DeclareLaunchArgument(
-        'verbose', default_value=TextSubstitution(text='false')
+        'verbose', default_value=TextSubstitution(text='true')
     )
     world_file = LaunchConfiguration('world_file')
     world_file_launch_arg = DeclareLaunchArgument(

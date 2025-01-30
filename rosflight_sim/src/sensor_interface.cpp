@@ -51,7 +51,9 @@ SensorInterface::SensorInterface()
       std::bind(&SensorInterface::status_callback, this, std::placeholders::_1));
   state_sub_ = this->create_subscription<rosflight_msgs::msg::SimState>("sim_state", 1,
       std::bind(&SensorInterface::sim_state_callback, this, std::placeholders::_1));
-  forces_sub_ = this->create_subscription<geometry_msgs::msg::TwistStamped>("forces_and_moments", 1,
+  wind_sub_ = this->create_subscription<geometry_msgs::msg::Vector3Stamped>("wind_truth", 1,
+      std::bind(&SensorInterface::wind_callback, this, std::placeholders::_1));
+  forces_sub_ = this->create_subscription<geometry_msgs::msg::WrenchStamped>("forces_and_moments", 1,
       std::bind(&SensorInterface::forces_moments_callback, this, std::placeholders::_1));
 
   // Initialize publishers
@@ -240,7 +242,12 @@ void SensorInterface::sim_state_callback(const rosflight_msgs::msg::SimState & m
   current_state_ = msg;
 }
 
-void SensorInterface::forces_moments_callback(const geometry_msgs::msg::TwistStamped & msg)
+void SensorInterface::wind_callback(const geometry_msgs::msg::Vector3Stamped & msg)
+{
+  current_wind_ = msg;
+}
+
+void SensorInterface::forces_moments_callback(const geometry_msgs::msg::WrenchStamped & msg)
 {
   current_forces_ = msg;
 }
@@ -282,7 +289,7 @@ void SensorInterface::gnss_publish()
 
 void SensorInterface::diff_pressure_publish()
 {
-  rosflight_msgs::msg::Airspeed msg = diff_pressure_update(current_state_);
+  rosflight_msgs::msg::Airspeed msg = diff_pressure_update(current_state_, current_wind_);
   diff_pressure_pub_->publish(msg);
 }
 

@@ -42,19 +42,25 @@
 #include <gazebo_ros/node.hpp>
 
 #include "rosflight_sim/dynamics_interface.hpp"
-#include "gazebo_sim/include/gz_compat.hpp"
-#include "gazebo_sim/include/gazebo_plugin.hpp"
+#include "gz_compat.hpp"
+// #include "gazebo_dynamics_plugin.hpp"
 
 namespace rosflight_sim
 {
+
 class GazeboDynamics : public DynamicsInterface
 {
 public:
-  GazeboDynamics();
+  GazeboDynamics(gazebo::physics::LinkPtr link_, std::string link_name);
 
 private:
-  void publish_truth();
+  void apply_forces_and_torques() override;
+  rosflight_msgs::msg::SimState compute_truth() override;
 
+  void wind_callback(const geometry_msgs::msg::Vector3 & msg);
+
+  gazebo::physics::LinkPtr link_;
+  std::string link_name_;
 };
 
 } // namespace rosflight_sim

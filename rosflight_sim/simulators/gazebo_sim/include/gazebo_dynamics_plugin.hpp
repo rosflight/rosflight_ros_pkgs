@@ -35,6 +35,8 @@
 #ifndef ROSFLIGHT_SIM_GAZEBO_PLUGIN_H
 #define ROSFLIGHT_SIM_GAZEBO_PLUGIN_H
 
+#include <thread>
+
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/common.hh>
 #include <gazebo/gazebo.hh>
@@ -42,8 +44,10 @@
 #include <gazebo_ros/node.hpp>
 
 #include <rclcpp/rclcpp.hpp>
+#include <Eigen/Geometry>
 
-#include "gazebo_sim/include/gz_compat.hpp"
+#include "gz_compat.hpp"
+#include "gazebo_dynamics.hpp"
 
 namespace rosflight_sim
 {
@@ -54,16 +58,20 @@ namespace rosflight_sim
  * @note This class does not inherit from rclcpp::Node as Gazebo provides the node that should be
  * used.
  */
-class GazeboPlugin : public gazebo::ModelPlugin
+class GazeboDynamicsPlugin : public gazebo::ModelPlugin
 {
 public:
-  GazeboPlugin(std::function<void()> on_update_callback);
-  ~GazeboPlugin() override;
+  GazeboDynamicsPlugin();
+  ~GazeboDynamicsPlugin() override;
 
   gazebo::physics::WorldPtr get_world() { return world_; }
   gazebo::physics::ModelPtr get_model() { return model_; }
   gazebo::physics::LinkPtr get_link() { return link_; }
-  rclcpp::Node::SharedPtr get_node() { return node_; }
+  rclcpp::Node::SharedPtr get_node() { return node_;}
+
+  Eigen::Vector3d vec3_to_eigen_from_gazebo(GazeboVector vec);
+  GazeboVector vec3_to_gazebo_from_eigen(Eigen::Vector3d vec);
+  Eigen::Matrix3d rotation_to_eigen_from_gazebo(GazeboQuaternion quat);
 
 protected:
   /**
@@ -80,8 +88,6 @@ protected:
   void OnUpdate(const gazebo::common::UpdateInfo & _info);
 
 private:
-  std::function<void()> on_update_callback_ptr_;
-
   std::string mav_type_;
   std::string namespace_;
   std::string link_name_;
@@ -98,6 +104,9 @@ private:
   rclcpp::Node::SharedPtr node_;
 
   void declare_SIL_params();
+
+  std::shared_ptr<rosflight_sim::GazeboDynamics> gazebo_dynamics_ptr_;
+  std::thread spin_thread_;
 };
 
 } // rosflight_sim

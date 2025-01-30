@@ -123,7 +123,7 @@ void StandaloneSensors::initialize_sensors()
   inertial_magnetic_field_ *= total_intensity;
 }
 
-// TODO: Move this to the dynamics object (for reading off truth from Gazebo)
+// TODO: Do something with this
 // void StandaloneSensors::sensors_init()
 // {
 //   using SC = gazebo::common::SphericalCoordinates;
@@ -136,20 +136,20 @@ void StandaloneSensors::initialize_sensors()
 //   sph_coord_.SetHeadingOffset(Ang(M_PI / 2.0));
 // }
 
-sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::TwistStamped & forces)
+sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::WrenchStamped & forces)
 {
   sensor_msgs::msg::Imu out_msg;
 
   // Get the current rotation from inertial to the body frame
   geometry_msgs::msg::TransformStamped q_inertial_to_body;
-  q_inertial_to_body.transform.rotation = state.pose.rotation;
+  q_inertial_to_body.transform.rotation = state.pose.orientation;
 
   Eigen::Vector3d gravity = Eigen::Vector3d::Zero();
   gravity[2] = this->get_parameter("gravity").as_double();
 
   Eigen::Vector3d velocity, acceleration;
-  velocity << state.velocity[0], state.velocity[1], state.velocity[2];
-  acceleration << state.acceleration[0], state.acceleration[1], state.acceleration[2];
+  velocity << state.twist.linear.x, state.twist.linear.y, state.twist.linear.z;
+  acceleration << state.acceleration.linear.x, state.acceleration.linear.y, state.acceleration.linear.z;
   acceleration = acceleration - gravity;
 
   Eigen::Vector3d y_acc;
@@ -158,13 +158,13 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
   // TODO: Check the directions of these rotations. It seemed like the previous implementation did the reverse of this.
   if (velocity.norm() < 0.05) {
     tf2::doTransform(gravity, y_acc, q_inertial_to_body);
-  } else if (abs(state.pose.translation.z) < 0.3) {
+  } else if (abs(state.pose.position.z) < 0.3) {
     tf2::doTransform(acceleration, y_acc, q_inertial_to_body);
   } else {
     double mass = this->get_parameter("mass").as_double();
-    y_acc << forces.twist.linear.x / mass,
-             forces.twist.linear.y / mass,
-             forces.twist.linear.z / mass;
+    y_acc << forces.wrench.force.x / mass,
+             forces.wrench.force.y / mass,
+             forces.wrench.force.z / mass;
   }
 
   // Determine if the aircraft is armed
@@ -190,7 +190,7 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
   out_msg.linear_acceleration.z = y_acc[2];
 
   Eigen::Vector3d y_gyro;
-  y_gyro << state.angular_velocity[0], state.angular_velocity[1], state.angular_velocity[2];
+  y_gyro << state.twist.angular.x, state.twist.angular.y, state.twist.angular.z;
 
   double gyro_stdev = this->get_parameter("gyro_stdev").as_double(); 
   double gyro_bias_walk_stdev = this->get_parameter("gyro_bias_walk_stdev").as_double(); 
@@ -224,7 +224,7 @@ sensor_msgs::msg::Temperature StandaloneSensors::imu_temperature_update(const ro
 sensor_msgs::msg::MagneticField StandaloneSensors::mag_update(const rosflight_msgs::msg::SimState & state)
 {
   geometry_msgs::msg::TransformStamped q_inertial_to_body;
-  q_inertial_to_body.transform.rotation = state.pose.rotation;
+  q_inertial_to_body.transform.rotation = state.pose.orientation;
 
   Eigen::Vector3d y_mag;
   tf2::doTransform(inertial_magnetic_field_, y_mag, q_inertial_to_body);
@@ -256,7 +256,7 @@ sensor_msgs::msg::MagneticField StandaloneSensors::mag_update(const rosflight_ms
 rosflight_msgs::msg::Barometer StandaloneSensors::baro_update(const rosflight_msgs::msg::SimState & state)
 {
   // Invert measurement model for pressure and temperature
-  double alt = -state.pose.translation.z + this->get_parameter("origin_altitude").as_double();
+  double alt = -state.pose.position.z + this->get_parameter("origin_altitude").as_double();
 
   // Convert to the true pressure reading
   double y_baro = 101325.0f
@@ -406,7 +406,7 @@ rosflight_msgs::msg::GNSSFull StandaloneSensors::gnss_full_update(const rosfligh
 
 sensor_msgs::msg::Range StandaloneSensors::sonar_update(const rosflight_msgs::msg::SimState & state)
 {
-  double alt = -state.pose.translation.z;
+  double alt = -state.pose.position.z;
   double sonar_min_range = this->get_parameter("sonar_min_range").as_double();
   double sonar_max_range = this->get_parameter("sonar_max_range").as_double();
   double sonar_stdev = this->get_parameter("sonar_stdev").as_double();
@@ -424,12 +424,14 @@ sensor_msgs::msg::Range StandaloneSensors::sonar_update(const rosflight_msgs::ms
   return out_msg;
 }
 
-rosflight_msgs::msg::Airspeed StandaloneSensors::diff_pressure_update(const rosflight_msgs::msg::SimState & state)
+rosflight_msgs::msg::Airspeed StandaloneSensors::diff_pressure_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::Vector3Stamped & wind)
 {
   // Calculate Airspeed
-  Eigen::Vector3d velocity;
-  velocity << state.air_velocity[0], state.air_velocity[1], state.air_velocity[2];
-  double Va = velocity.norm();
+  Eigen::Vector3d ground_velocity, inertial_wind_velocity, air_velocity;
+  ground_velocity << state.twist.linear.x, state.twist.linear.y, state.twist.linear.z;
+  inertial_wind_velocity << wind.vector.x, wind.vector.y, wind.vector.z;
+  air_velocity = ground_velocity - inertial_wind_velocity;
+  double Va = air_velocity.norm();
 
   // Invert Airpseed to get sensor measurement
   double y_as = rho_ * Va * Va / 2.0; // Page 130 in the UAV Book

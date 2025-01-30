@@ -31,7 +31,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(
                 get_package_share_directory('rosflight_sim'),
-                'launch/fixedwing.launch.py'
+                'launch/fixedwing_gazebo.launch.py'
             )
         )
     )
