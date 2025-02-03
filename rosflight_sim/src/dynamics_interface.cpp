@@ -53,7 +53,7 @@ DynamicsInterface::DynamicsInterface() : rclcpp::Node("dynamics")
 
 void DynamicsInterface::declare_parameters()
 {
-  // TODO:
+  // Declare parameters for the dynamics node here
 }
 
 rcl_interfaces::msg::SetParametersResult

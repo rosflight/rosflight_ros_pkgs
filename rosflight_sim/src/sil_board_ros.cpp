@@ -80,7 +80,6 @@ bool SILBoardROS::run_firmware(const rosflight_msgs::srv::RunFirmware::Request::
 
 } // namespace rosflight_sim
 
-// TODO: If we want to do zero copy transfer, remove this main function. For now it will remain
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);

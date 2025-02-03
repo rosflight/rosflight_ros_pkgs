@@ -37,35 +37,40 @@ namespace rosflight_sim
 {
 
 SensorInterface::SensorInterface()
-  : rclcpp::Node("sensors")
+    : rclcpp::Node("sensors")
 {
   // Declare parameters
   declare_parameters();
-  
+
   // Set up the parameter callback
   parameter_callback_handle_ = this->add_on_set_parameters_callback(
-      std::bind(&SensorInterface::parameters_callback, this, std::placeholders::_1));
+    std::bind(&SensorInterface::parameters_callback, this, std::placeholders::_1));
 
   // Subscriptions
-  status_sub_ = this->create_subscription<rosflight_msgs::msg::Status>("status", 1,
-      std::bind(&SensorInterface::status_callback, this, std::placeholders::_1));
-  state_sub_ = this->create_subscription<rosflight_msgs::msg::SimState>("sim_state", 1,
-      std::bind(&SensorInterface::sim_state_callback, this, std::placeholders::_1));
-  wind_sub_ = this->create_subscription<geometry_msgs::msg::Vector3Stamped>("wind_truth", 1,
-      std::bind(&SensorInterface::wind_callback, this, std::placeholders::_1));
-  forces_sub_ = this->create_subscription<geometry_msgs::msg::WrenchStamped>("forces_and_moments", 1,
-      std::bind(&SensorInterface::forces_moments_callback, this, std::placeholders::_1));
+  status_sub_ = this->create_subscription<rosflight_msgs::msg::Status>(
+    "status", 1, std::bind(&SensorInterface::status_callback, this, std::placeholders::_1));
+  state_sub_ = this->create_subscription<rosflight_msgs::msg::SimState>(
+    "sim_state", 1, std::bind(&SensorInterface::sim_state_callback, this, std::placeholders::_1));
+  wind_sub_ = this->create_subscription<geometry_msgs::msg::Vector3Stamped>(
+    "wind_truth", 1, std::bind(&SensorInterface::wind_callback, this, std::placeholders::_1));
+  forces_sub_ = this->create_subscription<geometry_msgs::msg::WrenchStamped>(
+    "forces_and_moments", 1,
+    std::bind(&SensorInterface::forces_moments_callback, this, std::placeholders::_1));
 
   // Initialize publishers
   imu_data_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("simulated_sensors/imu/data", 1);
-  imu_temperature_pub_ = this->create_publisher<sensor_msgs::msg::Temperature>("simulated_sensors/imu/temperature", 1);
+  imu_temperature_pub_ =
+    this->create_publisher<sensor_msgs::msg::Temperature>("simulated_sensors/imu/temperature", 1);
   mag_pub_ = this->create_publisher<sensor_msgs::msg::MagneticField>("simulated_sensors/mag", 1);
   baro_pub_ = this->create_publisher<rosflight_msgs::msg::Barometer>("simulated_sensors/baro", 1);
   gnss_pub_ = this->create_publisher<rosflight_msgs::msg::GNSS>("simulated_sensors/gnss", 1);
-  gnss_full_pub_ = this->create_publisher<rosflight_msgs::msg::GNSSFull>("simulated_sensors/gnss_full", 1);
-  diff_pressure_pub_ = this->create_publisher<rosflight_msgs::msg::Airspeed>("simulated_sensors/diff_pressure", 1);
+  gnss_full_pub_ =
+    this->create_publisher<rosflight_msgs::msg::GNSSFull>("simulated_sensors/gnss_full", 1);
+  diff_pressure_pub_ =
+    this->create_publisher<rosflight_msgs::msg::Airspeed>("simulated_sensors/diff_pressure", 1);
   sonar_pub_ = this->create_publisher<sensor_msgs::msg::Range>("simulated_sensors/sonar", 1);
-  battery_pub_ = this->create_publisher<rosflight_msgs::msg::BatteryStatus>("simulated_sensors/battery", 1);
+  battery_pub_ =
+    this->create_publisher<rosflight_msgs::msg::BatteryStatus>("simulated_sensors/battery", 1);
 
   // Initialize timers with the frequencies from the parameters
   imu_update_frequency_ = this->get_parameter("imu_update_frequency").as_double();
@@ -73,30 +78,39 @@ SensorInterface::SensorInterface()
   baro_update_frequency_ = this->get_parameter("baro_update_frequency").as_double();
   gnss_update_frequency_ = this->get_parameter("gnss_update_frequency").as_double();
   sonar_update_frequency_ = this->get_parameter("sonar_update_frequency").as_double();
-  diff_pressure_update_frequency_ = this->get_parameter("diff_pressure_update_frequency").as_double();
+  diff_pressure_update_frequency_ =
+    this->get_parameter("diff_pressure_update_frequency").as_double();
   battery_update_frequency_ = this->get_parameter("battery_update_frequency").as_double();
 
-  imu_timer_ = rclcpp::create_timer(this, this->get_clock(),
-      std::chrono::microseconds(static_cast<long long>(1.0 / imu_update_frequency_ * 1'000'000)),
-      std::bind(&SensorInterface::imu_publish, this));
-  mag_timer_ = rclcpp::create_timer(this, this->get_clock(),
-      std::chrono::microseconds(static_cast<long long>(1.0 / mag_update_frequency_ * 1'000'000)),
-      std::bind(&SensorInterface::mag_publish, this));
-  baro_timer_ = rclcpp::create_timer(this, this->get_clock(),
-      std::chrono::microseconds(static_cast<long long>(1.0 / baro_update_frequency_ * 1'000'000)),
-      std::bind(&SensorInterface::baro_publish, this));
-  gnss_timer_ = rclcpp::create_timer(this, this->get_clock(),
-      std::chrono::microseconds(static_cast<long long>(1.0 / gnss_update_frequency_ * 1'000'000)),
-      std::bind(&SensorInterface::gnss_publish, this));
-  diff_pressure_timer_ = rclcpp::create_timer(this, this->get_clock(),
-      std::chrono::microseconds(static_cast<long long>(1.0 / diff_pressure_update_frequency_ * 1'000'000)),
-      std::bind(&SensorInterface::diff_pressure_publish, this));
-  sonar_timer_ = rclcpp::create_timer(this, this->get_clock(),
-      std::chrono::microseconds(static_cast<long long>(1.0 / sonar_update_frequency_ * 1'000'000)),
-      std::bind(&SensorInterface::sonar_publish, this));
-  battery_timer_ = rclcpp::create_timer(this, this->get_clock(),
-      std::chrono::microseconds(static_cast<long long>(1.0 / battery_update_frequency_ * 1'000'000)),
-      std::bind(&SensorInterface::battery_publish, this));
+  imu_timer_ = rclcpp::create_timer(
+    this, this->get_clock(),
+    std::chrono::microseconds(static_cast<long long>(1.0 / imu_update_frequency_ * 1'000'000)),
+    std::bind(&SensorInterface::imu_publish, this));
+  mag_timer_ = rclcpp::create_timer(
+    this, this->get_clock(),
+    std::chrono::microseconds(static_cast<long long>(1.0 / mag_update_frequency_ * 1'000'000)),
+    std::bind(&SensorInterface::mag_publish, this));
+  baro_timer_ = rclcpp::create_timer(
+    this, this->get_clock(),
+    std::chrono::microseconds(static_cast<long long>(1.0 / baro_update_frequency_ * 1'000'000)),
+    std::bind(&SensorInterface::baro_publish, this));
+  gnss_timer_ = rclcpp::create_timer(
+    this, this->get_clock(),
+    std::chrono::microseconds(static_cast<long long>(1.0 / gnss_update_frequency_ * 1'000'000)),
+    std::bind(&SensorInterface::gnss_publish, this));
+  diff_pressure_timer_ =
+    rclcpp::create_timer(this, this->get_clock(),
+                         std::chrono::microseconds(static_cast<long long>(
+                           1.0 / diff_pressure_update_frequency_ * 1'000'000)),
+                         std::bind(&SensorInterface::diff_pressure_publish, this));
+  sonar_timer_ = rclcpp::create_timer(
+    this, this->get_clock(),
+    std::chrono::microseconds(static_cast<long long>(1.0 / sonar_update_frequency_ * 1'000'000)),
+    std::bind(&SensorInterface::sonar_publish, this));
+  battery_timer_ = rclcpp::create_timer(
+    this, this->get_clock(),
+    std::chrono::microseconds(static_cast<long long>(1.0 / battery_update_frequency_ * 1'000'000)),
+    std::bind(&SensorInterface::battery_publish, this));
 }
 
 void SensorInterface::declare_parameters()
@@ -137,7 +151,7 @@ SensorInterface::parameters_callback(const std::vector<rclcpp::Parameter> & para
     } else if (param.get_name() == "sonar_update_frequency") {
       reset_sonar_timer(param.as_double());
       result.reason = "Success. sonar timer reset.";
-    } else if (param.get_name() == "battery_update_update_frequency") {
+    } else if (param.get_name() == "battery_update_frequency") {
       reset_battery_timer(param.as_double());
       result.reason = "Success. battery_update timer reset.";
     }
@@ -151,9 +165,10 @@ void SensorInterface::reset_imu_timer(double frequency)
   if (frequency != imu_update_frequency_) {
     // Reset the timer
     imu_timer_->cancel();
-    imu_timer_ = rclcpp::create_timer(this, this->get_clock(),
-        std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000)),
-        std::bind(&SensorInterface::imu_publish, this));
+    imu_timer_ = rclcpp::create_timer(
+      this, this->get_clock(),
+      std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000)),
+      std::bind(&SensorInterface::imu_publish, this));
 
     imu_update_frequency_ = frequency;
   }
@@ -164,9 +179,10 @@ void SensorInterface::reset_mag_timer(double frequency)
   if (frequency != mag_update_frequency_) {
     // Reset the timer
     mag_timer_->cancel();
-    mag_timer_ = rclcpp::create_timer(this, this->get_clock(),
-        std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000)),
-        std::bind(&SensorInterface::mag_publish, this));
+    mag_timer_ = rclcpp::create_timer(
+      this, this->get_clock(),
+      std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000)),
+      std::bind(&SensorInterface::mag_publish, this));
 
     mag_update_frequency_ = frequency;
   }
@@ -177,9 +193,10 @@ void SensorInterface::reset_gnss_timer(double frequency)
   if (frequency != gnss_update_frequency_) {
     // Reset the timer
     gnss_timer_->cancel();
-    gnss_timer_ = rclcpp::create_timer(this, this->get_clock(),
-        std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000)),
-        std::bind(&SensorInterface::gnss_publish, this));
+    gnss_timer_ = rclcpp::create_timer(
+      this, this->get_clock(),
+      std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000)),
+      std::bind(&SensorInterface::gnss_publish, this));
 
     gnss_update_frequency_ = frequency;
   }
@@ -190,9 +207,10 @@ void SensorInterface::reset_baro_timer(double frequency)
   if (frequency != baro_update_frequency_) {
     // Reset the timer
     baro_timer_->cancel();
-    baro_timer_ = rclcpp::create_timer(this, this->get_clock(),
-        std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000)),
-        std::bind(&SensorInterface::baro_publish, this));
+    baro_timer_ = rclcpp::create_timer(
+      this, this->get_clock(),
+      std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000)),
+      std::bind(&SensorInterface::baro_publish, this));
 
     baro_update_frequency_ = frequency;
   }
@@ -203,9 +221,10 @@ void SensorInterface::reset_diff_pressure_timer(double frequency)
   if (frequency != diff_pressure_update_frequency_) {
     // Reset the timer
     diff_pressure_timer_->cancel();
-    diff_pressure_timer_ = rclcpp::create_timer(this, this->get_clock(),
-        std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000)),
-        std::bind(&SensorInterface::diff_pressure_publish, this));
+    diff_pressure_timer_ = rclcpp::create_timer(
+      this, this->get_clock(),
+      std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000)),
+      std::bind(&SensorInterface::diff_pressure_publish, this));
 
     diff_pressure_update_frequency_ = frequency;
   }
@@ -216,9 +235,10 @@ void SensorInterface::reset_sonar_timer(double frequency)
   if (frequency != sonar_update_frequency_) {
     // Reset the timer
     sonar_timer_->cancel();
-    sonar_timer_ = rclcpp::create_timer(this, this->get_clock(),
-        std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000)),
-        std::bind(&SensorInterface::sonar_publish, this));
+    sonar_timer_ = rclcpp::create_timer(
+      this, this->get_clock(),
+      std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000)),
+      std::bind(&SensorInterface::sonar_publish, this));
 
     sonar_update_frequency_ = frequency;
   }
@@ -229,9 +249,10 @@ void SensorInterface::reset_battery_timer(double frequency)
   if (frequency != battery_update_frequency_) {
     // Reset the timer
     battery_timer_->cancel();
-    battery_timer_ = rclcpp::create_timer(this, this->get_clock(),
-        std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000)),
-        std::bind(&SensorInterface::battery_publish, this));
+    battery_timer_ = rclcpp::create_timer(
+      this, this->get_clock(),
+      std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000)),
+      std::bind(&SensorInterface::battery_publish, this));
 
     battery_update_frequency_ = frequency;
   }
@@ -305,4 +326,4 @@ void SensorInterface::battery_publish()
   battery_pub_->publish(msg);
 }
 
-} // rosflight_sim
+} // namespace rosflight_sim

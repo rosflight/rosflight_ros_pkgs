@@ -52,10 +52,8 @@ void SILBoard::init_board() {
   boot_time_ = node_->now();
 
   // Set up the udp connection
-  // TODO: rename these to simulation_host instead of gazebo
-  // TODO: Also set up parameter change callback
-  auto bind_host = node_->get_parameter_or<std::string>("gazebo_host", "localhost");
-  int bind_port = node_->get_parameter_or<int>("gazebo_port", 14525);
+  auto bind_host = node_->get_parameter_or<std::string>("simulation_host", "localhost");
+  int bind_port = node_->get_parameter_or<int>("simulation_port", 14525);
   auto remote_host = node_->get_parameter_or<std::string>("ROS_host", "localhost");
   int remote_port = node_->get_parameter_or<int>("ROS_port", 14520);
 

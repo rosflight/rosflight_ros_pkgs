@@ -95,8 +95,8 @@ void GazeboDynamicsPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPt
 
 void GazeboDynamicsPlugin::declare_SIL_params()
 {
-  node_->declare_parameter("gazebo_host", rclcpp::PARAMETER_STRING);
-  node_->declare_parameter("gazebo_port", rclcpp::PARAMETER_INTEGER);
+  node_->declare_parameter("simulation_host", rclcpp::PARAMETER_STRING);
+  node_->declare_parameter("simulation_port", rclcpp::PARAMETER_INTEGER);
   node_->declare_parameter("ROS_host", rclcpp::PARAMETER_STRING);
   node_->declare_parameter("ROS_port", rclcpp::PARAMETER_INTEGER);
 
