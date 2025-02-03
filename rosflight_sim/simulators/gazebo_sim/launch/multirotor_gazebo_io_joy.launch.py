@@ -37,30 +37,52 @@ def generate_launch_description():
         )
     )
 
+    # Start Rosflight SIL
+    rosflight_sil_node = Node(
+        package="rosflight_sim",
+        executable="rosflight_sil",
+        output="screen",
+        parameters=[{"use_sim_time": True, "use_timer": False}],
+    )
+
+    # Start sil_board
+    sil_board_node = Node(
+        package="rosflight_sim",
+        executable="sil_board",
+        output="screen",
+        parameters=[{"use_sim_time": True}],
+    )
+
+    # Start standalone sensors
+    standalone_sensor_node = Node(
+        package="rosflight_sim",
+        executable="standalone_sensors",
+        output="screen",
+        parameters=[{"use_sim_time": True}],
+    )
+
     # Start rosflight_io interface node
     rosflight_io_node = Node(
-        package='rosflight_io',
-        executable='rosflight_io',
-        output='screen',
-        parameters=[
-            {'udp': True}
-        ]
+        package="rosflight_io",
+        executable="rosflight_io",
+        output="screen",
+        parameters=[{"udp": True}],
     )
 
     # Start rc_joy node for RC input
     rc_joy_node = Node(
-        package='rosflight_sim',
-        executable='rc.py',
-        remappings=[
-            ('/RC', '/multirotor/RC')
-        ],
-        parameters=[ 
-            {'use_vimfly': use_vimfly}
-        ]
+        package="rosflight_sim",
+        executable="rc.py",
+        remappings=[("/RC", "/fixedwing/RC")],
+        parameters=[{"use_vimfly": use_vimfly, "use_sim_time": True}],
     )
+
 
     return LaunchDescription([
         simulator_launch_include,
+        rosflight_sil_node,
+        sil_board_node,
+        standalone_sensor_node,
         rosflight_io_node,
         rc_joy_node
     ])
