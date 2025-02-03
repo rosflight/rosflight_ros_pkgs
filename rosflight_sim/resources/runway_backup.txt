@@ -60,7 +60,7 @@
     <!-- Include SUV -->
     <include>
       <uri>model://suv</uri>
-      <pose>39.9322 -0.054813 0 0 0 0</pose> 
+      <pose>40 0 0 0 0 0</pose> 
       <size>2000 2000</size>     
     </include>
 
@@ -73,11 +73,11 @@
     
 
     <!-- Sphere 6 (Front-Right on Bus Roof) -->
-    <model name="sphere_13">
+    <model name="sphere_6">
       <static>true</static>
       <pose>26.324884 4.939786 3.430458 0 0 0</pose>
-      <link name="sphere_13_link">
-        <visual name="sphere_13_visual">
+      <link name="sphere_6_link">
+        <visual name="sphere_6_visual">
           <geometry>
             <sphere>
               <radius>0.1</radius>
@@ -89,7 +89,7 @@
             <diffuse>0 1 0 1</diffuse>
           </material>
         </visual>
-        <collision name="sphere_13_collision">
+        <collision name="sphere_6_collision">
           <geometry>
             <sphere>
               <radius>0.1</radius>
@@ -100,11 +100,11 @@
     </model>
 
     <!-- Sphere 7 (Back-Left on Bus Roof) -->
-    <model name="sphere_14">
+    <model name="sphere_7">
       <static>true</static>
       <pose>24.315426 15.731086 3.501861 0 0 0</pose>
-      <link name="sphere_14_link">
-        <visual name="sphere_14_visual">
+      <link name="sphere_7_link">
+        <visual name="sphere_7_visual">
           <geometry>
             <sphere>
               <radius>0.1</radius>
@@ -116,7 +116,7 @@
             <diffuse>0 0 1 1</diffuse>
           </material>
         </visual>
-        <collision name="sphere_14_collision">
+        <collision name="sphere_7_collision">
           <geometry>
             <sphere>
               <radius>0.1</radius>
@@ -127,11 +127,11 @@
     </model>
 
     <!-- Sphere 8 (Back-Right on Bus Roof) -->
-    <model name="sphere_15">
+    <model name="sphere_8">
       <static>true</static>
       <pose>26.260056 15.945589 3.4388850 0 0</pose>
-      <link name="sphere_15_link">
-        <visual name="sphere_15_visual">
+      <link name="sphere_8_link">
+        <visual name="sphere_8_visual">
           <geometry>
             <sphere>
               <radius>0.1</radius>
@@ -143,7 +143,7 @@
             <diffuse>0.5 0 0.5 1</diffuse>
           </material>
         </visual>
-        <collision name="sphere_15_collision">
+        <collision name="sphere_8_collision">
           <geometry>
             <sphere>
               <radius>0.1</radius>
@@ -249,214 +249,6 @@
           </material>
         </visual>
         <collision name="sphere_4_collision">
-          <geometry>
-            <sphere>
-              <radius>0.1</radius>
-            </sphere>
-          </geometry>
-        </collision>
-      </link>
-    </model>
-    
-    <model name="sphere_5">
-      <static>true</static>
-      <pose>42.328 -1.091457 1.279831 0 0 0</pose>
-      <link name="sphere_5_link">
-        <visual name="sphere_5_visual">
-          <geometry>
-            <sphere>
-              <radius>0.1</radius>
-            </sphere>
-          </geometry>
-          <!-- Purple -->
-          <material>
-            <ambient>0 0 0.5 1</ambient>
-            <diffuse>0 0 0.5 1</diffuse>
-          </material>
-        </visual>
-        <collision name="sphere_5_collision">
-          <geometry>
-            <sphere>
-              <radius>0.1</radius>
-            </sphere>
-          </geometry>
-        </collision>
-      </link>
-    </model>
-    
-    <model name="sphere_6">
-      <static>true</static>
-      <pose>42.328 1.091457 1.279831 0 0 0</pose>
-      <link name="sphere_6_link">
-        <visual name="sphere_6_visual">
-          <geometry>
-            <sphere>
-              <radius>0.1</radius>
-            </sphere>
-          </geometry>
-          <!-- Pink -->
-          <material>
-            <ambient>1 0.5 0.7 1</ambient>
-            <diffuse>1 0.5 0.7 1</diffuse>
-          </material>
-        </visual>
-        <collision name="sphere_6_collision">
-          <geometry>
-            <sphere>
-              <radius>0.1</radius>
-            </sphere>
-          </geometry>
-        </collision>
-      </link>
-    </model>
-    
-    <model name="sphere_7">
-      <static>true</static>
-      <pose>38.3974 -1.17118 0.012289 0 0 0</pose>
-      <link name="sphere_7_link">
-        <visual name="sphere_7_visual">
-          <geometry>
-            <sphere>
-              <radius>0.1</radius>
-            </sphere>
-          </geometry>
-          <!-- Brown -->
-          <material>
-            <ambient>0.6 0.3 0 1</ambient>
-            <diffuse>0.6 0.3 0 1</diffuse>
-          </material>
-        </visual>
-        <collision name="sphere_7_collision">
-          <geometry>
-            <sphere>
-              <radius>0.1</radius>
-            </sphere>
-          </geometry>
-        </collision>
-      </link>
-    </model>
-    
-    <model name="sphere_8">
-      <static>true</static>
-      <pose>38.3974 1.17118 0.012289 0 0 0</pose>
-      <link name="sphere_8_link">
-        <visual name="sphere_8_visual">
-          <geometry>
-            <sphere>
-              <radius>0.1</radius>
-            </sphere>
-          </geometry>
-          <!-- Teal -->
-          <material>
-            <ambient>0 0.5 0.5 1</ambient>
-            <diffuse>0 0.5 0.5 1</diffuse>
-          </material>
-        </visual>
-        <collision name="sphere_8_collision">
-          <geometry>
-            <sphere>
-              <radius>0.1</radius>
-            </sphere>
-          </geometry>
-        </collision>
-      </link>
-    </model>
-    
-    <model name="sphere_9">
-      <static>true</static>
-      <pose>41.74792 1.17118 0.012289 0 0 0</pose>
-      <link name="sphere_9_link">
-        <visual name="sphere_9_visual">
-          <geometry>
-            <sphere>
-              <radius>0.1</radius>
-            </sphere>
-          </geometry>
-          <!-- Crimson Red -->
-          <material>
-            <ambient>0.86 0.08 0.24 1</ambient>
-            <diffuse>0.86 0.08 0.24 1</diffuse>
-          </material>
-        </visual>
-        <collision name="sphere_9_collision">
-          <geometry>
-            <sphere>
-              <radius>0.1</radius>
-            </sphere>
-          </geometry>
-        </collision>
-      </link>
-    </model>
-    
-    <model name="sphere_10">
-      <static>true</static>
-      <pose>41.74792 -1.17118 0.012289 0 0 0</pose>
-      <link name="sphere_10_link">
-        <visual name="sphere_10_visual">
-          <geometry>
-            <sphere>
-              <radius>0.1</radius>
-            </sphere>
-          </geometry>
-          <!-- Light Green -->
-          <material>
-            <ambient>0.7 1 0 1</ambient>
-            <diffuse>0.7 1 0 1</diffuse>
-          </material>
-        </visual>
-        <collision name="sphere_10_collision">
-          <geometry>
-            <sphere>
-              <radius>0.1</radius>
-            </sphere>
-          </geometry>
-        </collision>
-      </link>
-    </model>
-    
-    <model name="sphere_11">
-      <static>true</static>
-      <pose>37.548702 1.095811 1.006775 0 0 0</pose>
-      <link name="sphere_11_link">
-        <visual name="sphere_11_visual">
-          <geometry>
-            <sphere>
-              <radius>0.1</radius>
-            </sphere>
-          </geometry>
-          <!-- Gray -->
-          <material>
-            <ambient>0.5 0.5 0.5 1</ambient>
-            <diffuse>0.5 0.5 0.5 1</diffuse>
-          </material>
-        </visual>
-        <collision name="sphere_11_collision">
-          <geometry>
-            <sphere>
-              <radius>0.1</radius>
-            </sphere>
-          </geometry>
-        </collision>
-      </link>
-    </model>
-    
-    <model name="sphere_12">
-      <static>true</static>
-      <pose>37.548702 -1.095811 1.006775 0 0 0</pose>
-      <link name="sphere_12_link">
-        <visual name="sphere_12_visual">
-          <geometry>
-            <sphere>
-              <radius>0.1</radius>
-            </sphere>
-          </geometry>
-          <!-- Coral Orange -->
-          <material>
-            <ambient>1 0.5 0.31 1</ambient>
-            <diffuse>1 0.5 0.31 1</diffuse>
-          </material>
-        </visual>
-        <collision name="sphere_12_collision">
           <geometry>
             <sphere>
               <radius>0.1</radius>

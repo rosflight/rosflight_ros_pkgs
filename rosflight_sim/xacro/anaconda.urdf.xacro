@@ -59,6 +59,60 @@ Author: Gary Ellingson
     </collision>
   </link>
 
+  <!-- Camera Link -->
+  <link name="${namespace}/camera_link">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.02 0.02 0.02"/>
+      </geometry>
+      <material name="Black"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.02 0.02 0.02"/>
+      </geometry>
+    </collision>
+
+    <!-- Camera Sensor -->
+    <sensor name="${namespace}/camera_sensor" type="camera">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <camera>
+        <horizontal_fov>1.047</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.1</near>
+          <far>1000</far>
+        </clip>
+      </camera>
+      <plugin name="gazebo_ros_camera" filename="libgazebo_ros_camera.so">
+        <ros>
+          <namespace>${namespace}</namespace>
+          <remapping>image_raw:=camera/image_raw</remapping>
+        </ros>
+        <cameraName>camera</cameraName>
+        <frameName>${namespace}/camera_link</frameName>
+      </plugin>
+    </sensor>
+  </link>
+
+  <!-- Camera Joint -->
+  <joint name="${namespace}/camera_joint" type="fixed">
+    <parent link="${namespace}/base_link"/>
+    <child link="${namespace}/camera_link"/>
+    <origin xyz="1.0 0 0" rpy="0 0 0"/>
+  </joint>
+
   <!-- ROSflight SIL -->
   <xacro:include filename="$(find rosflight_sim)/xacro/rosflight_sil.xacro"/>
   <xacro:generic_fixedwing namespace="${namespace}" parent_link="${namespace}/base_link"/>
