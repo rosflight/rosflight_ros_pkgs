@@ -56,7 +56,11 @@ namespace rosflight_sim
 class Fixedwing : public MAVForcesAndMoments
 {
 private:
-  rclcpp::Node::SharedPtr node_;
+
+  OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
+  rcl_interfaces::msg::SetParametersResult parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
+
+  void update_params_from_ROS();
 
   // physical parameters
   double rho_;
@@ -138,20 +142,12 @@ private:
    */
   void declare_fixedwing_params();
 
-  /**
-  * @brief Updates class's aerodynamic parameters with parameters from ROS. Will print a ROS error message
-  * for any missing parameters.
-  */
-  void update_params_from_ROS();
-
-  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr forces_moments_pub_;
-
 public:
   /**
    * @param node ROS2 node to obtain parameters from. Usually the node provided by the Gazebo model
    * plugin.
    */
-  explicit Fixedwing(rclcpp::Node::SharedPtr node);
+  Fixedwing();
   ~Fixedwing();
 
   /**
@@ -161,14 +157,7 @@ public:
    * @param act_cmds Actuator commands
    * @return 6x1 eigen matrix of calculated forces and moments
    */
-  Eigen::Matrix<double, 6, 1> update_forces_and_torques(CurrentState x,
-                                                        const int act_cmds[]) override;
-  /**
-   * @brief Sets the wind speed to use when calculating the forces and moments.
-   *
-   * @param wind Eigen vector of wind speeds
-   */
-  void set_wind(Eigen::Vector3d wind) override;
+  geometry_msgs::msg::WrenchStamped update_forces_and_torques(rosflight_msgs::msg::SimState x, const int act_cmds[]) override;
 };
 
 } // namespace rosflight_sim

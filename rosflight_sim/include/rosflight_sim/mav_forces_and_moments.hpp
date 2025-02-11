@@ -3,6 +3,7 @@
  *
  * Copyright (c) 2017 Daniel Koch, James Jackson and Gary Ellingson, BYU MAGICC Lab.
  * Copyright (c) 2023 Brandon Sutherland, AeroVironment Inc.
+ * Copyright (c) 2025 Gabe Snow
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,14 +38,48 @@
 
 #include <eigen3/Eigen/Core>
 
+#include <rclcpp/rclcpp.hpp>
+#include <geometry_msgs/msg/wrench_stamped.hpp>
+
+#include <rosflight_msgs/msg/sim_state.hpp>
+
+
 namespace rosflight_sim
 {
 /**
  * @brief Base class for forces and moments classes for UAVs.
  */
-class MAVForcesAndMoments
+class MAVForcesAndMoments : public rclcpp::Node
 {
+private:
+  rclcpp::Publisher<geometry_msgs::msg::WrenchStamped>::SharedPtr forces_moments_pub_;
+
 protected:
+
+  // CurrentState most_recent_state_;
+  // int most_recent_actuator_command_ [];
+
+  // void state_callback(const rosflight_msgs::msg::State & msg)
+  // {
+  //   most_recent_state_ = msg.data;
+  // }
+
+  // void actuator_command_callback()
+  // {
+  //   most_recent_actuator_command_ = msg.data;
+  // }
+
+  // /**
+  //  * @brief Publisher timer callback
+  //  */
+  // void timer_callback()
+  // {
+  //   rosflight_msg::msg::ForcesAndMoments message;
+  //   Eigen::Matrix<double, 6, 1> forces_and_torques = update_forces_and_torques(most_recent_state, most_recent_actuator_command_)
+  //   message.data = forces_and_torques;
+  //   forces_and_moments_pub_->publish(message);
+  // }
+
   /**
    * @brief Saturation function for actuator commands.
    *
@@ -74,6 +109,9 @@ protected:
   static double max(double x, double y) { return (x > y) ? x : y; }
 
 public:
+
+  MAVForcesAndMoments();
+
   /**
    * @brief Struct for storing the position and velocity of the MAV for both translation and rotation
    * coordinates, as well as the time of the state.
@@ -99,8 +137,7 @@ public:
    * @param act_cmds Current MAV commands
    * @return Calculated forces and moments
    */
-  virtual Eigen::Matrix<double, 6, 1> update_forces_and_torques(CurrentState x,
-                                                                const int act_cmds[]) = 0;
+  virtual geometry_msgs::msg::WrenchStamped update_forces_and_torques(rosflight_msgs::msg::SimState x, const int act_cmds[]) = 0;
   /**
    * @brief Interface function for updating the wind speed to use in the forces and moments calculations.
    *

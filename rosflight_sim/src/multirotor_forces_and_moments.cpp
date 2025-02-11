@@ -49,29 +49,29 @@ Multirotor::Multirotor(rclcpp::Node::SharedPtr node)
 
   /* Load Rotor Configuration */
   motors_.resize(num_rotors_);
-  
+
   Prop prop;
 
   prop.CT_0 = node_->get_parameter("CT_0").as_double();
   prop.CT_1 = node_->get_parameter("CT_1").as_double();
   prop.CT_2 = node_->get_parameter("CT_2").as_double();
-  
+
   prop.CQ_0 = node_->get_parameter("CQ_0").as_double();
   prop.CQ_1 = node_->get_parameter("CQ_1").as_double();
   prop.CQ_2 = node_->get_parameter("CQ_2").as_double();
 
   prop.diam = node_->get_parameter("D_prop").as_double();
-  
+
   std::vector<double> dists = node_->get_parameter("rotor_dists").as_double_array();
   std::vector<double> angles = node_->get_parameter("rotor_radial_angles").as_double_array();
   std::vector<int64_t> rotation_dirs = node_->get_parameter("rotor_rotation_directions").as_integer_array();
-  
+
   Motor motor_characteristics;
   motor_characteristics.prop = prop;
   motor_characteristics.R = node_->get_parameter("R_motor").as_double();
   motor_characteristics.I_0 = node_->get_parameter("I_0").as_double();
   motor_characteristics.KQ = node_->get_parameter("KQ").as_double();
-  
+
 
   for (int i = 0; i < num_rotors_; i++) {
     Motor motor = motor_characteristics;
@@ -101,7 +101,7 @@ void Multirotor::declare_multirotor_params()
   node_->declare_parameter("CQ_0", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("CQ_1", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("CQ_2", rclcpp::PARAMETER_DOUBLE);
-  
+
   node_->declare_parameter("KQ", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("V_max", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("R_motor", rclcpp::PARAMETER_DOUBLE);
@@ -117,7 +117,7 @@ void Multirotor::declare_multirotor_params()
   node_->declare_parameter("A_c", rclcpp::PARAMETER_DOUBLE);
 
   node_->declare_parameter("CD_induced", rclcpp::PARAMETER_DOUBLE);
-  
+
   node_->declare_parameter("ground_effect", rclcpp::PARAMETER_DOUBLE_ARRAY);
 }
 
@@ -126,7 +126,7 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
 {
   // The maximum voltage of the battery.
   double V_max = node_->get_parameter("V_max").as_double();
-  
+
   double rho = node_->get_parameter("rho").as_double();
 
   // Get airspeed vector for drag force calculation (rotate wind into body frame and add to inertial velocity)
@@ -190,16 +190,16 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
     }
 
     double motor_thrust = CT * (rho * pow(motor.prop.diam, 4))/(4*pow(M_PI,2)) * pow(prop_speed, 2);
-    
+
     double motor_roll_torque = -motor_thrust*motor.dist*sinf(motor.radial_angle);
     double motor_pitch_torque = motor_thrust*motor.dist*cosf(motor.radial_angle);
 
     double CQ = motor.prop.CQ_2*pow(advance_ratio, 2) + motor.prop.CQ_1*advance_ratio + motor.prop.CQ_0;
-    
+
     if (CQ <= 0.0) {
       CQ = 0.0001;
     }
-    
+
     // The torque produced by the propeller spinning.
     double prop_torque = motor.direction * CQ * (rho*pow(motor.prop.diam, 5))/(4*pow(M_PI,2)) * pow(prop_speed, 2);
 
@@ -211,9 +211,9 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
 
   double cross_sectional_area = node_->get_parameter("A_c").as_double(); // m^2
   double CD = node_->get_parameter("CD").as_double();
- 
+
   // Rotate from body to inertial frame.
-  
+
   Eigen::Vector3d body_forces;
   body_forces << 0.0, 0.0, -total_thrust;
 
@@ -237,7 +237,7 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
   Eigen::Vector3d induced_drag_force = drag_matrix * x.vel;
 
   body_forces += induced_drag_force;
-  
+
   Eigen::Vector3d body_torques;
   body_torques << total_roll_torque, total_pitch_torque, -total_yaw_torque;
 
@@ -255,7 +255,7 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
                                         ground_effect_coeffs[4]);
 
   forces(2) -= ground_effect_force;
-  
+
   geometry_msgs::msg::TwistStamped msg;
 
   rclcpp::Time now = node_->get_clock()->now();
@@ -278,3 +278,18 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
 void Multirotor::set_wind(Eigen::Vector3d wind) { wind_ = wind; }
 
 } // namespace rosflight_sim
+
+
+int main(int argc, char** argv)
+{
+  rclcpp::init(argc, argv);
+
+  auto node = std::make_shared<rosflight_sim::Multirotor>();
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
+
+  executor.spin();
+
+  rclcpp::shutdown();
+  return 0;
+}

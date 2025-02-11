@@ -40,7 +40,6 @@
 #include <geometry_msgs/msg/wrench_stamped.hpp>
 #include <std_srvs/srv/trigger.hpp>
 
-#include "rosflight_msgs/msg/sim_forces_moments.hpp"
 #include "rosflight_msgs/msg/sim_state.hpp"
 
 namespace rosflight_sim

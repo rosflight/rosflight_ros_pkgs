@@ -23,6 +23,7 @@ find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 #find_package(tf2 REQUIRED)
 find_package(tf2_eigen REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 # find_package(nav_msgs REQUIRED)
 find_package(rosflight_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -128,7 +129,7 @@ add_executable(time_manager_standalone
   src/time_manager_interface.cpp
   simulators/standalone_sim/src/standalone_time_manager.cpp)
 target_include_directories(time_manager_standalone
-  PRIVATE 
+  PRIVATE
     include
     simulators/standalone_sim/include)
 ament_target_dependencies(time_manager_standalone rclcpp)
@@ -144,6 +145,37 @@ target_include_directories(rosflight_sil
 ament_target_dependencies(rosflight_sil rclcpp std_srvs rosflight_msgs)
 install(
   TARGETS rosflight_sil
+  DESTINATION lib/${PROJECT_NAME})
+
+# # Multirotor Forces And Moments
+# add_executable(multirotor_forces_and_moments
+#   src/mav_forces_and_moments.cpp
+#   src/multirotor_forces_and_moments.cpp)
+# target_include_directories(multirotor_forces_and_moments
+#   PRIVATE include)
+# ament_target_dependencies(multirotor_forces_and_moments
+#   rclcpp
+#   std_srvs
+#   rosflight_msgs)
+# install(
+#   TARGETS multirotor_forces_and_moments
+#   DESTINATION lib/${PROJECT_NAME})
+
+# FixedWing Forces And Moments
+add_executable(fixedwing_forces_and_moments
+  src/mav_forces_and_moments.cpp
+  src/fixedwing_forces_and_moments.cpp)
+target_include_directories(fixedwing_forces_and_moments
+  PRIVATE include)
+ament_target_dependencies(fixedwing_forces_and_moments
+  rclcpp
+  std_srvs
+  geometry_msgs
+  tf2_eigen
+  tf2_geometry_msgs
+  rosflight_msgs)
+install(
+  TARGETS fixedwing_forces_and_moments
   DESTINATION lib/${PROJECT_NAME})
 
 # SILBoard

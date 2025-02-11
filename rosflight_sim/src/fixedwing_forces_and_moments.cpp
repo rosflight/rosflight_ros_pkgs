@@ -36,14 +36,19 @@
 
 #include <rclcpp/logging.hpp>
 #include <rclcpp/parameter_value.hpp>
+#include <geometry_msgs/msg/wrench_stamped.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+
+// #include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <tf2_eigen/tf2_eigen.hpp>
 
 #include "rosflight_sim/fixedwing_forces_and_moments.hpp"
 
 namespace rosflight_sim
 {
-Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node)
-    : node_(std::move(node))
-    , rho_(0)
+Fixedwing::Fixedwing()
+    : rho_(0)
     , wing_()
     , prop_()
     , motor_()
@@ -56,350 +61,607 @@ Fixedwing::Fixedwing(rclcpp::Node::SharedPtr node)
     , delta_()
 {
   declare_fixedwing_params();
+  parameter_callback_handle_ = this->add_on_set_parameters_callback( std::bind(&Fixedwing::parameters_callback, this, std::placeholders::_1));
   update_params_from_ROS();
-  wind_ = Eigen::Vector3d::Zero();
-  forces_moments_pub_ =
-    node_->create_publisher<geometry_msgs::msg::TwistStamped>("/forces_and_moments", 1);
 }
 
 Fixedwing::~Fixedwing() = default;
 
 void Fixedwing::declare_fixedwing_params()
 {
-  node_->declare_parameter("rho", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("mass", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("rho", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("mass", rclcpp::PARAMETER_DOUBLE);
 
-  node_->declare_parameter("wing_s", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("wing_b", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("wing_c", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("wing_M", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("wing_epsilon", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("wing_alpha0", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("wing_s", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("wing_b", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("wing_c", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("wing_M", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("wing_epsilon", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("wing_alpha0", rclcpp::PARAMETER_DOUBLE);
 
-  node_->declare_parameter("servo_tau", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("servo_tau", rclcpp::PARAMETER_DOUBLE);
 
-  node_->declare_parameter("C_L_O", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_L_alpha", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_L_beta", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_L_p", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_L_q", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_L_r", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_L_delta_a", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_L_delta_e", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_L_delta_r", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_L_O", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_L_alpha", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_L_beta", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_L_p", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_L_q", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_L_r", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_L_delta_a", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_L_delta_e", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_L_delta_r", rclcpp::PARAMETER_DOUBLE);
 
-  node_->declare_parameter("C_D_O", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_D_alpha", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_D_beta", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_D_p", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_D_q", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_D_r", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_D_delta_a", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_D_delta_e", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_D_delta_r", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_D_O", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_D_alpha", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_D_beta", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_D_p", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_D_q", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_D_r", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_D_delta_a", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_D_delta_e", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_D_delta_r", rclcpp::PARAMETER_DOUBLE);
 
-  node_->declare_parameter("C_ell_O", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_ell_alpha", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_ell_beta", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_ell_p", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_ell_q", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_ell_r", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_ell_delta_a", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_ell_delta_e", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_ell_delta_r", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_ell_O", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_ell_alpha", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_ell_beta", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_ell_p", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_ell_q", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_ell_r", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_ell_delta_a", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_ell_delta_e", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_ell_delta_r", rclcpp::PARAMETER_DOUBLE);
 
-  node_->declare_parameter("C_m_O", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_m_alpha", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_m_beta", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_m_p", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_m_q", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_m_r", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_m_delta_a", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_m_delta_e", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_m_delta_r", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_m_O", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_m_alpha", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_m_beta", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_m_p", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_m_q", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_m_r", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_m_delta_a", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_m_delta_e", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_m_delta_r", rclcpp::PARAMETER_DOUBLE);
 
-  node_->declare_parameter("C_n_O", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_n_alpha", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_n_beta", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_n_p", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_n_q", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_n_r", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_n_delta_a", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_n_delta_e", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_n_delta_r", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_n_O", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_n_alpha", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_n_beta", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_n_p", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_n_q", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_n_r", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_n_delta_a", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_n_delta_e", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_n_delta_r", rclcpp::PARAMETER_DOUBLE);
 
-  node_->declare_parameter("C_Y_O", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_Y_alpha", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_Y_beta", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_Y_p", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_Y_q", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_Y_r", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_Y_delta_a", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_Y_delta_e", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("C_Y_delta_r", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_Y_O", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_Y_alpha", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_Y_beta", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_Y_p", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_Y_q", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_Y_r", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_Y_delta_a", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_Y_delta_e", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("C_Y_delta_r", rclcpp::PARAMETER_DOUBLE);
 
-  node_->declare_parameter("D_prop", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("CT_0", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("CT_1", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("CT_2", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("CQ_0", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("CQ_1", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("CQ_2", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("D_prop", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("CT_0", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("CT_1", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("CT_2", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("CQ_0", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("CQ_1", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("CQ_2", rclcpp::PARAMETER_DOUBLE);
 
-  node_->declare_parameter("KV", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("KQ", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("V_max", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("R_motor", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("I_0", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("KV", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("KQ", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("V_max", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("R_motor", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("I_0", rclcpp::PARAMETER_DOUBLE);
 }
 
 void Fixedwing::update_params_from_ROS()
 {
-  if (!node_->get_parameter("rho", rho_)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'rho' not defined");
+  if (!this->get_parameter("rho", rho_)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'rho' not defined");
   }
 
   // Wing Geometry
-  if (!node_->get_parameter("wing_s", wing_.S)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'wing_s' not defined");
+  if (!this->get_parameter("wing_s", wing_.S)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'wing_s' not defined");
   }
-  if (!node_->get_parameter("wing_b", wing_.b)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'wing_b' not defined");
+  if (!this->get_parameter("wing_b", wing_.b)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'wing_b' not defined");
   }
-  if (!node_->get_parameter("wing_c", wing_.c)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'wing_c' not defined");
+  if (!this->get_parameter("wing_c", wing_.c)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'wing_c' not defined");
   }
-  if (!node_->get_parameter("wing_M", wing_.M)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'wing_M' not defined");
+  if (!this->get_parameter("wing_M", wing_.M)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'wing_M' not defined");
   }
-  if (!node_->get_parameter("wing_epsilon", wing_.epsilon)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'wing_epsilon' not defined");
+  if (!this->get_parameter("wing_epsilon", wing_.epsilon)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'wing_epsilon' not defined");
   }
-  if (!node_->get_parameter("wing_alpha0", wing_.alpha0)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'wing_alpha0' not defined");
+  if (!this->get_parameter("wing_alpha0", wing_.alpha0)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'wing_alpha0' not defined");
   }
 
   // Propeller Coefficients
-  if (!node_->get_parameter("D_prop", prop_.D_prop)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'D_prop' not defined");
+  if (!this->get_parameter("D_prop", prop_.D_prop)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'D_prop' not defined");
   }
-  if (!node_->get_parameter("CT_0", prop_.CT_0)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'CT_0' not defined");
+  if (!this->get_parameter("CT_0", prop_.CT_0)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'CT_0' not defined");
   }
-  if (!node_->get_parameter("CT_1", prop_.CT_1)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'CT_1' not defined");
+  if (!this->get_parameter("CT_1", prop_.CT_1)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'CT_1' not defined");
   }
-  if (!node_->get_parameter("CT_2", prop_.CT_2)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'CT_2' not defined");
+  if (!this->get_parameter("CT_2", prop_.CT_2)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'CT_2' not defined");
   }
-  if (!node_->get_parameter("CQ_0", prop_.CQ_0)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'CQ_0' not defined");
+  if (!this->get_parameter("CQ_0", prop_.CQ_0)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'CQ_0' not defined");
   }
-  if (!node_->get_parameter("CQ_1", prop_.CQ_1)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'CQ_1' not defined");
+  if (!this->get_parameter("CQ_1", prop_.CQ_1)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'CQ_1' not defined");
   }
-  if (!node_->get_parameter("CQ_2", prop_.CQ_2)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'CQ_2' not defined");
+  if (!this->get_parameter("CQ_2", prop_.CQ_2)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'CQ_2' not defined");
   }
 
   // Motor Coefficients
-  if (!node_->get_parameter("KV", motor_.KV)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'KV' not defined");
+  if (!this->get_parameter("KV", motor_.KV)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'KV' not defined");
   }
-  if (!node_->get_parameter("KQ", motor_.KQ)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'KQ' not defined");
+  if (!this->get_parameter("KQ", motor_.KQ)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'KQ' not defined");
   }
-  if (!node_->get_parameter("V_max", motor_.V_max)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'V_max' not defined");
+  if (!this->get_parameter("V_max", motor_.V_max)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'V_max' not defined");
   }
-  if (!node_->get_parameter("R_motor", motor_.R_motor)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'R_motor' not defined");
+  if (!this->get_parameter("R_motor", motor_.R_motor)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'R_motor' not defined");
   }
-  if (!node_->get_parameter("I_0", motor_.I_0)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'I_0' not defined");
+  if (!this->get_parameter("I_0", motor_.I_0)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'I_0' not defined");
   }
 
-  if (!node_->get_parameter("servo_tau", servo_tau_)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'servo_tau' not defined");
+  if (!this->get_parameter("servo_tau", servo_tau_)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'servo_tau' not defined");
   }
 
   // Lift Params
-  if (!node_->get_parameter("C_L_O", CL_.O)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_L_O' not defined");
+  if (!this->get_parameter("C_L_O", CL_.O)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_L_O' not defined");
   }
-  if (!node_->get_parameter("C_L_alpha", CL_.alpha)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_L_alpha' not defined");
+  if (!this->get_parameter("C_L_alpha", CL_.alpha)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_L_alpha' not defined");
   }
-  if (!node_->get_parameter("C_L_beta", CL_.beta)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_L_beta' not defined");
+  if (!this->get_parameter("C_L_beta", CL_.beta)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_L_beta' not defined");
   }
-  if (!node_->get_parameter("C_L_p", CL_.p)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_L_p' not defined");
+  if (!this->get_parameter("C_L_p", CL_.p)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_L_p' not defined");
   }
-  if (!node_->get_parameter("C_L_q", CL_.q)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_L_q' not defined");
+  if (!this->get_parameter("C_L_q", CL_.q)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_L_q' not defined");
   }
-  if (!node_->get_parameter("C_L_r", CL_.r)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_L_r' not defined");
+  if (!this->get_parameter("C_L_r", CL_.r)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_L_r' not defined");
   }
-  if (!node_->get_parameter("C_L_delta_a", CL_.delta_a)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_L_delta_a' not defined");
+  if (!this->get_parameter("C_L_delta_a", CL_.delta_a)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_L_delta_a' not defined");
   }
-  if (!node_->get_parameter("C_L_delta_e", CL_.delta_e)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_L_delta_e' not defined");
+  if (!this->get_parameter("C_L_delta_e", CL_.delta_e)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_L_delta_e' not defined");
   }
-  if (!node_->get_parameter("C_L_delta_r", CL_.delta_r)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_L_delta_r' not defined");
+  if (!this->get_parameter("C_L_delta_r", CL_.delta_r)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_L_delta_r' not defined");
   }
 
   // Drag Params
-  if (!node_->get_parameter("C_D_O", CD_.O)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_D_O' not defined");
+  if (!this->get_parameter("C_D_O", CD_.O)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_D_O' not defined");
   }
-  if (!node_->get_parameter("C_D_alpha", CD_.alpha)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_D_alpha' not defined");
+  if (!this->get_parameter("C_D_alpha", CD_.alpha)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_D_alpha' not defined");
   }
-  if (!node_->get_parameter("C_D_beta", CD_.beta)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_D_beta' not defined");
+  if (!this->get_parameter("C_D_beta", CD_.beta)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_D_beta' not defined");
   }
-  if (!node_->get_parameter("C_D_p", CD_.p)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_D_p' not defined");
+  if (!this->get_parameter("C_D_p", CD_.p)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_D_p' not defined");
   }
-  if (!node_->get_parameter("C_D_q", CD_.q)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_D_q' not defined");
+  if (!this->get_parameter("C_D_q", CD_.q)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_D_q' not defined");
   }
-  if (!node_->get_parameter("C_D_r", CD_.r)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_D_r' not defined");
+  if (!this->get_parameter("C_D_r", CD_.r)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_D_r' not defined");
   }
-  if (!node_->get_parameter("C_D_delta_a", CD_.delta_a)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_D_delta_a' not defined");
+  if (!this->get_parameter("C_D_delta_a", CD_.delta_a)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_D_delta_a' not defined");
   }
-  if (!node_->get_parameter("C_D_delta_e", CD_.delta_e)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_D_delta_e' not defined");
+  if (!this->get_parameter("C_D_delta_e", CD_.delta_e)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_D_delta_e' not defined");
   }
-  if (!node_->get_parameter("C_D_delta_r", CD_.delta_r)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_D_delta_r' not defined");
+  if (!this->get_parameter("C_D_delta_r", CD_.delta_r)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_D_delta_r' not defined");
   }
 
   // ell Params (x axis moment)
-  if (!node_->get_parameter("C_ell_O", Cell_.O)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_ell_O' not defined");
+  if (!this->get_parameter("C_ell_O", Cell_.O)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_ell_O' not defined");
   }
-  if (!node_->get_parameter("C_ell_alpha", Cell_.alpha)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_ell_alpha' not defined");
+  if (!this->get_parameter("C_ell_alpha", Cell_.alpha)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_ell_alpha' not defined");
   }
-  if (!node_->get_parameter("C_ell_beta", Cell_.beta)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_ell_beta' not defined");
+  if (!this->get_parameter("C_ell_beta", Cell_.beta)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_ell_beta' not defined");
   }
-  if (!node_->get_parameter("C_ell_p", Cell_.p)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_ell_p' not defined");
+  if (!this->get_parameter("C_ell_p", Cell_.p)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_ell_p' not defined");
   }
-  if (!node_->get_parameter("C_ell_q", Cell_.q)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_ell_q' not defined");
+  if (!this->get_parameter("C_ell_q", Cell_.q)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_ell_q' not defined");
   }
-  if (!node_->get_parameter("C_ell_r", Cell_.r)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_ell_r' not defined");
+  if (!this->get_parameter("C_ell_r", Cell_.r)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_ell_r' not defined");
   }
-  if (!node_->get_parameter("C_ell_delta_a", Cell_.delta_a)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_ell_delta_a' not defined");
+  if (!this->get_parameter("C_ell_delta_a", Cell_.delta_a)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_ell_delta_a' not defined");
   }
-  if (!node_->get_parameter("C_ell_delta_e", Cell_.delta_e)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_ell_delta_e' not defined");
+  if (!this->get_parameter("C_ell_delta_e", Cell_.delta_e)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_ell_delta_e' not defined");
   }
-  if (!node_->get_parameter("C_ell_delta_r", Cell_.delta_r)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_ell_delta_r' not defined");
+  if (!this->get_parameter("C_ell_delta_r", Cell_.delta_r)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_ell_delta_r' not defined");
   }
 
   // m Params (y axis moment)
-  if (!node_->get_parameter("C_m_O", Cm_.O)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_m_O' not defined");
+  if (!this->get_parameter("C_m_O", Cm_.O)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_m_O' not defined");
   }
-  if (!node_->get_parameter("C_m_alpha", Cm_.alpha)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_m_alpha' not defined");
+  if (!this->get_parameter("C_m_alpha", Cm_.alpha)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_m_alpha' not defined");
   }
-  if (!node_->get_parameter("C_m_beta", Cm_.beta)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_m_beta' not defined");
+  if (!this->get_parameter("C_m_beta", Cm_.beta)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_m_beta' not defined");
   }
-  if (!node_->get_parameter("C_m_p", Cm_.p)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_m_p' not defined");
+  if (!this->get_parameter("C_m_p", Cm_.p)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_m_p' not defined");
   }
-  if (!node_->get_parameter("C_m_q", Cm_.q)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_m_q' not defined");
+  if (!this->get_parameter("C_m_q", Cm_.q)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_m_q' not defined");
   }
-  if (!node_->get_parameter("C_m_r", Cm_.r)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_m_r' not defined");
+  if (!this->get_parameter("C_m_r", Cm_.r)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_m_r' not defined");
   }
-  if (!node_->get_parameter("C_m_delta_a", Cm_.delta_a)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_m_delta_a' not defined");
+  if (!this->get_parameter("C_m_delta_a", Cm_.delta_a)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_m_delta_a' not defined");
   }
-  if (!node_->get_parameter("C_m_delta_e", Cm_.delta_e)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_m_delta_e' not defined");
+  if (!this->get_parameter("C_m_delta_e", Cm_.delta_e)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_m_delta_e' not defined");
   }
-  if (!node_->get_parameter("C_m_delta_r", Cm_.delta_r)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_m_delta_r' not defined");
+  if (!this->get_parameter("C_m_delta_r", Cm_.delta_r)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_m_delta_r' not defined");
   }
 
   // n Params (z axis moment)
-  if (!node_->get_parameter("C_n_O", Cn_.O)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_O' not defined");
+  if (!this->get_parameter("C_n_O", Cn_.O)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_n_O' not defined");
   }
-  if (!node_->get_parameter("C_n_alpha", Cn_.alpha)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_alpha' not defined");
+  if (!this->get_parameter("C_n_alpha", Cn_.alpha)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_n_alpha' not defined");
   }
-  if (!node_->get_parameter("C_n_beta", Cn_.beta)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_beta' not defined");
+  if (!this->get_parameter("C_n_beta", Cn_.beta)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_n_beta' not defined");
   }
-  if (!node_->get_parameter("C_n_p", Cn_.p)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_p' not defined");
+  if (!this->get_parameter("C_n_p", Cn_.p)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_n_p' not defined");
   }
-  if (!node_->get_parameter("C_n_q", Cn_.q)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_q' not defined");
+  if (!this->get_parameter("C_n_q", Cn_.q)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_n_q' not defined");
   }
-  if (!node_->get_parameter("C_n_r", Cn_.r)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_r' not defined");
+  if (!this->get_parameter("C_n_r", Cn_.r)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_n_r' not defined");
   }
-  if (!node_->get_parameter("C_n_delta_a", Cn_.delta_a)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_delta_a' not defined");
+  if (!this->get_parameter("C_n_delta_a", Cn_.delta_a)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_n_delta_a' not defined");
   }
-  if (!node_->get_parameter("C_n_delta_e", Cn_.delta_e)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_delta_e' not defined");
+  if (!this->get_parameter("C_n_delta_e", Cn_.delta_e)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_n_delta_e' not defined");
   }
-  if (!node_->get_parameter("C_n_delta_r", Cn_.delta_r)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_n_delta_r' not defined");
+  if (!this->get_parameter("C_n_delta_r", Cn_.delta_r)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_n_delta_r' not defined");
   }
 
   // Y Params (Sideslip Forces)
-  if (!node_->get_parameter("C_Y_O", CY_.O)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_O' not defined");
+  if (!this->get_parameter("C_Y_O", CY_.O)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_Y_O' not defined");
   }
-  if (!node_->get_parameter("C_Y_alpha", CY_.alpha)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_alpha' not defined");
+  if (!this->get_parameter("C_Y_alpha", CY_.alpha)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_Y_alpha' not defined");
   }
-  if (!node_->get_parameter("C_Y_beta", CY_.beta)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_beta' not defined");
+  if (!this->get_parameter("C_Y_beta", CY_.beta)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_Y_beta' not defined");
   }
-  if (!node_->get_parameter("C_Y_p", CY_.p)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_p' not defined");
+  if (!this->get_parameter("C_Y_p", CY_.p)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_Y_p' not defined");
   }
-  if (!node_->get_parameter("C_Y_q", CY_.q)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_q' not defined");
+  if (!this->get_parameter("C_Y_q", CY_.q)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_Y_q' not defined");
   }
-  if (!node_->get_parameter("C_Y_r", CY_.r)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_r' not defined");
+  if (!this->get_parameter("C_Y_r", CY_.r)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_Y_r' not defined");
   }
-  if (!node_->get_parameter("C_Y_delta_a", CY_.delta_a)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_delta_a' not defined");
+  if (!this->get_parameter("C_Y_delta_a", CY_.delta_a)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_Y_delta_a' not defined");
   }
-  if (!node_->get_parameter("C_Y_delta_e", CY_.delta_e)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_delta_e' not defined");
+  if (!this->get_parameter("C_Y_delta_e", CY_.delta_e)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_Y_delta_e' not defined");
   }
-  if (!node_->get_parameter("C_Y_delta_r", CY_.delta_r)) {
-    RCLCPP_ERROR(node_->get_logger(), "Param 'C_Y_delta_r' not defined");
+  if (!this->get_parameter("C_Y_delta_r", CY_.delta_r)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'C_Y_delta_r' not defined");
   }
 }
 
-Eigen::Matrix<double, 6, 1> Fixedwing::update_forces_and_torques(CurrentState x,
-                                                                 const int act_cmds[])
+rcl_interfaces::msg::SetParametersResult Fixedwing::parameters_callback(const std::vector<rclcpp::Parameter> & parameters)
+{
+  rcl_interfaces::msg::SetParametersResult result;
+  result.successful = true;
+  result.reason = "success";
+
+  for (auto param : parameters) {
+
+    if (param.get_name() == "rho") {
+			rho_ = param.as_double();
+    }
+
+    // Wing Geometry
+    else if (param.get_name() == "wing_s") {
+			wing_.S = param.as_double();
+    }
+    else if (param.get_name() == "wing_b") {
+			wing_.b = param.as_double();
+    }
+    else if (param.get_name() == "wing_c") {
+			wing_.c = param.as_double();
+    }
+    else if (param.get_name() == "wing_M") {
+			wing_.M = param.as_double();
+    }
+    else if (param.get_name() == "wing_epsilon") {
+			wing_.epsilon = param.as_double();
+    }
+    else if (param.get_name() == "wing_alpha0") {
+			wing_.alpha0 = param.as_double();
+    }
+
+    // Propeller Coefficients
+    else if (param.get_name() == "D_prop") {
+			prop_.D_prop = param.as_double();
+    }
+    else if (param.get_name() == "CT_0") {
+			prop_.CT_0 = param.as_double();
+    }
+    else if (param.get_name() == "CT_1") {
+			prop_.CT_1 = param.as_double();
+    }
+    else if (param.get_name() == "CT_2") {
+			prop_.CT_2 = param.as_double();
+    }
+    else if (param.get_name() == "CQ_0") {
+			prop_.CQ_0 = param.as_double();
+    }
+    else if (param.get_name() == "CQ_1") {
+			prop_.CQ_1 = param.as_double();
+    }
+    else if (param.get_name() == "CQ_2") {
+			prop_.CQ_2 = param.as_double();
+    }
+
+    // Motor Coefficients
+    else if (param.get_name() == "KV") {
+			motor_.KV = param.as_double();
+    }
+    else if (param.get_name() == "KQ") {
+			motor_.KQ = param.as_double();
+    }
+    else if (param.get_name() == "V_max") {
+			motor_.V_max = param.as_double();
+    }
+    else if (param.get_name() == "R_motor") {
+			motor_.R_motor = param.as_double();
+    }
+    else if (param.get_name() == "I_0") {
+			motor_.I_0 = param.as_double();
+    }
+
+    else if (param.get_name() == "servo_tau") {
+			servo_tau_ = param.as_double();
+    }
+
+    // Lift Params
+    else if (param.get_name() == "C_L_O") {
+			CL_.O = param.as_double();
+    }
+    else if (param.get_name() == "C_L_alpha") {
+			CL_.alpha = param.as_double();
+    }
+    else if (param.get_name() == "C_L_beta") {
+			CL_.beta = param.as_double();
+    }
+    else if (param.get_name() == "C_L_p") {
+			CL_.p = param.as_double();
+    }
+    else if (param.get_name() == "C_L_q") {
+			CL_.q = param.as_double();
+    }
+    else if (param.get_name() == "C_L_r") {
+			CL_.r = param.as_double();
+    }
+    else if (param.get_name() == "C_L_delta_a") {
+			CL_.delta_a = param.as_double();
+    }
+    else if (param.get_name() == "C_L_delta_e") {
+			CL_.delta_e = param.as_double();
+    }
+    else if (param.get_name() == "C_L_delta_r") {
+			CL_.delta_r = param.as_double();
+    }
+
+    // Drag Params
+    else if (param.get_name() == "C_D_O") {
+			CD_.O = param.as_double();
+    }
+    else if (param.get_name() == "C_D_alpha") {
+			CD_.alpha = param.as_double();
+    }
+    else if (param.get_name() == "C_D_beta") {
+			CD_.beta = param.as_double();
+    }
+    else if (param.get_name() == "C_D_p") {
+			CD_.p = param.as_double();
+    }
+    else if (param.get_name() == "C_D_q") {
+			CD_.q = param.as_double();
+    }
+    else if (param.get_name() == "C_D_r") {
+			CD_.r = param.as_double();
+    }
+    else if (param.get_name() == "C_D_delta_a") {
+			CD_.delta_a = param.as_double();
+    }
+    else if (param.get_name() == "C_D_delta_e") {
+			CD_.delta_e = param.as_double();
+    }
+    else if (param.get_name() == "C_D_delta_r") {
+			CD_.delta_r = param.as_double();
+    }
+
+    // ell Params (x axis moment)
+    else if (param.get_name() == "C_ell_O") {
+			Cell_.O = param.as_double();
+    }
+    else if (param.get_name() == "C_ell_alpha") {
+			Cell_.alpha = param.as_double();
+    }
+    else if (param.get_name() == "C_ell_beta") {
+			Cell_.beta = param.as_double();
+    }
+    else if (param.get_name() == "C_ell_p") {
+			Cell_.p = param.as_double();
+    }
+    else if (param.get_name() == "C_ell_q") {
+			Cell_.q = param.as_double();
+    }
+    else if (param.get_name() == "C_ell_r") {
+			Cell_.r = param.as_double();
+    }
+    else if (param.get_name() == "C_ell_delta_a") {
+			Cell_.delta_a = param.as_double();
+    }
+    else if (param.get_name() == "C_ell_delta_e") {
+			Cell_.delta_e = param.as_double();
+    }
+    else if (param.get_name() == "C_ell_delta_r") {
+			Cell_.delta_r = param.as_double();
+    }
+
+    // m Params (y axis moment)
+    else if (param.get_name() == "C_m_O") {
+			Cm_.O = param.as_double();
+    }
+    else if (param.get_name() == "C_m_alpha") {
+			Cm_.alpha = param.as_double();
+    }
+    else if (param.get_name() == "C_m_beta") {
+			Cm_.beta = param.as_double();
+    }
+    else if (param.get_name() == "C_m_p") {
+			Cm_.p = param.as_double();
+    }
+    else if (param.get_name() == "C_m_q") {
+			Cm_.q = param.as_double();
+    }
+    else if (param.get_name() == "C_m_r") {
+			Cm_.r = param.as_double();
+    }
+    else if (param.get_name() == "C_m_delta_a") {
+			Cm_.delta_a = param.as_double();
+    }
+    else if (param.get_name() == "C_m_delta_e") {
+			Cm_.delta_e = param.as_double();
+    }
+    else if (param.get_name() == "C_m_delta_r") {
+			Cm_.delta_r = param.as_double();
+    }
+
+    // n Params (z axis moment)
+    else if (param.get_name() == "C_n_O") {
+			Cn_.O = param.as_double();
+    }
+    else if (param.get_name() == "C_n_alpha") {
+			Cn_.alpha = param.as_double();
+    }
+    else if (param.get_name() == "C_n_beta") {
+			Cn_.beta = param.as_double();
+    }
+    else if (param.get_name() == "C_n_p") {
+			Cn_.p = param.as_double();
+    }
+    else if (param.get_name() == "C_n_q") {
+			Cn_.q = param.as_double();
+    }
+    else if (param.get_name() == "C_n_r") {
+			Cn_.r = param.as_double();
+    }
+    else if (param.get_name() == "C_n_delta_a") {
+			Cn_.delta_a = param.as_double();
+    }
+    else if (param.get_name() == "C_n_delta_e") {
+			Cn_.delta_e = param.as_double();
+    }
+    else if (param.get_name() == "C_n_delta_r") {
+			Cn_.delta_r = param.as_double();
+    }
+
+    // Y Params (Sideslip Forces)
+    else if (param.get_name() == "C_Y_O") {
+			CY_.O = param.as_double();
+    }
+    else if (param.get_name() == "C_Y_alpha") {
+			CY_.alpha = param.as_double();
+    }
+    else if (param.get_name() == "C_Y_beta") {
+			CY_.beta = param.as_double();
+    }
+    else if (param.get_name() == "C_Y_p") {
+			CY_.p = param.as_double();
+    }
+    else if (param.get_name() == "C_Y_q") {
+			CY_.q = param.as_double();
+    }
+    else if (param.get_name() == "C_Y_r") {
+			CY_.r = param.as_double();
+    }
+    else if (param.get_name() == "C_Y_delta_a") {
+			CY_.delta_a = param.as_double();
+    }
+    else if (param.get_name() == "C_Y_delta_e") {
+			CY_.delta_e = param.as_double();
+    }
+    else if (param.get_name() == "C_Y_delta_r") {
+			CY_.delta_r = param.as_double();
+    }
+
+    else {
+      RCLCPP_ERROR_STREAM(this->get_logger(), "Parameter " << param.get_name() << " invalid.");
+      result.successful = false;
+      result.reason = "Parameter invalid";
+    }
+  }
+
+  return result;
+}
+
+geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight_msgs::msg::SimState x, const int act_cmds[])
 {
   delta_.a = (act_cmds[0] - 1500.0) / 500.0;
   delta_.e = -(act_cmds[1] - 1500.0) / 500.0;
@@ -419,12 +681,19 @@ Eigen::Matrix<double, 6, 1> Fixedwing::update_forces_and_torques(CurrentState x,
 
   delta_prev_command_ = delta_;
 
-  double p = x.omega(0);
-  double q = x.omega(1);
-  double r = x.omega(2);
+  double p = x.twist.angular.x;
+  double q = x.twist.angular.y;
+  double r = x.twist.angular.z;
 
   // Calculate airspeed
-  Eigen::Vector3d V_airspeed = x.vel + x.rot.inverse() * wind_;
+  // Eigen::Vector3d V_airspeed = x.vel + x.rot.inverse() * wind_;
+  geometry_msgs::msg::Vector3 V_airspeed;
+  geometry_msgs::msg::TransformStamped rot;
+  rot.transform.rotation = x.pose.orientation;
+  tf2::doTransform(wind_, V_airspeed, rot);
+  V_airspeed += x.twist.linear;
+
+
   double ur = V_airspeed(0);
   double vr = V_airspeed(1);
   double wr = V_airspeed(2);
@@ -530,7 +799,7 @@ Eigen::Matrix<double, 6, 1> Fixedwing::update_forces_and_torques(CurrentState x,
 
   geometry_msgs::msg::TwistStamped msg;
 
-  rclcpp::Time now = node_->get_clock()->now();
+  rclcpp::Time now = this->get_clock()->now();
 
   msg.header.stamp = now;
 
@@ -550,3 +819,18 @@ Eigen::Matrix<double, 6, 1> Fixedwing::update_forces_and_torques(CurrentState x,
 void Fixedwing::set_wind(Eigen::Vector3d wind) { wind_ = wind; }
 
 } // namespace rosflight_sim
+
+
+int main(int argc, char** argv)
+{
+  rclcpp::init(argc, argv);
+
+  auto node = std::make_shared<rosflight_sim::Fixedwing>();
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
+
+  executor.spin();
+
+  rclcpp::shutdown();
+  return 0;
+}
