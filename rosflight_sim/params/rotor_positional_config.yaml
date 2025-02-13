@@ -1,0 +1,38 @@
+# This configuration file specifies the location and 
+# orientation of thrusting motors for a multirotor
+# aircraft. Note that servos are not included, only
+# motors that produce thrust and torque to satisfy 
+# control commands.
+
+components: 4
+
+# Vector from a common measuring point to each significant mass
+component_positions:
+  - [1, 1, 0]
+  - [-1, 1, 0]
+  - [-1, -1, 0]
+  - [1, -1, 0]
+
+# Mass of each object being used for inertial tensor calculation
+component_masses:
+  - 3
+  - 3
+  - 1
+  - 1
+
+component_inertias:
+  - [[0,0,0],[0,0,0],[0,0,0]]
+  - [[0,0,0],[0,0,0],[0,0,0]]
+  - [[0,0,0],[0,0,0],[0,0,0]]
+  - [[0,0,0],[0,0,0],[0,0,0]]
+
+# Misc motor/frame parameters
+vehicle_mass: 3.5   # kg
+motor_resistance: 0.085   # ohms
+air_density: 1.225        # kg/m3
+motor_kv: 0.02894         # SI units
+no_load_current: 1.01     # amps
+prop_diameter: 0.381      # meters
+max_voltage: 25.0         # Volts
+prop_ct: 0.075
+prop_cq: 0.0045
