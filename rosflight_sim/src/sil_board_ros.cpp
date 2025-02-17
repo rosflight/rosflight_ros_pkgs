@@ -44,6 +44,22 @@ SILBoardROS::SILBoardROS()
 {
   firmware_run_srvs_ = this->create_service<rosflight_msgs::srv::RunFirmware>("sil_board/run", 
     std::bind(&SILBoardROS::run_firmware, this, std::placeholders::_1, std::placeholders::_2));
+
+  // Start timer to initialize the board. Used here in case the run_firmware service
+  // is not called quickly enough
+  initialize_timer_ = this->create_wall_timer(std::chrono::microseconds(100),
+    std::bind(&SILBoardROS::init_timer_callback, this));
+}
+
+void SILBoardROS::init_timer_callback()
+{
+  if (!is_initialized_) {
+    initialize_members();
+    is_initialized_ = true;
+  }
+
+  // Kill the timer so it only fires once
+  initialize_timer_->cancel();
 }
 
 void SILBoardROS::initialize_members()
@@ -62,9 +78,9 @@ void SILBoardROS::initialize_members()
 bool SILBoardROS::run_firmware(const rosflight_msgs::srv::RunFirmware::Request::SharedPtr & req,  
                                const rosflight_msgs::srv::RunFirmware::Response::SharedPtr & res)
 {
-  if (!is_initialized) {
+  if (!is_initialized_) {
     initialize_members();
-    is_initialized = true;
+    is_initialized_ = true;
   }
 
   // TODO: In the original rosflight_sil, they called run twice "to make sure that functions that don't get run when we have imu get run".

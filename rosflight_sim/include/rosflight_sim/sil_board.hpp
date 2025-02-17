@@ -39,9 +39,9 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
-#include <sensor_msgs/msg/temperature.hpp>
 #include <sensor_msgs/msg/magnetic_field.hpp>
 #include <sensor_msgs/msg/range.hpp>
+#include <sensor_msgs/msg/temperature.hpp>
 
 #include "rosflight_msgs/msg/airspeed.hpp"
 #include "rosflight_msgs/msg/barometer.hpp"
@@ -156,7 +156,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void board_reset(bool bootloader) override{};
+  void board_reset(bool bootloader) override {};
 
   // clock
   /**
@@ -174,7 +174,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void clock_delay(uint32_t milliseconds) override{};
+  void clock_delay(uint32_t milliseconds) override {};
 
   // serial
   /**
@@ -356,7 +356,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void rc_init(rc_type_t rc_type) override{};
+  void rc_init(rc_type_t rc_type) override {};
   /**
    * @brief Function used to check if RC connection is present. Currently returns false if anything
    * is ever published on RC.
@@ -375,7 +375,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void memory_init() override{};
+  void memory_init() override {};
   /**
    * @brief Reads data from memory file.
    *
@@ -397,34 +397,34 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led0_on() override{};
+  void led0_on() override {};
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led0_off() override{};
+  void led0_off() override {};
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led0_toggle() override{};
+  void led0_toggle() override {};
 
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led1_on() override{};
+  void led1_on() override {};
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led1_off() override{};
+  void led1_off() override {};
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led1_toggle() override{};
+  void led1_toggle() override {};
 
   // Backup Memory
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void backup_memory_init() override{};
+  void backup_memory_init() override {};
   /**
    * @brief Reads data from backup memory object.
    *
@@ -504,7 +504,7 @@ public:
    */
   void battery_current_set_multiplier(double multiplier) override;
 
-  inline const std::array<int, 14>& get_outputs() const { return pwm_outputs_; }
+  inline const std::array<int, 14> & get_outputs() const { return pwm_outputs_; }
 
   // TODO: implement these if necessary
   bool imu_present() override;
@@ -512,6 +512,8 @@ public:
   uint16_t sensors_init_message_count() override { return 0; }
   bool sensors_init_message_good(uint16_t i) override { return true; }
   uint16_t sensors_init_message(char *message, uint16_t size, uint16_t i) { return 0; }
+
+  void declare_parameters();
 };
 
 } // namespace rosflight_sim

@@ -35,6 +35,8 @@
 #ifndef ROSFLIGHT_SIM_SIL_BOARD_ROS_H
 #define ROSFLIGHT_SIM_SIL_BOARD_ROS_H
 
+#include <chrono>
+
 #include <rclcpp/rclcpp.hpp>
 
 #include "rosflight_msgs/srv/run_firmware.hpp"
@@ -54,6 +56,7 @@ public:
 
 private:
   rclcpp::Service<rosflight_msgs::srv::RunFirmware>::SharedPtr firmware_run_srvs_;
+  rclcpp::TimerBase::SharedPtr initialize_timer_;
 
   /**
    * @brief Calls firmware.run()
@@ -67,14 +70,14 @@ private:
    * why this initialization code is not done in the construtor.
    */
   void initialize_members();
-
+  void init_timer_callback();
 
   // Components of the firmware
   std::shared_ptr<SILBoard> board_;
   std::shared_ptr<rosflight_firmware::Mavlink> comm_;
   std::shared_ptr<rosflight_firmware::ROSflight> firmware_;
 
-  bool is_initialized = false;
+  bool is_initialized_ = false;
 };
 
 } // namespace rosflight_sim

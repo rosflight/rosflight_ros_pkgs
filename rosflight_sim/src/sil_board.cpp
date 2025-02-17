@@ -46,10 +46,21 @@ namespace rosflight_sim
 SILBoard::SILBoard(rclcpp::Node::SharedPtr node)
   : UDPBoard()
   , node_(node)
-{}
+{
+  declare_parameters();
+}
+
+void SILBoard::declare_parameters()
+{
+  node_->declare_parameter("simulation_host", rclcpp::PARAMETER_STRING);
+  node_->declare_parameter("simulation_port", rclcpp::PARAMETER_INTEGER);
+  node_->declare_parameter("ROS_host", rclcpp::PARAMETER_STRING);
+  node_->declare_parameter("ROS_port", rclcpp::PARAMETER_INTEGER);
+  node_->declare_parameter("serial_delay_ns", rclcpp::PARAMETER_INTEGER);
+}
 
 void SILBoard::init_board() {
-  boot_time_ = node_->now();
+  boot_time_ = node_->get_clock()->now();
 
   // Set up the udp connection
   auto bind_host = node_->get_parameter_or<std::string>("simulation_host", "localhost");
@@ -71,13 +82,13 @@ constexpr double deg2Rad(double x) { return M_PI / 180.0 * x; }
 // clock
 uint32_t SILBoard::clock_millis()
 {
-  uint32_t millis = (uint32_t) (node_->now() - boot_time_).nanoseconds() * 1e-6;
+  uint32_t millis = (node_->get_clock()->now().nanoseconds() - boot_time_.nanoseconds()) * 1e-6;
   return millis;
 }
 
 uint64_t SILBoard::clock_micros()
 {
-  uint32_t micros = (uint32_t) (node_->now() - boot_time_).nanoseconds() * 1e-3;
+  uint64_t micros = (node_->get_clock()->now().nanoseconds() - boot_time_.nanoseconds()) * 1e-3;
   return micros;
 }
 

@@ -38,7 +38,7 @@ namespace rosflight_sim
 {
 
 TimeManagerInterface::TimeManagerInterface()
-  : rclcpp::Node("time_manager")
+    : rclcpp::Node("time_manager")
 {
   // Declare parameters and set up parameter change callback
   declare_parameters();
@@ -98,9 +98,10 @@ void TimeManagerInterface::set_timers(double default_pub_rate_us, double real_ti
 {
   // Note that this is specifically a wall timer, so it runs off of system time
   // and publishes according to the node parameters
-  clock_duration_us_ = std::chrono::microseconds(
-    static_cast<long int>(default_pub_rate_us / real_time_multiplier));
-  sim_clock_timer_ = this->create_wall_timer(clock_duration_us_, std::bind(&TimeManagerInterface::publish_sim_time, this));
+  clock_duration_us_ =
+    std::chrono::microseconds(static_cast<long int>(default_pub_rate_us / real_time_multiplier));
+  sim_clock_timer_ = this->create_wall_timer(
+    clock_duration_us_, std::bind(&TimeManagerInterface::publish_sim_time, this));
 }
 
 void TimeManagerInterface::publish_sim_time()
@@ -115,4 +116,3 @@ void TimeManagerInterface::publish_sim_time()
 }
 
 } // namespace rosflight_sim
-
