@@ -5,7 +5,7 @@
 - {name: MOTOR_IDLE_THR, type: 9, value: .1} # Set motor to not idle at zero throttle.
 - {name: ARM_CHANNEL, type: 6, value: 4} # Set to desired arm channel.
 - {name: FIXED_WING, type: 6, value: 1} # Configure firmware for fixedwing.
-- {name: MIXER, type: 6, value: 10} # Set mixer to pass through, to directly pass ROSplane2 commands to acutators.
+- {name: PRIMARY_MIXER, type: 6, value: 10} # Set mixer to pass through, to directly pass ROSplane2 commands to acutators.
 - {name: ELEVATOR_REV, type: 6, value: 0} # Option to reverse elevator.
 - {name: AIL_REV, type: 6, value: 0} # Option to reverse Aileron.
 - {name: RUDDER_REV, type: 6, value: 0} # Option to reverse rudder.

@@ -144,27 +144,35 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
   geometry_msgs::msg::TransformStamped q_inertial_to_body;
   q_inertial_to_body.transform.rotation = state.pose.orientation;
 
+  // Form body to inertial rotation
+  geometry_msgs::msg::TransformStamped q_body_to_inertial = q_inertial_to_body;
+  q_body_to_inertial.transform.rotation.x *= -1;
+  q_body_to_inertial.transform.rotation.y *= -1;
+  q_body_to_inertial.transform.rotation.z *= -1;
+
   Eigen::Vector3d gravity = Eigen::Vector3d::Zero();
   gravity[2] = this->get_parameter("gravity").as_double();
 
-  Eigen::Vector3d velocity, acceleration;
+  Eigen::Vector3d velocity, acceleration; // Acceleration and velocity expressed in the body frame
   velocity << state.twist.linear.x, state.twist.linear.y, state.twist.linear.z;
   acceleration << state.acceleration.linear.x, state.acceleration.linear.y, state.acceleration.linear.z;
-  acceleration = acceleration - gravity;
+
+  // Rotate acceleration into inertial frame and subtract gravity
+  tf2::doTransform(acceleration, acceleration, q_body_to_inertial);
+  Eigen::Vector3d acceleration_minus_gravity = acceleration - gravity;
 
   Eigen::Vector3d y_acc;
 
   // this is James's egregious hack to overcome wild imu while sitting on the ground
-  // TODO: Check the directions of these rotations. It seemed like the previous implementation did the reverse of this.
   if (velocity.norm() < 0.05) {
-    tf2::doTransform(gravity, y_acc, q_inertial_to_body);
-  } else if (abs(state.pose.position.z) < 0.3) {
-    tf2::doTransform(acceleration, y_acc, q_inertial_to_body);
+    Eigen::Vector3d minus_gravity = -gravity;
+    tf2::doTransform(minus_gravity, y_acc, q_inertial_to_body);
+  // TODO: Do we need this branch? Seems equivalent to the third branch
+  // } else if (abs(state.pose.position.z) < 0.3) {
+  //   tf2::doTransform(acceleration_minus_gravity, y_acc, q_inertial_to_body);
   } else {
-    double mass = this->get_parameter("mass").as_double();
-    y_acc << forces.wrench.force.x / mass,
-             forces.wrench.force.y / mass,
-             forces.wrench.force.z / mass;
+    // Rotate the acceleration_minus_gravity into the body frame
+    tf2::doTransform(acceleration_minus_gravity, y_acc, q_inertial_to_body);
   }
 
   // Determine if the aircraft is armed

@@ -37,10 +37,11 @@ namespace rosflight_sim
 {
 
 GazeboDynamicsPlugin::GazeboDynamicsPlugin()
-  : gazebo::ModelPlugin()
+    : gazebo::ModelPlugin()
 {}
 
-GazeboDynamicsPlugin::~GazeboDynamicsPlugin() { 
+GazeboDynamicsPlugin::~GazeboDynamicsPlugin()
+{
   GZ_COMPAT_DISCONNECT_WORLD_UPDATE_BEGIN(updateConnection_);
   rclcpp::shutdown();
   if (spin_thread_.joinable()) {
@@ -76,6 +77,7 @@ void GazeboDynamicsPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPt
   });
 
   /* Load Params from Gazebo Server */
+  // TODO: who needs this parameter? Where should we put this?
   if (_sdf->HasElement("mavType")) {
     mav_type_ = _sdf->GetElement("mavType")->Get<std::string>();
   } else {
@@ -86,21 +88,9 @@ void GazeboDynamicsPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPt
   // Declare the initial pose for the reset method
   initial_pose_ = GZ_COMPAT_GET_WORLD_COG_POSE(link_);
 
-  declare_SIL_params();
-
   // Connect the update function to the simulation
-  updateConnection_ =
-    gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&GazeboDynamicsPlugin::OnUpdate, this, _1));
-}
-
-void GazeboDynamicsPlugin::declare_SIL_params()
-{
-  node_->declare_parameter("simulation_host", rclcpp::PARAMETER_STRING);
-  node_->declare_parameter("simulation_port", rclcpp::PARAMETER_INTEGER);
-  node_->declare_parameter("ROS_host", rclcpp::PARAMETER_STRING);
-  node_->declare_parameter("ROS_port", rclcpp::PARAMETER_INTEGER);
-
-  node_->declare_parameter("serial_delay_ns", rclcpp::PARAMETER_INTEGER);
+  updateConnection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
+    boost::bind(&GazeboDynamicsPlugin::OnUpdate, this, _1));
 }
 
 void GazeboDynamicsPlugin::OnUpdate(const gazebo::common::UpdateInfo & _info)
@@ -135,4 +125,4 @@ Eigen::Matrix3d GazeboDynamicsPlugin::rotation_to_eigen_from_gazebo(GazeboQuater
 }
 
 GZ_REGISTER_MODEL_PLUGIN(GazeboDynamicsPlugin)
-} // rosflight_sim
+} // namespace rosflight_sim

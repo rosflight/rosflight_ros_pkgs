@@ -109,11 +109,15 @@ rosflight_msgs::msg::SimState GazeboDynamics::compute_truth()
 }
 
 // TODO: What should we do with this?
-void GazeboDynamics::wind_callback(const geometry_msgs::msg::Vector3 & msg)
+// Publish the wind in the body frame
+geometry_msgs::msg::Vector3Stamped GazeboDynamics::compute_wind_truth()
 {
   // Eigen::Vector3d wind;
   // wind << msg.x, msg.y, msg.z;
   // mav_dynamics_->set_wind(wind);
+  geometry_msgs::msg::Vector3Stamped current_wind;
+  current_wind.header.stamp = this->get_clock()->now();
+  return current_wind;
 }
 
 } // namespace rosflight_sim

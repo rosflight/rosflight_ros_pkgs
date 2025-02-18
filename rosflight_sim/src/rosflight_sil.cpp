@@ -62,8 +62,8 @@ ROSflightSIL::ROSflightSIL()
   // Initialize the service clients that will be used
   client_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   firmware_run_client_ = this->create_client<rosflight_msgs::srv::RunFirmware>("sil_board/run", rmw_qos_profile_services_default, client_cb_group_);
-  forces_and_moments_client_ = this->create_client<rosflight_msgs::srv::RunForcesMoments>("forces_and_moments/run", rmw_qos_profile_services_default, client_cb_group_);
-  dynamics_client_ = this->create_client<std_srvs::srv::Trigger>("dynamics/apply_forces_and_moments", rmw_qos_profile_services_default, client_cb_group_);
+  forces_and_moments_client_ = this->create_client<rosflight_msgs::srv::RunForcesMoments>("forces_and_moments/compute", rmw_qos_profile_services_default, client_cb_group_);
+  dynamics_client_ = this->create_client<std_srvs::srv::Trigger>("dynamics/apply_forces_moments", rmw_qos_profile_services_default, client_cb_group_);
 }
 
 void ROSflightSIL::declare_parameters()

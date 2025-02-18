@@ -36,19 +36,24 @@
 namespace rosflight_sim
 {
 
-DynamicsInterface::DynamicsInterface() : rclcpp::Node("dynamics")
+DynamicsInterface::DynamicsInterface()
+    : rclcpp::Node("dynamics")
 {
   // Declare parameters and set up the callback for changing parameters
   declare_parameters();
-  parameter_callback_handle_ = this->add_on_set_parameters_callback(std::bind(&DynamicsInterface::parameters_callback, this, std::placeholders::_1));
+  parameter_callback_handle_ = this->add_on_set_parameters_callback(
+    std::bind(&DynamicsInterface::parameters_callback, this, std::placeholders::_1));
 
   // Initialize publishers, subscribers, and services
   truth_state_pub_ = this->create_publisher<rosflight_msgs::msg::SimState>("sim_state", 1);
+  wind_truth_pub_ = this->create_publisher<geometry_msgs::msg::Vector3Stamped>("wind_truth", 1);
   forces_moments_sub_ = this->create_subscription<geometry_msgs::msg::WrenchStamped>(
-    "forces_and_moments", 1, std::bind(&DynamicsInterface::forces_callback, this, std::placeholders::_1));
+    "forces_and_moments", 1,
+    std::bind(&DynamicsInterface::forces_callback, this, std::placeholders::_1));
   dynamics_update_srvs_ = this->create_service<std_srvs::srv::Trigger>(
     "dynamics/apply_forces_moments",
-    std::bind(&DynamicsInterface::apply_forces_publish_truth, this, std::placeholders::_1, std::placeholders::_2));
+    std::bind(&DynamicsInterface::apply_forces_publish_truth, this, std::placeholders::_1,
+              std::placeholders::_2));
 }
 
 void DynamicsInterface::declare_parameters()
@@ -71,13 +76,19 @@ void DynamicsInterface::forces_callback(const geometry_msgs::msg::WrenchStamped 
   forces_moments_ = msg;
 }
 
-bool DynamicsInterface::apply_forces_publish_truth(const std_srvs::srv::Trigger::Request::SharedPtr & req,
-                                                   const std_srvs::srv::Trigger::Response::SharedPtr & res)
+bool DynamicsInterface::apply_forces_publish_truth(
+  const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  const std_srvs::srv::Trigger::Response::SharedPtr & res)
 {
   apply_forces_and_torques();
 
+  // Compute truth state
   rosflight_msgs::msg::SimState truth = compute_truth();
   truth_state_pub_->publish(truth);
+
+  // Compute wind truth
+  geometry_msgs::msg::Vector3Stamped wind_truth = compute_wind_truth();
+  wind_truth_pub_->publish(wind_truth);
 
   res->message = "success";
   res->success = true;
@@ -85,6 +96,4 @@ bool DynamicsInterface::apply_forces_publish_truth(const std_srvs::srv::Trigger:
   return true;
 }
 
-
-} // rosflight_sim
-
+} // namespace rosflight_sim

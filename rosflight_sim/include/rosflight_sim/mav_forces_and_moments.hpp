@@ -36,12 +36,12 @@
 #ifndef ROSFLIGHT_SIM_MAV_FORCES_AND_MOMENTS_H
 #define ROSFLIGHT_SIM_MAV_FORCES_AND_MOMENTS_H
 
-#include <eigen3/Eigen/Core>
-
 #include <rclcpp/rclcpp.hpp>
 #include <geometry_msgs/msg/wrench_stamped.hpp>
+#include <geometry_msgs/msg/vector3_stamped.hpp>
 
 #include <rosflight_msgs/msg/sim_state.hpp>
+#include <rosflight_msgs/srv/run_forces_moments.hpp>
 
 
 namespace rosflight_sim
@@ -53,33 +53,21 @@ class MAVForcesAndMoments : public rclcpp::Node
 {
 private:
   rclcpp::Publisher<geometry_msgs::msg::WrenchStamped>::SharedPtr forces_moments_pub_;
+  rclcpp::Subscription<geometry_msgs::msg::Vector3Stamped>::SharedPtr wind_sub_;
+  rclcpp::Subscription<rosflight_msgs::msg::SimState>::SharedPtr truth_sub_;
+  rclcpp::Service<rosflight_msgs::srv::RunForcesMoments>::SharedPtr run_forces_moments_srvr_;
+
+  // Persistent variables
+  rosflight_msgs::msg::SimState current_state_;
+  geometry_msgs::msg::Vector3Stamped current_wind_;
+
+  // Callbacks
+  void state_callback(const rosflight_msgs::msg::SimState & msg);
+  void wind_callback(const geometry_msgs::msg::Vector3Stamped & msg);
+  bool forces_moments_srvr_callback(const rosflight_msgs::srv::RunForcesMoments::Request::SharedPtr & req,
+                                    const rosflight_msgs::srv::RunForcesMoments::Response::SharedPtr & res);
 
 protected:
-
-  // CurrentState most_recent_state_;
-  // int most_recent_actuator_command_ [];
-
-  // void state_callback(const rosflight_msgs::msg::State & msg)
-  // {
-  //   most_recent_state_ = msg.data;
-  // }
-
-  // void actuator_command_callback()
-  // {
-  //   most_recent_actuator_command_ = msg.data;
-  // }
-
-  // /**
-  //  * @brief Publisher timer callback
-  //  */
-  // void timer_callback()
-  // {
-  //   rosflight_msg::msg::ForcesAndMoments message;
-  //   Eigen::Matrix<double, 6, 1> forces_and_torques = update_forces_and_torques(most_recent_state, most_recent_actuator_command_)
-  //   message.data = forces_and_torques;
-  //   forces_and_moments_pub_->publish(message);
-  // }
-
   /**
    * @brief Saturation function for actuator commands.
    *
@@ -113,37 +101,16 @@ public:
   MAVForcesAndMoments();
 
   /**
-   * @brief Struct for storing the position and velocity of the MAV for both translation and rotation
-   * coordinates, as well as the time of the state.
-   */
-  struct CurrentState
-  {
-    /// Position of MAV in NED wrt initial position
-    Eigen::Vector3d pos;
-    /// Rotation of MAV in NED wrt initial position
-    Eigen::Matrix3d rot;
-    /// Body-fixed velocity of MAV wrt initial position (NED)
-    Eigen::Vector3d vel;
-    /// Body-fixed angular velocity of MAV (NED)
-    Eigen::Vector3d omega;
-    /// current time
-    double t;
-  };
-
-  /**
-   * @brief Interface function for calculating the current MAV forces and moments for Gazebo.
+   * @brief Interface function for calculating the current MAV forces and moments.
    *
    * @param x Current state of MAV
+   * @param wind Current wind acting on the MAV
    * @param act_cmds Current MAV commands
    * @return Calculated forces and moments
    */
-  virtual geometry_msgs::msg::WrenchStamped update_forces_and_torques(rosflight_msgs::msg::SimState x, const int act_cmds[]) = 0;
-  /**
-   * @brief Interface function for updating the wind speed to use in the forces and moments calculations.
-   *
-   * @param wind Wind velocities
-   */
-  virtual void set_wind(Eigen::Vector3d wind) = 0;
+  virtual geometry_msgs::msg::WrenchStamped update_forces_and_torques(rosflight_msgs::msg::SimState x,
+                                                                      geometry_msgs::msg::Vector3Stamped wind,
+                                                                      std::array<int, 14> act_cmds) = 0;
 };
 
 } // namespace rosflight_sim

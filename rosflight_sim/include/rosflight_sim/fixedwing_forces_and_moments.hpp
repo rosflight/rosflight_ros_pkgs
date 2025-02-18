@@ -35,17 +35,23 @@
 #ifndef ROSFLIGHT_SIM_FIXEDWING_FORCES_AND_MOMENTS_H
 #define ROSFLIGHT_SIM_FIXEDWING_FORCES_AND_MOMENTS_H
 
-#include <eigen3/Eigen/Dense>
+#include <cmath>
+
 #include <rclcpp/rclcpp.hpp>
-#include <geometry_msgs/msg/twist_stamped.hpp>
+#include <rclcpp/parameter_value.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <geometry_msgs/msg/vector3_stamped.hpp>
+#include <geometry_msgs/msg/wrench_stamped.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include "rosflight_sim/mav_forces_and_moments.hpp"
+#include "rosflight_msgs/msg/sim_state.hpp"
 
 namespace rosflight_sim
 {
 /**
- * @brief This class contains the forces and moments calculations used for fixedwing simulations in
- * Gazebo. It uses the dynamic model described in Small Unmanned Aircraft: Theory and Practice by
+ * @brief This class contains the forces and moments calculations used for fixedwing simulations.
+ * It uses the dynamic model described in Small Unmanned Aircraft: Theory and Practice by
  * Dr. Randy Beard and Dr. Tim McLain. Aerodynamic parameters can be configured at runtime in the
  * fixedwing_dynamics.yaml parameter file.
  *
@@ -134,30 +140,25 @@ private:
   Actuators delta_prev_;
   Actuators delta_prev_command_;
 
-  // wind
-  Eigen::Vector3d wind_;
-
   /**
    * @brief Declares ROS parameters. Must be called in the constructor.
    */
   void declare_fixedwing_params();
 
 public:
-  /**
-   * @param node ROS2 node to obtain parameters from. Usually the node provided by the Gazebo model
-   * plugin.
-   */
   Fixedwing();
-  ~Fixedwing();
 
   /**
    * @brief Calculates forces and moments based on current state and aerodynamic forces.
    *
    * @param x Current state of aircraft
+   * @param wind Current wind acting on the aircraft
    * @param act_cmds Actuator commands
    * @return 6x1 eigen matrix of calculated forces and moments
    */
-  geometry_msgs::msg::WrenchStamped update_forces_and_torques(rosflight_msgs::msg::SimState x, const int act_cmds[]) override;
+  geometry_msgs::msg::WrenchStamped update_forces_and_torques(rosflight_msgs::msg::SimState x,
+                                                              geometry_msgs::msg::Vector3Stamped wind,
+                                                              std::array<int, 14> act_cmds) override;
 };
 
 } // namespace rosflight_sim

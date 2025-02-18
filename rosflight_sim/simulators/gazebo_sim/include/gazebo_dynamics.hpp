@@ -56,8 +56,7 @@ public:
 private:
   void apply_forces_and_torques() override;
   rosflight_msgs::msg::SimState compute_truth() override;
-
-  void wind_callback(const geometry_msgs::msg::Vector3 & msg);
+  geometry_msgs::msg::Vector3Stamped compute_wind_truth() override;
 
   gazebo::physics::LinkPtr link_;
   std::string link_name_;

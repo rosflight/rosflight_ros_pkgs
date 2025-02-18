@@ -11,7 +11,8 @@ import sys
 
 from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 
@@ -19,29 +20,47 @@ from launch_ros.actions import Node
 def generate_launch_description():
     """This is a launch file that runs the bare minimum requirements fly a fixedwing in gazebo"""
 
+    aircraft = 'anaconda' # default aircraft
     use_vimfly = False
 
+    # TODO: It would be better to use the launch argument configuration instead of manually parsing
     for arg in sys.argv:
         if arg.startswith("use_vimfly:="):
             use_vimfly = arg.split(":=")[1]
             use_vimfly = use_vimfly.lower() == "true"
 
+        elif arg.startswith("aircraft:="):
+            aircraft = arg.split(":=")[1]
+
+
     # Start simulator
     simulator_launch_include = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
+        PythonLaunchDescriptionSource([
             os.path.join(
                 get_package_share_directory("rosflight_sim"),
                 "launch/fixedwing_gazebo.launch.py",
             )
-        )
+        ]),
+        launch_arguments={
+            'aircraft': aircraft,
+        }.items()
     )
+
+    # Declare launch arguments
+    use_sim_time_arg = DeclareLaunchArgument(
+        "use_sim_time",
+        default_value="true",
+        description="Whether the nodes will use sim time or not"
+    )
+    use_sim_time = LaunchConfiguration('use_sim_time')
+
 
     # Start Rosflight SIL
     rosflight_sil_node = Node(
         package="rosflight_sim",
         executable="rosflight_sil",
         output="screen",
-        parameters=[{"use_sim_time": True, "use_timer": False}],
+        parameters=[{"use_sim_time": use_sim_time, "use_timer": True}],
     )
 
     # Start sil_board
@@ -49,7 +68,19 @@ def generate_launch_description():
         package="rosflight_sim",
         executable="sil_board",
         output="screen",
-        parameters=[{"use_sim_time": True}],
+        parameters=[{"use_sim_time": use_sim_time}],
+    )
+
+    # Start forces and moments
+    fw_forces_moments_node = Node(
+        package="rosflight_sim",
+        executable="fixedwing_forces_and_moments",
+        output="screen",
+        parameters=[
+            os.path.join(get_package_share_directory('rosflight_sim'),
+                                 f'params/{aircraft}_dynamics.yaml'),
+            {"use_sim_time": use_sim_time},
+        ],
     )
 
     # Start standalone sensors
@@ -57,7 +88,7 @@ def generate_launch_description():
         package="rosflight_sim",
         executable="standalone_sensors",
         output="screen",
-        parameters=[{"use_sim_time": True}],
+        parameters=[{"use_sim_time": use_sim_time}],
     )
 
     # Start rosflight_io interface node
@@ -65,7 +96,8 @@ def generate_launch_description():
         package="rosflight_io",
         executable="rosflight_io",
         output="screen",
-        parameters=[{"udp": True}],
+        parameters=[{"udp": True,
+                     "use_sim_time": use_sim_time}],
     )
 
     # Start rc_joy node for RC input
@@ -73,14 +105,16 @@ def generate_launch_description():
         package="rosflight_sim",
         executable="rc.py",
         remappings=[("/RC", "/fixedwing/RC")],
-        parameters=[{"use_vimfly": use_vimfly, "use_sim_time": True}],
+        parameters=[{"use_vimfly": use_vimfly, "use_sim_time": use_sim_time}],
     )
 
     return LaunchDescription(
         [
+            use_sim_time_arg,
             simulator_launch_include,
             rosflight_sil_node,
             sil_board_node,
+            fw_forces_moments_node,
             standalone_sensor_node,
             rosflight_io_node,
             rc_joy_node,

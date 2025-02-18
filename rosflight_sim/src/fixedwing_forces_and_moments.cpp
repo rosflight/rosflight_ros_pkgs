@@ -32,23 +32,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <cmath>
-
-#include <rclcpp/logging.hpp>
-#include <rclcpp/parameter_value.hpp>
-#include <geometry_msgs/msg/wrench_stamped.hpp>
-#include <geometry_msgs/msg/transform_stamped.hpp>
-
-// #include <tf2/LinearMath/Quaternion.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-#include <tf2_eigen/tf2_eigen.hpp>
-
 #include "rosflight_sim/fixedwing_forces_and_moments.hpp"
 
 namespace rosflight_sim
 {
 Fixedwing::Fixedwing()
-    : rho_(0)
+    : MAVForcesAndMoments()
+    , rho_(0)
     , wing_()
     , prop_()
     , motor_()
@@ -60,12 +50,14 @@ Fixedwing::Fixedwing()
     , Cn_()
     , delta_()
 {
+  // Declare parameters
   declare_fixedwing_params();
-  parameter_callback_handle_ = this->add_on_set_parameters_callback( std::bind(&Fixedwing::parameters_callback, this, std::placeholders::_1));
+  parameter_callback_handle_ = this->add_on_set_parameters_callback(
+    std::bind(&Fixedwing::parameters_callback, this, std::placeholders::_1));
+
+  // Load all params from ROS. Throw an error if params don't exist
   update_params_from_ROS();
 }
-
-Fixedwing::~Fixedwing() = default;
 
 void Fixedwing::declare_fixedwing_params()
 {
@@ -78,8 +70,6 @@ void Fixedwing::declare_fixedwing_params()
   this->declare_parameter("wing_M", rclcpp::PARAMETER_DOUBLE);
   this->declare_parameter("wing_epsilon", rclcpp::PARAMETER_DOUBLE);
   this->declare_parameter("wing_alpha0", rclcpp::PARAMETER_DOUBLE);
-
-  this->declare_parameter("servo_tau", rclcpp::PARAMETER_DOUBLE);
 
   this->declare_parameter("C_L_O", rclcpp::PARAMETER_DOUBLE);
   this->declare_parameter("C_L_alpha", rclcpp::PARAMETER_DOUBLE);
@@ -154,6 +144,16 @@ void Fixedwing::declare_fixedwing_params()
   this->declare_parameter("V_max", rclcpp::PARAMETER_DOUBLE);
   this->declare_parameter("R_motor", rclcpp::PARAMETER_DOUBLE);
   this->declare_parameter("I_0", rclcpp::PARAMETER_DOUBLE);
+
+  // RC command channel configuration
+  this->declare_parameter("aileron_channel", 0);
+  this->declare_parameter("elevator_channel", 1);
+  this->declare_parameter("throttle_channel", 4);
+  this->declare_parameter("rudder_channel", 2);
+
+  // Servo time delay parameters
+  this->declare_parameter("servo_refresh_rate", 0.003);
+  this->declare_parameter("servo_tau", 0.01);
 }
 
 void Fixedwing::update_params_from_ROS()
@@ -650,35 +650,32 @@ rcl_interfaces::msg::SetParametersResult Fixedwing::parameters_callback(const st
     else if (param.get_name() == "C_Y_delta_r") {
 			CY_.delta_r = param.as_double();
     }
-
-    else {
-      RCLCPP_ERROR_STREAM(this->get_logger(), "Parameter " << param.get_name() << " invalid.");
-      result.successful = false;
-      result.reason = "Parameter invalid";
-    }
   }
 
   return result;
 }
 
-geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight_msgs::msg::SimState x, const int act_cmds[])
+geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight_msgs::msg::SimState x,
+                                                                       geometry_msgs::msg::Vector3Stamped wind,
+                                                                       std::array<int, 14> act_cmds)
 {
-  delta_.a = (act_cmds[0] - 1500.0) / 500.0;
-  delta_.e = -(act_cmds[1] - 1500.0) / 500.0;
-  delta_.t = (act_cmds[4] - 1000.0) / 1000.0;
-  delta_.r = -(act_cmds[2] - 1500.0) / 500.0;
+  delta_.a =  (act_cmds[this->get_parameter("aileron_channel").as_int()] - 1500.0) / 500.0;
+  delta_.e = -(act_cmds[this->get_parameter("elevator_channel").as_int()] - 1500.0) / 500.0;
+  delta_.t =  (act_cmds[this->get_parameter("throttle_channel").as_int()] - 1000.0) / 1000.0;
+  delta_.r = -(act_cmds[this->get_parameter("rudder_channel").as_int()] - 1500.0) / 500.0;
 
+  // Apply servo time delay
   Actuators delta_curr;
 
-  float Ts = .003; // refresh rate TODO find a way to programmatically set this.
-
+  float Ts = this->get_parameter("servo_refresh_rate").as_double(); // refresh rate TODO: find a way to programmatically set this.
   delta_curr.a = 1 / (2 * servo_tau_ / Ts + 1)
     * (delta_prev_command_.a + delta_.a + (2 * servo_tau_ / Ts - 1) * delta_prev_.a);
   delta_curr.e = 1 / (2 * servo_tau_ / Ts + 1)
     * (delta_prev_command_.e + delta_.e + (2 * servo_tau_ / Ts - 1) * delta_prev_.e);
+  delta_curr.r = 1 / (2 * servo_tau_ / Ts + 1)
+    * (delta_prev_command_.r + delta_.r + (2 * servo_tau_ / Ts - 1) * delta_prev_.r);
 
   delta_prev_ = delta_curr;
-
   delta_prev_command_ = delta_;
 
   double p = x.twist.angular.x;
@@ -686,21 +683,20 @@ geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight
   double r = x.twist.angular.z;
 
   // Calculate airspeed
-  // Eigen::Vector3d V_airspeed = x.vel + x.rot.inverse() * wind_;
-  geometry_msgs::msg::Vector3 V_airspeed;
+  geometry_msgs::msg::Vector3Stamped V_wind;  // in body frame
   geometry_msgs::msg::TransformStamped rot;
   rot.transform.rotation = x.pose.orientation;
-  tf2::doTransform(wind_, V_airspeed, rot);
-  V_airspeed += x.twist.linear;
+  tf2::doTransform(wind, V_wind, rot);
+  geometry_msgs::msg::Vector3Stamped V_airspeed;
 
+  // Va = [ur, vr, wr] = V_ground - V_wind
+  double ur = x.twist.linear.x - V_wind.vector.x;
+  double vr = x.twist.linear.y - V_wind.vector.y;
+  double wr = x.twist.linear.z - V_wind.vector.z;
 
-  double ur = V_airspeed(0);
-  double vr = V_airspeed(1);
-  double wr = V_airspeed(2);
+  double Va = sqrt(pow(ur,2.0) + pow(vr,2.0) + pow(wr,2.0));
 
-  double Va = V_airspeed.norm();
-
-  Eigen::Matrix<double, 6, 1> forces;
+  geometry_msgs::msg::WrenchStamped forces;
 
   /*
    * The following math follows the method described in chapter 4 of
@@ -755,68 +751,55 @@ geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight
     double CZ_q_a = -CD_.q * sa - CL_.q * ca;
     double CZ_deltaE_a = -CD_.delta_e * sa - CL_.delta_e * ca;
 
-    forces(0) = 0.5 * (rho_) *Va * Va * wing_.S
+    forces.wrench.force.x = 0.5 * (rho_) *Va * Va * wing_.S
         * (CX_a + (CX_q_a * wing_.c * q) / (2.0 * Va) + CX_deltaE_a * delta_curr.e)
       + Prop_Force;
 
-    forces(1) = 0.5 * (rho_) *Va * Va * wing_.S
+    forces.wrench.force.y = 0.5 * (rho_) *Va * Va * wing_.S
       * (CY_.O + CY_.beta * beta + ((CY_.p * wing_.b * p) / (2.0 * Va))
          + ((CY_.r * wing_.b * r) / (2.0 * Va)) + CY_.delta_a * delta_curr.a
          + CY_.delta_r * delta_.r);
 
-    forces(2) = 0.5 * (rho_) *Va * Va * wing_.S
+    forces.wrench.force.z = 0.5 * (rho_) *Va * Va * wing_.S
       * (CZ_a + (CZ_q_a * wing_.c * q) / (2.0 * Va) + CZ_deltaE_a * delta_curr.e);
 
-    forces(3) = 0.5 * (rho_) *Va * Va * wing_.S * wing_.b
+    forces.wrench.torque.x = 0.5 * (rho_) *Va * Va * wing_.S * wing_.b
         * (Cell_.O + Cell_.beta * beta + (Cell_.p * wing_.b * p) / (2.0 * Va)
            + (Cell_.r * wing_.b * r) / (2.0 * Va) + Cell_.delta_a * delta_curr.a
            + Cell_.delta_r * delta_.r)
       - Prop_Torque;
 
-    forces(4) = 0.5 * (rho_) *Va * Va * wing_.S * wing_.c
+    forces.wrench.torque.y = 0.5 * (rho_) *Va * Va * wing_.S * wing_.c
       * (Cm_.O + Cm_.alpha * alpha + (Cm_.q * wing_.c * q) / (2.0 * Va)
          + Cm_.delta_e * delta_curr.e);
 
-    forces(5) = 0.5 * (rho_) *Va * Va * wing_.S * wing_.b
+    forces.wrench.torque.z = 0.5 * (rho_) *Va * Va * wing_.S * wing_.b
       * (Cn_.O + Cn_.beta * beta + (Cn_.p * wing_.b * p) / (2.0 * Va)
          + (Cn_.r * wing_.b * r) / (2.0 * Va) + Cn_.delta_a * delta_curr.a
          + Cn_.delta_r * delta_.r);
   } else {
 
-    if (delta_.t == 0.0) {
-      forces(0) = 0.0;
+    if (delta_.t < 0.01) {
+      forces.wrench.force.x = 0.0;
     } else {
-      forces(0) = Prop_Force;
+      forces.wrench.force.x = Prop_Force;
     }
 
-    forces(1) = 0.0;
-    forces(2) = 0.0;
-    forces(3) =
-      0.0; // We do not simulate torque in the low speed conditions, this is because it usually means we are on the ground.
-    forces(4) = 0.0;
-    forces(5) = 0.0;
+    forces.wrench.force.y = 0.0;
+    forces.wrench.force.z = 0.0;
+    // We do not simulate torque in the low speed conditions.
+    // This is because it usually means we are on the ground.
+    forces.wrench.torque.x = 0.0;
+    forces.wrench.torque.y = 0.0;
+    forces.wrench.torque.z = 0.0;
   }
 
-  geometry_msgs::msg::TwistStamped msg;
-
+  // Package up the message and return it
   rclcpp::Time now = this->get_clock()->now();
-
-  msg.header.stamp = now;
-
-  msg.twist.linear.x = forces(0);
-  msg.twist.linear.y = forces(1);
-  msg.twist.linear.z = forces(2);
-
-  msg.twist.angular.x = forces(3);
-  msg.twist.angular.y = forces(4);
-  msg.twist.angular.z = forces(5);
-
-  forces_moments_pub_->publish(msg);
+  forces.header.stamp = now;
 
   return forces;
 }
-
-void Fixedwing::set_wind(Eigen::Vector3d wind) { wind_ = wind; }
 
 } // namespace rosflight_sim
 

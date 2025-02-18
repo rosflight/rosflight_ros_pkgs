@@ -103,8 +103,6 @@ private:
   gazebo::event::ConnectionPtr updateConnection_; // Pointer to the update event connection.
   rclcpp::Node::SharedPtr node_;
 
-  void declare_SIL_params();
-
   std::shared_ptr<rosflight_sim::GazeboDynamics> gazebo_dynamics_ptr_;
   std::thread spin_thread_;
 };

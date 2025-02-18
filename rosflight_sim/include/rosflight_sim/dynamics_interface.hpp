@@ -31,13 +31,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef ROSFLIGHT_SIM_SENSOR_INTERFACE_H
 #define ROSFLIGHT_SIM_SENSOR_INTERFACE_H
 
-#include <rclcpp/rclcpp.hpp>
 #include <geometry_msgs/msg/vector3_stamped.hpp>
 #include <geometry_msgs/msg/wrench_stamped.hpp>
+#include <rclcpp/rclcpp.hpp>
 #include <std_srvs/srv/trigger.hpp>
 
 #include "rosflight_msgs/msg/sim_state.hpp"
@@ -50,11 +49,15 @@ class DynamicsInterface : public rclcpp::Node
 public:
   DynamicsInterface();
 
-  inline const geometry_msgs::msg::WrenchStamped get_forces_moments() const { return forces_moments_; }
+  inline const geometry_msgs::msg::WrenchStamped get_forces_moments() const
+  {
+    return forces_moments_;
+  }
 
 private:
   virtual void apply_forces_and_torques() = 0;
   virtual rosflight_msgs::msg::SimState compute_truth() = 0;
+  virtual geometry_msgs::msg::Vector3Stamped compute_wind_truth() = 0;
 
   // ROS2 interfaces
   rclcpp::Publisher<rosflight_msgs::msg::SimState>::SharedPtr truth_state_pub_;
@@ -69,7 +72,7 @@ private:
                                   const std_srvs::srv::Trigger::Response::SharedPtr & res);
   void forces_callback(const geometry_msgs::msg::WrenchStamped & msg);
 
-    /**
+  /**
    *  @brief Declares all of the parameters with the ROS2 parameter system. Called during initialization
    */
   void declare_parameters();
@@ -88,9 +91,8 @@ private:
    */
   rcl_interfaces::msg::SetParametersResult
   parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
-
 };
 
-}
+} // namespace rosflight_sim
 
 #endif // ROSFLIGHT_SIM_SENSOR_INTERFACE_H

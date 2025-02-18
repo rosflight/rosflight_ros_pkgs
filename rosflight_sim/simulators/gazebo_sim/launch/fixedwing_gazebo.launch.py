@@ -74,12 +74,6 @@ def generate_launch_description():
         'ros_log_level', default_value=TextSubstitution(text='info')
     )
 
-    aircraft = 'anaconda' # default aircraft
-
-    for arg in sys.argv:
-        if arg.startswith("aircraft:="):
-            aircraft = arg.split(":=")[1]
-
     # Start simulator
     gazebo_launch_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -93,10 +87,18 @@ def generate_launch_description():
             'gui': gui,
             'verbose': verbose,
             'world': world_file,
-            'params_file': os.path.join(get_package_share_directory('rosflight_sim'),
-                                        f'params/{aircraft}_dynamics.yaml'),
         }.items()
     )
+
+    # aircraft = LaunchConfiguration('aircraft')
+    # TODO: We have to parse it in two places, the parent file and this file, since we 
+    # need that info in both. LaunchConfiguration cannot be converted to a string by anything
+    # other than the other launch actions... There is potentially a way to use the Command launch
+    # action, which evaluates a command (i.e. evaluates the xacro command)
+    aircraft = 'anaconda' # default aircraft
+    for arg in sys.argv:
+        if arg.startswith("aircraft:="):
+            aircraft = arg.split(":=")[1]
 
     # Render xacro file
     xacro_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'),
