@@ -1,7 +1,0 @@
-# Service to run the forces and moments computation for rosflight_sim
-
-int32[14] pwm_outputs
-bool valid
----
-bool success
-string message

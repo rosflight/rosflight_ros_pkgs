@@ -1,5 +1,0 @@
-# Service call to the SIL board to run the firmware loop (firmware.run())
-
----
-int32[14] pwm_outputs
-bool success

@@ -30,6 +30,7 @@ set(msg_files
   "msg/GNSS.msg"
   "msg/GNSSFull.msg"
   "msg/OutputRaw.msg"
+  "msg/PwmOutput.msg"
   "msg/RCRaw.msg"
   "msg/Status.msg"
   "msg/SimState.msg"
@@ -40,8 +41,6 @@ set(srv_files
   "srv/ParamFile.srv"
   "srv/ParamGet.srv"
   "srv/ParamSet.srv"
-  "srv/RunFirmware.srv"
-  "srv/RunForcesMoments.srv"
   )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
