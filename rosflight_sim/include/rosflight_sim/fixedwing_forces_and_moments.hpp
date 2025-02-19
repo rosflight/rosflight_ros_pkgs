@@ -158,7 +158,7 @@ public:
    */
   geometry_msgs::msg::WrenchStamped update_forces_and_torques(rosflight_msgs::msg::SimState x,
                                                               geometry_msgs::msg::Vector3Stamped wind,
-                                                              std::array<int, 14> act_cmds) override;
+                                                              std::array<uint16_t, 14> act_cmds) override;
 };
 
 } // namespace rosflight_sim

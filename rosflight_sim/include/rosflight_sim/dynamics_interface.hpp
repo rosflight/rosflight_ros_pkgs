@@ -49,27 +49,19 @@ class DynamicsInterface : public rclcpp::Node
 public:
   DynamicsInterface();
 
-  inline const geometry_msgs::msg::WrenchStamped get_forces_moments() const
-  {
-    return forces_moments_;
-  }
 
 private:
-  virtual void apply_forces_and_torques() = 0;
+  virtual void apply_forces_and_torques(const geometry_msgs::msg::WrenchStamped & msg) = 0;
   virtual rosflight_msgs::msg::SimState compute_truth() = 0;
   virtual geometry_msgs::msg::Vector3Stamped compute_wind_truth() = 0;
 
   // ROS2 interfaces
   rclcpp::Publisher<rosflight_msgs::msg::SimState>::SharedPtr truth_state_pub_;
   rclcpp::Publisher<geometry_msgs::msg::Vector3Stamped>::SharedPtr wind_truth_pub_;
-
   rclcpp::Subscription<geometry_msgs::msg::WrenchStamped>::SharedPtr forces_moments_sub_;
-  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr dynamics_update_srvs_;
 
   geometry_msgs::msg::WrenchStamped forces_moments_;
 
-  bool apply_forces_publish_truth(const std_srvs::srv::Trigger::Request::SharedPtr & req,
-                                  const std_srvs::srv::Trigger::Response::SharedPtr & res);
   void forces_callback(const geometry_msgs::msg::WrenchStamped & msg);
 
   /**

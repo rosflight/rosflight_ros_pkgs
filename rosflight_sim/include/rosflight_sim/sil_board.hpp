@@ -84,7 +84,7 @@ private:
 
   // TODO: figure out where to define the mav_type_. Previously it was defined by Gazebo I believe
   std::string mav_type_;
-  std::array<int, 14> pwm_outputs_ = {0}; // assumes maximum of 14 channels
+  std::array<uint16_t, 14> pwm_outputs_ = {0}; // assumes maximum of 14 channels
 
   // Time variables
   rclcpp::Time boot_time_;
@@ -504,7 +504,7 @@ public:
    */
   void battery_current_set_multiplier(double multiplier) override;
 
-  inline const std::array<int, 14> & get_outputs() const { return pwm_outputs_; }
+  inline const std::array<uint16_t, 14> & get_outputs() const { return pwm_outputs_; }
 
   // TODO: implement these if necessary
   bool imu_present() override;

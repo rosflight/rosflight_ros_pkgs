@@ -47,14 +47,11 @@ MAVForcesAndMoments::MAVForcesAndMoments()
   // Define ROS interfaces
   forces_moments_pub_ = this->create_publisher<geometry_msgs::msg::WrenchStamped>("/forces_and_moments", 1);
   truth_sub_ = this->create_subscription<rosflight_msgs::msg::SimState>(
-    "/sim_state", 1, std::bind(&MAVForcesAndMoments::state_callback, this, std::placeholders::_1));
+    "sim/truth_state", 1, std::bind(&MAVForcesAndMoments::state_callback, this, std::placeholders::_1));
   wind_sub_ = this->create_subscription<geometry_msgs::msg::Vector3Stamped>(
-    "/wind_truth", 1, std::bind(&MAVForcesAndMoments::wind_callback, this, std::placeholders::_1));
-
-  // Initialize the forces and moments service
-  run_forces_moments_srvr_ = this->create_service<rosflight_msgs::srv::RunForcesMoments>(
-      "forces_and_moments/compute", std::bind(&MAVForcesAndMoments::forces_moments_srvr_callback, this,
-                                                    std::placeholders::_1, std::placeholders::_2));
+    "sim/wind_truth", 1, std::bind(&MAVForcesAndMoments::wind_callback, this, std::placeholders::_1));
+  firware_out_sub_ = this->create_subscription<rosflight_msgs::msg::PwmOutput>(
+    "sim/pwm_output", 1, std::bind(&MAVForcesAndMoments::firmware_output_callback, this, std::placeholders::_1));
 }
 
 void MAVForcesAndMoments::state_callback(const rosflight_msgs::msg::SimState & msg)
@@ -67,18 +64,13 @@ void MAVForcesAndMoments::wind_callback(const geometry_msgs::msg::Vector3Stamped
   current_wind_ = msg;
 }
 
-bool MAVForcesAndMoments::forces_moments_srvr_callback(const rosflight_msgs::srv::RunForcesMoments::Request::SharedPtr & req,
-                                                       const rosflight_msgs::srv::RunForcesMoments::Response::SharedPtr & res)
+void MAVForcesAndMoments::firmware_output_callback(const rosflight_msgs::msg::PwmOutput & msg)
 {
   // Update the forces and moments
-  geometry_msgs::msg::WrenchStamped forces_moments = update_forces_and_torques(current_state_, current_wind_, req->pwm_outputs);
+  geometry_msgs::msg::WrenchStamped forces_moments = update_forces_and_torques(current_state_, current_wind_, msg.values);
 
   // Publish forces and moments
   forces_moments_pub_->publish(forces_moments);
-
-  res->message = "";
-  res->success = true;
-  return true;
 }
 
 } // namespace rosflight_sim

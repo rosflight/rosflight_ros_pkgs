@@ -36,12 +36,12 @@
 #ifndef ROSFLIGHT_SIM_MAV_FORCES_AND_MOMENTS_H
 #define ROSFLIGHT_SIM_MAV_FORCES_AND_MOMENTS_H
 
-#include <rclcpp/rclcpp.hpp>
 #include <geometry_msgs/msg/wrench_stamped.hpp>
 #include <geometry_msgs/msg/vector3_stamped.hpp>
+#include <rclcpp/rclcpp.hpp>
 
+#include <rosflight_msgs/msg/pwm_output.hpp>
 #include <rosflight_msgs/msg/sim_state.hpp>
-#include <rosflight_msgs/srv/run_forces_moments.hpp>
 
 
 namespace rosflight_sim
@@ -55,7 +55,7 @@ private:
   rclcpp::Publisher<geometry_msgs::msg::WrenchStamped>::SharedPtr forces_moments_pub_;
   rclcpp::Subscription<geometry_msgs::msg::Vector3Stamped>::SharedPtr wind_sub_;
   rclcpp::Subscription<rosflight_msgs::msg::SimState>::SharedPtr truth_sub_;
-  rclcpp::Service<rosflight_msgs::srv::RunForcesMoments>::SharedPtr run_forces_moments_srvr_;
+  rclcpp::Subscription<rosflight_msgs::msg::PwmOutput>::SharedPtr firware_out_sub_;
 
   // Persistent variables
   rosflight_msgs::msg::SimState current_state_;
@@ -64,8 +64,7 @@ private:
   // Callbacks
   void state_callback(const rosflight_msgs::msg::SimState & msg);
   void wind_callback(const geometry_msgs::msg::Vector3Stamped & msg);
-  bool forces_moments_srvr_callback(const rosflight_msgs::srv::RunForcesMoments::Request::SharedPtr & req,
-                                    const rosflight_msgs::srv::RunForcesMoments::Response::SharedPtr & res);
+  void firmware_output_callback(const rosflight_msgs::msg::PwmOutput & msg);
 
 protected:
   /**
@@ -110,7 +109,7 @@ public:
    */
   virtual geometry_msgs::msg::WrenchStamped update_forces_and_torques(rosflight_msgs::msg::SimState x,
                                                                       geometry_msgs::msg::Vector3Stamped wind,
-                                                                      std::array<int, 14> act_cmds) = 0;
+                                                                      std::array<uint16_t, 14> act_cmds) = 0;
 };
 
 } // namespace rosflight_sim

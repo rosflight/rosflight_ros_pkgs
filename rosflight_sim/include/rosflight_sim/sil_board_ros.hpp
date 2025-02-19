@@ -38,8 +38,9 @@
 #include <chrono>
 
 #include <rclcpp/rclcpp.hpp>
+#include <std_srvs/srv/trigger.hpp>
 
-#include "rosflight_msgs/srv/run_firmware.hpp"
+#include "rosflight_msgs/msg/pwm_output.hpp"
 #include "rosflight_sim/sil_board.hpp"
 
 namespace rosflight_sim
@@ -55,14 +56,15 @@ public:
   SILBoardROS();
 
 private:
-  rclcpp::Service<rosflight_msgs::srv::RunFirmware>::SharedPtr firmware_run_srvs_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr firmware_run_srvs_;
   rclcpp::TimerBase::SharedPtr initialize_timer_;
+  rclcpp::Publisher<rosflight_msgs::msg::PwmOutput>::SharedPtr pwm_out_pub_;
 
   /**
    * @brief Calls firmware.run()
    */
-  bool run_firmware(const rosflight_msgs::srv::RunFirmware::Request::SharedPtr & req,
-                    const rosflight_msgs::srv::RunFirmware::Response::SharedPtr & res);
+  bool run_firmware(const std_srvs::srv::Trigger::Request::SharedPtr & req,
+                    const std_srvs::srv::Trigger::Response::SharedPtr & res);
 
   /**
    * @brief Initializes the board and the firmware. Since the SIL board needs a reference to the 

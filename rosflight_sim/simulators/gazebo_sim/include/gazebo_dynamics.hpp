@@ -54,7 +54,7 @@ public:
   GazeboDynamics(gazebo::physics::LinkPtr link_, std::string link_name);
 
 private:
-  void apply_forces_and_torques() override;
+  void apply_forces_and_torques(const geometry_msgs::msg::WrenchStamped & forces_torques) override;
   rosflight_msgs::msg::SimState compute_truth() override;
   geometry_msgs::msg::Vector3Stamped compute_wind_truth() override;
 

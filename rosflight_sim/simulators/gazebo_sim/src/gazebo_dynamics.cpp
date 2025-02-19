@@ -46,10 +46,8 @@ GazeboDynamics::GazeboDynamics(gazebo::physics::LinkPtr link, std::string link_n
   link_name_ = link_name;
 }
 
-void GazeboDynamics::apply_forces_and_torques()
+void GazeboDynamics::apply_forces_and_torques(const geometry_msgs::msg::WrenchStamped & forces_torques)
 {
-  geometry_msgs::msg::WrenchStamped forces_torques = get_forces_moments();
-
   // Gazebo expects the forces to be added in NWU
   GazeboVector force(forces_torques.wrench.force.x, -forces_torques.wrench.force.y, -forces_torques.wrench.force.z);
   GazeboVector torque(forces_torques.wrench.torque.x, -forces_torques.wrench.torque.y, -forces_torques.wrench.torque.z);
@@ -108,15 +106,11 @@ rosflight_msgs::msg::SimState GazeboDynamics::compute_truth()
   return truth;
 }
 
-// TODO: What should we do with this?
-// Publish the wind in the body frame
 geometry_msgs::msg::Vector3Stamped GazeboDynamics::compute_wind_truth()
 {
-  // Eigen::Vector3d wind;
-  // wind << msg.x, msg.y, msg.z;
-  // mav_dynamics_->set_wind(wind);
   geometry_msgs::msg::Vector3Stamped current_wind;
   current_wind.header.stamp = this->get_clock()->now();
+  // TODO: Publish the wind in the body frame
   return current_wind;
 }
 

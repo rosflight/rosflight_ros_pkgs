@@ -45,15 +45,11 @@ DynamicsInterface::DynamicsInterface()
     std::bind(&DynamicsInterface::parameters_callback, this, std::placeholders::_1));
 
   // Initialize publishers, subscribers, and services
-  truth_state_pub_ = this->create_publisher<rosflight_msgs::msg::SimState>("sim_state", 1);
-  wind_truth_pub_ = this->create_publisher<geometry_msgs::msg::Vector3Stamped>("wind_truth", 1);
+  truth_state_pub_ = this->create_publisher<rosflight_msgs::msg::SimState>("sim/truth_state", 1);
+  wind_truth_pub_ = this->create_publisher<geometry_msgs::msg::Vector3Stamped>("sim/wind_truth", 1);
   forces_moments_sub_ = this->create_subscription<geometry_msgs::msg::WrenchStamped>(
     "forces_and_moments", 1,
     std::bind(&DynamicsInterface::forces_callback, this, std::placeholders::_1));
-  dynamics_update_srvs_ = this->create_service<std_srvs::srv::Trigger>(
-    "dynamics/apply_forces_moments",
-    std::bind(&DynamicsInterface::apply_forces_publish_truth, this, std::placeholders::_1,
-              std::placeholders::_2));
 }
 
 void DynamicsInterface::declare_parameters()
@@ -73,14 +69,7 @@ DynamicsInterface::parameters_callback(const std::vector<rclcpp::Parameter> & pa
 
 void DynamicsInterface::forces_callback(const geometry_msgs::msg::WrenchStamped & msg)
 {
-  forces_moments_ = msg;
-}
-
-bool DynamicsInterface::apply_forces_publish_truth(
-  const std_srvs::srv::Trigger::Request::SharedPtr & req,
-  const std_srvs::srv::Trigger::Response::SharedPtr & res)
-{
-  apply_forces_and_torques();
+  apply_forces_and_torques(msg);
 
   // Compute truth state
   rosflight_msgs::msg::SimState truth = compute_truth();
@@ -89,11 +78,6 @@ bool DynamicsInterface::apply_forces_publish_truth(
   // Compute wind truth
   geometry_msgs::msg::Vector3Stamped wind_truth = compute_wind_truth();
   wind_truth_pub_->publish(wind_truth);
-
-  res->message = "success";
-  res->success = true;
-
-  return true;
 }
 
 } // namespace rosflight_sim

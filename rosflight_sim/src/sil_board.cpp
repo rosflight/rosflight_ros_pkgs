@@ -35,6 +35,7 @@
 
 #include <chrono>
 #include <cmath>
+#include <cstdint>
 #include <fstream>
 
 #include <rclcpp/logging.hpp>
@@ -382,7 +383,7 @@ void SILBoard::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
   latestRC_.values[4] = 1000; // attitude override
   latestRC_.values[5] = 1000; // arm
 
-  for (int & pwm_output : pwm_outputs_) {
+  for (auto & pwm_output : pwm_outputs_) {
     pwm_output = 1000;
   }
 

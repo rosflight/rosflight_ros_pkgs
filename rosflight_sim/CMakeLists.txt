@@ -189,7 +189,7 @@ target_link_libraries(sil_board
 target_include_directories(sil_board
   PRIVATE
     include)
-ament_target_dependencies(sil_board rclcpp sensor_msgs rosflight_msgs)
+ament_target_dependencies(sil_board rclcpp std_srvs sensor_msgs rosflight_msgs)
 install(
   TARGETS sil_board
   DESTINATION lib/${PROJECT_NAME})
@@ -210,6 +210,9 @@ install(
 
 # Gazebo dynamics
 add_subdirectory(simulators/gazebo_sim)
+
+# Standalone simulator
+add_subdirectory(simulators/standalone_sim)
 
 #############
 ## Install ##
