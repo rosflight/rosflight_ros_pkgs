@@ -48,12 +48,6 @@ ROSflightSIL::ROSflightSIL()
   declare_parameters();
   parameter_callback_handle_ = this->add_on_set_parameters_callback(std::bind(&ROSflightSIL::parameters_callback, this, std::placeholders::_1));
 
-  // Initialize the timer if the parameter is set to be so
-  if (this->get_parameter("use_timer").as_bool()) {
-    auto sim_loop_time_us = std::chrono::microseconds(static_cast<long>(1.0 / this->get_parameter("simulation_loop_frequency").as_double() * 1e6));
-    simulation_loop_timer_ = rclcpp::create_timer(this, this->get_clock(), sim_loop_time_us, std::bind(&ROSflightSIL::call_firmware, this));
-  }
-
   // Initialize the service 
   run_SIL_iteration_srvs_ = this->create_service<std_srvs::srv::Trigger>(
       "rosflight_sil/take_sim_step", std::bind(&ROSflightSIL::iterate_simulation, this,
@@ -62,6 +56,13 @@ ROSflightSIL::ROSflightSIL()
   // Initialize the service clients that will be used
   client_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   firmware_run_client_ = this->create_client<std_srvs::srv::Trigger>("sil_board/run", rmw_qos_profile_services_default, client_cb_group_);
+
+  // Initialize the timer if the parameter is set to be so
+  if (this->get_parameter("use_timer").as_bool()) {
+    timer_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    auto sim_loop_time_us = std::chrono::microseconds(static_cast<long>(1.0 / this->get_parameter("simulation_loop_frequency").as_double() * 1e6));
+    simulation_loop_timer_ = rclcpp::create_timer(this, this->get_clock(), sim_loop_time_us, std::bind(&ROSflightSIL::call_firmware, this), timer_cb_group_);
+  }
 }
 
 void ROSflightSIL::declare_parameters()

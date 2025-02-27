@@ -57,6 +57,7 @@ public:
 
 private:
   // Timer that ticks the simulation
+  rclcpp::CallbackGroup::SharedPtr timer_cb_group_;
   rclcpp::TimerBase::SharedPtr simulation_loop_timer_;
 
   // Service call can be used to tick the firmware externally 

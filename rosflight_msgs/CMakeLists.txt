@@ -41,6 +41,7 @@ set(srv_files
   "srv/ParamFile.srv"
   "srv/ParamGet.srv"
   "srv/ParamSet.srv"
+  "srv/SetSimState.srv"
   )
 
 rosidl_generate_interfaces(${PROJECT_NAME}

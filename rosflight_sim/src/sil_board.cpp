@@ -388,7 +388,7 @@ void SILBoard::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
   }
 
   rc_sub_ = node_->create_subscription<rosflight_msgs::msg::RCRaw>(
-    "RC", 1, std::bind(&SILBoard::RC_callback, this, std::placeholders::_1));
+    "sim/RC", 1, std::bind(&SILBoard::RC_callback, this, std::placeholders::_1));
 }
 
 void SILBoard::pwm_init_multi(const float *rate, uint32_t channels)

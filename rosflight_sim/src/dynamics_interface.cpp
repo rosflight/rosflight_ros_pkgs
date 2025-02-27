@@ -73,10 +73,12 @@ void DynamicsInterface::forces_callback(const geometry_msgs::msg::WrenchStamped 
 
   // Compute truth state
   rosflight_msgs::msg::SimState truth = compute_truth();
+  truth.header.stamp = this->get_clock()->now();
   truth_state_pub_->publish(truth);
 
   // Compute wind truth
   geometry_msgs::msg::Vector3Stamped wind_truth = compute_wind_truth();
+  wind_truth.header.stamp = this->get_clock()->now();
   wind_truth_pub_->publish(wind_truth);
 }
 

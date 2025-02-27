@@ -60,8 +60,6 @@ private:
   rclcpp::Publisher<geometry_msgs::msg::Vector3Stamped>::SharedPtr wind_truth_pub_;
   rclcpp::Subscription<geometry_msgs::msg::WrenchStamped>::SharedPtr forces_moments_sub_;
 
-  geometry_msgs::msg::WrenchStamped forces_moments_;
-
   void forces_callback(const geometry_msgs::msg::WrenchStamped & msg);
 
   /**
