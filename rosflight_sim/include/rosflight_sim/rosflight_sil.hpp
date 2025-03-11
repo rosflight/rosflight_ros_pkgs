@@ -41,9 +41,6 @@
 #include <rclcpp/executors.hpp>
 #include <std_srvs/srv/trigger.hpp>
 
-#include <rosflight_msgs/srv/run_firmware.hpp>
-#include <rosflight_msgs/srv/run_forces_moments.hpp>
-
 namespace rosflight_sim
 {
 /**

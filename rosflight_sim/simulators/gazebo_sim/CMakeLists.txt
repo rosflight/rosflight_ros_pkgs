@@ -72,6 +72,6 @@ install(
 )
 
 install(
-  DIRECTORY resources
+  DIRECTORY resources ../common_resource
   DESTINATION share/${PROJECT_NAME}
 )
