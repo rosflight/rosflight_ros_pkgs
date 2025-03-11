@@ -115,7 +115,7 @@ void StandaloneDynamics::apply_forces_and_torques(const geometry_msgs::msg::Wren
   current_truth_state_.twist.angular.x,
   current_truth_state_.twist.angular.y,
   current_truth_state_.twist.angular.z,
-  0, 0, 0, 0, 0, 0; // Add zeros for the acceleration - don't integrate acceleration states
+  0, 0, 0, 0, 0, 0; // Add zeros for the acceleration - don't keep state history of acceleration states
 
   // integrate forces and torques
   rk4(state, fm, dt);
@@ -133,7 +133,7 @@ Eigen::VectorXd StandaloneDynamics::add_gravity_forces(Eigen::VectorXd forces)
   rot.transform.rotation.z = -current_truth_state_.pose.orientation.z;
   tf2::doTransform(gravity, gravity_rotated, rot);
 
-  forces.segment(0,3) += gravity_rotated;
+  forces.segment(0,3) += gravity_rotated * this->get_parameter("mass").as_double();
   return forces;
 }
 
@@ -247,13 +247,6 @@ Eigen::VectorXd StandaloneDynamics::f(Eigen::VectorXd state, Eigen::VectorXd for
   out.segment(0,3) = pos_dot;
 
   // uvw
-  Eigen::Vector3d tmp;
-  rot.transform.rotation.x = -quat(1);
-  rot.transform.rotation.y = -quat(2);
-  rot.transform.rotation.z = -quat(3);
-  tf2::doTransform(force, tmp, rot);
-  std::cout << "forces inertial: " << std::endl << tmp <<std::endl;
-
   Eigen::Vector3d uvw_dot = force / mass - pqr.cross(uvw);
   out.segment(3,3) = uvw_dot;
   out.segment(13,3) = uvw_dot;
