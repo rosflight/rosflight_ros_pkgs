@@ -318,8 +318,12 @@ void ROSflightIO::handle_status_msg(const mavlink_message_t & msg)
 
   // rc override check
   if (prev_status_.rc_override != status_msg.rc_override) {
-    if (status_msg.rc_override)
-      RCLCPP_WARN(this->get_logger(), "RC override active");
+    if (status_msg.rc_override == 3)
+      RCLCPP_WARN(this->get_logger(), "Attitude and Throttle RC Override active");
+    else if (status_msg.rc_override == 2)
+      RCLCPP_WARN(this->get_logger(), "Throttle RC Override active");
+    else if (status_msg.rc_override == 1)
+      RCLCPP_WARN(this->get_logger(), "AttitudeRC Override active");
     else
       RCLCPP_WARN(this->get_logger(), "Returned to computer control");
   }
