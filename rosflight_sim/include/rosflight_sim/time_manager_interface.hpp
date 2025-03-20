@@ -38,6 +38,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rosgraph_msgs/msg/clock.hpp>
+#include <std_srvs/srv/trigger.hpp>
 
 namespace rosflight_sim
 {
@@ -52,10 +53,12 @@ public:
 private:
   rclcpp::TimerBase::SharedPtr sim_clock_timer_;
   rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr sim_time_pubber_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr play_pause_srvs_;
 
   std::chrono::microseconds clock_duration_us_;
 
   bool node_initialized_ = false;
+  bool is_paused_ = false;
 
   virtual void update_time() = 0;
   virtual unsigned long int get_seconds() = 0;
@@ -83,6 +86,9 @@ private:
 
   void set_timers(double default_pub_rate_us, double real_time_multiplier);
   void publish_sim_time();
+
+  bool toggle_pause_callback(const std_srvs::srv::Trigger::Request::SharedPtr & req,
+                             const std_srvs::srv::Trigger::Response::SharedPtr & res);
 };
 
 }   // rosflight_sim

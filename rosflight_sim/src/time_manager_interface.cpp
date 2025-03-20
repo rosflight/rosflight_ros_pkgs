@@ -45,6 +45,11 @@ TimeManagerInterface::TimeManagerInterface()
   parameter_callback_handle_ = this->add_on_set_parameters_callback(
     std::bind(&TimeManagerInterface::parameters_callback, this, std::placeholders::_1));
 
+  // Create pause and reset service
+  play_pause_srvs_ = this->create_service<std_srvs::srv::Trigger>(
+    "time_manager/toggle_pause",
+    std::bind(&TimeManagerInterface::toggle_pause_callback, this, std::placeholders::_1, std::placeholders::_2));
+
   // Create publisher
   auto qos = rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data);
   sim_time_pubber_ = this->create_publisher<rosgraph_msgs::msg::Clock>("clock", qos);
@@ -113,6 +118,27 @@ void TimeManagerInterface::publish_sim_time()
   now.clock.sec = get_seconds();
   now.clock.nanosec = get_nanoseconds();
   sim_time_pubber_->publish(now);
+}
+
+bool TimeManagerInterface::toggle_pause_callback(const std_srvs::srv::Trigger::Request::SharedPtr & req,
+                                                 const std_srvs::srv::Trigger::Response::SharedPtr & res)
+{
+  if (is_paused_) {
+    // Unpause and restart the timer to continue publishing time information
+    is_paused_ = false;
+
+    double default_pub_rate_us = this->get_parameter("default_pub_rate_us").as_double();
+    double real_time_multiplier = this->get_parameter("real_time_multiplier").as_double();
+    set_timers(default_pub_rate_us, real_time_multiplier);
+    RCLCPP_INFO_STREAM(this->get_logger(), "Timer is live!");
+  } else {
+    is_paused_ = true;
+
+    sim_clock_timer_->cancel();
+    RCLCPP_INFO_STREAM(this->get_logger(), "Timer is paused!");
+  }
+
+  return true;
 }
 
 } // namespace rosflight_sim
