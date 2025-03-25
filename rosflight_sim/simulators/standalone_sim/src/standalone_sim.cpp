@@ -61,7 +61,7 @@ RvizPublisher::RvizPublisher()
   aircraft_.ns = "vehicle";
   aircraft_.id = 0;
   aircraft_.type = visualization_msgs::msg::Marker::MESH_RESOURCE;
-  aircraft_.mesh_resource = "package://rosflight_sim/common_resource/" + this->get_parameter("sim_aircraft_file").as_string();
+  aircraft_.mesh_resource = "package://rosflight_sim/" + this->get_parameter("sim_aircraft_file").as_string();
   aircraft_.mesh_use_embedded_materials = false;
   aircraft_.action = visualization_msgs::msg::Marker::ADD;
   aircraft_.pose.position.x = 0.0;

@@ -1,74 +1,80 @@
+"""
+File: multirotor_standalone.launch.py
+Author: Brandon Sutherland, Jacob Moore
+Created: February 3, 2025
+Last Modified: March 25, 2025
+Description: ROS2 launch file used to launch all the nodes for a Multirotor standalone simulator
+"""
+
 import os
+import sys
+
+from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
-    # Create the package directory
-    rosflight_sim_share_dir = get_package_share_directory("rosflight_sim")
+    """This is a launch file that runs the bare minimum requirements fly a multirotor in a standalone simulator"""
 
-    rviz2_config_file = os.path.join(
-        rosflight_sim_share_dir, "config", "standalone_sim.rviz"
+    # Declare launch arguments
+    use_sim_time_arg = DeclareLaunchArgument(
+        "use_sim_time",
+        default_value="true",
+        description="Whether the nodes will use sim time or not"
     )
-    rviz2_splash_file = os.path.join(rosflight_sim_share_dir, "standalone_resource", "logo.png")
+    use_sim_time = LaunchConfiguration('use_sim_time')
+
+    ##########
+    # Launch #
+    ##########
+
+    # Start simulator
+    simulator_launch_include = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            os.path.join(
+                get_package_share_directory("rosflight_sim"),
+                "launch/standalone_sim.launch.py",
+            )
+        ]),
+        launch_arguments={
+            'sim_aircraft_file': os.path.join("common_resource", "multirotor.dae")
+        }.items()
+    )
+
+    # Start common nodes
+    common_nodes_include = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("rosflight_sim"),
+                "launch", "common_nodes_standalone.launch.py"
+            )
+        ),
+        launch_arguments={
+            'use_sim_time': use_sim_time
+        }.items()
+    )
+
+    # Start forces and moments
+    mr_forces_moments_node = Node(
+        package="rosflight_sim",
+        executable="multirotor_forces_and_moments",
+        output="screen",
+        parameters=[
+            os.path.join(get_package_share_directory('rosflight_sim'),
+                                 'params', 'multirotor_dynamics.yaml'),
+            {"use_sim_time": use_sim_time},
+        ],
+    )
 
     return LaunchDescription(
         [
-            Node(
-                package="tf2_ros",
-                executable="static_transform_publisher",
-                arguments=[
-                    "--x",
-                    "0",
-                    "--y",
-                    "0",
-                    "--z",
-                    "0",
-                    "--yaw",
-                    "0",
-                    "--pitch",
-                    "0",
-                    "--roll",
-                    "3.1415926535",
-                    "--frame-id",
-                    "world",
-                    "--child-frame-id",
-                    "NED",
-                ],
-            ),
-            Node(
-                package="tf2_ros",
-                executable="static_transform_publisher",
-                arguments=[
-                    "--x",
-                    "0",
-                    "--y",
-                    "0",
-                    "--z",
-                    "0",
-                    "--yaw",
-                    "-1.570796326",
-                    "--pitch",
-                    "0",
-                    "--roll",
-                    "3.1415926535",
-                    "--frame-id",
-                    "aircraft_body",
-                    "--child-frame-id",
-                    "stl_frame",
-                ],
-            ),
-            Node(
-                package="rviz2",
-                executable="rviz2",
-                arguments=["-d", rviz2_config_file, "-s", rviz2_splash_file],
-            ),
-            Node(
-                package="rosflight_sim",
-                executable="rviz_sim_publisher",
-                output="screen",
-                parameters=[{"sim_aircraft_file": "multirotor.dae"}]
-            ),
+            use_sim_time_arg,
+            simulator_launch_include,
+            common_nodes_include,
+            mr_forces_moments_node,
         ]
     )
