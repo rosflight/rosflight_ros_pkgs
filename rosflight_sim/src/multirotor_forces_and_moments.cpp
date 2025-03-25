@@ -39,38 +39,38 @@
 
 namespace rosflight_sim
 {
-Multirotor::Multirotor(rclcpp::Node::SharedPtr node)
-    : node_(std::move(node))
+Multirotor::Multirotor()
+    : MAVForcesAndMoments()
     , num_rotors_(0)
 {
   declare_multirotor_params();
 
-  num_rotors_ = node_->get_parameter("num_rotors").as_int();
+  num_rotors_ = this->get_parameter("num_rotors").as_int();
 
   /* Load Rotor Configuration */
   motors_.resize(num_rotors_);
 
   Prop prop;
 
-  prop.CT_0 = node_->get_parameter("CT_0").as_double();
-  prop.CT_1 = node_->get_parameter("CT_1").as_double();
-  prop.CT_2 = node_->get_parameter("CT_2").as_double();
+  prop.CT_0 = this->get_parameter("CT_0").as_double();
+  prop.CT_1 = this->get_parameter("CT_1").as_double();
+  prop.CT_2 = this->get_parameter("CT_2").as_double();
 
-  prop.CQ_0 = node_->get_parameter("CQ_0").as_double();
-  prop.CQ_1 = node_->get_parameter("CQ_1").as_double();
-  prop.CQ_2 = node_->get_parameter("CQ_2").as_double();
+  prop.CQ_0 = this->get_parameter("CQ_0").as_double();
+  prop.CQ_1 = this->get_parameter("CQ_1").as_double();
+  prop.CQ_2 = this->get_parameter("CQ_2").as_double();
 
-  prop.diam = node_->get_parameter("D_prop").as_double();
+  prop.diam = this->get_parameter("D_prop").as_double();
 
-  std::vector<double> dists = node_->get_parameter("rotor_dists").as_double_array();
-  std::vector<double> angles = node_->get_parameter("rotor_radial_angles").as_double_array();
-  std::vector<int64_t> rotation_dirs = node_->get_parameter("rotor_rotation_directions").as_integer_array();
+  std::vector<double> dists = this->get_parameter("rotor_dists").as_double_array();
+  std::vector<double> angles = this->get_parameter("rotor_radial_angles").as_double_array();
+  std::vector<int64_t> rotation_dirs = this->get_parameter("rotor_rotation_directions").as_integer_array();
 
   Motor motor_characteristics;
   motor_characteristics.prop = prop;
-  motor_characteristics.R = node_->get_parameter("R_motor").as_double();
-  motor_characteristics.I_0 = node_->get_parameter("I_0").as_double();
-  motor_characteristics.KQ = node_->get_parameter("KQ").as_double();
+  motor_characteristics.R = this->get_parameter("R_motor").as_double();
+  motor_characteristics.I_0 = this->get_parameter("I_0").as_double();
+  motor_characteristics.KQ = this->get_parameter("KQ").as_double();
 
 
   for (int i = 0; i < num_rotors_; i++) {
@@ -81,67 +81,81 @@ Multirotor::Multirotor(rclcpp::Node::SharedPtr node)
     motor.command = 0.0;
     motors_[i] = motor;
   }
-
-  wind_ = Eigen::Vector3d::Zero();
-
-  forces_moments_pub_ =
-    node_->create_publisher<geometry_msgs::msg::TwistStamped>("/forces_and_moments", 1);
-
 }
 
 Multirotor::~Multirotor() = default;
 
 void Multirotor::declare_multirotor_params()
 {
-  node_->declare_parameter("num_rotors", rclcpp::PARAMETER_INTEGER);
+  this->declare_parameter("num_rotors", rclcpp::PARAMETER_INTEGER);
+  this->declare_parameter("CT_0", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("CT_1", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("CT_2", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("CQ_0", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("CQ_1", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("CQ_2", rclcpp::PARAMETER_DOUBLE);
 
-  node_->declare_parameter("CT_0", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("CT_1", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("CT_2", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("CQ_0", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("CQ_1", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("CQ_2", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("KQ", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("V_max", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("R_motor", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("I_0", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("rotor_dists", rclcpp::PARAMETER_DOUBLE_ARRAY);
+  this->declare_parameter("rotor_radial_angles", rclcpp::PARAMETER_DOUBLE_ARRAY);
+  this->declare_parameter("rotor_rotation_directions", rclcpp::PARAMETER_INTEGER_ARRAY);
 
-  node_->declare_parameter("KQ", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("V_max", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("R_motor", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("I_0", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("rotor_dists", rclcpp::PARAMETER_DOUBLE_ARRAY);
-  node_->declare_parameter("rotor_radial_angles", rclcpp::PARAMETER_DOUBLE_ARRAY);
-  node_->declare_parameter("rotor_rotation_directions", rclcpp::PARAMETER_INTEGER_ARRAY);
+  this->declare_parameter("D_prop", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("rho", rclcpp::PARAMETER_DOUBLE);
 
-  node_->declare_parameter("D_prop", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("rho", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("CD", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("A_c", rclcpp::PARAMETER_DOUBLE);
 
-  node_->declare_parameter("CD", rclcpp::PARAMETER_DOUBLE);
-  node_->declare_parameter("A_c", rclcpp::PARAMETER_DOUBLE);
+  this->declare_parameter("CD_induced", rclcpp::PARAMETER_DOUBLE);
 
-  node_->declare_parameter("CD_induced", rclcpp::PARAMETER_DOUBLE);
-
-  node_->declare_parameter("ground_effect", rclcpp::PARAMETER_DOUBLE_ARRAY);
+  this->declare_parameter("ground_effect", rclcpp::PARAMETER_DOUBLE_ARRAY);
 }
 
-Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x,
-                                                                  const int act_cmds[])
+geometry_msgs::msg::WrenchStamped Multirotor::update_forces_and_torques(rosflight_msgs::msg::SimState x,
+                                                                        geometry_msgs::msg::Vector3Stamped wind,
+                                                                        std::array<uint16_t, 14> act_cmds)
 {
   // The maximum voltage of the battery.
-  double V_max = node_->get_parameter("V_max").as_double();
+  double V_max = this->get_parameter("V_max").as_double();
 
-  double rho = node_->get_parameter("rho").as_double();
+  // TODO: We should change this to the nonlinear model as a function of altitude
+  double rho = this->get_parameter("rho").as_double();
 
-  // Get airspeed vector for drag force calculation (rotate wind into body frame and add to inertial velocity)
-  Eigen::Vector3d Va = x.vel + x.rot.inverse() * wind_;
+  // Get airspeed vector for drag force calculation (rotate wind into
+  // body frame and subtract from inertial velocity in body frame)
+  geometry_msgs::msg::Vector3Stamped V_wind;  // in body frame
+  geometry_msgs::msg::TransformStamped rot;
+  rot.transform.rotation = x.pose.orientation;
+  tf2::doTransform(wind, V_wind, rot);
+  geometry_msgs::msg::Vector3Stamped V_airspeed;
 
+  // Compute airspeed
+  // Va = [ur, vr, wr] = V_ground - V_wind
+  Eigen::Vector3d Vg(x.twist.linear.x, x.twist.linear.y, x.twist.linear.z);
+  double ur = Vg(0) - V_wind.vector.x;
+  double vr = Vg(1) - V_wind.vector.y;
+  double wr = Vg(2) - V_wind.vector.z;
+  Eigen::Vector3d Va(ur, vr, wr);
+
+  // TODO: Would be better to compute the vector force/torque contributed by each motor,
+  // not assume that the motors are aligned vertically
   double total_thrust = 0.0;
   double total_roll_torque = 0.0;
   double total_pitch_torque = 0.0;
   double total_yaw_torque = 0.0;
 
+  // Convert PWM commands to [0,1]
   for (int i = 0; i < num_rotors_; i++) {
-
     double motor_cmd = (act_cmds[i] - 1000)/1000.0;
 
+    // Saturate from 0 to 1 -- physical PWM constraints
+    motor_cmd = sat(motor_cmd, 0, 1);
+
     motors_[i].command = motor_cmd;
+
   }
 
   for (Motor motor : motors_) {
@@ -149,7 +163,8 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
     // Use model with V_max
     double v_in = V_max * motor.command;
 
-    // Take true angle and only compare the portion parrallel to the body z-axis.
+    // Take true angle and only compare the portion parallel to the body z-axis.
+    // TODO: Add better model of propeller with non-straight aero forces
     Eigen::Vector3d body_z;
     body_z << 0.0, 0.0, 1.0;
 
@@ -169,9 +184,9 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
 
     double prop_speed = ((-b + sqrt((pow((b), 2.0)) - (4 * a * c))) / (2 * a));
 
-    // Protect against singularities
-    if (abs(prop_speed) < 0.0001) {
-      prop_speed += 0.001;
+    // Protect against singularities -- prop speed should be positive 
+    if (prop_speed < 0.0001) {
+      prop_speed = 0.0001;
     }
 
     // Calculate the advance ratio.
@@ -184,7 +199,6 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
     }
 
     double CT = motor.prop.CT_2*pow(advance_ratio, 2) + motor.prop.CT_1*advance_ratio + motor.prop.CT_0;
-
     if (CT <= 0.0) {
       CT = 0.0001;
     }
@@ -195,7 +209,6 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
     double motor_pitch_torque = motor_thrust*motor.dist*cosf(motor.radial_angle);
 
     double CQ = motor.prop.CQ_2*pow(advance_ratio, 2) + motor.prop.CQ_1*advance_ratio + motor.prop.CQ_0;
-
     if (CQ <= 0.0) {
       CQ = 0.0001;
     }
@@ -209,73 +222,63 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
     total_yaw_torque += prop_torque;
   }
 
-  double cross_sectional_area = node_->get_parameter("A_c").as_double(); // m^2
-  double CD = node_->get_parameter("CD").as_double();
-
-  // Rotate from body to inertial frame.
-
-  Eigen::Vector3d body_forces;
-  body_forces << 0.0, 0.0, -total_thrust;
+  // Compute aerodynamic drag forces on the body of the vehicle
+  double cross_sectional_area = this->get_parameter("A_c").as_double(); // m^2
+  double CD = this->get_parameter("CD").as_double();
 
   double drag = 0.5 * rho * cross_sectional_area * CD * pow(Va.norm(), 2);
-
-  Eigen::Vector3d drag_force = drag * Va / Va.norm();
+  Eigen::Vector3d drag_force;
 
   if (Va.norm() < 0.001) {
     drag_force << 0.0, 0.0, 0.0;
+  } else {
+    drag_force = -drag * Va / Va.norm();
   }
 
-  body_forces -= drag_force;
-
-  double CD_induced = node_->get_parameter("CD_induced").as_double();
+  // Compute the drag force induced from the propellers
+  double CD_induced = this->get_parameter("CD_induced").as_double();
 
   Eigen::Matrix3d drag_matrix;
   drag_matrix << -total_thrust*CD_induced, 0.0, 0.0,
                  0.0, -total_thrust*CD_induced, 0.0,
                  0.0, 0.0, 0.0;
 
-  Eigen::Vector3d induced_drag_force = drag_matrix * x.vel;
+  Eigen::Vector3d induced_drag_force = drag_matrix * Va;
 
+  // Apply Ground Effect
+  std::vector<double> ground_effect_coeffs = this->get_parameter("ground_effect").as_double_array();
+  double ground_effect_force = max(0.0, ground_effect_coeffs[0]*pow(-x.pose.position.z, 4) +
+                                        ground_effect_coeffs[1]*pow(-x.pose.position.z, 3) +
+                                        ground_effect_coeffs[2]*pow(-x.pose.position.z, 2) +
+                                        ground_effect_coeffs[3]*-x.pose.position.z +
+                                        ground_effect_coeffs[4]);
+  Eigen::Vector3d ground_effect(0.0, 0.0, -ground_effect_force);
+
+
+  // Add the forces together in the body frame
+  Eigen::Vector3d body_forces;
+  body_forces << 0.0, 0.0, -total_thrust; // negative Z direction
+  body_forces += drag_force;
   body_forces += induced_drag_force;
+  body_forces += ground_effect;
 
   Eigen::Vector3d body_torques;
   body_torques << total_roll_torque, total_pitch_torque, -total_yaw_torque;
 
-  Eigen::Matrix<double, 6, 1> forces;
-  forces.block<3,1>(0,0) = body_forces;
-  forces.block<3,1>(3,0) = body_torques;
+  // Package up message and return
+  geometry_msgs::msg::WrenchStamped msg;
 
-  // Apply Ground Effect
-  std::vector<double> ground_effect_coeffs = node_->get_parameter("ground_effect").as_double_array();
+  msg.header.stamp = this->get_clock()->now();
 
-  double ground_effect_force = max(0.0, ground_effect_coeffs[0]*pow(-x.pos.z(), 4) +
-                                        ground_effect_coeffs[1]*pow(-x.pos.z(), 3) +
-                                        ground_effect_coeffs[2]*pow(-x.pos.z(), 2) +
-                                        ground_effect_coeffs[3]*-x.pos.z() +
-                                        ground_effect_coeffs[4]);
+  msg.wrench.force.x = body_forces(0);
+  msg.wrench.force.y = body_forces(1);
+  msg.wrench.force.z = body_forces(2);
+  msg.wrench.torque.x = body_torques(0);
+  msg.wrench.torque.y = body_torques(1);
+  msg.wrench.torque.z = body_torques(2);
 
-  forces(2) -= ground_effect_force;
-
-  geometry_msgs::msg::TwistStamped msg;
-
-  rclcpp::Time now = node_->get_clock()->now();
-
-  msg.header.stamp = now;
-
-  msg.twist.linear.x = forces(0);
-  msg.twist.linear.y = forces(1);
-  msg.twist.linear.z = forces(2);
-
-  msg.twist.angular.x = forces(3);
-  msg.twist.angular.y = forces(4);
-  msg.twist.angular.z = forces(5);
-
-  forces_moments_pub_->publish(msg);
-
-  return forces;
+  return msg;
 }
-
-void Multirotor::set_wind(Eigen::Vector3d wind) { wind_ = wind; }
 
 } // namespace rosflight_sim
 

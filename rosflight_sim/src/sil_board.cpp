@@ -317,7 +317,11 @@ bool SILBoard::imu_read(float accel[3], float * temperature, float gyro[3], uint
 
   // TODO: Should we read it this way or just pull the information from the time manager 
   // (i.e. the time the data was recorded or the time that we read it?)
-  (*time_us) = imu_data_.header.stamp.sec * 1e6 + imu_data_.header.stamp.nanosec * 1e-3;
+  // Or should we use the SIL_board time (curr_time - boot time)?
+  // Using system time as is commented out causes issues with the imu timestamping (one is straight 
+  // sys time while the sil board compares it to sys time - boot time.)
+  // (*time_us) = imu_data_.header.stamp.sec * 1e6 + imu_data_.header.stamp.nanosec * 1e-3;
+  (*time_us) = clock_micros();
 
   return true;
 }

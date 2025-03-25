@@ -38,11 +38,12 @@
 
 #include <cstdint>
 
-#include <eigen3/Eigen/Dense>
-#include <geometry_msgs/msg/twist_stamped.hpp>
-#include <rclcpp/rclcpp.hpp>
+#include <Eigen/Core>
+#include <tf2_eigen/tf2_eigen.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include "rosflight_sim/mav_forces_and_moments.hpp"
+#include "rosflight_msgs/msg/sim_state.hpp"
 
 namespace rosflight_sim
 {
@@ -56,9 +57,6 @@ namespace rosflight_sim
 class Multirotor : public MAVForcesAndMoments
 {
 private:
-  rclcpp::Node::SharedPtr node_;
-  Eigen::Vector3d wind_;
-  
   struct Prop
   {
     // Prop thrust constant coeffs.
@@ -107,10 +105,8 @@ public:
    * @param node ROS2 node to obtain parameters from. Usually the node provided by the Gazebo model
    * plugin.
    */
-  explicit Multirotor(rclcpp::Node::SharedPtr node);
+  explicit Multirotor();
   ~Multirotor();
-
-  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr forces_moments_pub_;
 
   /**
    * @brief Calculates forces and moments based on current state and aerodynamic forces.
@@ -119,14 +115,9 @@ public:
    * @param act_cmds Actuator commands
    * @return 6x1 eigen matrix of calculated forces and moments
    */
-  Eigen::Matrix<double, 6, 1> update_forces_and_torques(CurrentState x,
-                                                        const int act_cmds[]) override;
-  /**
-   * @brief Sets the wind speed to use when calculating the forces and moments.
-   *
-   * @param wind Eigen vector of wind speeds
-   */
-  void set_wind(Eigen::Vector3d wind) override;
+  geometry_msgs::msg::WrenchStamped update_forces_and_torques(rosflight_msgs::msg::SimState x,
+                                                              geometry_msgs::msg::Vector3Stamped wind,
+                                                              std::array<uint16_t, 14> act_cmds) override;
 };
 
 } // namespace rosflight_sim
