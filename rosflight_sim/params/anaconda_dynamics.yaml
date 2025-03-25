@@ -34,6 +34,7 @@
     I_0 : 1.5                     # no-load (zero torque) current (A)
 
     servo_tau: .01
+    max_deflection_angle: 40. # Maximum deflection of the control surfaces in degrees.
 
     # Anaconda done for C_L
 

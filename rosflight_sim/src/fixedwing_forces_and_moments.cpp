@@ -75,6 +75,7 @@ void Fixedwing::declare_fixedwing_params()
   node_->declare_parameter("wing_alpha0", rclcpp::PARAMETER_DOUBLE);
 
   node_->declare_parameter("servo_tau", rclcpp::PARAMETER_DOUBLE);
+  node_->declare_parameter("max_deflection_angle", rclcpp::PARAMETER_DOUBLE);
 
   node_->declare_parameter("C_L_O", rclcpp::PARAMETER_DOUBLE);
   node_->declare_parameter("C_L_alpha", rclcpp::PARAMETER_DOUBLE);
@@ -219,6 +220,9 @@ void Fixedwing::update_params_from_ROS()
 
   if (!node_->get_parameter("servo_tau", servo_tau_)) {
     RCLCPP_ERROR(node_->get_logger(), "Param 'servo_tau' not defined");
+  }
+  if (!node_->get_parameter("max_deflection_angle", max_deflection_angle_)) {
+    RCLCPP_ERROR(node_->get_logger(), "Param 'max_deflection_angle' not defined");
   }
 
   // Lift Params
@@ -399,10 +403,12 @@ void Fixedwing::update_params_from_ROS()
 Eigen::Matrix<double, 6, 1> Fixedwing::update_forces_and_torques(CurrentState x,
                                                                  const int act_cmds[])
 {
-  delta_.a = (act_cmds[0] - 1500.0) / 500.0;
-  delta_.e = -(act_cmds[1] - 1500.0) / 500.0;
+
+  double max_deflection_angle_radians = max_deflection_angle_ * M_PI/180.0;
+  delta_.a = (act_cmds[0] - 1500.0) / 500.0 * max_deflection_angle_radians; // FIXME: Change the PWM to rad conversion here.
+  delta_.e = -(act_cmds[1] - 1500.0) / 500.0 * max_deflection_angle_radians;
   delta_.t = (act_cmds[4] - 1000.0) / 1000.0;
-  delta_.r = -(act_cmds[2] - 1500.0) / 500.0;
+  delta_.r = -(act_cmds[2] - 1500.0) / 500.0 * max_deflection_angle_radians;
 
   Actuators delta_curr;
 

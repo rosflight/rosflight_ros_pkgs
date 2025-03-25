@@ -115,6 +115,7 @@ private:
   LiftCoeff Cn_;
 
   double servo_tau_;
+  double max_deflection_angle_;
 
   // not constants
   // actuators
