@@ -77,6 +77,13 @@ protected:
    */
   static double sat(double x, double max, double min)
   {
+    // Double check the user entered it in correctly
+    if (max < min) {
+      double tmp = min;
+      min = max;
+      max = tmp;
+    }
+
     if (x > max) {
       return max;
     } else if (x < min) {
