@@ -86,7 +86,7 @@ install(
 )
 
 install(
-  DIRECTORY ../common_resource
+  DIRECTORY ../common_resource standalone_resource
   DESTINATION share/${PROJECT_NAME}
 )
 

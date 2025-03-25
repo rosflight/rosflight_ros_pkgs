@@ -1,9 +1,9 @@
 """
-File: fixedwing_gazebo_io_joy.launch.py
+File: multirotor_standalone_io_joy.launch.py
 Author: Brandon Sutherland, Jacob Moore
-Created: June 22, 2023
-Last Modified: July 17, 2023
-Description: ROS2 launch file used to launch fixedwing SIL, rosflight_io, and rc_joy all at once.
+Created: February 3, 2025
+Last Modified: February 3, 2025
+Description: ROS2 launch file used to launch multirotor SIL, rosflight_io, and rc_joy all at once.
 """
 
 import os
@@ -12,39 +12,13 @@ import sys
 from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    """This is a launch file that runs the bare minimum requirements fly a fixedwing in gazebo"""
-
-    aircraft = 'anaconda' # default aircraft
-    use_vimfly = False
-
-    # TODO: It would be better to use the launch argument configuration instead of manually parsing
-    for arg in sys.argv:
-        if arg.startswith("use_vimfly:="):
-            use_vimfly = arg.split(":=")[1]
-            use_vimfly = use_vimfly.lower() == "true"
-
-        elif arg.startswith("aircraft:="):
-            aircraft = arg.split(":=")[1]
-
-
-    # Start simulator
-    simulator_launch_include = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            os.path.join(
-                get_package_share_directory("rosflight_sim"),
-                "launch/fixedwing_gazebo.launch.py",
-            )
-        ]),
-        launch_arguments={
-            'aircraft': aircraft,
-        }.items()
-    )
+    """This is a launch file that runs the bare minimum requirements fly a multirotor in a standalone simulator"""
 
     # Declare launch arguments
     use_sim_time_arg = DeclareLaunchArgument(
@@ -53,7 +27,26 @@ def generate_launch_description():
         description="Whether the nodes will use sim time or not"
     )
     use_sim_time = LaunchConfiguration('use_sim_time')
+    use_vimfly_arg = DeclareLaunchArgument(
+        "use_vimfly",
+        default_value="false",
+        description="Whether to use Vimfly instead of an RC node"
+    )
+    use_vimfly = LaunchConfiguration('use_vimfly')
 
+    ##########
+    # Launch #
+    ##########
+
+    # Start simulator
+    simulator_launch_include = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            os.path.join(
+                get_package_share_directory("rosflight_sim"),
+                "launch/multirotor_standalone.launch.py",
+            )
+        ])
+    )
 
     # Start Rosflight SIL
     rosflight_sil_node = Node(
@@ -72,15 +65,23 @@ def generate_launch_description():
     )
 
     # Start forces and moments
-    fw_forces_moments_node = Node(
+    mr_forces_moments_node = Node(
         package="rosflight_sim",
-        executable="fixedwing_forces_and_moments",
+        executable="multirotor_forces_and_moments",
         output="screen",
         parameters=[
             os.path.join(get_package_share_directory('rosflight_sim'),
-                                 f'params/{aircraft}_dynamics.yaml'),
+                                 'params', 'multirotor_dynamics.yaml'),
             {"use_sim_time": use_sim_time},
         ],
+    )
+
+    # Start dynamics node
+    dynamics_node = Node(
+        package="rosflight_sim",
+        executable="standalone_dynamics",
+        output="screen",
+        parameters=[{"use_sim_time": use_sim_time}]
     )
 
     # Start standalone sensors
@@ -96,8 +97,7 @@ def generate_launch_description():
         package="rosflight_io",
         executable="rosflight_io",
         output="screen",
-        parameters=[{"udp": True,
-                     "use_sim_time": use_sim_time}],
+        parameters=[{"udp": True}],
     )
 
     # Start rc_joy node for RC input
@@ -110,10 +110,12 @@ def generate_launch_description():
     return LaunchDescription(
         [
             use_sim_time_arg,
+            use_vimfly_arg,
             simulator_launch_include,
             rosflight_sil_node,
             sil_board_node,
-            fw_forces_moments_node,
+            mr_forces_moments_node,
+            dynamics_node,
             standalone_sensor_node,
             rosflight_io_node,
             rc_joy_node,

@@ -72,6 +72,6 @@ install(
 )
 
 install(
-  DIRECTORY resources ../common_resource
+  DIRECTORY gazebo_resource ../common_resource
   DESTINATION share/${PROJECT_NAME}
 )

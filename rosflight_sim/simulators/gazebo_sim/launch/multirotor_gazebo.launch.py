@@ -53,7 +53,7 @@ def generate_launch_description():
     world_file = LaunchConfiguration('world_file')
     world_file_launch_arg = DeclareLaunchArgument(
         'world_file', default_value=TextSubstitution(text=os.path.join(
-            get_package_share_directory('rosflight_sim'), 'resources', 'runway.world'
+            get_package_share_directory('rosflight_sim'), 'gazebo_resource', 'runway.world'
         ))
     )
     tf_prefix = LaunchConfiguration('tf_prefix')
@@ -92,12 +92,12 @@ def generate_launch_description():
 
     # Render xacro file
     xacro_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'), 'xacro', 'multirotor.urdf.xacro')
-    urdf_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'), 'resources', 'multirotor.urdf')
+    urdf_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'), 'gazebo_resource', 'multirotor.urdf')
     robot_description = xacro.process_file(
         xacro_filepath_string, mappings={
             'mesh_file_location': os.path.join(
                 get_package_share_directory('rosflight_sim'),
-                'resources', 'multirotor.dae'
+                'common_resource', 'multirotor.dae'
             )
         }
     ).toxml()

@@ -61,7 +61,7 @@ RvizPublisher::RvizPublisher()
   aircraft_.ns = "vehicle";
   aircraft_.id = 0;
   aircraft_.type = visualization_msgs::msg::Marker::MESH_RESOURCE;
-  aircraft_.mesh_resource = "package://rosflight_sim/resource/skyhunter.dae";
+  aircraft_.mesh_resource = "package://rosflight_sim/common_resource/" + this->get_parameter("sim_aircraft_file").as_string();
   aircraft_.mesh_use_embedded_materials = false;
   aircraft_.action = visualization_msgs::msg::Marker::ADD;
   aircraft_.pose.position.x = 0.0;
@@ -85,6 +85,7 @@ RvizPublisher::RvizPublisher()
 
 void RvizPublisher::declare_parameters()
 {
+  this->declare_parameter("sim_aircraft_file", "skyhunter.dae");
   this->declare_parameter("aircraft_scale", 5.0);
   this->declare_parameter("path_publish_modulo", 10);
   this->declare_parameter("max_path_history", 10000);

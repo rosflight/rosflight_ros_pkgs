@@ -54,7 +54,7 @@ def generate_launch_description():
     world_file = LaunchConfiguration('world_file')
     world_file_launch_arg = DeclareLaunchArgument(
         'world_file', default_value=TextSubstitution(text=os.path.join(
-            get_package_share_directory('rosflight_sim'), 'resources/runway.world'
+            get_package_share_directory('rosflight_sim'), 'gazebo_resource/runway.world'
         ))
     )
     tf_prefix = LaunchConfiguration('tf_prefix')
@@ -95,6 +95,7 @@ def generate_launch_description():
     # need that info in both. LaunchConfiguration cannot be converted to a string by anything
     # other than the other launch actions... There is potentially a way to use the Command launch
     # action, which evaluates a command (i.e. evaluates the xacro command)
+    # TODO: I think we could structure this so that we only need one XXXX_gazebo.launch.py....
     aircraft = 'anaconda' # default aircraft
     for arg in sys.argv:
         if arg.startswith("aircraft:="):
@@ -104,12 +105,12 @@ def generate_launch_description():
     xacro_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'),
                                          f'xacro/{aircraft}.urdf.xacro')
     urdf_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'),
-                                        'resources/fixedwing.urdf')
+                                        'gazebo_resource/fixedwing.urdf')
     robot_description = xacro.process_file(
         xacro_filepath_string, mappings={
             'mesh_file_location': os.path.join(
                 get_package_share_directory('rosflight_sim'),
-                'resources/skyhunter.dae'
+                'common_resource/skyhunter.dae'
             )
         }
     ).toxml()
