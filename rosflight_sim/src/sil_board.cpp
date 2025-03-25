@@ -47,7 +47,7 @@ namespace rosflight_sim
 SILBoard::SILBoard()
     : UDPBoard()
     // , bias_generator_(std::chrono::system_clock::now().time_since_epoch().count()) // Uncomment if you would like to
-                                                                                      // have bias biases for the sensors
+                                                                                      // have different biases for the sensors
                                                                                       // on each flight. Delete next line.
     , bias_generator_(0)
     , noise_generator_(std::chrono::system_clock::now().time_since_epoch().count())
@@ -84,9 +84,22 @@ void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Worl
   serial_delay_ns_ = node_->get_parameter_or<long>("serial_delay_ns", 0.006 * 1e9);
 
   // Get Sensor Parameters
-  gyro_stdev_ = node_->get_parameter_or<double>("gyro_stdev", 0.0226);
+  gyro_stdev_ = node_->get_parameter_or<double>("gyro_stdev", 0.00226);
   gyro_bias_range_ = node_->get_parameter_or<double>("gyro_bias_range", 0.25);
-  gyro_bias_walk_stdev_ = node_->get_parameter_or<double>("gyro_bias_walk_stdev", 0.00001);
+  gyro_bias_walk_stdev_ = node_->get_parameter_or<double>("gyro_bias_walk_stdev", 0.033);
+  k_gyro_ = node_->get_parameter_or<double>("k_gyro", 20.0);
+  gyro_bias_model_tau_ = node_->get_parameter_or<double>("gyro_bias_model_tau", 400.0);
+  double bias_model_x0 = node_->get_parameter_or<double>("bias_model_x0", 0.003);
+  double bias_model_y0 = node_->get_parameter_or<double>("bias_model_y0", -0.002);
+  double bias_model_z0 = node_->get_parameter_or<double>("bias_model_z0", 0.001);
+
+  GZ_COMPAT_SET_X(bias_instability_, bias_model_x0);
+  GZ_COMPAT_SET_Y(bias_instability_, bias_model_y0);
+  GZ_COMPAT_SET_Z(bias_instability_, bias_model_z0);
+  
+  GZ_COMPAT_SET_X(gyro_bias_eta_, 0.0);
+  GZ_COMPAT_SET_Y(gyro_bias_eta_, 0.0);
+  GZ_COMPAT_SET_Z(gyro_bias_eta_, 0.0);
 
   acc_stdev_ = node_->get_parameter_or<double>("acc_stdev", 0.2);
   acc_bias_range_ = node_->get_parameter_or<double>("acc_bias_range", 0.6);
@@ -385,6 +398,12 @@ bool SILBoard::imu_read(float accel[3], float * temperature, float gyro[3], uint
 
   GazeboVector y_gyro = GZ_COMPAT_GET_RELATIVE_ANGULAR_VEL(link_);
 
+  if (GZ_COMPAT_GET_LENGTH(current_vel) < 0.05) {
+    GZ_COMPAT_SET_X(y_gyro, 0.0);
+    GZ_COMPAT_SET_Y(y_gyro, 0.0);
+    GZ_COMPAT_SET_Z(y_gyro, 0.0);
+  }
+
   // Normal Noise from motors
   if (motors_spinning()) {
     GZ_COMPAT_SET_X(y_gyro,
@@ -396,20 +415,31 @@ bool SILBoard::imu_read(float accel[3], float * temperature, float gyro[3], uint
   }
 
   // bias Walk for bias
-  GZ_COMPAT_SET_X(gyro_bias_,
-                  GZ_COMPAT_GET_X(gyro_bias_)
-                    + gyro_bias_walk_stdev_ * normal_distribution_(noise_generator_));
-  GZ_COMPAT_SET_Y(gyro_bias_,
-                  GZ_COMPAT_GET_Y(gyro_bias_)
-                    + gyro_bias_walk_stdev_ * normal_distribution_(noise_generator_));
-  GZ_COMPAT_SET_Z(gyro_bias_,
-                  GZ_COMPAT_GET_Z(gyro_bias_)
-                    + gyro_bias_walk_stdev_ * normal_distribution_(noise_generator_));
+  float T_s = 1.0/imu_update_rate_;
+  GazeboVector noise;
+  GZ_COMPAT_SET_X(noise, gyro_bias_walk_stdev_ * normal_distribution_(noise_generator_));
+  GZ_COMPAT_SET_Y(noise, gyro_bias_walk_stdev_ * normal_distribution_(noise_generator_));
+  GZ_COMPAT_SET_Z(noise, gyro_bias_walk_stdev_ * normal_distribution_(noise_generator_));
+  gyro_bias_eta_ = std::exp(-k_gyro_*T_s) * gyro_bias_eta_ + T_s*noise;
+
+  // Calculate bias instability model.
+  bias_instability_ = bias_model();
+
 
   // Apply Constant Bias
   GZ_COMPAT_SET_X(y_gyro, GZ_COMPAT_GET_X(y_gyro) + GZ_COMPAT_GET_X(gyro_bias_));
   GZ_COMPAT_SET_Y(y_gyro, GZ_COMPAT_GET_Y(y_gyro) + GZ_COMPAT_GET_Y(gyro_bias_));
   GZ_COMPAT_SET_Z(y_gyro, GZ_COMPAT_GET_Z(y_gyro) + GZ_COMPAT_GET_Z(gyro_bias_));
+
+  // Apply modeled bias instability
+  GZ_COMPAT_SET_X(y_gyro, GZ_COMPAT_GET_X(y_gyro) + GZ_COMPAT_GET_X(bias_instability_));
+  GZ_COMPAT_SET_Y(y_gyro, GZ_COMPAT_GET_Y(y_gyro) + GZ_COMPAT_GET_Y(bias_instability_));
+  GZ_COMPAT_SET_Z(y_gyro, GZ_COMPAT_GET_Z(y_gyro) + GZ_COMPAT_GET_Z(bias_instability_));
+  
+  // Apply Bias walk
+  GZ_COMPAT_SET_X(y_gyro, GZ_COMPAT_GET_X(y_gyro) + GZ_COMPAT_GET_X(gyro_bias_eta_));
+  GZ_COMPAT_SET_Y(y_gyro, GZ_COMPAT_GET_Y(y_gyro) + GZ_COMPAT_GET_Y(gyro_bias_eta_));
+  GZ_COMPAT_SET_Z(y_gyro, GZ_COMPAT_GET_Z(y_gyro) + GZ_COMPAT_GET_Z(gyro_bias_eta_));
 
   // Convert to NED for output
   gyro[0] = GZ_COMPAT_GET_X(y_gyro);
@@ -419,6 +449,19 @@ bool SILBoard::imu_read(float accel[3], float * temperature, float gyro[3], uint
   (*temperature) = 27.0 + 273.15;
   (*time_us) = clock_micros();
   return true;
+}
+
+ignition::math::Vector3d SILBoard::bias_model() 
+{
+  double T = 1/imu_update_rate_;
+
+  double alpha = T/(T+gyro_bias_model_tau_);
+  
+  GZ_COMPAT_SET_X(bias_instability_, GZ_COMPAT_GET_X(bias_instability_) * (1-alpha));
+  GZ_COMPAT_SET_Y(bias_instability_, GZ_COMPAT_GET_Y(bias_instability_) * (1-alpha));
+  GZ_COMPAT_SET_Z(bias_instability_, GZ_COMPAT_GET_Z(bias_instability_) * (1-alpha));
+
+   return bias_instability_;
 }
 
 void SILBoard::imu_not_responding_error()

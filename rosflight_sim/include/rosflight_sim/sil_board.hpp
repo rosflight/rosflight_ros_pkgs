@@ -80,6 +80,11 @@ private:
   double gyro_stdev_ = 0;
   double gyro_bias_walk_stdev_ = 0;
   double gyro_bias_range_ = 0;
+  double k_gyro_ = 1.0;
+  ignition::math::Vector3d gyro_bias_eta_;
+  ignition::math::Vector3d bias_instability_;
+  double gyro_bias_model_tau_;
+
 
   double acc_stdev_ = 0;
   double acc_bias_range_ = 0;
@@ -162,6 +167,8 @@ private:
   uint64_t sonar_update_period_us_ = 0;
   uint64_t rc_update_period_us_ = 0;
   uint64_t battery_update_period_us_ = 0;
+  
+  ignition::math::Vector3d bias_model();
 
   /**
    * @brief Callback function to update RC values when new values are received.
