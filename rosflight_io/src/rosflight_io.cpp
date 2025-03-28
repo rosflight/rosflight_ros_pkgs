@@ -38,6 +38,7 @@
  * @author Brandon Sutherland <brandonsutherland2\@gmail.com>
  */
 
+#include <rosflight_msgs/msg/detail/gnss__struct.hpp>
 #ifdef ROSFLIGHT_VERSION
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x) // Somehow, C++ requires two macros to convert a macro to a string
@@ -242,9 +243,6 @@ void ROSflightIO::handle_mavlink_message(const mavlink_message_t & msg)
       break;
     case MAVLINK_MSG_ID_ROSFLIGHT_GNSS:
       handle_rosflight_gnss_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_ROSFLIGHT_GNSS_FULL:
-      handle_rosflight_gnss_full_msg(msg);
       break;
     case MAVLINK_MSG_ID_ROSFLIGHT_VERSION:
       handle_version_msg(msg);
@@ -817,7 +815,6 @@ void ROSflightIO::handle_battery_status_msg(const mavlink_message_t & msg)
 
   battery_status_pub_->publish(battery_status_message);
 }
-
 void ROSflightIO::handle_rosflight_gnss_msg(const mavlink_message_t & msg)
 {
   mavlink_rosflight_gnss_t gnss;
@@ -826,72 +823,33 @@ void ROSflightIO::handle_rosflight_gnss_msg(const mavlink_message_t & msg)
   rclcpp::Time stamp = fcu_time_to_ros_time(std::chrono::microseconds(gnss.rosflight_timestamp));
   rosflight_msgs::msg::GNSS gnss_msg;
   gnss_msg.header.stamp = stamp;
-  gnss_msg.header.frame_id = "ECEF";
-  gnss_msg.fix = gnss.fix_type;
-  gnss_msg.time = rclcpp::Time((int32_t) gnss.time, gnss.nanos);
-  gnss_msg.position[0] = .01 * gnss.ecef_x; //.01 for conversion from cm to m
-  gnss_msg.position[1] = .01 * gnss.ecef_y;
-  gnss_msg.position[2] = .01 * gnss.ecef_z;
-  gnss_msg.horizontal_accuracy = gnss.h_acc;
-  gnss_msg.vertical_accuracy = gnss.v_acc;
-  gnss_msg.velocity[0] = .01 * gnss.ecef_v_x; //.01 for conversion from cm/s to m/s
-  gnss_msg.velocity[1] = .01 * gnss.ecef_v_y;
-  gnss_msg.velocity[2] = .01 * gnss.ecef_v_z;
-  gnss_msg.speed_accuracy = gnss.s_acc;
+  gnss_msg.header.frame_id = "ECEF"; // TODO: is this right?
+  
+  gnss_msg.fix = gnss.fix_type; // TODO: is this right?
+  
+  gnss_msg.year = gnss.year;
+  gnss_msg.month = gnss.month;
+  gnss_msg.day = gnss.day;
+  gnss_msg.hour = gnss.hour;
+  gnss_msg.min = gnss.min;
+  gnss_msg.sec = gnss.sec;
+
+  gnss_msg.num_sat = gnss.num_sat;
+  gnss_msg.lon = gnss.lon; // FIXME: DO CONVERSION
+  gnss_msg.lat = gnss.lat; // FIXME: DO CONVERSION
+  gnss_msg.alt = gnss.alt; // FIXME: DO CONVERSION
+  gnss_msg.horizontal_accuracy = gnss.horizontal_accuracy; // FIXME: DO CONVERSION
+  gnss_msg.vertical_accuracy = gnss.vertical_accuracy; // FIXME: DO CONVERSION
+
+  gnss_msg.vel_n = gnss.vel_n; // FIXME: DO CONVERSION
+  gnss_msg.vel_e = gnss.vel_e; // FIXME: DO CONVERSION
+  gnss_msg.vel_d = gnss.vel_d; // FIXME: DO CONVERSION
+  gnss_msg.velocity_accuracy = gnss.velocity_accuracy; // FIXME: DO CONVERSION
   if (gnss_pub_ == nullptr) {
     gnss_pub_ = this->create_publisher<rosflight_msgs::msg::GNSS>("gnss", 1);
   }
   gnss_pub_->publish(gnss_msg);
-
-  sensor_msgs::msg::NavSatFix navsat_fix;
-  navsat_fix.header.stamp = stamp;
-  navsat_fix.header.frame_id = "LLA";
-  navsat_fix.latitude = 1e-7 * gnss.lat;    // 1e-7 to convert from 100's of nanodegrees
-  navsat_fix.longitude = 1e-7 * gnss.lon;   // 1e-7 to convert from 100's of nanodegrees
-  navsat_fix.altitude = .001 * gnss.height; //.001 to convert from mm to m
-  navsat_fix.position_covariance[0] = gnss.h_acc * gnss.h_acc;
-  navsat_fix.position_covariance[4] = gnss.h_acc * gnss.h_acc;
-  navsat_fix.position_covariance[8] = gnss.v_acc * gnss.v_acc;
-  navsat_fix.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
-  sensor_msgs::msg::NavSatStatus navsat_status;
-  auto fix_type = gnss.fix_type;
-  switch (fix_type) {
-    case GNSS_FIX_RTK_FLOAT:
-    case GNSS_FIX_RTK_FIXED:
-      navsat_status.status = sensor_msgs::msg::NavSatStatus::STATUS_GBAS_FIX;
-      break;
-    case GNSS_FIX_FIX:
-      navsat_status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
-      break;
-    default:
-      navsat_status.status = sensor_msgs::msg::NavSatStatus::STATUS_NO_FIX;
-  }
-  // The UBX is not configured to report which system is used, even though it supports them all
-  navsat_status.service = 1; // Report that only GPS was used, even though others may have been
-  navsat_fix.status = navsat_status;
-
-  if (nav_sat_fix_pub_ == nullptr) {
-    nav_sat_fix_pub_ = this->create_publisher<sensor_msgs::msg::NavSatFix>("navsat_compat/fix", 1);
-  }
-  nav_sat_fix_pub_->publish(navsat_fix);
-
-  geometry_msgs::msg::TwistStamped twist_stamped;
-  twist_stamped.header.stamp = stamp;
-  // GNSS does not provide angular data
-  twist_stamped.twist.angular.x = 0;
-  twist_stamped.twist.angular.y = 0;
-  twist_stamped.twist.angular.z = 0;
-
-  twist_stamped.twist.linear.x = .001 * gnss.vel_n; // Convert from mm/s to m/s
-  twist_stamped.twist.linear.y = .001 * gnss.vel_e;
-  twist_stamped.twist.linear.z = .001 * gnss.vel_d;
-
-  if (twist_stamped_pub_ == nullptr) {
-    twist_stamped_pub_ =
-      this->create_publisher<geometry_msgs::msg::TwistStamped>("navsat_compat/vel", 1);
-  }
-  twist_stamped_pub_->publish(twist_stamped);
-
+  
   sensor_msgs::msg::TimeReference time_ref;
   time_ref.header.stamp = stamp;
   time_ref.source = "GNSS";
@@ -902,50 +860,7 @@ void ROSflightIO::handle_rosflight_gnss_msg(const mavlink_message_t & msg)
       this->create_publisher<sensor_msgs::msg::TimeReference>("navsat_compat/time_reference", 1);
   }
 
-  time_reference_pub_->publish(time_ref);
-}
-
-void ROSflightIO::handle_rosflight_gnss_full_msg(const mavlink_message_t & msg)
-{
-  /// \todo Publishes a lot of duplicate data, reduce this down to more unified topics and MAVLink
-  ///  communication. (Move additional information in gnss_full to gnss and get rid of gnss_full?)
-
-  mavlink_rosflight_gnss_full_t full;
-  mavlink_msg_rosflight_gnss_full_decode(&msg, &full);
-
-  rosflight_msgs::msg::GNSSFull msg_out;
-  msg_out.header.stamp = this->get_clock()->now();
-  msg_out.time_of_week = full.time_of_week;
-  msg_out.year = full.year;
-  msg_out.month = full.month;
-  msg_out.day = full.day;
-  msg_out.hour = full.hour;
-  msg_out.min = full.min;
-  msg_out.sec = full.sec;
-  msg_out.valid = full.valid;
-  msg_out.t_acc = full.t_acc;
-  msg_out.nano = full.nano;
-  msg_out.fix_type = full.fix_type;
-  msg_out.num_sat = full.num_sat;
-  msg_out.lon = full.lon;
-  msg_out.lat = full.lat;
-  msg_out.height = full.height;
-  msg_out.height_msl = full.height_msl;
-  msg_out.h_acc = full.h_acc;
-  msg_out.v_acc = full.v_acc;
-  msg_out.vel_n = full.vel_n;
-  msg_out.vel_e = full.vel_e;
-  msg_out.vel_d = full.vel_d;
-  msg_out.g_speed = full.g_speed;
-  msg_out.head_mot = full.head_mot;
-  msg_out.s_acc = full.s_acc;
-  msg_out.head_acc = full.head_acc;
-  msg_out.p_dop = full.p_dop;
-
-  if (gnss_full_pub_ == nullptr) {
-    gnss_full_pub_ = this->create_publisher<rosflight_msgs::msg::GNSSFull>("gnss_full", 1);
-  }
-  gnss_full_pub_->publish(msg_out);
+  time_reference_pub_->publish(time_ref); // TODO: Does this still exist?
 }
 
 void ROSflightIO::commandCallback(const rosflight_msgs::msg::Command::ConstSharedPtr & msg)

@@ -72,7 +72,6 @@
 #include <rosflight_msgs/msg/command.hpp>
 #include <rosflight_msgs/msg/error.hpp>
 #include <rosflight_msgs/msg/gnss.hpp>
-#include <rosflight_msgs/msg/gnss_full.hpp>
 #include <rosflight_msgs/msg/output_raw.hpp>
 #include <rosflight_msgs/msg/rc_raw.hpp>
 #include <rosflight_msgs/msg/status.hpp>
@@ -275,20 +274,11 @@ private:
   /**
    * @brief Handles ROSflight GNSS MAVLink messages.
    *
-   * Receives GNSS data from MAVLink, and uses that to publish "gnss" topic and all three
-   * "navsat_compact" topics.
+   * Receives GNSS data from MAVLink, and uses that to publish "gnss" topic.
    *
    * @param msg ROSflight GNSS message.
    */
   void handle_rosflight_gnss_msg(const mavlink_message_t & msg);
-  /**
-   * @brief Handles ROSflight GNSS full MAVLink messages.
-   *
-   * Receives "full" GNSS data from MAVLink and publishes it on "gnss_full" topic.
-   *
-   * @param msg ROSflight GNSS full message.
-   */
-  void handle_rosflight_gnss_full_msg(const mavlink_message_t & msg);
   /**
    * @brief Handles named value integer MAVLink messages.
    *
@@ -601,12 +591,6 @@ private:
   rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr sonar_pub_;
   /// "gnss" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::GNSS>::SharedPtr gnss_pub_;
-  /// "gnss_full" ROS topic publisher.
-  rclcpp::Publisher<rosflight_msgs::msg::GNSSFull>::SharedPtr gnss_full_pub_;
-  /// "navsat_compat/fix" ROS topic publisher.
-  rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr nav_sat_fix_pub_;
-  /// "navsat_compat/vel" ROS topic publisher.
-  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_stamped_pub_;
   /// "navsat_compat/time_reference" ROS topic publisher.
   rclcpp::Publisher<sensor_msgs::msg::TimeReference>::SharedPtr time_reference_pub_;
   /// "magnetometer" ROS topic publisher.
