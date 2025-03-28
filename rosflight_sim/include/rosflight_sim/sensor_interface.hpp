@@ -79,7 +79,6 @@ private:
   virtual sensor_msgs::msg::MagneticField mag_update(const rosflight_msgs::msg::SimState & state) = 0;
   virtual rosflight_msgs::msg::Barometer baro_update(const rosflight_msgs::msg::SimState & state) = 0;
   virtual rosflight_msgs::msg::GNSS gnss_update(const rosflight_msgs::msg::SimState & state) = 0;
-  virtual rosflight_msgs::msg::GNSSFull gnss_full_update(const rosflight_msgs::msg::SimState & state) = 0;
   virtual sensor_msgs::msg::Range sonar_update(const rosflight_msgs::msg::SimState & state) = 0;
   virtual rosflight_msgs::msg::Airspeed diff_pressure_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::Vector3Stamped & wind) = 0;
   virtual rosflight_msgs::msg::BatteryStatus battery_update(const rosflight_msgs::msg::SimState & state) = 0;
@@ -90,7 +89,6 @@ private:
   rclcpp::Publisher<sensor_msgs::msg::MagneticField>::SharedPtr mag_pub_;
   rclcpp::Publisher<rosflight_msgs::msg::Barometer>::SharedPtr baro_pub_;
   rclcpp::Publisher<rosflight_msgs::msg::GNSS>::SharedPtr gnss_pub_;
-  rclcpp::Publisher<rosflight_msgs::msg::GNSSFull>::SharedPtr gnss_full_pub_;
   rclcpp::Publisher<rosflight_msgs::msg::Airspeed>::SharedPtr diff_pressure_pub_;
   rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr sonar_pub_;
   rclcpp::Publisher<rosflight_msgs::msg::BatteryStatus>::SharedPtr battery_pub_;

@@ -64,8 +64,6 @@ SensorInterface::SensorInterface()
   mag_pub_ = this->create_publisher<sensor_msgs::msg::MagneticField>("simulated_sensors/mag", 1);
   baro_pub_ = this->create_publisher<rosflight_msgs::msg::Barometer>("simulated_sensors/baro", 1);
   gnss_pub_ = this->create_publisher<rosflight_msgs::msg::GNSS>("simulated_sensors/gnss", 1);
-  gnss_full_pub_ =
-    this->create_publisher<rosflight_msgs::msg::GNSSFull>("simulated_sensors/gnss_full", 1);
   diff_pressure_pub_ =
     this->create_publisher<rosflight_msgs::msg::Airspeed>("simulated_sensors/diff_pressure", 1);
   sonar_pub_ = this->create_publisher<sensor_msgs::msg::Range>("simulated_sensors/sonar", 1);
@@ -303,9 +301,6 @@ void SensorInterface::gnss_publish()
 {
   rosflight_msgs::msg::GNSS msg = gnss_update(current_state_);
   gnss_pub_->publish(msg);
-
-  rosflight_msgs::msg::GNSSFull gnss_full_msg = gnss_full_update(current_state_);
-  gnss_full_pub_->publish(gnss_full_msg);
 }
 
 void SensorInterface::diff_pressure_publish()

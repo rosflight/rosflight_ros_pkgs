@@ -93,6 +93,10 @@ void StandaloneSensors::declare_parameters()
 
   this->declare_parameter("gravity", 9.81);
   this->declare_parameter("mass", 2.25);
+
+  this->declare_parameter("initial_latitude", 40.24647);
+  this->declare_parameter("initial_longitude", -111.64857);
+  this->declare_parameter("initial_altitude", 1387.0);
 }
 
 void StandaloneSensors::initialize_sensors()
@@ -122,19 +126,6 @@ void StandaloneSensors::initialize_sensors()
   inertial_magnetic_field_.normalize();
   inertial_magnetic_field_ *= total_intensity;
 }
-
-// TODO: Do something with this
-// void StandaloneSensors::sensors_init()
-// {
-//   using SC = gazebo::common::SphericalCoordinates;
-//   using Ang = ignition::math::Angle;
-//   sph_coord_.SetSurfaceType(SC::SurfaceType::EARTH_WGS84);
-//   sph_coord_.SetLatitudeReference(Ang(deg2Rad(origin_latitude_)));
-//   sph_coord_.SetLongitudeReference(Ang(deg2Rad(origin_longitude_)));
-//   sph_coord_.SetElevationReference(origin_altitude_);
-//   // Force x-axis to be north-aligned. I promise, I will change everything to ENU in the next commit
-//   sph_coord_.SetHeadingOffset(Ang(M_PI / 2.0));
-// }
 
 sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::WrenchStamped & forces)
 {
@@ -292,123 +283,75 @@ rosflight_msgs::msg::Barometer StandaloneSensors::baro_update(const rosflight_ms
   return out_msg;
 }
 
-// TODO: Fix the GNSS messages first
 rosflight_msgs::msg::GNSS StandaloneSensors::gnss_update(const rosflight_msgs::msg::SimState & state)
 {
-  // using Vec3 = ignition::math::Vector3d;
-  // using Coord = gazebo::common::SphericalCoordinates::CoordinateType;
-
-  // double T_s = 1.0/gnss_update_rate_;
-
-  // GazeboPose local_pose = GZ_COMPAT_GET_WORLD_POSE(link_);
-  // Vec3 local_pos = GZ_COMPAT_GET_POS(local_pose) + gnss_gauss_markov_eta_;
-
-  // Vec3 pos_noise(horizontal_gnss_stdev_ * normal_distribution_(noise_generator_),
-  //                horizontal_gnss_stdev_ * normal_distribution_(noise_generator_),
-  //                vertical_gnss_stdev_ * normal_distribution_(noise_generator_));
-  // gnss_gauss_markov_eta_ = std::exp(-k_gnss_*T_s) * gnss_gauss_markov_eta_ + T_s*pos_noise;
-
-
-  // Vec3 local_vel = GZ_COMPAT_GET_WORLD_LINEAR_VEL(link_);
-  // Vec3 vel_noise(gnss_velocity_stdev_ * normal_distribution_(noise_generator_),
-  //                gnss_velocity_stdev_ * normal_distribution_(noise_generator_),
-  //                gnss_velocity_stdev_ * normal_distribution_(noise_generator_));
-  // local_vel += vel_noise;
-
-  // Vec3 ecef_pos = sph_coord_.PositionTransform(local_pos, Coord::LOCAL, Coord::ECEF);
-  // Vec3 ecef_vel = sph_coord_.VelocityTransform(local_vel, Coord::LOCAL, Coord::ECEF);
-  // Vec3 lla = sph_coord_.PositionTransform(local_pos, Coord::LOCAL, Coord::SPHERICAL);
-  // 
-  // gnss_.lat = (int) std::round(rad2Deg(lla.X()) * 1e7);
-  // gnss_.lon = (int) std::round(rad2Deg(lla.Y()) * 1e7);
-  // gnss_.height = (int) std::round(lla.Z() * 1e3);
-
-  // // For now, we have defined the Gazebo Local Frame as NWU.  This should be fixed in a future
-  // // commit
-  // gnss_.vel_n = (int) std::round(local_vel.X() * 1e3);
-  // gnss_.vel_e = (int) std::round(-local_vel.Y() * 1e3);
-  // gnss_.vel_d = (int) std::round(-local_vel.Z() * 1e3);
-
-  // gnss_.fix_type = rosflight_firmware::GNSSFixType::GNSS_FIX_TYPE_3D_FIX;
-  // gnss_.time_of_week = GZ_COMPAT_GET_SIM_TIME(world_).Double() * 1000;
-  // gnss_.time = GZ_COMPAT_GET_SIM_TIME(world_).Double();
-  // // TODO: time manager
-  // gnss_.nanos =
-  //   (uint64_t) std::round((GZ_COMPAT_GET_SIM_TIME(world_).Double() - (double) gnss_.time) * 1e9);
-
-  // gnss_.h_acc = (int) std::round(horizontal_gnss_stdev_ * 1000.0);
-  // gnss_.v_acc = (int) std::round(vertical_gnss_stdev_ * 1000.0);
-
-  // gnss_.ecef.x = (int) std::round(ecef_pos.X() * 100);
-  // gnss_.ecef.y = (int) std::round(ecef_pos.Y() * 100);
-  // gnss_.ecef.z = (int) std::round(ecef_pos.Z() * 100);
-  // gnss_.ecef.p_acc = (int) std::round(gnss_.h_acc / 10.0);
-  // gnss_.ecef.vx = (int) std::round(ecef_vel.X() * 100);
-  // gnss_.ecef.vy = (int) std::round(ecef_vel.Y() * 100);
-  // gnss_.ecef.vz = (int) std::round(ecef_vel.Z() * 100);
-  // gnss_.ecef.s_acc = (int) std::round(gnss_velocity_stdev_ * 100);
-
-  // // TODO: time manager
-  // gnss_.rosflight_timestamp = clock_micros();
-
-  // using Vec3 = ignition::math::Vector3d;
-  // using Vec3 = ignition::math::Vector3d;
-  // using Coord = gazebo::common::SphericalCoordinates::CoordinateType;
-
-  // // TODO: Do a better job of simulating the wander of GNSS
-  // 
-  // auto now = std::chrono::system_clock::now();
-  // auto now_c = std::chrono::system_clock::to_time_t(now);
-  // auto now_tm = std::localtime(&now_c);
-  // 
-  // gnss_full_.year = now_tm->tm_year + 1900;
-  // gnss_full_.month = now_tm->tm_mon + 1;
-  // gnss_full_.day = now_tm->tm_mday;
-  // gnss_full_.hour = now_tm->tm_hour;
-  // gnss_full_.min = now_tm->tm_min;
-  // gnss_full_.sec = now_tm->tm_sec;
-  // gnss_full_.valid = 1;
-
-  // gnss_full_.lat = (int) std::round(rad2Deg(lla.X()) * 1e7);
-  // gnss_full_.lon = (int) std::round(rad2Deg(lla.Y()) * 1e7);
-  // gnss_full_.height = (int) std::round(lla.Z() * 1e3);
-  // gnss_full_.height_msl = gnss_full_.height; // TODO
-
-  // // For now, we have defined the Gazebo Local Frame as NWU.  This should be
-  // // fixed in a future commit
-  // gnss_full_.vel_n = (int) std::round(local_vel.X() * 1e3);
-  // gnss_full_.vel_e = (int) std::round(-local_vel.Y() * 1e3);
-  // gnss_full_.vel_d = (int) std::round(-local_vel.Z() * 1e3);
-
-  // gnss_full_.fix_type = rosflight_firmware::GNSSFixType::GNSS_FIX_TYPE_3D_FIX;
-  // gnss_full_.time_of_week = GZ_COMPAT_GET_SIM_TIME(world_).Double() * 1000;
-  // gnss_full_.num_sat = 15;
-  // // TODO
-  // gnss_full_.t_acc = 0;
-  // gnss_full_.nano = 0;
-
-  // gnss_full_.h_acc = (int) std::round(horizontal_gnss_stdev_ * 1000.0);
-  // gnss_full_.v_acc = (int) std::round(vertical_gnss_stdev_ * 1000.0);
-
-  // // Again, TODO switch to using ENU convention per REP
-  // double vn = local_vel.X();
-  // double ve = -local_vel.Y();
-  // double ground_speed = std::sqrt(vn * vn + ve * ve);
-  // gnss_full_.g_speed = (int) std::round(ground_speed * 1000);
-
-  // double head_mot = std::atan2(ve, vn);
-  // gnss_full_.head_mot = (int) std::round(rad2Deg(head_mot) * 1e5);
-  // gnss_full_.p_dop = 0.0; // TODO
-  // gnss_full_.rosflight_timestamp = clock_micros();
-
   rosflight_msgs::msg::GNSS out_msg;
-  return out_msg;
-}
 
-// TODO: Placeholder code until we can redefine the gnss messages
-rosflight_msgs::msg::GNSSFull StandaloneSensors::gnss_full_update(const rosflight_msgs::msg::SimState & state)
-{
-  rosflight_msgs::msg::GNSSFull out_msg;
+  // Compute GNSS location 
+  Eigen::Vector3d local_pose;
+  local_pose << state.pose.position.x, state.pose.position.y, state.pose.position.z; // inertial NED (m)
+
+  // Add random walk, then update random walk
+  local_pose += gnss_gauss_markov_eta_;
+
+  double T_s = 1.0/get_gnss_update_frequency();
+  double h_std = this->get_parameter("horizontal_gnss_stdev").as_double();
+  double v_std = this->get_parameter("vertical_gnss_stdev").as_double();
+  double k_gnss = this->get_parameter("k_gnss").as_double();
+  Eigen::Vector3d pos_noise(h_std * normal_distribution_(noise_generator_),
+                            h_std * normal_distribution_(noise_generator_),
+                            v_std * normal_distribution_(noise_generator_));
+  gnss_gauss_markov_eta_ = std::exp(-k_gnss*T_s) * gnss_gauss_markov_eta_ + T_s*pos_noise;
+
+  // Compute LLA (assuming spherical earth model)
+  double init_lat = this->get_parameter("initial_latitude").as_double();
+  double init_lon = this->get_parameter("initial_longitude").as_double();
+  double init_alt = this->get_parameter("initial_altitude").as_double();
+  double lat = 180.0 / (EARTH_RADIUS * M_PI) * local_pose(0) + init_lat;
+  double lon = 180.0 / (EARTH_RADIUS * M_PI) 
+    / cos(init_lat * M_PI / 180.0) * local_pose(1) + init_lon;
+  double alt = -local_pose(2) + init_alt;
+
+  // Convert lat and lon to 100's of nanodegrees
+  lat = (int) std::round(lat * 1e7);
+  lon = (int) std::round(lon * 1e7);
+  out_msg.lat = lat;
+  out_msg.lon = lon;
+  out_msg.alt = alt;
+
+  // Compute GNSS velocity
+  Eigen::Vector3d local_vel;
+  local_vel << state.twist.linear.x, state.twist.linear.y, state.twist.linear.z;  // NED
+  double vel_std = this->get_parameter("gnss_velocity_stdev").as_double();
+  Eigen::Vector3d vel_noise(vel_std * normal_distribution_(noise_generator_),
+                            vel_std * normal_distribution_(noise_generator_),
+                            vel_std * normal_distribution_(noise_generator_));
+  local_vel += vel_noise;
+  out_msg.vel_n = local_vel(0);
+  out_msg.vel_e = local_vel(1);
+  out_msg.vel_d = local_vel(2);
+
+  // Fill in the rest of the message
+  out_msg.fix_type = rosflight_msgs::msg::GNSS::GNSS_FIX_TYPE_3D_FIX;
+
+  // Add GNSS time
+  auto curr_nanos = this->get_clock()->now().nanoseconds();
+  auto now = std::chrono::system_clock::time_point(std::chrono::nanoseconds(1)*curr_nanos);
+  auto now_c = std::chrono::system_clock::to_time_t(now);
+  auto now_tm = std::localtime(&now_c);
+
+  out_msg.year = now_tm->tm_year + 1900;
+  out_msg.month = now_tm->tm_mon + 1;
+  out_msg.day = now_tm->tm_mday;
+  out_msg.hour = now_tm->tm_hour;
+  out_msg.min = now_tm->tm_min;
+  out_msg.sec = now_tm->tm_sec;
+
+  out_msg.num_sat = 15;
+  out_msg.horizontal_accuracy = h_std;
+  out_msg.vertical_accuracy = v_std;
+  out_msg.velocity_accuracy = vel_std;
+
   return out_msg;
 }
 

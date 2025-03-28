@@ -44,6 +44,8 @@
 #include "rosflight_sim/sensor_interface.hpp"
 #include "rosflight_msgs/msg/sim_state.hpp"
 
+#define EARTH_RADIUS 6378145.0f
+
 namespace rosflight_sim
 {
 
@@ -60,7 +62,6 @@ public:
   sensor_msgs::msg::MagneticField mag_update(const rosflight_msgs::msg::SimState & state) override;
   rosflight_msgs::msg::Barometer baro_update(const rosflight_msgs::msg::SimState & state) override;
   rosflight_msgs::msg::GNSS gnss_update(const rosflight_msgs::msg::SimState & state) override;
-  rosflight_msgs::msg::GNSSFull gnss_full_update(const rosflight_msgs::msg::SimState & state) override;
   sensor_msgs::msg::Range sonar_update(const rosflight_msgs::msg::SimState & state) override;
   rosflight_msgs::msg::Airspeed diff_pressure_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::Vector3Stamped & wind) override;
   rosflight_msgs::msg::BatteryStatus battery_update(const rosflight_msgs::msg::SimState & state) override;
@@ -72,6 +73,8 @@ private:
   std::normal_distribution<double> normal_distribution_;
   std::uniform_real_distribution<double> uniform_distribution_;
 
+  // TODO: Should we initialize this as non zero?
+  Eigen::Vector3d gnss_gauss_markov_eta_ = Eigen::Vector3d::Zero();
   Eigen::Vector3d mag_gauss_markov_eta_ = Eigen::Vector3d::Zero();
   Eigen::Vector3d inertial_magnetic_field_;
 
