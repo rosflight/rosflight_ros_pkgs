@@ -28,7 +28,6 @@ set(msg_files
   "msg/Command.msg"
   "msg/Error.msg"
   "msg/GNSS.msg"
-  "msg/GNSSFull.msg"
   "msg/OutputRaw.msg"
   "msg/PwmOutput.msg"
   "msg/RCRaw.msg"
