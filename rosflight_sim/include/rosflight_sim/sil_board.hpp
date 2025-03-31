@@ -47,7 +47,6 @@
 #include "rosflight_msgs/msg/barometer.hpp"
 #include "rosflight_msgs/msg/battery_status.hpp"
 #include "rosflight_msgs/msg/gnss.hpp"
-#include "rosflight_msgs/msg/gnss_full.hpp"
 #include "rosflight_msgs/msg/rc_raw.hpp"
 #include "rosflight_sim/udp_board.hpp"
 
@@ -71,7 +70,6 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::MagneticField>::SharedPtr mag_data_sub_;
   rclcpp::Subscription<rosflight_msgs::msg::Barometer>::SharedPtr baro_data_sub_;
   rclcpp::Subscription<rosflight_msgs::msg::GNSS>::SharedPtr gnss_data_sub_;
-  // rclcpp::Subscription<rosflight_msgs::msg::GNSSFull>::SharedPtr gnss_full_data_sub_;
   rclcpp::Subscription<rosflight_msgs::msg::Airspeed>::SharedPtr diff_pressure_data_sub_;
   rclcpp::Subscription<sensor_msgs::msg::Range>::SharedPtr sonar_data_sub_;
   rclcpp::Subscription<rosflight_msgs::msg::BatteryStatus>::SharedPtr battery_data_sub_;
@@ -94,7 +92,6 @@ private:
   bool new_mag_data_available_ = false;
   bool new_baro_data_available_ = false;
   bool new_gnss_data_available_ = false;
-  bool new_gnss_full_data_available_ = false;
   bool new_diff_pressure_data_available_ = false;
   bool new_sonar_data_available_ = false;
   bool new_battery_data_available_ = false;
@@ -113,7 +110,6 @@ private:
   sensor_msgs::msg::MagneticField mag_data_;
   rosflight_msgs::msg::Barometer baro_data_;
   rosflight_msgs::msg::GNSS gnss_data_;
-  rosflight_msgs::msg::GNSSFull gnss_full_data_;
   rosflight_msgs::msg::Airspeed diff_pressure_data_;
   sensor_msgs::msg::Range sonar_data_;
   rosflight_msgs::msg::BatteryStatus battery_data_;
@@ -160,13 +156,13 @@ public:
 
   // clock
   /**
-   * @brief Gets current FCU time in milliseconds based on Gazebo time.
+   * @brief Gets current FCU time in milliseconds based on node time.
    *
    * @return Current FCU time in milliseconds.
    */
   uint32_t clock_millis() override;
   /**
-   * @brief Gets current FCU time in microseconds based on Gazebo time.
+   * @brief Gets current FCU time in microseconds based on node time.
    *
    * @return Current FCU time in microseconds
    */
@@ -202,7 +198,7 @@ public:
    */
   bool imu_has_new_data() override;
   /**
-   * @brief Generates simulated IMU data from truth data from Gazebo. Utilizes noise, bias, and walk
+   * @brief Generates simulated IMU data from truth data. Utilizes noise, bias, and walk
    * parameters provided. All data is returned through the values given as the function arguments.
    *
    * @param accel Acceleration values to populate.
@@ -223,7 +219,7 @@ public:
    */
   bool mag_present() override;
   /**
-   * @brief Generates magnetometer data based on Gazebo orientation and given noise/bias parameters.
+   * @brief Generates magnetometer data based on truth orientation and given noise/bias parameters.
    *
    * @param mag Magnetometer values to populate.
    * @return true if successful.
@@ -242,7 +238,7 @@ public:
    */
   bool baro_present() override;
   /**
-   * @brief Generates barometer measurement based on Gazebo altitude and noise/bias parameters.
+   * @brief Generates barometer measurement based on truth altitude and noise/bias parameters.
    *
    * @param pressure Pressure value to populate.
    * @param temperature Temperature value to populate.
@@ -263,7 +259,7 @@ public:
    */
   bool diff_pressure_present() override;
   /**
-   * @brief Generates a differential pressure measurement based on Gazebo speed and noise/bias
+   * @brief Generates a differential pressure measurement based on truth speed and noise/bias
    * parameters.
    *
    * @param diff_pressure Differential pressure value to populate.
@@ -286,7 +282,7 @@ public:
    */
   bool sonar_present() override;
   /**
-   * @brief Generates sonar reading based on min/max range and noise parameters. Based on Gazebo
+   * @brief Generates sonar reading based on min/max range and noise parameters. Based on truth
    * altitude value.
    *
    * @param range measurement to update.
@@ -455,15 +451,13 @@ public:
    */
   bool gnss_present() override;
   /**
-   * @brief Generates GNSS data based on Gazebo truth and noise/bias parameters.
+   * @brief Generates GNSS data based on truth and noise/bias parameters.
    *
    * @param gnss GNSSData object to update.
-   * @param gnss_full GNSSFull object to update.
    *
    * @return true if successful.
    */
-  bool gnss_read(rosflight_firmware::GNSSData * gnss,
-                 rosflight_firmware::GNSSFull * gnss_full) override;
+  bool gnss_read(rosflight_firmware::GNSSData * gnss) override;
   /**
    * @brief Checks to see if it has been enough time to warrant new data.
    *

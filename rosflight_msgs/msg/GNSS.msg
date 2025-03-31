@@ -28,5 +28,5 @@ float32 vertical_accuracy   # m
 float32 vel_n                 # m/s
 float32 vel_e                 # m/s
 float32 vel_d                 # m/s
-float32 velocity_accuracy     # m/s
+float32 speed_accuracy        # m/s
 

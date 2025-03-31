@@ -591,8 +591,6 @@ private:
   rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr sonar_pub_;
   /// "gnss" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::GNSS>::SharedPtr gnss_pub_;
-  /// "navsat_compat/time_reference" ROS topic publisher.
-  rclcpp::Publisher<sensor_msgs::msg::TimeReference>::SharedPtr time_reference_pub_;
   /// "magnetometer" ROS topic publisher.
   rclcpp::Publisher<sensor_msgs::msg::MagneticField>::SharedPtr mag_pub_;
   /// "attitude" ROS topic publisher.

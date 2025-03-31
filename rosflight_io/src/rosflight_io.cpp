@@ -38,7 +38,7 @@
  * @author Brandon Sutherland <brandonsutherland2\@gmail.com>
  */
 
-#include <rosflight_msgs/msg/detail/gnss__struct.hpp>
+#include <cstdint>
 #ifdef ROSFLIGHT_VERSION
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x) // Somehow, C++ requires two macros to convert a macro to a string
@@ -820,47 +820,32 @@ void ROSflightIO::handle_rosflight_gnss_msg(const mavlink_message_t & msg)
   mavlink_rosflight_gnss_t gnss;
   mavlink_msg_rosflight_gnss_decode(&msg, &gnss);
 
-  rclcpp::Time stamp = fcu_time_to_ros_time(std::chrono::microseconds(gnss.rosflight_timestamp));
+  uint64_t gnss_us = (uint64_t) (gnss.seconds * 1e6 + gnss.nanos * 1e-3);
+  rclcpp::Time stamp = fcu_time_to_ros_time(std::chrono::microseconds(gnss_us));
   rosflight_msgs::msg::GNSS gnss_msg;
   gnss_msg.header.stamp = stamp;
-  gnss_msg.header.frame_id = "ECEF"; // TODO: is this right?
-  
-  gnss_msg.fix = gnss.fix_type; // TODO: is this right?
-  
+  gnss_msg.header.frame_id = "NED";
+  gnss_msg.fix_type = gnss.fix_type;
   gnss_msg.year = gnss.year;
   gnss_msg.month = gnss.month;
   gnss_msg.day = gnss.day;
   gnss_msg.hour = gnss.hour;
   gnss_msg.min = gnss.min;
   gnss_msg.sec = gnss.sec;
-
   gnss_msg.num_sat = gnss.num_sat;
-  gnss_msg.lon = gnss.lon; // FIXME: DO CONVERSION
-  gnss_msg.lat = gnss.lat; // FIXME: DO CONVERSION
-  gnss_msg.alt = gnss.alt; // FIXME: DO CONVERSION
-  gnss_msg.horizontal_accuracy = gnss.horizontal_accuracy; // FIXME: DO CONVERSION
-  gnss_msg.vertical_accuracy = gnss.vertical_accuracy; // FIXME: DO CONVERSION
-
-  gnss_msg.vel_n = gnss.vel_n; // FIXME: DO CONVERSION
-  gnss_msg.vel_e = gnss.vel_e; // FIXME: DO CONVERSION
-  gnss_msg.vel_d = gnss.vel_d; // FIXME: DO CONVERSION
-  gnss_msg.velocity_accuracy = gnss.velocity_accuracy; // FIXME: DO CONVERSION
+  gnss_msg.lat = 1e-7 * gnss.lat;        // 1e-7 to convert from 100's of nanodegrees 
+  gnss_msg.lon = 1e-7 * gnss.lon;        // 1e-7 to convert from 100's of nanodegrees 
+  gnss_msg.alt = .001 * gnss.height;     //.001 to convert from mm to m
+  gnss_msg.vel_n = .001 * gnss.vel_n;    // Convert from mm/s to m/s
+  gnss_msg.vel_e = .001 * gnss.vel_e;
+  gnss_msg.vel_d = .001 * gnss.vel_d;
+  gnss_msg.horizontal_accuracy = gnss.h_acc;
+  gnss_msg.vertical_accuracy = gnss.v_acc;
+  gnss_msg.speed_accuracy = gnss.s_acc;
   if (gnss_pub_ == nullptr) {
     gnss_pub_ = this->create_publisher<rosflight_msgs::msg::GNSS>("gnss", 1);
   }
   gnss_pub_->publish(gnss_msg);
-  
-  sensor_msgs::msg::TimeReference time_ref;
-  time_ref.header.stamp = stamp;
-  time_ref.source = "GNSS";
-  time_ref.time_ref = rclcpp::Time((int32_t) gnss.time, gnss.nanos);
-
-  if (time_reference_pub_ == nullptr) {
-    time_reference_pub_ =
-      this->create_publisher<sensor_msgs::msg::TimeReference>("navsat_compat/time_reference", 1);
-  }
-
-  time_reference_pub_->publish(time_ref); // TODO: Does this still exist?
 }
 
 void ROSflightIO::commandCallback(const rosflight_msgs::msg::Command::ConstSharedPtr & msg)

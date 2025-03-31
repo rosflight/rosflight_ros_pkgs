@@ -136,9 +136,6 @@ void SILBoard::sensors_init()
   gnss_data_sub_ = node_->create_subscription<rosflight_msgs::msg::GNSS>("simulated_sensors/gnss", 1,
       std::bind(&SILBoard::gnss_data_callback, this, std::placeholders::_1));
 
-  // gnss_full_data_sub_ = node_->create_subscription<rosflight_msgs::msg::GNSSFull>("simulated_sensors/gnss_full", 1,
-  //     std::bind(&SILBoard::gnss_data_callback, this, std::placeholders::_1));
-
   diff_pressure_data_sub_ = node_->create_subscription<rosflight_msgs::msg::Airspeed>("simulated_sensors/diff_pressure", 1,
       std::bind(&SILBoard::diff_pressure_data_callback, this, std::placeholders::_1));
 
@@ -184,13 +181,6 @@ void SILBoard::gnss_data_callback(const rosflight_msgs::msg::GNSS & msg)
   gnss_present_ = true;
 }
 
-// void SILBoard::gnss_full_data_callback(const rosflight_msgs::msg::GNSSFull & msg)
-// {
-//   gnss_full_data_ = msg;
-//   new_gnss_full_data_available_ = true;
-//   gnss_present_ = true;
-// }
-
 void SILBoard::diff_pressure_data_callback(const rosflight_msgs::msg::Airspeed & msg)
 {
   diff_pressure_data_ = msg;
@@ -235,9 +225,8 @@ bool SILBoard::mag_has_new_data()
 
 bool SILBoard::gnss_has_new_data()
 {
-  if (new_gnss_data_available_ && new_gnss_full_data_available_) {
+  if (new_gnss_data_available_) {
     new_gnss_data_available_ = false;
-    new_gnss_full_data_available_ = false;
     return true;
   } else {
     return false;
@@ -507,73 +496,31 @@ void SILBoard::RC_callback(const rosflight_msgs::msg::RCRaw & msg)
   latestRC_ = msg;
 }
 
-bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss,
-                         rosflight_firmware::GNSSFull * gnss_full)
+bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss)
 {
-  // The commented out data doesn't get used by ROSflightIO
-  // TODO: Just kidding it does.... Let's change the GNSS messages.
-  // We need to update these messages, consolidate them, and only keep info we need 
-  // gnss->lat = gnss_data_.lat;
-  // gnss->lon = gnss_data_.lon;
-  // gnss->height = gnss_.height;
-
-  // gnss->vel_n = gnss_data_.velocity[0];
-  // gnss->vel_e = gnss_data_.velocity[1];
-  // gnss->vel_d = gnss_data_.velocity[2];
-
-  gnss->fix_type = static_cast<rosflight_firmware::GNSSFixType>(gnss_data_.fix);
-  // gnss->time_of_week = gnss_.time_of_week;
-  gnss->time = gnss_data_.header.stamp.sec;
+  gnss->seconds = gnss_data_.header.stamp.sec;
   gnss->nanos = gnss_data_.header.stamp.nanosec;
 
+  gnss->fix_type = static_cast<rosflight_firmware::GNSSFixType>(gnss_data_.fix_type);
+
+  gnss->year = gnss_data_.year;
+  gnss->month = gnss_data_.month;
+  gnss->day = gnss_data_.day;
+  gnss->hour = gnss_data_.hour;
+  gnss->min = gnss_data_.min;
+  gnss->sec = gnss_data_.sec;
+
+  gnss->num_sat = gnss_data_.num_sat;
+  gnss->lat = gnss_data_.lat;
+  gnss->lon = gnss_data_.lon;
+  gnss->height = gnss_data_.alt;
   gnss->h_acc = gnss_data_.horizontal_accuracy;
   gnss->v_acc = gnss_data_.vertical_accuracy;
 
-  gnss->ecef.x = gnss_data_.position[0];
-  gnss->ecef.y = gnss_data_.position[1];
-  gnss->ecef.z = gnss_data_.position[2];
-  // gnss->ecef.p_acc = gnss_.ecef.p_acc;
-  gnss->ecef.vx = gnss_data_.velocity[0];
-  gnss->ecef.vy = gnss_data_.velocity[1];
-  gnss->ecef.vz = gnss_data_.velocity[2];
-  gnss->ecef.s_acc = gnss_data_.speed_accuracy;
-
-  gnss->rosflight_timestamp = (gnss_data_.header.stamp.sec + gnss_data_.header.stamp.nanosec * 1e-9) * 1000;  // Convert to millis
-
-  gnss_full->year = gnss_full_data_.year;
-  gnss_full->month = gnss_full_data_.month;
-  gnss_full->day = gnss_full_data_.day;
-  gnss_full->hour = gnss_full_data_.hour;
-  gnss_full->min = gnss_full_data_.min;
-  gnss_full->sec = gnss_full_data_.sec;
-  gnss_full->valid = gnss_full_data_.valid;
-
-  gnss_full->lat = gnss_full_data_.lat;
-  gnss_full->lon = gnss_full_data_.lon;
-  gnss_full->height = gnss_full_data_.height;
-  gnss_full->height_msl = gnss_full_data_.height_msl;
-
-  // For now, we have defined the Gazebo Local Frame as NWU.  This should be
-  // fixed in a future commit
-  gnss_full->vel_n = gnss_full_data_.vel_n;
-  gnss_full->vel_e = gnss_full_data_.vel_e;
-  gnss_full->vel_d = gnss_full_data_.vel_d;
-
-  gnss_full->fix_type = gnss_full_data_.fix_type;
-  gnss_full->time_of_week = gnss_full_data_.time_of_week;
-  gnss_full->num_sat = gnss_full_data_.num_sat;
-  // TODO
-  gnss_full->t_acc = gnss_full_data_.t_acc;
-  gnss_full->nano = gnss_full_data_.nano;
-
-  gnss_full->h_acc = gnss_full_data_.h_acc;
-  gnss_full->v_acc = gnss_full_data_.v_acc;
-
-  gnss_full->g_speed = gnss_full_data_.g_speed;
-
-  gnss_full->head_mot = gnss_full_data_.head_mot;
-  gnss_full->p_dop = gnss_full_data_.p_dop;
-  gnss_full->rosflight_timestamp = (gnss_full_data_.header.stamp.sec + gnss_full_data_.header.stamp.nanosec * 1e-9) * 1000;  // Convert to millis
+  gnss->vel_n = gnss_data_.vel_n;
+  gnss->vel_e = gnss_data_.vel_e;
+  gnss->vel_d = gnss_data_.vel_d;
+  gnss->s_acc = gnss_data_.speed_accuracy;
 
   return true;
 }
