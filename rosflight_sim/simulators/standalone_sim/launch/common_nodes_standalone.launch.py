@@ -89,7 +89,7 @@ def generate_launch_description():
     # Start time manager, if applicable
     time_manager_node = Node(
         package="rosflight_sim",
-        executable="standalone_time_manager",
+        executable="time_manager_standalone",
         output="screen",
         condition=IfCondition(use_sim_time)
     )

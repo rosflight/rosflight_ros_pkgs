@@ -351,6 +351,7 @@ rosflight_msgs::msg::GNSS StandaloneSensors::gnss_update(const rosflight_msgs::m
   out_msg.horizontal_accuracy = h_std;
   out_msg.vertical_accuracy = v_std;
   out_msg.speed_accuracy = vel_std;
+  out_msg.header.stamp = this->now();
 
   return out_msg;
 }

@@ -506,7 +506,7 @@ void ROSflightIO::handle_rosflight_output_raw_msg(const mavlink_message_t & msg)
   mavlink_msg_rosflight_output_raw_decode(&msg, &servo);
 
   rosflight_msgs::msg::OutputRaw out_msg;
-  out_msg.header.stamp = fcu_time_to_ros_time(std::chrono::microseconds(servo.stamp));
+  out_msg.header.stamp = fcu_time_to_ros_time(std::chrono::milliseconds(servo.stamp));
   for (int i = 0; i < 14; i++) {
     out_msg.values[i] = servo.values[i];
   }
