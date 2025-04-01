@@ -49,7 +49,7 @@ namespace rosflight_sim
 /**
  * @brief Base class for forces and moments classes for UAVs.
  */
-class MAVForcesAndMoments : public rclcpp::Node
+class ForcesAndMomentsInterface : public rclcpp::Node
 {
 private:
   rclcpp::Publisher<geometry_msgs::msg::WrenchStamped>::SharedPtr forces_moments_pub_;
@@ -104,7 +104,7 @@ protected:
 
 public:
 
-  MAVForcesAndMoments();
+  ForcesAndMomentsInterface();
 
   /**
    * @brief Interface function for calculating the current MAV forces and moments.

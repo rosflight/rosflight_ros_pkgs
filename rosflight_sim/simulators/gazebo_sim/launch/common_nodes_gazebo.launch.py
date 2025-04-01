@@ -25,8 +25,8 @@ def generate_launch_description():
     # Declare launch arguments
     use_sim_time_arg = DeclareLaunchArgument(
         "use_sim_time",
-        default_value="true",
-        description="Whether the nodes will use sim time or not"
+        default_value="false",  # Gazebo uses sim time, but publishes at 10 Hz
+        description="Whether the nodes will use sim time or not. Defaults to false for Gazebo"
     )
     use_sim_time = LaunchConfiguration('use_sim_time')
 
@@ -41,7 +41,7 @@ def generate_launch_description():
     # Start Rosflight SIL
     rosflight_sil_node = Node(
         package="rosflight_sim",
-        executable="rosflight_sil",
+        executable="rosflight_sil_manager",
         output="screen",
         parameters=[{"use_sim_time": use_sim_time, "use_timer": True}],
     )
@@ -76,14 +76,6 @@ def generate_launch_description():
         package="rosflight_sim",
         executable="rc.py",
         parameters=[{"use_vimfly": use_vimfly, "use_sim_time": use_sim_time}],
-    )
-
-    # Start time manager, if applicable
-    time_manager_node = Node(
-        package="rosflight_sim",
-        executable="standalone_time_manager",
-        output="screen",
-        condition=IfCondition(use_sim_time)
     )
 
     return LaunchDescription(

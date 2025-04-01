@@ -32,12 +32,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "rosflight_sim/fixedwing_forces_and_moments.hpp"
+#include "fixedwing_forces_and_moments.hpp"
 
 namespace rosflight_sim
 {
 Fixedwing::Fixedwing()
-    : MAVForcesAndMoments()
+    : ForcesAndMomentsInterface()
     , rho_(0)
     , wing_()
     , prop_()

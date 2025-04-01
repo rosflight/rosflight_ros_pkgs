@@ -26,6 +26,7 @@ find_package(gazebo_dev)
 find_package(gazebo_plugins REQUIRED)
 find_package(gazebo_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 
 link_directories(${GAZEBO_LIBRARY_DIRS})
 

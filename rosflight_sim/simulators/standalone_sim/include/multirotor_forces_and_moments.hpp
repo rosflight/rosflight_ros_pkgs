@@ -42,7 +42,7 @@
 #include <tf2_eigen/tf2_eigen.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
-#include "rosflight_sim/mav_forces_and_moments.hpp"
+#include "rosflight_sim/forces_and_moments_interface.hpp"
 #include "rosflight_msgs/msg/sim_state.hpp"
 
 namespace rosflight_sim
@@ -54,7 +54,7 @@ namespace rosflight_sim
  * other and need to be provided as a set. Notifying the user of missing parameters helps avoid
  * inadvertently using an incomplete set of parameters.
  */
-class Multirotor : public MAVForcesAndMoments
+class Multirotor : public ForcesAndMomentsInterface
 {
 private:
   struct Prop

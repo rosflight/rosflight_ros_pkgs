@@ -33,13 +33,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "rosflight_sim/mav_forces_and_moments.hpp"
+#include "rosflight_sim/forces_and_moments_interface.hpp"
 
 namespace rosflight_sim
 {
 
-MAVForcesAndMoments::MAVForcesAndMoments()
-  : rclcpp::Node("MAVForcesAndMoments")
+ForcesAndMomentsInterface::ForcesAndMomentsInterface()
+  : rclcpp::Node("forces_and_moments")
 {
   // Note that we don't define the parameter callback routine here.
   // This is so that implementation-specific details can be included there.
@@ -47,24 +47,24 @@ MAVForcesAndMoments::MAVForcesAndMoments()
   // Define ROS interfaces
   forces_moments_pub_ = this->create_publisher<geometry_msgs::msg::WrenchStamped>("/forces_and_moments", 1);
   truth_sub_ = this->create_subscription<rosflight_msgs::msg::SimState>(
-    "sim/truth_state", 1, std::bind(&MAVForcesAndMoments::state_callback, this, std::placeholders::_1));
+    "sim/truth_state", 1, std::bind(&ForcesAndMomentsInterface::state_callback, this, std::placeholders::_1));
   wind_sub_ = this->create_subscription<geometry_msgs::msg::Vector3Stamped>(
-    "sim/wind_truth", 1, std::bind(&MAVForcesAndMoments::wind_callback, this, std::placeholders::_1));
+    "sim/wind_truth", 1, std::bind(&ForcesAndMomentsInterface::wind_callback, this, std::placeholders::_1));
   firware_out_sub_ = this->create_subscription<rosflight_msgs::msg::PwmOutput>(
-    "sim/pwm_output", 1, std::bind(&MAVForcesAndMoments::firmware_output_callback, this, std::placeholders::_1));
+    "sim/pwm_output", 1, std::bind(&ForcesAndMomentsInterface::firmware_output_callback, this, std::placeholders::_1));
 }
 
-void MAVForcesAndMoments::state_callback(const rosflight_msgs::msg::SimState & msg)
+void ForcesAndMomentsInterface::state_callback(const rosflight_msgs::msg::SimState & msg)
 {
   current_state_ = msg;
 }
 
-void MAVForcesAndMoments::wind_callback(const geometry_msgs::msg::Vector3Stamped & msg)
+void ForcesAndMomentsInterface::wind_callback(const geometry_msgs::msg::Vector3Stamped & msg)
 {
   current_wind_ = msg;
 }
 
-void MAVForcesAndMoments::firmware_output_callback(const rosflight_msgs::msg::PwmOutput & msg)
+void ForcesAndMomentsInterface::firmware_output_callback(const rosflight_msgs::msg::PwmOutput & msg)
 {
   // Update the forces and moments
   geometry_msgs::msg::WrenchStamped forces_moments = update_forces_and_torques(current_state_, current_wind_, msg.values);

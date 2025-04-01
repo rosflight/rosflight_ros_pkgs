@@ -42,7 +42,7 @@ namespace rosflight_sim
 {
 
 ROSflightSIL::ROSflightSIL()
-  : rclcpp::Node("ROSflightSimManager")
+  : rclcpp::Node("rosflight_sil_manager")
 {
   // Declare parameters and set up the parameter change callbacks
   declare_parameters();

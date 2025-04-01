@@ -35,12 +35,12 @@
 #include <cmath>
 #include <cstdint>
 
-#include "rosflight_sim/multirotor_forces_and_moments.hpp"
+#include "multirotor_forces_and_moments.hpp"
 
 namespace rosflight_sim
 {
 Multirotor::Multirotor()
-    : MAVForcesAndMoments()
+    : ForcesAndMomentsInterface()
     , num_rotors_(0)
 {
   declare_multirotor_params();

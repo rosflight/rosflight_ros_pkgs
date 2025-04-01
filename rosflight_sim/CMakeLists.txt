@@ -18,13 +18,8 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
-find_package(geometry_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
-#find_package(tf2 REQUIRED)
-find_package(tf2_eigen REQUIRED)
-find_package(tf2_geometry_msgs REQUIRED)
-# find_package(nav_msgs REQUIRED)
 find_package(rosflight_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
@@ -114,71 +109,22 @@ include_directories(include
   ${ament_INCLUDE_DIRS}
   ${rclcpp_INLCUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
-  #${GAZEBO_INCLUDE_DIRS}
   ${SDFormat_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
 )
-#link_directories(${GAZEBO_LIBRARY_DIRS})
 
 ##################
 ##  Executables ##
 ##################
 
-# Time Manager
-add_executable(time_manager_standalone
-  src/time_manager_interface.cpp
-  simulators/standalone_sim/src/standalone_time_manager.cpp)
-target_include_directories(time_manager_standalone
-  PRIVATE
-    include
-    simulators/standalone_sim/include)
-ament_target_dependencies(time_manager_standalone rclcpp std_srvs)
-install(
-  TARGETS time_manager_standalone
-  DESTINATION lib/${PROJECT_NAME})
-
 # ROSflightSIL
-add_executable(rosflight_sil
+add_executable(rosflight_sil_manager
   src/rosflight_sil.cpp)
-target_include_directories(rosflight_sil
+target_include_directories(rosflight_sil_manager
   PRIVATE include)
-ament_target_dependencies(rosflight_sil rclcpp std_srvs rosflight_msgs)
+ament_target_dependencies(rosflight_sil_manager rclcpp std_srvs rosflight_msgs)
 install(
-  TARGETS rosflight_sil
-  DESTINATION lib/${PROJECT_NAME})
-
-# Multirotor Forces And Moments
-add_executable(multirotor_forces_and_moments
-  src/mav_forces_and_moments.cpp
-  src/multirotor_forces_and_moments.cpp)
-target_include_directories(multirotor_forces_and_moments
-  PRIVATE include)
-ament_target_dependencies(multirotor_forces_and_moments
-  rclcpp
-  std_srvs
-  geometry_msgs
-  tf2_eigen
-  tf2_geometry_msgs
-  rosflight_msgs)
-install(
-  TARGETS multirotor_forces_and_moments
-  DESTINATION lib/${PROJECT_NAME})
-
-# FixedWing Forces And Moments
-add_executable(fixedwing_forces_and_moments
-  src/mav_forces_and_moments.cpp
-  src/fixedwing_forces_and_moments.cpp)
-target_include_directories(fixedwing_forces_and_moments
-  PRIVATE include)
-ament_target_dependencies(fixedwing_forces_and_moments
-  rclcpp
-  std_srvs
-  geometry_msgs
-  tf2_eigen
-  tf2_geometry_msgs
-  rosflight_msgs)
-install(
-  TARGETS fixedwing_forces_and_moments
+  TARGETS rosflight_sil_manager
   DESTINATION lib/${PROJECT_NAME})
 
 # SILBoard
@@ -197,21 +143,7 @@ install(
   TARGETS sil_board
   DESTINATION lib/${PROJECT_NAME})
 
-# Standalone Sensors
-add_executable(standalone_sensors
-  src/sensor_interface.cpp
-  simulators/standalone_sim/src/standalone_sensors.cpp)
-target_include_directories(standalone_sensors
-  PRIVATE
-    include
-    simulators/standalone_sim/include)
-target_link_libraries(standalone_sensors Eigen3::Eigen)
-ament_target_dependencies(standalone_sensors rclcpp sensor_msgs rosflight_msgs geometry_msgs tf2_eigen)
-install(
-  TARGETS standalone_sensors
-  DESTINATION lib/${PROJECT_NAME})
-
-# Gazebo dynamics
+# Gazebo dynamics and simulator
 add_subdirectory(simulators/gazebo_sim)
 
 # Standalone simulator
