@@ -47,7 +47,6 @@
 #include "rosflight_msgs/msg/barometer.hpp"
 #include "rosflight_msgs/msg/battery_status.hpp"
 #include "rosflight_msgs/msg/gnss.hpp"
-#include "rosflight_msgs/msg/gnss_full.hpp"
 #include "rosflight_msgs/msg/sim_state.hpp"
 #include "rosflight_msgs/msg/status.hpp"
 
