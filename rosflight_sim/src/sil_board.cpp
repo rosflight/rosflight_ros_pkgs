@@ -498,6 +498,7 @@ void SILBoard::RC_callback(const rosflight_msgs::msg::RCRaw & msg)
 
 bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss)
 {
+  gnss->time_of_week = clock_millis();  // Only used internal to the firmware. GNSS iTOW in ms
   gnss->seconds = gnss_data_.header.stamp.sec;
   gnss->nanos = gnss_data_.header.stamp.nanosec;
 
