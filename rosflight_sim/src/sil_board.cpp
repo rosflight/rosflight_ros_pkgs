@@ -512,8 +512,8 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss)
   gnss->sec = gnss_data_.sec;
 
   gnss->num_sat = gnss_data_.num_sat;
-  gnss->lat = 1e7 * gnss_data_.lat;
-  gnss->lon = 1e7 * gnss_data_.lon;
+  gnss->lat = gnss_data_.lat;
+  gnss->lon = gnss_data_.lon;
   gnss->height = 1000 * gnss_data_.alt;
   gnss->h_acc = 1000 * gnss_data_.horizontal_accuracy;
   gnss->v_acc = 1000 * gnss_data_.vertical_accuracy;

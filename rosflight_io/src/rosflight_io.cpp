@@ -833,8 +833,8 @@ void ROSflightIO::handle_rosflight_gnss_msg(const mavlink_message_t & msg)
   gnss_msg.min = gnss.min;
   gnss_msg.sec = gnss.sec;
   gnss_msg.num_sat = gnss.num_sat;
-  gnss_msg.lat = 1e-7 * gnss.lat;        // 1e-7 to convert from 100's of nanodegrees 
-  gnss_msg.lon = 1e-7 * gnss.lon;        // 1e-7 to convert from 100's of nanodegrees 
+  gnss_msg.lat = gnss.lat;
+  gnss_msg.lon = gnss.lon;
   gnss_msg.alt = .001 * gnss.height;     //.001 to convert from mm to m
   gnss_msg.vel_n = .001 * gnss.vel_n;    // Convert from mm/s to m/s
   gnss_msg.vel_e = .001 * gnss.vel_e;

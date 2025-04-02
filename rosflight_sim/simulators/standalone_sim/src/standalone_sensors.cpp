@@ -312,9 +312,6 @@ rosflight_msgs::msg::GNSS StandaloneSensors::gnss_update(const rosflight_msgs::m
     / cos(init_lat * M_PI / 180.0) * local_pose(1) + init_lon;
   double alt = -local_pose(2) + init_alt;
 
-  // Convert lat and lon to 100's of nanodegrees
-  lat = (int) std::round(lat * 1e7);
-  lon = (int) std::round(lon * 1e7);
   out_msg.lat = lat;
   out_msg.lon = lon;
   out_msg.alt = alt;
@@ -327,9 +324,16 @@ rosflight_msgs::msg::GNSS StandaloneSensors::gnss_update(const rosflight_msgs::m
                             vel_std * normal_distribution_(noise_generator_),
                             vel_std * normal_distribution_(noise_generator_));
   local_vel += vel_noise;
-  out_msg.vel_n = local_vel(0);
-  out_msg.vel_e = local_vel(1);
-  out_msg.vel_d = local_vel(2);
+
+  Eigen::Quaterniond quat(state.pose.orientation.w,
+                          state.pose.orientation.x,
+                          state.pose.orientation.y,
+                          state.pose.orientation.z);
+
+  Eigen::Vector3d global_vel = quat.toRotationMatrix().transpose()*local_vel;
+  out_msg.vel_n = global_vel(0);
+  out_msg.vel_e = global_vel(1);
+  out_msg.vel_d = global_vel(2);
 
   // Fill in the rest of the message
   out_msg.fix_type = rosflight_msgs::msg::GNSS::GNSS_FIX_TYPE_3D_FIX;

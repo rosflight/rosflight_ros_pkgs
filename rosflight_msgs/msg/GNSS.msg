@@ -19,8 +19,8 @@ uint8 min
 uint8 sec
 
 uint8 num_sat
-int32 lat                   # deg*10e7
-int32 lon                   # deg*10e7
+float64 lat                   # deg DDS
+float64 lon                   # deg DDS
 float32 alt                 # m above ellipsoid
 float32 horizontal_accuracy # m
 float32 vertical_accuracy   # m
