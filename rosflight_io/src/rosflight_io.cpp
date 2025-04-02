@@ -835,13 +835,13 @@ void ROSflightIO::handle_rosflight_gnss_msg(const mavlink_message_t & msg)
   gnss_msg.num_sat = gnss.num_sat;
   gnss_msg.lat = gnss.lat;
   gnss_msg.lon = gnss.lon;
-  gnss_msg.alt = .001 * gnss.height;     //.001 to convert from mm to m
-  gnss_msg.vel_n = .001 * gnss.vel_n;    // Convert from mm/s to m/s
-  gnss_msg.vel_e = .001 * gnss.vel_e;
-  gnss_msg.vel_d = .001 * gnss.vel_d;
-  gnss_msg.horizontal_accuracy = .001 * gnss.h_acc;
-  gnss_msg.vertical_accuracy = .001 * gnss.v_acc;
-  gnss_msg.speed_accuracy = .001 * gnss.s_acc;
+  gnss_msg.alt = gnss.height;
+  gnss_msg.vel_n = gnss.vel_n;
+  gnss_msg.vel_e = gnss.vel_e;
+  gnss_msg.vel_d = gnss.vel_d;
+  gnss_msg.horizontal_accuracy = gnss.h_acc;
+  gnss_msg.vertical_accuracy = gnss.v_acc;
+  gnss_msg.speed_accuracy = gnss.s_acc;
   if (gnss_pub_ == nullptr) {
     gnss_pub_ = this->create_publisher<rosflight_msgs::msg::GNSS>("gnss", 1);
   }
