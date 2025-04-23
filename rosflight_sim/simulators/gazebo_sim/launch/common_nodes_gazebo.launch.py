@@ -87,6 +87,5 @@ def generate_launch_description():
             standalone_sensor_node,
             rosflight_io_node,
             rc_joy_node,
-            time_manager_node,
         ]
     )
