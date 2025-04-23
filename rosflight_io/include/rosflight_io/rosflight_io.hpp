@@ -246,7 +246,7 @@ private:
    *
    * @param msg RC channels raw message.
    */
-  void handle_rc_channels_raw_msg(const mavlink_message_t & msg);
+  void handle_rc_channels_msg(const mavlink_message_t & msg);
   /**
    * @brief Handles differential pressure MAVLink messages.
    *
@@ -279,34 +279,6 @@ private:
    * @param msg ROSflight GNSS message.
    */
   void handle_rosflight_gnss_msg(const mavlink_message_t & msg);
-  /**
-   * @brief Handles named value integer MAVLink messages.
-   *
-   * Receives named int messages from MAVLink and publishes it on "named_value/int/{value name}"
-   * topic. Won't create topic if firmware never sends these messages.
-   *
-   * @param msg Named value integer message.
-   */
-  void handle_named_value_int_msg(const mavlink_message_t & msg);
-  /**
-   * @brief Handles named value float MAVLink messages.
-   *
-   * Receives named float messages from MAVLink and publishes it on "named_value/float/{value name}"
-   * topic. Won't create topic if firmware never sends these messages.
-   *
-   * @param msg Named value float message.
-   */
-  void handle_named_value_float_msg(const mavlink_message_t & msg);
-  /**
-   * @brief Handles named command struct MAVLink messages.
-   *
-   * Receives named command struct messages from MAVLink and publishes it on
-   * "named_value/command_struct/{value name}" topic. Won't create topic if
-   * firmware never sends these messages.
-   *
-   * @param msg Named command struct message.
-   */
-  void handle_named_command_struct_msg(const mavlink_message_t & msg);
   /**
    * @brief Handles rangefinder MAVLink messages.
    *
@@ -607,14 +579,6 @@ private:
   rclcpp::Publisher<rosflight_msgs::msg::Error>::SharedPtr error_pub_;
   /// "battery" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::BatteryStatus>::SharedPtr battery_status_pub_;
-  /// "named_value/int/" ROS topic publisher.
-  std::map<std::string, rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr> named_value_int_pubs_;
-  /// "named_value/float/" ROS topic publisher.
-  std::map<std::string, rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr>
-    named_value_float_pubs_;
-  /// "named_value/command_struct/" ROS topic publisher.
-  std::map<std::string, rclcpp::Publisher<rosflight_msgs::msg::Command>::SharedPtr>
-    named_command_struct_pubs_;
 
   /// "param_get" ROS service.
   rclcpp::Service<rosflight_msgs::srv::ParamGet>::SharedPtr param_get_srv_;

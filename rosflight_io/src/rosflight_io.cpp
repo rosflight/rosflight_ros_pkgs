@@ -221,19 +221,10 @@ void ROSflightIO::handle_mavlink_message(const mavlink_message_t & msg)
       handle_rosflight_output_raw_msg(msg);
       break;
     case MAVLINK_MSG_ID_RC_CHANNELS:
-      handle_rc_channels_raw_msg(msg);
+      handle_rc_channels_msg(msg);
       break;
     case MAVLINK_MSG_ID_DIFF_PRESSURE:
       handle_diff_pressure_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_NAMED_VALUE_INT:
-      handle_named_value_int_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_NAMED_VALUE_FLOAT:
-      handle_named_value_float_msg(msg);
-      break;
-    case MAVLINK_MSG_ID_NAMED_COMMAND_STRUCT:
-      handle_named_command_struct_msg(msg);
       break;
     case MAVLINK_MSG_ID_SMALL_BARO:
       handle_small_baro_msg(msg);
@@ -517,10 +508,10 @@ void ROSflightIO::handle_rosflight_output_raw_msg(const mavlink_message_t & msg)
   output_raw_pub_->publish(out_msg);
 }
 
-void ROSflightIO::handle_rc_channels_raw_msg(const mavlink_message_t & msg)
+void ROSflightIO::handle_rc_channels_msg(const mavlink_message_t & msg)
 {
-  mavlink_rc_channels_raw_t rc;
-  mavlink_msg_rc_channels_raw_decode(&msg, &rc);
+  mavlink_rc_channels_t rc;
+  mavlink_msg_rc_channels_decode(&msg, &rc);
 
   rosflight_msgs::msg::RCRaw out_msg;
   out_msg.header.stamp = fcu_time_to_ros_time(std::chrono::milliseconds(rc.time_boot_ms));
@@ -562,85 +553,6 @@ void ROSflightIO::handle_diff_pressure_msg(const mavlink_message_t & msg)
     diff_pressure_pub_ = this->create_publisher<rosflight_msgs::msg::Airspeed>("airspeed", 1);
   }
   diff_pressure_pub_->publish(airspeed_msg);
-}
-
-void ROSflightIO::handle_named_value_int_msg(const mavlink_message_t & msg)
-{
-  mavlink_named_value_int_t val;
-  mavlink_msg_named_value_int_decode(&msg, &val);
-
-  // ensure null termination of name
-  char c_name[MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN + 1];
-  memcpy(c_name, val.name, MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN);
-  c_name[MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN] = '\0';
-  std::string name(c_name);
-
-  if (named_value_int_pubs_.find(name) == named_value_int_pubs_.end()) {
-    named_value_int_pubs_[name] =
-      this->create_publisher<std_msgs::msg::Int32>("named_value/int/" + name, 1);
-  }
-
-  std_msgs::msg::Int32 out_msg;
-  out_msg.data = val.value;
-
-  named_value_int_pubs_[name]->publish(out_msg);
-}
-
-void ROSflightIO::handle_named_value_float_msg(const mavlink_message_t & msg)
-{
-  mavlink_named_value_float_t val;
-  mavlink_msg_named_value_float_decode(&msg, &val);
-
-  // ensure null termination of name
-  char c_name[MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN + 1];
-  memcpy(c_name, val.name, MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN);
-  c_name[MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN] = '\0';
-  std::string name(c_name);
-
-  if (named_value_float_pubs_.find(name) == named_value_float_pubs_.end()) {
-    named_value_float_pubs_[name] =
-      this->create_publisher<std_msgs::msg::Float32>("named_value/float/" + name, 1);
-  }
-
-  std_msgs::msg::Float32 out_msg;
-  out_msg.data = val.value;
-
-  named_value_float_pubs_[name]->publish(out_msg);
-}
-
-void ROSflightIO::handle_named_command_struct_msg(const mavlink_message_t & msg)
-{
-  mavlink_named_command_struct_t command;
-  mavlink_msg_named_command_struct_decode(&msg, &command);
-
-  // ensure null termination of name
-  char c_name[MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN + 1];
-  memcpy(c_name, command.name, MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN);
-  c_name[MAVLINK_MSG_NAMED_VALUE_FLOAT_FIELD_NAME_LEN] = '\0';
-  std::string name(c_name);
-
-  if (named_command_struct_pubs_.find(name) == named_command_struct_pubs_.end()) {
-    named_command_struct_pubs_[name] =
-      this->create_publisher<rosflight_msgs::msg::Command>("named_value/command_struct/" + name, 1);
-  }
-
-  rosflight_msgs::msg::Command command_msg;
-  if (command.type == MODE_PASS_THROUGH) {
-    command_msg.mode = rosflight_msgs::msg::Command::MODE_PASS_THROUGH;
-  } else if (command.type == MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE) {
-    command_msg.mode = rosflight_msgs::msg::Command::MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE;
-  } else if (command.type == MODE_ROLL_PITCH_YAWRATE_THROTTLE) {
-    command_msg.mode = rosflight_msgs::msg::Command::MODE_ROLL_PITCH_YAWRATE_THROTTLE;
-  }
-
-  command_msg.ignore = command.ignore;
-  command_msg.qx = command.qx;
-  command_msg.qy = command.qy;
-  command_msg.qz = command.qz;
-  command_msg.fx = command.Fx;
-  command_msg.fy = command.Fy;
-  command_msg.fz = command.Fz;
-  named_command_struct_pubs_[name]->publish(command_msg);
 }
 
 void ROSflightIO::handle_small_baro_msg(const mavlink_message_t & msg)
