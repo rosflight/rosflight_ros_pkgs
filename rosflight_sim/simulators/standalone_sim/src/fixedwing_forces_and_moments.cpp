@@ -659,10 +659,10 @@ geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight
                                                                        geometry_msgs::msg::Vector3Stamped wind,
                                                                        std::array<uint16_t, 14> act_cmds)
 {
-  delta_.a =  (act_cmds[this->get_parameter("aileron_channel").as_int()] - 1500.0) / 500.0;
-  delta_.e = -(act_cmds[this->get_parameter("elevator_channel").as_int()] - 1500.0) / 500.0;
-  delta_.t =  (act_cmds[this->get_parameter("throttle_channel").as_int()] - 1000.0) / 1000.0;
-  delta_.r = -(act_cmds[this->get_parameter("rudder_channel").as_int()] - 1500.0) / 500.0;
+  delta_.a = (act_cmds[this->get_parameter("aileron_channel").as_int()] - 1500.0) / 500.0;
+  delta_.e = (act_cmds[this->get_parameter("elevator_channel").as_int()] - 1500.0) / 500.0;
+  delta_.t = (act_cmds[this->get_parameter("throttle_channel").as_int()] - 1000.0) / 1000.0;
+  delta_.r = (act_cmds[this->get_parameter("rudder_channel").as_int()] - 1500.0) / 500.0;
 
   // Apply servo time delay
   Actuators delta_curr;

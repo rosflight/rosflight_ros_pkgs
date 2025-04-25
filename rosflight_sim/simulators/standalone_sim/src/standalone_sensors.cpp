@@ -131,39 +131,27 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
 {
   sensor_msgs::msg::Imu out_msg;
 
-  // Get the current rotation from inertial to the body frame
-  geometry_msgs::msg::TransformStamped q_inertial_to_body;
-  q_inertial_to_body.transform.rotation = state.pose.orientation;
+  // Get the current rotation from body to inertial
+  Eigen::Quaterniond q_body_to_inertial(state.pose.orientation.w,
+                                        state.pose.orientation.x,
+                                        state.pose.orientation.y,
+                                        state.pose.orientation.z);
 
-  // Form body to inertial rotation
-  geometry_msgs::msg::TransformStamped q_body_to_inertial = q_inertial_to_body;
-  q_body_to_inertial.transform.rotation.x *= -1;
-  q_body_to_inertial.transform.rotation.y *= -1;
-  q_body_to_inertial.transform.rotation.z *= -1;
+  Eigen::Vector3d gravity(0.0, 0.0, this->get_parameter("gravity").as_double());
+  Eigen::Vector3d gravity_body = q_body_to_inertial.inverse() * gravity;
 
-  Eigen::Vector3d gravity = Eigen::Vector3d::Zero();
-  gravity[2] = this->get_parameter("gravity").as_double();
-
-  Eigen::Vector3d velocity, acceleration; // Acceleration and velocity expressed in the body frame
-  velocity << state.twist.linear.x, state.twist.linear.y, state.twist.linear.z;
-  acceleration << state.acceleration.linear.x, state.acceleration.linear.y, state.acceleration.linear.z;
-
-  // Rotate acceleration into inertial frame and subtract gravity
-  tf2::doTransform(acceleration, acceleration, q_body_to_inertial);
-  Eigen::Vector3d acceleration_minus_gravity = acceleration - gravity;
-
+  // Accelerometer measurement in the body frame
   Eigen::Vector3d y_acc;
 
   // this is James's egregious hack to overcome wild imu while sitting on the ground
-  if (velocity.norm() < 0.05) {
-    Eigen::Vector3d minus_gravity = -gravity;
-    tf2::doTransform(minus_gravity, y_acc, q_inertial_to_body);
-  // TODO: Do we need this branch? Seems equivalent to the third branch
-  // } else if (abs(state.pose.position.z) < 0.3) {
-  //   tf2::doTransform(acceleration_minus_gravity, y_acc, q_inertial_to_body);
+  Eigen::Vector3d velocity_body(state.twist.linear.x, state.twist.linear.y, state.twist.linear.z);
+  if (velocity_body.norm() < 0.05) {
+    y_acc = -gravity_body;
   } else {
-    // Rotate the acceleration_minus_gravity into the body frame
-    tf2::doTransform(acceleration_minus_gravity, y_acc, q_inertial_to_body);
+    Eigen::Vector3d acceleration_body(state.acceleration.linear.x,
+                                      state.acceleration.linear.y,
+                                      state.acceleration.linear.z);
+    y_acc = acceleration_body - gravity_body;
   }
 
   // Determine if the aircraft is armed
@@ -222,11 +210,14 @@ sensor_msgs::msg::Temperature StandaloneSensors::imu_temperature_update(const ro
 
 sensor_msgs::msg::MagneticField StandaloneSensors::mag_update(const rosflight_msgs::msg::SimState & state)
 {
-  geometry_msgs::msg::TransformStamped q_inertial_to_body;
-  q_inertial_to_body.transform.rotation = state.pose.orientation;
+  // Get the current rotation from body to inertial
+  Eigen::Quaterniond q_body_to_inertial(state.pose.orientation.w,
+                                        state.pose.orientation.x,
+                                        state.pose.orientation.y,
+                                        state.pose.orientation.z);
 
-  Eigen::Vector3d y_mag;
-  tf2::doTransform(inertial_magnetic_field_, y_mag, q_inertial_to_body);
+  Eigen::Vector3d y_mag = q_body_to_inertial.inverse() * inertial_magnetic_field_;
+
   // Apply walk
   y_mag += mag_gauss_markov_eta_;
   
@@ -259,7 +250,7 @@ rosflight_msgs::msg::Barometer StandaloneSensors::baro_update(const rosflight_ms
 
   // Convert to the true pressure reading
   double y_baro = 101325.0f
-    * (float) pow((1 - 2.25694e-5 * alt), 5.2553); // TODO: Add these parameters to the parameters.
+    * (float) pow((1 - 2.25694e-5 * alt), 5.2553);
 
   rho_ = 1.225 * pow(y_baro / 101325.0, 0.809736894596450);
 
@@ -325,12 +316,13 @@ rosflight_msgs::msg::GNSS StandaloneSensors::gnss_update(const rosflight_msgs::m
                             vel_std * normal_distribution_(noise_generator_));
   local_vel += vel_noise;
 
-  Eigen::Quaterniond quat(state.pose.orientation.w,
-                          state.pose.orientation.x,
-                          state.pose.orientation.y,
-                          state.pose.orientation.z);
+  // Body to inertial rotation
+  Eigen::Quaterniond q_body_to_inertial(state.pose.orientation.w,
+                                        state.pose.orientation.x,
+                                        state.pose.orientation.y,
+                                        state.pose.orientation.z);
 
-  Eigen::Vector3d global_vel = quat.toRotationMatrix().transpose()*local_vel;
+  Eigen::Vector3d global_vel = q_body_to_inertial * local_vel;
   out_msg.vel_n = global_vel(0);
   out_msg.vel_e = global_vel(1);
   out_msg.vel_d = global_vel(2);
@@ -383,14 +375,21 @@ sensor_msgs::msg::Range StandaloneSensors::sonar_update(const rosflight_msgs::ms
 rosflight_msgs::msg::Airspeed StandaloneSensors::diff_pressure_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::Vector3Stamped & wind)
 {
   // Calculate Airspeed
-  Eigen::Vector3d ground_velocity, inertial_wind_velocity, air_velocity;
-  ground_velocity << state.twist.linear.x, state.twist.linear.y, state.twist.linear.z;
-  inertial_wind_velocity << wind.vector.x, wind.vector.y, wind.vector.z;
-  air_velocity = ground_velocity - inertial_wind_velocity;
-  double Va = air_velocity.norm();
+  // Rotate wind velocities into the body frame
+  Eigen::Quaterniond q_body_to_inertial(state.pose.orientation.w,
+                                        state.pose.orientation.x,
+                                        state.pose.orientation.y,
+                                        state.pose.orientation.z);
+
+  Eigen::Vector3d body_vel(state.twist.linear.x, state.twist.linear.y, state.twist.linear.z);
+  Eigen::Vector3d inertial_wind_velocity(wind.vector.x, wind.vector.y, wind.vector.z);
+  Eigen::Vector3d body_air_velocity = body_vel - q_body_to_inertial.inverse() * inertial_wind_velocity;
+
+  // Airspeed sensor only measures x component of the airspeed in the body frame
+  double u = body_air_velocity(0);
 
   // Invert Airpseed to get sensor measurement
-  double y_as = rho_ * Va * Va / 2.0; // Page 130 in the UAV Book
+  double y_as = rho_ * u * u / 2.0; // Page 130 in the UAV Book
 
   // Add noise
   double airspeed_stdev = this->get_parameter("airspeed_stdev").as_double(); 

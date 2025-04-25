@@ -88,7 +88,7 @@ rosflight_msgs::msg::SimState GazeboDynamics::compute_truth()
   truth.acceleration.angular.y = GZ_COMPAT_GET_Y(ang_accel);
   truth.acceleration.angular.z = GZ_COMPAT_GET_Z(ang_accel);
 
-  // Convert to NED
+  // Convert to NED from NWU
   // truth.header.frame_id = link_name_ + "_NED";
   truth.pose.orientation.y *= -1.0;
   truth.pose.orientation.z *= -1.0;
@@ -110,7 +110,7 @@ geometry_msgs::msg::Vector3Stamped GazeboDynamics::compute_wind_truth()
 {
   geometry_msgs::msg::Vector3Stamped current_wind;
   current_wind.header.stamp = this->get_clock()->now();
-  // TODO: Publish the wind in the body frame
+  // TODO: Publish the wind in the inertial frame
   return current_wind;
 }
 

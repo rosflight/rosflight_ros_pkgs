@@ -123,17 +123,15 @@ void StandaloneDynamics::apply_forces_and_torques(const geometry_msgs::msg::Wren
 
 Eigen::VectorXd StandaloneDynamics::add_gravity_forces(Eigen::VectorXd forces)
 {
+  // Rotate gravity into body frame
+  Eigen::Quaterniond q_body_to_inertial(current_truth_state_.pose.orientation.w, 
+                                        current_truth_state_.pose.orientation.x,
+                                        current_truth_state_.pose.orientation.y,
+                                        current_truth_state_.pose.orientation.z);
   Eigen::Vector3d gravity(0,0,this->get_parameter("gravity").as_double());
-  Eigen::Vector3d gravity_rotated;
+  Eigen::Vector3d gravity_body = q_body_to_inertial.inverse() * gravity;
 
-  geometry_msgs::msg::TransformStamped rot; // body to inertial
-  rot.transform.rotation.w = current_truth_state_.pose.orientation.w;
-  rot.transform.rotation.x = -current_truth_state_.pose.orientation.x;
-  rot.transform.rotation.y = -current_truth_state_.pose.orientation.y;
-  rot.transform.rotation.z = -current_truth_state_.pose.orientation.z;
-  tf2::doTransform(gravity, gravity_rotated, rot);
-
-  forces.segment(0,3) += gravity_rotated * this->get_parameter("mass").as_double();
+  forces.segment(0,3) += gravity_body * this->get_parameter("mass").as_double();
   return forces;
 }
 
@@ -142,24 +140,27 @@ Eigen::VectorXd StandaloneDynamics::add_ground_collision_forces(Eigen::VectorXd 
   // Low fidelity approximation of what actually might happen
   current_truth_state_.pose.position.z = std::min(0.0, current_truth_state_.pose.position.z);
 
-  if (current_truth_state_.pose.position.z > -0.01) { // NED frame
+  if (current_truth_state_.pose.position.z > -0.1) { // NED frame
     // If close to the ground
 
     if (forces(2) > 0.0) {
       // If down force is positive, set it to zero.
       forces(2) = 0.0;
-
-      // Also set roll and pitch to zero
-      tf2::Quaternion q(current_truth_state_.pose.orientation.x,
-                        current_truth_state_.pose.orientation.y,
-                        current_truth_state_.pose.orientation.z,
-                        current_truth_state_.pose.orientation.w);
-      tf2::Matrix3x3 m(q);
-      double roll, pitch, yaw;
-      m.getRPY(roll, pitch, yaw);
-      q.setRPY(0,0,yaw);
-      current_truth_state_.pose.orientation = tf2::toMsg(q);
     }
+
+    // Also set roll and pitch to zero if pointing into ground
+    tf2::Quaternion q(current_truth_state_.pose.orientation.x,
+                      current_truth_state_.pose.orientation.y,
+                      current_truth_state_.pose.orientation.z,
+                      current_truth_state_.pose.orientation.w);
+    tf2::Matrix3x3 m(q);
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+
+    pitch = std::max(0.0, pitch);
+
+    q.setRPY(0.0,pitch,yaw);
+    current_truth_state_.pose.orientation = tf2::toMsg(q);
   }
 
   return forces;
@@ -219,7 +220,7 @@ Eigen::VectorXd StandaloneDynamics::f(Eigen::VectorXd state, Eigen::VectorXd for
   // State:
   // pn pe pd   - Inertial positions in inertial frame
   // u v w      - Inertial velocities in body frame
-  // quaternion - Rotation from inertial to body
+  // quaternion - Rotation from body to inertial
   // p q r      - Angular velocity about center of mass in body frame
   // accel      - Linear acceleration expressed in body frame
   // alpha      - Angular acceleration expressed in body frame
@@ -237,16 +238,11 @@ Eigen::VectorXd StandaloneDynamics::f(Eigen::VectorXd state, Eigen::VectorXd for
   Eigen::VectorXd out(19);
 
   // pn pe pd
-  Eigen::Vector3d pos_dot;
-  geometry_msgs::msg::TransformStamped rot;
-  rot.transform.rotation.w = quat(0);
-  rot.transform.rotation.x = quat(1);
-  rot.transform.rotation.y = quat(2);
-  rot.transform.rotation.z = quat(3);
-  tf2::doTransform(uvw, pos_dot, rot);
+  Eigen::Quaterniond q_body_to_inertial(quat(0), quat(1), quat(2), quat(3));
+  Eigen::Vector3d pos_dot = q_body_to_inertial * uvw;
   out.segment(0,3) = pos_dot;
 
-  // uvw
+  // uvw -- force is in body frame
   Eigen::Vector3d uvw_dot = force / mass - pqr.cross(uvw);
   out.segment(3,3) = uvw_dot;
   out.segment(13,3) = uvw_dot;
