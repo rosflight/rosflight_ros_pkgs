@@ -148,7 +148,7 @@ void SILBoard::gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::Worl
   battery_update_rate_ = node_->get_parameter_or<double>("battery_update_rate", 5.0);
   battery_update_period_us_ = (uint64_t) (1e6 / battery_update_rate_);
 
-  mass_ = node_->get_parameter_or<double>("mass", 2.28);
+  mass_ = node_->get_parameter_or<double>("mass", 3.50);
   rho_ = node_->get_parameter_or<double>("rho", 1.225);
 
   // Get the desired altitude at the ground (for baro and LLA)
@@ -364,7 +364,7 @@ bool SILBoard::imu_read(float accel[3], float * temperature, float gyro[3], uint
   } else {
     y_acc.Set(f_x / mass_, -f_y / mass_, -f_z / mass_);
   }
-
+  
   // Apply normal noise (only if armed, because most of the noise comes from motors
   if (motors_spinning()) {
     GZ_COMPAT_SET_X(y_acc,
@@ -455,7 +455,7 @@ ignition::math::Vector3d SILBoard::bias_model()
 {
   double T = 1/imu_update_rate_;
 
-  double alpha = T/(T+gyro_bias_model_tau_);
+  double alpha = T/(T+gyro_bias_model_tau_); 
   
   GZ_COMPAT_SET_X(bias_instability_, GZ_COMPAT_GET_X(bias_instability_) * (1-alpha));
   GZ_COMPAT_SET_Y(bias_instability_, GZ_COMPAT_GET_Y(bias_instability_) * (1-alpha));
