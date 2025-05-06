@@ -252,9 +252,11 @@ Eigen::Matrix<double, 6, 1> Multirotor::update_forces_and_torques(CurrentState x
                                         ground_effect_coeffs[1]*pow(-x.pos.z(), 3) +
                                         ground_effect_coeffs[2]*pow(-x.pos.z(), 2) +
                                         ground_effect_coeffs[3]*-x.pos.z() +
-                                        ground_effect_coeffs[4]);
-
-  forces(2) -= ground_effect_force;
+                                        ground_effect_coeffs[4]); 
+  // Only apply ground effect when thrust is being applied.
+  if (total_thrust > 0.01) {
+    forces(2) -= ground_effect_force;
+  }
   
   geometry_msgs::msg::TwistStamped msg;
 
