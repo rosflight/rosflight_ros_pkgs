@@ -117,30 +117,12 @@ ament_target_dependencies(rosflight_io
   tf2_geometry_msgs
   )
 
-# calibrate mag node
-add_executable(calibrate_mag
-  src/mag_cal_node.cpp
-  src/mag_cal.cpp
-  )
-target_link_libraries(calibrate_mag
-  ${rclcpp_LIBRARIES}
-  ${ament_LIBRARIES}
-  ${Boost_LIBRARIES}
-  )
-ament_target_dependencies(calibrate_mag
-  rosflight_msgs
-  sensor_msgs
-  eigen_stl_containers
-  message_filters
-  )
-
-
 #############
 ## Install ##
 #############
 
 # Mark executables and libraries for installation
-install(TARGETS mavrosflight rosflight_io calibrate_mag
+install(TARGETS mavrosflight rosflight_io
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
