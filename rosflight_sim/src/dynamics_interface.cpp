@@ -72,6 +72,9 @@ void DynamicsInterface::forces_callback(const geometry_msgs::msg::WrenchStamped 
   apply_forces_and_torques(msg);
 
   // Compute truth state
+  // TODO: This should probably be on a different timer than the output from the board. 
+  // A zero-order-hold would be more realistic. Perhaps we put a timer in the forces and moments that 
+  // controls how fast propagation happens.
   rosflight_msgs::msg::SimState truth = compute_truth();
   truth.header.stamp = this->get_clock()->now();
   truth_state_pub_->publish(truth);
