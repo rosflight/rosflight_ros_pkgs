@@ -485,6 +485,18 @@ private:
    */
   bool rebootToBootloaderSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr & req,
                                      const std_srvs::srv::Trigger::Response::SharedPtr & res);
+  /**
+   * @brief "all_params_received" service callback.
+   *
+   * This function is called anytime the "all_params_received" ROS service is called. It returns
+   * true if all the parameters have been received from the firmware.
+   *
+   * @param req ROS Trigger service request.
+   * @param res ROS Trigger service response.
+   * @return True
+   */
+  bool checkIfAllParamsReceivedCallback(const std_srvs::srv::Trigger::Request::SharedPtr & req,
+                                        const std_srvs::srv::Trigger::Response::SharedPtr & res);
 
   // timer callbacks
   /**
@@ -545,8 +557,12 @@ private:
   /// "external_attitude" ROS topic subscription.
   rclcpp::Subscription<rosflight_msgs::msg::Attitude>::SharedPtr extatt_sub_;
 
-  /// "unsaved_params" ROS topic publisher.
+  /// "status/unsaved_params" ROS topic publisher.
   rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr unsaved_params_pub_;
+  /// "status/rosflight_errors" ROS topic publisher.
+  rclcpp::Publisher<rosflight_msgs::msg::Error>::SharedPtr error_pub_;
+  /// "status/params_changed" ROS topic publisher.
+  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr params_changed_pub_;
   /// "imu/data" ROS topic publisher.
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
   /// "imu/temperature" ROS topic publisher.
@@ -575,8 +591,6 @@ private:
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr version_pub_;
   /// "lidar" ROS topic publisher.
   rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr lidar_pub_;
-  /// "rosflight_errors" ROS topic publisher.
-  rclcpp::Publisher<rosflight_msgs::msg::Error>::SharedPtr error_pub_;
   /// "battery" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::BatteryStatus>::SharedPtr battery_status_pub_;
 
@@ -602,6 +616,8 @@ private:
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr reboot_srv_;
   /// "reboot_to_bootloader" ROS service.
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr reboot_bootloader_srv_;
+  /// "all_params_received" ROS service.
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr check_if_all_params_received_srv_;
 
   /// ROS timer for param requests.
   rclcpp::TimerBase::SharedPtr param_timer_;
