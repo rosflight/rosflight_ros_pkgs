@@ -32,9 +32,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <cmath>
-#include <cstdint>
-
 #include "multirotor_forces_and_moments.hpp"
 
 namespace rosflight_sim
@@ -87,6 +84,11 @@ Multirotor::~Multirotor() = default;
 
 void Multirotor::declare_multirotor_params()
 {
+  // TODO: Should we try to sync these with the values in the firmware?
+  //  - The firmware won't always have these values
+  //  - The firmware may not use these values even if it has them (based on USE_MOTOR_PARAMS)
+  //  - The firmware uses a constant CT, CQ, not the quadratic coeffs
+  //  - The firmware doesn't have values like CD_induced or ground_effect
   this->declare_parameter("num_rotors", rclcpp::PARAMETER_INTEGER);
   this->declare_parameter("CT_0", rclcpp::PARAMETER_DOUBLE);
   this->declare_parameter("CT_1", rclcpp::PARAMETER_DOUBLE);
@@ -118,6 +120,9 @@ geometry_msgs::msg::WrenchStamped Multirotor::update_forces_and_torques(rosfligh
                                                                         geometry_msgs::msg::Vector3Stamped wind,
                                                                         std::array<uint16_t, 14> act_cmds)
 {
+  // Note that the motor commands should not be unmixed here for the multirotor aircraft, since the
+  // values are already motor outputs.
+
   // The maximum voltage of the battery.
   double V_max = this->get_parameter("V_max").as_double();
 
@@ -280,6 +285,11 @@ geometry_msgs::msg::WrenchStamped Multirotor::update_forces_and_torques(rosfligh
   return msg;
 }
 
+void Multirotor::get_firmware_parameters()
+{
+  // No extra parameters to query since mixer has already been queried
+}
+
 } // namespace rosflight_sim
 
 
@@ -288,7 +298,7 @@ int main(int argc, char** argv)
   rclcpp::init(argc, argv);
 
   auto node = std::make_shared<rosflight_sim::Multirotor>();
-  rclcpp::executors::SingleThreadedExecutor executor;
+  rclcpp::executors::MultiThreadedExecutor executor;
   executor.add_node(node);
 
   executor.spin();

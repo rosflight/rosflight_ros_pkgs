@@ -17,6 +17,7 @@ endif()
 # Find packages
 find_package(ament_cmake REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rosflight_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
@@ -71,6 +72,7 @@ target_include_directories(multirotor_forces_and_moments
   PRIVATE
     ../../include
     include)
+target_link_libraries(multirotor_forces_and_moments Eigen3::Eigen)
 ament_target_dependencies(multirotor_forces_and_moments
   rclcpp
   std_srvs
@@ -88,8 +90,9 @@ add_executable(fixedwing_forces_and_moments
   src/fixedwing_forces_and_moments.cpp)
 target_include_directories(fixedwing_forces_and_moments
   PRIVATE
-    include
-    simulators/standalone_sim/include)
+    ../../include
+    include)
+target_link_libraries(fixedwing_forces_and_moments Eigen3::Eigen)
 ament_target_dependencies(fixedwing_forces_and_moments
   rclcpp
   std_srvs

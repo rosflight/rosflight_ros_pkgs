@@ -146,10 +146,10 @@ void Fixedwing::declare_fixedwing_params()
   this->declare_parameter("I_0", rclcpp::PARAMETER_DOUBLE);
 
   // RC command channel configuration
-  this->declare_parameter("aileron_channel", 0);
-  this->declare_parameter("elevator_channel", 1);
-  this->declare_parameter("throttle_channel", 4);
-  this->declare_parameter("rudder_channel", 2);
+  // TODO: Correct these values!
+  this->declare_parameter("aileron_max_deflection_rad", 1.0);
+  this->declare_parameter("elevator_max_deflection_rad", 1.0);
+  this->declare_parameter("rudder_max_deflection_rad", 1.0);
 
   // Servo time delay parameters
   this->declare_parameter("servo_refresh_rate", 0.003);
@@ -657,12 +657,44 @@ rcl_interfaces::msg::SetParametersResult Fixedwing::parameters_callback(const st
 
 geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight_msgs::msg::SimState x,
                                                                        geometry_msgs::msg::Vector3Stamped wind,
-                                                                       std::array<uint16_t, 14> act_cmds)
+                                                                       std::array<uint16_t, NUM_TOTAL_OUTPUTS> act_cmds)
 {
-  delta_.a = (act_cmds[this->get_parameter("aileron_channel").as_int()] - 1500.0) / 500.0;
-  delta_.e = (act_cmds[this->get_parameter("elevator_channel").as_int()] - 1500.0) / 500.0;
-  delta_.t = (act_cmds[this->get_parameter("throttle_channel").as_int()] - 1000.0) / 1000.0;
-  delta_.r = (act_cmds[this->get_parameter("rudder_channel").as_int()] - 1500.0) / 500.0;
+  // TODO: The mixer used is not either of the vanilla PRIMARY or SECONDARY mixers... It is a combination,
+  // based on the current value of the RC_OVERRIDE switch... I need to add that logic here.
+  // This will need to be done after the RC override switch is updated to reflect attitude vs throttle override (separate Github issue)
+  // Until then, this simulator will always use the primary mixer (not any combo of primary and secondary that is possible in firmware).
+
+  // Convert PWM into 0 to 1 output - note that the mixer does not touch the last (NUM_TOTAL_OUTPUTS - NUM_MIXER_OUTPUTS)
+  // number of outputs
+  Eigen::Matrix<double, NUM_MIXER_OUTPUTS, 1> act_cmds_vect;
+  for (int i=0; i<NUM_MIXER_OUTPUTS; ++i) {
+    // {0, 1, 2, 3} = {aux, servo, motor, gpio}
+    switch (mixer_header_vals_(i)) {
+      case 0:
+      case 4:
+        act_cmds_vect(i) = static_cast<double>(act_cmds[i]);
+        break;
+      case 1:
+        act_cmds_vect(i) = (static_cast<double>(act_cmds[i]) - 1500.0) / 500.0;
+        break;
+      case 2:
+        act_cmds_vect(i) = (static_cast<double>(act_cmds[i]) - 1000.0) / 1000.0;
+        break;
+      default:
+        RCLCPP_ERROR_STREAM(this->get_logger(), "Mixer header has unknown value!");
+        act_cmds_vect(i) = 0.0;
+        break;
+    }
+  }
+
+  // Unmix the actuator commands
+  Eigen::VectorXd act_cmds_unmixed = primary_mixing_matrix_ * act_cmds_vect;
+
+  // Act cmds unmixed are {Fx, Fy, Fz, Qx, Qy, Qz}
+  delta_.a = act_cmds_unmixed(3);
+  delta_.e = act_cmds_unmixed(4);
+  delta_.t = act_cmds_unmixed(0);
+  delta_.r = act_cmds_unmixed(5);
 
   // Apply servo time delay
   Actuators delta_curr;
@@ -801,6 +833,11 @@ geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight
   return forces;
 }
 
+void Fixedwing::get_firmware_parameters()
+{
+  // No extra parameters to query since mixer has already been queried
+}
+
 } // namespace rosflight_sim
 
 
@@ -809,7 +846,7 @@ int main(int argc, char** argv)
   rclcpp::init(argc, argv);
 
   auto node = std::make_shared<rosflight_sim::Fixedwing>();
-  rclcpp::executors::SingleThreadedExecutor executor;
+  rclcpp::executors::MultiThreadedExecutor executor;
   executor.add_node(node);
 
   executor.spin();

@@ -36,12 +36,20 @@
 #ifndef ROSFLIGHT_SIM_MAV_FORCES_AND_MOMENTS_H
 #define ROSFLIGHT_SIM_MAV_FORCES_AND_MOMENTS_H
 
+#include <chrono>
+#include <future>
+
+#include <Eigen/Dense>
+#include <Eigen/SVD>
 #include <geometry_msgs/msg/wrench_stamped.hpp>
 #include <geometry_msgs/msg/vector3_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/bool.hpp>
+#include <std_srvs/srv/trigger.hpp>
 
 #include <rosflight_msgs/msg/pwm_output.hpp>
 #include <rosflight_msgs/msg/sim_state.hpp>
+#include <rosflight_msgs/srv/param_get.hpp>
 
 
 namespace rosflight_sim
@@ -51,22 +59,17 @@ namespace rosflight_sim
  */
 class ForcesAndMomentsInterface : public rclcpp::Node
 {
-private:
-  rclcpp::Publisher<geometry_msgs::msg::WrenchStamped>::SharedPtr forces_moments_pub_;
-  rclcpp::Subscription<geometry_msgs::msg::Vector3Stamped>::SharedPtr wind_sub_;
-  rclcpp::Subscription<rosflight_msgs::msg::SimState>::SharedPtr truth_sub_;
-  rclcpp::Subscription<rosflight_msgs::msg::PwmOutput>::SharedPtr firware_out_sub_;
-
-  // Persistent variables
-  rosflight_msgs::msg::SimState current_state_;
-  geometry_msgs::msg::Vector3Stamped current_wind_;
-
-  // Callbacks
-  void state_callback(const rosflight_msgs::msg::SimState & msg);
-  void wind_callback(const geometry_msgs::msg::Vector3Stamped & msg);
-  void firmware_output_callback(const rosflight_msgs::msg::PwmOutput & msg);
-
 protected:
+  static constexpr uint8_t NUM_TOTAL_OUTPUTS = 14;
+  static constexpr uint8_t NUM_MIXER_OUTPUTS = 10;
+
+  // Matrix to store the current mixing matrix
+  Eigen::Matrix<double, 6, NUM_MIXER_OUTPUTS> primary_mixing_matrix_;
+  Eigen::Matrix<double, 6, NUM_MIXER_OUTPUTS> secondary_mixing_matrix_;
+  Eigen::Matrix<int, 1, NUM_MIXER_OUTPUTS> mixer_header_vals_;
+  int primary_mixer_ = 255;
+  int secondary_mixer_ = 255;
+
   /**
    * @brief Saturation function for actuator commands.
    *
@@ -102,6 +105,34 @@ protected:
    */
   static double max(double x, double y) { return (x > y) ? x : y; }
 
+private:
+  rclcpp::Publisher<geometry_msgs::msg::WrenchStamped>::SharedPtr forces_moments_pub_;
+  rclcpp::Subscription<geometry_msgs::msg::Vector3Stamped>::SharedPtr wind_sub_;
+  rclcpp::Subscription<rosflight_msgs::msg::SimState>::SharedPtr truth_sub_;
+  rclcpp::Subscription<rosflight_msgs::msg::PwmOutput>::SharedPtr firware_out_sub_;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr params_changed_sub_;
+
+  rclcpp::CallbackGroup::SharedPtr sub_cb_group_;
+  rclcpp::CallbackGroup::SharedPtr client_cb_group_;
+  rclcpp::Client<rosflight_msgs::srv::ParamGet>::SharedPtr firmware_param_get_client_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr firmware_check_param_client_;
+
+  // Persistent variables
+  rosflight_msgs::msg::SimState current_state_;
+  geometry_msgs::msg::Vector3Stamped current_wind_;
+  bool do_initialize_parameters_ = false;
+
+  // Callbacks
+  void state_callback(const rosflight_msgs::msg::SimState & msg);
+  void wind_callback(const geometry_msgs::msg::Vector3Stamped & msg);
+  void firmware_output_callback(const rosflight_msgs::msg::PwmOutput & msg);
+  void params_changed_callback(const std_msgs::msg::Bool & msg);
+
+  void get_mixer_firmware_parameters();
+  double send_get_param_service_to_firmware(std::string param_name);
+  bool send_check_params_service_to_firmware();
+  void invert_matrix(Eigen::Matrix<double, 6, NUM_MIXER_OUTPUTS> &mixer_to_invert);
+
 public:
 
   ForcesAndMomentsInterface();
@@ -116,7 +147,13 @@ public:
    */
   virtual geometry_msgs::msg::WrenchStamped update_forces_and_torques(rosflight_msgs::msg::SimState x,
                                                                       geometry_msgs::msg::Vector3Stamped wind,
-                                                                      std::array<uint16_t, 14> act_cmds) = 0;
+                                                                      std::array<uint16_t, NUM_TOTAL_OUTPUTS> act_cmds) = 0;
+
+  /**
+  * @brief Interface function for pulling the current firmware parameters from rosflight_io.
+  * Mixer is pulled by default before this function gets called.
+  */
+  virtual void get_firmware_parameters() {};
 };
 
 } // namespace rosflight_sim
