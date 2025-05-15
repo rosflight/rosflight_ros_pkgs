@@ -330,23 +330,12 @@ rosflight_msgs::msg::GNSS StandaloneSensors::gnss_update(const rosflight_msgs::m
   // Fill in the rest of the message
   out_msg.fix_type = rosflight_msgs::msg::GNSS::GNSS_FIX_TYPE_3D_FIX;
 
-  // Add GNSS time
-  auto curr_nanos = this->get_clock()->now().nanoseconds();
-  auto now = std::chrono::system_clock::time_point(std::chrono::nanoseconds(1)*curr_nanos);
-  auto now_c = std::chrono::system_clock::to_time_t(now);
-  auto now_tm = std::localtime(&now_c);
-
-  out_msg.year = now_tm->tm_year + 1900;
-  out_msg.month = now_tm->tm_mon + 1;
-  out_msg.day = now_tm->tm_mday;
-  out_msg.hour = now_tm->tm_hour;
-  out_msg.min = now_tm->tm_min;
-  out_msg.sec = now_tm->tm_sec;
-
   out_msg.num_sat = 15;
   out_msg.horizontal_accuracy = h_std;
   out_msg.vertical_accuracy = v_std;
   out_msg.speed_accuracy = vel_std;
+
+  // Add GNSS time
   out_msg.header.stamp = this->now();
 
   return out_msg;
