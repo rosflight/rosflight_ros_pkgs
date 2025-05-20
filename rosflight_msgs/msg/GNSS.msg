@@ -11,13 +11,6 @@ uint8 GNSS_FIX_TYPE_TIME_FIX_ONLY = 5
 
 uint8 fix_type # fix type, as defined in the UBX protocol, enums defined above
 
-uint16 year
-uint8 month
-uint8 day
-uint8 hour
-uint8 min
-uint8 sec
-
 uint8 num_sat
 float64 lat                   # deg DDS
 float64 lon                   # deg DDS
@@ -30,3 +23,4 @@ float32 vel_e                 # m/s
 float32 vel_d                 # m/s
 float32 speed_accuracy        # m/s
 
+float64 rosflight_timestamp # microseconds, timestamp of the last received packet

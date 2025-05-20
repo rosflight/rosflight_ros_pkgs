@@ -157,8 +157,6 @@ Eigen::VectorXd StandaloneDynamics::add_ground_collision_forces(Eigen::VectorXd 
     double roll, pitch, yaw;
     m.getRPY(roll, pitch, yaw);
 
-    pitch = std::max(0.0, pitch);
-
     q.setRPY(0.0,pitch,yaw);
     current_truth_state_.pose.orientation = tf2::toMsg(q);
   }

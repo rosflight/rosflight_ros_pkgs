@@ -504,13 +504,6 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss)
 
   gnss->fix_type = static_cast<rosflight_firmware::GNSSFixType>(gnss_data_.fix_type);
 
-  gnss->year = gnss_data_.year;
-  gnss->month = gnss_data_.month;
-  gnss->day = gnss_data_.day;
-  gnss->hour = gnss_data_.hour;
-  gnss->min = gnss_data_.min;
-  gnss->sec = gnss_data_.sec;
-
   gnss->num_sat = gnss_data_.num_sat;
   gnss->lat = gnss_data_.lat;
   gnss->lon = gnss_data_.lon;
@@ -522,6 +515,8 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss)
   gnss->vel_e = gnss_data_.vel_e;
   gnss->vel_d = gnss_data_.vel_d;
   gnss->s_acc = gnss_data_.speed_accuracy;
+
+  gnss->rosflight_timestamp = clock_micros();
 
   return true;
 }
