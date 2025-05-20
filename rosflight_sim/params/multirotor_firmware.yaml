@@ -12,3 +12,10 @@
                                              # If you don't want motor params and custom mixer, use mixer 2 and set
                                              # USE_MOTOR_PARAM to 0
 - {name: USE_MOTOR_PARAM, type: 6, value: 1}  # Don't use the motor parameters by default
+- {name: PID_ROLL_RATE_P, type: 9, value: 0.5}  # Controller values are good defaults for the custom mixer parameters
+- {name: PID_PITCH_RATE_P, type: 9, value: 0.5}
+- {name: PID_YAW_RATE_P, type: 9, value: 0.5}
+- {name: PID_ROLL_ANG_P, type: 9, value: 0.9}
+- {name: PID_ROLL_ANG_D, type: 9, value: 0.2}
+- {name: PID_PITCH_ANG_P, type: 9, value: 0.9}
+- {name: PID_PITCH_ANG_D, type: 9, value: 0.2}
