@@ -33,8 +33,6 @@
 
 #include "standalone_dynamics.hpp"
 
-#include <iostream>
-
 namespace rosflight_sim
 {
 

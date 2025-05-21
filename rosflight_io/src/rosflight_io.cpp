@@ -73,11 +73,13 @@ ROSflightIO::ROSflightIO()
   rclcpp::QoS qos_transient_local_1_(1);
   qos_transient_local_1_.transient_local();
   unsaved_params_pub_ =
-    this->create_publisher<std_msgs::msg::Bool>("unsaved_params", qos_transient_local_1_);
+    this->create_publisher<std_msgs::msg::Bool>("status/unsaved_params", qos_transient_local_1_);
   rclcpp::QoS qos_transient_local_5_(5); // A relatively large queue so all messages get through
   qos_transient_local_5_.transient_local();
   error_pub_ =
-    this->create_publisher<rosflight_msgs::msg::Error>("rosflight_errors", qos_transient_local_5_);
+    this->create_publisher<rosflight_msgs::msg::Error>("status/rosflight_errors", qos_transient_local_5_);
+  params_changed_pub_ =
+    this->create_publisher<std_msgs::msg::Bool>("status/params_changed", 1);
 
   param_get_srv_ = this->create_service<rosflight_msgs::srv::ParamGet>(
     "param_get",
@@ -113,6 +115,10 @@ ROSflightIO::ROSflightIO()
   reboot_bootloader_srv_ = this->create_service<std_srvs::srv::Trigger>(
     "reboot_to_bootloader",
     std::bind(&ROSflightIO::rebootToBootloaderSrvCallback, this, std::placeholders::_1,
+              std::placeholders::_2));
+  check_if_all_params_received_srv_ = this->create_service<std_srvs::srv::Trigger>(
+    "all_params_received",
+    std::bind(&ROSflightIO::checkIfAllParamsReceivedCallback, this, std::placeholders::_1,
               std::placeholders::_2));
 
   this->declare_parameter("udp", rclcpp::PARAMETER_BOOL);
@@ -156,6 +162,7 @@ ROSflightIO::ROSflightIO()
 
   // request the param list
   mavrosflight_->param.request_params();
+  // TODO: Do these need to be changed to node timers instead of wall timers?
   param_timer_ =
     this->create_wall_timer(std::chrono::seconds(PARAMETER_PERIOD),
                             std::bind(&ROSflightIO::paramTimerCallback, this), nullptr);
@@ -263,6 +270,13 @@ void ROSflightIO::on_new_param_received(std::string name, double value)
 void ROSflightIO::on_param_value_updated(std::string name, double value)
 {
   RCLCPP_INFO(this->get_logger(), "Parameter %s has new value %g", name.c_str(), value);
+
+  if (mavrosflight_->param.got_all_params()) {
+    // Send message that params have changed
+    std_msgs::msg::Bool params_changed;
+    params_changed.data = true;
+    params_changed_pub_->publish(params_changed);
+  }
 }
 
 void ROSflightIO::on_params_saved_change(bool unsaved_changes)
@@ -727,6 +741,7 @@ void ROSflightIO::handle_battery_status_msg(const mavlink_message_t & msg)
 
   battery_status_pub_->publish(battery_status_message);
 }
+
 void ROSflightIO::handle_rosflight_gnss_msg(const mavlink_message_t & msg)
 {
   mavlink_rosflight_gnss_t gnss;
@@ -951,6 +966,18 @@ bool ROSflightIO::rebootToBootloaderSrvCallback(
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_REBOOT_TO_BOOTLOADER);
   mavrosflight_->comm.send_message(msg);
   res->success = true;
+  return true;
+}
+
+bool ROSflightIO::checkIfAllParamsReceivedCallback(
+  const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  const std_srvs::srv::Trigger::Response::SharedPtr & res)
+{
+  res->success = mavrosflight_->param.got_all_params();
+  res->message = "Not all params recieved from firmware.";
+  if (res->success) {
+    res->message = "All params recieved from firmware.";
+  }
   return true;
 }
 
