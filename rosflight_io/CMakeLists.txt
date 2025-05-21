@@ -115,6 +115,7 @@ ament_target_dependencies(rosflight_io
   std_srvs
   tf2
   tf2_geometry_msgs
+  Eigen3
   )
 
 #############

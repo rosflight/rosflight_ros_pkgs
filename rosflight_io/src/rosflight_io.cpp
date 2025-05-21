@@ -38,6 +38,8 @@
  * @author Brandon Sutherland <brandonsutherland2\@gmail.com>
  */
 
+#include <rclcpp/logging.hpp>
+#include <std_srvs/srv/detail/trigger__struct.hpp>
 #ifdef ROSFLIGHT_VERSION
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x) // Somehow, C++ requires two macros to convert a macro to a string
@@ -48,10 +50,9 @@
 #include <rosflight_io/mavrosflight/mavlink_udp.hpp>
 #include <rosflight_io/mavrosflight/serial_exception.hpp>
 #include <string>
-#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Matrix3x3.h> // Swap to Eigen!
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-#include <utility>
 
 #include <rosflight_io/rosflight_io.hpp>
 
@@ -104,6 +105,10 @@ ROSflightIO::ROSflightIO()
   imu_calibrate_bias_srv_ = this->create_service<std_srvs::srv::Trigger>(
     "calibrate_imu",
     std::bind(&ROSflightIO::calibrateImuBiasSrvCallback, this, std::placeholders::_1,
+              std::placeholders::_2));
+  mag_calibrate_srv_ = this->create_service<std_srvs::srv::Trigger>(
+    "calibrate_mag",
+    std::bind(&ROSflightIO::calibrateMagSrvCallback, this, std::placeholders::_1,
               std::placeholders::_2));
   calibrate_rc_srv_ = this->create_service<std_srvs::srv::Trigger>(
     "calibrate_rc_trim",
@@ -585,6 +590,13 @@ void ROSflightIO::handle_small_imu_msg(const mavlink_message_t & msg)
     imu_temp_pub_ = this->create_publisher<sensor_msgs::msg::Temperature>("imu/temperature", 1);
   }
   imu_temp_pub_->publish(temp_msg);
+
+  if (calibrate_mag_) { // alpha filter the calibrated mag accel.
+    float alpha = 0.95;
+    Eigen::Vector3f instant_accel;
+    instant_accel << imu.xacc, imu.yacc, imu.zacc;
+    current_accels_ = current_accels_*alpha + (1-alpha)*instant_accel;
+  }
 }
 
 void ROSflightIO::handle_rosflight_output_raw_msg(const mavlink_message_t & msg)
@@ -694,6 +706,12 @@ void ROSflightIO::handle_small_mag_msg(const mavlink_message_t & msg)
     mag_pub_ = this->create_publisher<sensor_msgs::msg::MagneticField>("magnetometer", 1);
   }
   mag_pub_->publish(mag_msg);
+  if (calibrate_mag_) { // HACK: This will likely be slow. But it may not matter! Consider only grabbing one in 4 of the measurements as well.
+    Eigen::RowVector3f new_row;
+    new_row << mag.xmag, mag.ymag, mag.zmag;
+    mag_calibration_data_.conservativeResize(mag_calibration_data_.rows()+1, Eigen::NoChange);
+    mag_calibration_data_.row(mag_calibration_data_.rows() - 1) = new_row;
+  }
 }
 
 void ROSflightIO::handle_small_range_msg(const mavlink_message_t & msg)
@@ -1026,6 +1044,280 @@ bool ROSflightIO::calibrateBaroSrvCallback(const std_srvs::srv::Trigger::Request
   mavrosflight_->comm.send_message(msg);
   res->success = true;
   return true;
+}
+
+bool ROSflightIO::calibrateMagSrvCallback(
+  const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  const std_srvs::srv::Trigger::Response::SharedPtr & res) {
+
+  float frequency = 10.0;
+
+  auto timer_period = std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000));
+
+  // Set timer to trigger bound callback while calibrating.
+  mag_calibration_timer_ = rclcpp::create_timer(this, this->get_clock(), timer_period,
+                                   std::bind(&ROSflightIO::calibrateMag, this));
+
+  res->success = true;
+
+  // TODO: Make it so you can manually toggle this on and off.
+  
+  return true;
+
+}
+
+void ROSflightIO::calibrateMag() {
+
+  enum orientation_index {
+    X_DOWN,
+    X_UP,
+    Y_DOWN,
+    Y_UP,
+    Z_DOWN,
+    Z_UP
+  };
+  
+  if (calibrate_mag_ == false) {
+    calibrate_mag_ = true;
+    reorienting_ = true;
+    mag_calibration_data_.resize(0,3);
+  }
+  
+  // TODO: Print out orientation and publish on feedback topic.
+  if (reorienting_) {
+    // Analyze the oreientation and print it out.
+    float threshold = 2.0;
+    float consecutive_interval_threshold = 20;
+    
+    float accel_x = current_accels_(0);
+    float accel_y = current_accels_(1);
+    float accel_z = current_accels_(2);
+    
+    // TODO: Case and switch statement?
+    if (abs(accel_x - 9.81) < threshold) {
+      // Body x face down.
+      current_candidate_index_ = orientation_index::X_DOWN;
+    }
+    else if (abs(accel_x + 9.81) < threshold) {
+      // Body x face up.
+      current_candidate_index_ = orientation_index::X_UP;
+    }
+    else if (abs(accel_y - 9.81) < threshold) {
+      // Body y face down.
+      current_candidate_index_ = orientation_index::Y_DOWN;
+    }
+    else if (abs(accel_y + 9.81) < threshold) {
+      // Body y face up.
+      current_candidate_index_ = orientation_index::Y_UP;
+    }
+    else if (abs(accel_z - 9.81) < threshold) {
+      // Body z face down.
+      current_candidate_index_ = orientation_index::Z_DOWN;
+    }
+    else if (abs(accel_z + 9.81) < threshold) {
+      // Body z face up.
+      current_candidate_index_ = orientation_index::Z_UP;
+    }
+
+    for (unsigned long i = 0; i < orientations_.size(); i++) {
+
+      if (i != current_candidate_index_) {
+        orientations_[i] = 0;
+      }
+      else {
+        orientations_[i] += 1;
+      }
+
+    }
+
+    if (orientations_[current_candidate_index_] >= consecutive_interval_threshold &&
+                          completed_mag_orientations_.find(current_candidate_index_) == completed_mag_orientations_.end()) {
+      RCLCPP_INFO(this->get_logger(), "ORIENTATION FIXED. BEGIN ROTATIONS.");
+      current_orientation_index_ = mag_calibration_data_.rows() - 1;
+      reorienting_ = false;
+      num_times_checked_ = 1;
+    }
+    else if (completed_mag_orientations_.find(current_candidate_index_) != completed_mag_orientations_.end()){
+      RCLCPP_INFO(this->get_logger(), "THIS ORIENTATION WAS ALREADY COMPLETED.");
+      return;
+    }
+    else {
+      RCLCPP_INFO(this->get_logger(), "NO ORIENTATION FOUND. HOLD IN DESIRED ORIENTATION FOR ~2 SEC.");
+      return;
+    }
+  } 
+  
+  unsigned long rotation_complete_check_interval = 200; // Check every ~2 seconds.
+  
+  if (((mag_calibration_data_.rows() - current_orientation_index_) / (num_times_checked_ * rotation_complete_check_interval)) >= 1 && !all_orientation_data_gathered_) {
+
+    num_times_checked_ += 1;
+
+    Eigen::MatrixXf current_orientation_data = mag_calibration_data_.bottomRows(mag_calibration_data_.rows() - current_orientation_index_);
+    // Calculate the centroid.
+    Eigen::Vector3f centroid = current_orientation_data.colwise().mean();
+
+    // Subtact centroid, because it is sampled from a convex hull, the origin is now interior to the ellipse.
+    Eigen::MatrixXf centered_data = current_orientation_data.colwise() - centroid;
+
+    // Bin the data since the orientation into 10 bins, must be at least 3 bins.
+    int num_bins = 10;
+    std::vector<Eigen::Vector3f> binned_values;
+
+    int bin_index_start = 0;
+
+    int length_of_bin = int(current_orientation_data.rows()/ num_bins);
+    
+    for (int i = 0; i < num_bins; i++) {
+      binned_values.push_back(current_orientation_data.middleRows(bin_index_start, length_of_bin).colwise().mean());
+      bin_index_start += length_of_bin;
+    }
+
+    // Define a plane and project binned values onto it.
+
+    // Grab 2 random binned values, use the first 2 of the shuffled vector.
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::vector<Eigen::Vector3f> shuffled_binned_values = binned_values;
+    std::shuffle(shuffled_binned_values.begin(),shuffled_binned_values.end(), gen);
+
+    // Define the normal vector.
+    Eigen::Vector3f point_1 = shuffled_binned_values[0];
+    Eigen::Vector3f point_2 = shuffled_binned_values[1];
+
+    Eigen::Vector3f plane_basis_x = point_1; 
+    plane_basis_x.normalize();
+
+    Eigen::Vector3f normal = (plane_basis_x).cross(point_2);
+    normal.normalize();
+
+    Eigen::Vector3f plane_basis_y = plane_basis_x.cross(normal);
+
+    // Project the binned values onto the plane. This is just in case the user doesn't rotate the vehile in a flat manner.
+    // (turns pringles into ellipses.)
+    // Use atan2 to find the angle.
+    float bin_widths = 2*M_PI/num_bins;
+    
+    std::vector<int> angle_counts(num_bins, 0);
+    for (int i = 0; i < centered_data.rows(); i++) {
+      Eigen::Vector3f point = centered_data.row(i);
+      Eigen::Vector3f projected_point = point - point.dot(normal)*normal;
+
+      float x_coord_2D = plane_basis_x.dot(projected_point);
+      float y_coord_2D = plane_basis_y.dot(projected_point);
+      float angle = std::atan2(y_coord_2D, x_coord_2D);
+
+      int bin = int((angle+M_PI)/bin_widths);
+      if (bin < 0) {
+        bin = 0;
+      }
+      else if (bin >= num_bins) {
+        bin = num_bins - 1;
+      }
+      angle_counts[bin]++;
+    }
+
+    int min_number_of_points_in_bin = 20;
+
+    RCLCPP_INFO_STREAM(this->get_logger(), "angles: " << angle_counts[0] << ", " << angle_counts[1] << ", " << angle_counts[2] << ", " << angle_counts[3] << ", " << angle_counts[4] << ", " << angle_counts[5] << ", " << angle_counts[6] << ", " << angle_counts[7] << ", " << angle_counts[8] << ", " << angle_counts[9] << ", ");
+
+    if (*std::min_element(angle_counts.begin(),angle_counts.end()) > min_number_of_points_in_bin) {
+      completed_mag_orientations_.insert(current_candidate_index_);
+      if (completed_mag_orientations_.size() == 6) {
+        all_orientation_data_gathered_ = true;
+        reorienting_ = false;
+        RCLCPP_INFO(this->get_logger(), "ALL ORIENTATIONS COVERED, PERFORMING CALIBRATION.");
+      }
+      else {
+        reorienting_ = true;
+        RCLCPP_INFO(this->get_logger(), "ENOUGH DATA GATHERED FOR THIS ORIENTATION, REORIENT.");
+      }
+    }
+    else {
+      RCLCPP_INFO(this->get_logger(), "ADDITIONAL DATA REQUIRED, BE SURE TO COVER A FULL CIRCLE.");
+    }
+  }
+  
+  // When all of the data is collected, run the calibration.
+  if (all_orientation_data_gathered_) {
+    calibrate_mag_ = false;
+
+    // Get the least squares fit to the coeffecients of the equation x^2 + x*y + x*z + y^2 + y*z + z^2 + x + y + z + 1 = 0
+    // This gives us the best fit of the equation of an ellipsoid.
+    auto coeffs = ellipsoid_least_squares(mag_calibration_data_);
+
+    Eigen::Matrix3f correction_matrix;
+    correction_matrix << coeffs(0), coeffs(1), coeffs(2),
+                         coeffs(1), coeffs(3), coeffs(4),
+                         coeffs(2), coeffs(4), coeffs(5);
+
+    float determinant = correction_matrix.determinant();
+
+    if (determinant < 0) {
+      correction_matrix = -correction_matrix;
+      coeffs = -coeffs;
+      determinant = -determinant;
+    }
+
+    Eigen::Vector3f offset_terms;
+    offset_terms << coeffs(6), coeffs(7), coeffs(8);
+
+    // Find hard iron offsets
+    Eigen::Vector3f hard_iron_offset = -0.5*(correction_matrix.inverse()*offset_terms);
+    
+    // Soft iron correction terms.
+    float third_root_determinant = std::cbrt(determinant); // Scaling term. Adjusts the result close to the unit sphere.
+    Eigen::Matrix3f soft_iron_correction = (correction_matrix/third_root_determinant).sqrt();
+
+    // TODO: Change the params of board. mavrosflight_->param.set_param_value(req->name, req->value);
+    mavrosflight_->param.set_param_value("MAG_X_BIAS", hard_iron_offset(0));
+    mavrosflight_->param.set_param_value("MAG_Y_BIAS", hard_iron_offset(1));
+    mavrosflight_->param.set_param_value("MAG_Z_BIAS", hard_iron_offset(2));
+    
+    mavrosflight_->param.set_param_value("MAG_A11_COMP", soft_iron_correction(0,0));
+    mavrosflight_->param.set_param_value("MAG_A12_COMP", soft_iron_correction(0,1));
+    mavrosflight_->param.set_param_value("MAG_A13_COMP", soft_iron_correction(0,2));
+    mavrosflight_->param.set_param_value("MAG_A21_COMP", soft_iron_correction(1,0));
+    mavrosflight_->param.set_param_value("MAG_A22_COMP", soft_iron_correction(1,1));
+    mavrosflight_->param.set_param_value("MAG_A23_COMP", soft_iron_correction(1,2));
+    mavrosflight_->param.set_param_value("MAG_A31_COMP", soft_iron_correction(2,0));
+    mavrosflight_->param.set_param_value("MAG_A32_COMP", soft_iron_correction(2,1));
+    mavrosflight_->param.set_param_value("MAG_A33_COMP", soft_iron_correction(2,2));
+
+    RCLCPP_INFO(this->get_logger(), "Calibration complete.");
+
+    // TODO: Stop the timer!
+  }
+}
+
+Eigen::VectorXf ROSflightIO::ellipsoid_least_squares(Eigen::MatrixXf data){
+  Eigen::VectorXf x = data.col(0);
+  Eigen::VectorXf y = data.col(1);
+  Eigen::VectorXf z = data.col(2);
+
+  Eigen::MatrixXf A = Eigen::MatrixXf::Zero(x.rows(),10);
+  A.col(0) = x.cwiseProduct(x);
+  A.col(1) = x.cwiseProduct(y);
+  A.col(2) = x.cwiseProduct(z);
+  A.col(3) = y.cwiseProduct(y);
+  A.col(4) = y.cwiseProduct(z);
+  A.col(5) = z.cwiseProduct(z);
+  A.col(6) = x;
+  A.col(7) = y;
+  A.col(8) = z;
+  A.col(9) = Eigen::VectorXf::Ones(x.cols());
+  
+  // TODO: Compare the accuracy of Jacobi vs BDC to see what works better for our application.
+  
+  Eigen::JacobiSVD<Eigen::MatrixXf> svd(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
+  
+  // TODO: Compare svd.solve to selecting the last singular vector.
+  
+  Eigen::MatrixXf V = svd.matrixV();
+
+  RCLCPP_INFO_STREAM(this->get_logger(), "V:\n" << V);
+
+  return V.col(10);
 }
 
 bool ROSflightIO::rebootSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr & req,
