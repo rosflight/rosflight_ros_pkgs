@@ -92,11 +92,7 @@ void StandaloneSensors::declare_parameters()
   this->declare_parameter("k_gnss", 1.0/1100);
 
   this->declare_parameter("gravity", 9.81);
-  this->declare_parameter("mass", 2.25);
-
-  this->declare_parameter("initial_latitude", 40.24647);
-  this->declare_parameter("initial_longitude", -111.64857);
-  this->declare_parameter("initial_altitude", 1387.0);
+  this->declare_parameter("mass", 4.5);
 }
 
 void StandaloneSensors::initialize_sensors()
@@ -295,9 +291,9 @@ rosflight_msgs::msg::GNSS StandaloneSensors::gnss_update(const rosflight_msgs::m
   gnss_gauss_markov_eta_ = std::exp(-k_gnss*T_s) * gnss_gauss_markov_eta_ + T_s*pos_noise;
 
   // Compute LLA (assuming spherical earth model)
-  double init_lat = this->get_parameter("initial_latitude").as_double();
-  double init_lon = this->get_parameter("initial_longitude").as_double();
-  double init_alt = this->get_parameter("initial_altitude").as_double();
+  double init_lat = this->get_parameter("origin_latitude").as_double();
+  double init_lon = this->get_parameter("origin_longitude").as_double();
+  double init_alt = this->get_parameter("origin_altitude").as_double();
   double lat = 180.0 / (EARTH_RADIUS * M_PI) * local_pose(0) + init_lat;
   double lon = 180.0 / (EARTH_RADIUS * M_PI) 
     / cos(init_lat * M_PI / 180.0) * local_pose(1) + init_lon;

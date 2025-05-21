@@ -1,0 +1,54 @@
+/**:
+  ros__parameters:
+    gravity: 9.81
+    mass: 3.5
+
+/sensors:
+  ros__parameters:
+    gyro_stdev: 0.0226
+    gyro_bias_range: 0.25
+    gyro_bias_walk_stdev: 0.00001
+    acc_stdev: 0.2
+    acc_bias_range: 0.6
+    acc_bias_walk_stdev: 0.00001
+    mag_stdev: 0.000003 # from nano tesla to tesla
+    k_mag: 7.0
+    inclination: 1.139436457
+    declination: 0.1857972802
+    total_intensity: 0.0000507163 # nanoTesla converted to tesla.
+    baro_stdev: 4.0
+    baro_bias_range: 500.0
+    baro_bias_walk_stdev: 0.1
+    airspeed_stdev: 1.15
+    airspeed_bias_range: 0.15
+    airspeed_bias_walk_stdev: 0.001
+    sonar_stdev: 0.03
+    sonar_min_range: 0.25
+    sonar_max_range: 8.0
+    origin_altitude: 1387.0
+    origin_latitude: 40.2463724
+    origin_longitude: -111.6474138
+    horizontal_gnss_stdev: 0.21
+    vertical_gnss_stdev: 0.4
+    gnss_velocity_stdev: 0.01
+    k_gnss: 0.0009091
+
+/dynamics:
+  ros__parameters:
+    Jxx: 0.24855
+    Jxy: 0.0
+    Jxz: 0.06
+    Jyy: 0.3784
+    Jyz: 0.0
+    Jzz: 0.618
+
+/rviz_sim_publisher:
+  ros__parameters:
+    aircraft_scale: 5.0
+    path_publish_modulo: 10
+    max_path_history: 10000
+
+/time_manager:
+  ros__parameters:
+    real_time_multiplier: 1.0
+    default_pub_rate_us: 100.0

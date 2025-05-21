@@ -14,6 +14,7 @@ def generate_launch_description():
         rosflight_sim_share_dir, "config", "standalone_sim.rviz"
     )
     rviz2_splash_file = os.path.join(rosflight_sim_share_dir, "standalone_resource", "logo.png")
+    param_file = os.path.join(rosflight_sim_share_dir, 'params', 'standalone_sim_params.yaml')
 
     sim_aircraft_file = LaunchConfiguration('sim_aircraft_file')
     sim_aircraft_file_launch_arg = DeclareLaunchArgument(
@@ -78,7 +79,7 @@ def generate_launch_description():
                 package="rosflight_sim",
                 executable="rviz_sim_publisher",
                 output="screen",
-                parameters=[{"sim_aircraft_file": sim_aircraft_file}]
+                parameters=[{"sim_aircraft_file": sim_aircraft_file}, param_file]
             ),
         ]
     )

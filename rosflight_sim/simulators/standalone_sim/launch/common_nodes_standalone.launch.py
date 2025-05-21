@@ -22,6 +22,9 @@ from launch_ros.actions import Node
 def generate_launch_description():
     """This is a launch file that launches all nodes needed for a standalone simulation that do not depend on the standalone simulator"""
 
+    rosflight_sim_dir = get_package_share_directory('rosflight_sim')
+    param_file = os.path.join(rosflight_sim_dir, 'params', 'standalone_sim_params.yaml')
+
     # Declare launch arguments
     use_sim_time_arg = DeclareLaunchArgument(
         "use_sim_time",
@@ -59,7 +62,7 @@ def generate_launch_description():
         package="rosflight_sim",
         executable="standalone_sensors",
         output="screen",
-        parameters=[{"use_sim_time": use_sim_time}],
+        parameters=[{"use_sim_time": use_sim_time}, param_file],
     )
 
     # Start dynamics node
@@ -67,7 +70,7 @@ def generate_launch_description():
         package="rosflight_sim",
         executable="standalone_dynamics",
         output="screen",
-        parameters=[{"use_sim_time": use_sim_time}]
+        parameters=[{"use_sim_time": use_sim_time}, param_file]
     )
 
     # Start rosflight_io interface node
@@ -91,7 +94,8 @@ def generate_launch_description():
         package="rosflight_sim",
         executable="standalone_time_manager",
         output="screen",
-        condition=IfCondition(use_sim_time)
+        condition=IfCondition(use_sim_time),
+        parameters=[param_file]
     )
 
     return LaunchDescription(

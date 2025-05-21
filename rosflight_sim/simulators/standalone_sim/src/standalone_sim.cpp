@@ -85,7 +85,7 @@ RvizPublisher::RvizPublisher()
 
 void RvizPublisher::declare_parameters()
 {
-  this->declare_parameter("sim_aircraft_file", "skyhunter.dae");
+  this->declare_parameter("sim_aircraft_file", "common_resource/skyhunter.dae");
   this->declare_parameter("aircraft_scale", 5.0);
   this->declare_parameter("path_publish_modulo", 10);
   this->declare_parameter("max_path_history", 10000);
