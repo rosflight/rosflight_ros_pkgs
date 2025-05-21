@@ -35,49 +35,52 @@
 
     servo_tau: .01
     servo_refresh_rate: 0.003
+    max_aileron_deflection_angle: 40. # Maximum deflection of the control surfaces in degrees.
+    max_rudder_deflection_angle: 40. # Maximum deflection of the control surfaces in degrees.
+    max_elevator_deflection_angle: 40. # Maximum deflection of the control surfaces in degrees.
 
     # Anaconda done for C_L
 
-    C_L_O: .375
-    C_L_alpha: 4.43
+    C_L_O: .506
+    C_L_alpha: 5.61
     C_L_beta: 0.0
     C_L_p: 0.0
-    C_L_q: 1.89
+    C_L_q: 7.95
     C_L_r: 0.0
     C_L_delta_a: 0.0
-    C_L_delta_e: .09 # Correct sign?
+    C_L_delta_e: 0.13
     C_L_delta_r: 0.0
 
     # Anaconda done for C_D
 
-    C_D_O: 0.045
-    C_D_alpha: 0.03 # revisit
-    C_D_beta: 0.0 # revisit
-    C_D_p: 0.0 # revisit
-    C_D_q: 0.0 # revisit
-    C_D_r: 0.0 # revisit
-    C_D_delta_a: 0.0 # revisit
-    C_D_delta_e: 0.09 # revisit
-    C_D_delta_r: 0.0 # revisit
+    C_D_O: 0.043
+    C_D_alpha: 0.03
+    C_D_beta: 0.0
+    C_D_p: 0.043
+    C_D_q: 0.0
+    C_D_r: 0.0
+    C_D_delta_a: 0.0
+    C_D_delta_e: 0.0135
+    C_D_delta_r: 0.0
 
     C_ell_O: 0.0
     C_ell_alpha: 0.00
-    C_ell_beta: -0.0790
-    C_ell_p: -0.5077
+    C_ell_beta: -0.13
+    C_ell_p: -0.51
     C_ell_q: 0.0
-    C_ell_r: 0.1871
-    C_ell_delta_a: 0.17 #change back/double check
+    C_ell_r: 0.25
+    C_ell_delta_a: 0.17
     C_ell_delta_e: 0.0
     C_ell_delta_r: 0.0024
 
-    C_m_O: 0.01988 # Average of Skyhunter and Aerosonde
-    C_m_alpha: -2.008 # Average of Skyhunter and Aerosonde
+    C_m_O: 0.135
+    C_m_alpha: -2.74
     C_m_beta: 0.0
     C_m_p: 0.0
-    C_m_q: -22.351
+    C_m_q: -38.21
     C_m_r: 0.0
     C_m_delta_a: 0.0
-    C_m_delta_e: -.99 # Leaving this as is but not verified.
+    C_m_delta_e: -.99
     C_m_delta_r: 0.0
 
     C_n_O: 0.0
@@ -88,16 +91,16 @@
     C_n_r: -0.1541
     C_n_delta_a: -0.011
     C_n_delta_e: 0.0
-    C_n_delta_r: -0.069 #check the sign on this
+    C_n_delta_r: -0.069
 
     # Anaconda done for C_Y
 
     C_Y_O: 0.0
     C_Y_alpha: 0.00
-    C_Y_beta: -0.84
-    C_Y_p: 0.0700
+    C_Y_beta: -0.98
+    C_Y_p: 0.0
     C_Y_q: 0.0
     C_Y_r: 0.0
-    C_Y_delta_a: 0.075 #check the sign on this
+    C_Y_delta_a: 0.075
     C_Y_delta_e: 0.0
-    C_Y_delta_r: .2 #check the sign on this
+    C_Y_delta_r: .19

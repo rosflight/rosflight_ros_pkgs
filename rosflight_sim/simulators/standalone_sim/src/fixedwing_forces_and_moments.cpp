@@ -71,6 +71,10 @@ void Fixedwing::declare_fixedwing_params()
   this->declare_parameter("wing_epsilon", rclcpp::PARAMETER_DOUBLE);
   this->declare_parameter("wing_alpha0", rclcpp::PARAMETER_DOUBLE);
 
+  this->declare_parameter("max_aileron_deflection_angle", 40.);
+  this->declare_parameter("max_elevator_deflection_angle", 40.);
+  this->declare_parameter("max_rudder_deflection_angle", 40.);
+
   this->declare_parameter("C_L_O", rclcpp::PARAMETER_DOUBLE);
   this->declare_parameter("C_L_alpha", rclcpp::PARAMETER_DOUBLE);
   this->declare_parameter("C_L_beta", rclcpp::PARAMETER_DOUBLE);
@@ -691,10 +695,12 @@ geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight
   Eigen::VectorXd act_cmds_unmixed = primary_mixing_matrix_ * act_cmds_vect;
 
   // Act cmds unmixed are {Fx, Fy, Fz, Qx, Qy, Qz}
-  delta_.a = act_cmds_unmixed(3);
-  delta_.e = act_cmds_unmixed(4);
+  // Scale the unmixed commands by the maximum control surface deflection angle
+  // TODO: Does doing it this way make sense for a vtail configuration?
+  delta_.a = act_cmds_unmixed(3) * this->get_parameter("max_aileron_deflection_angle").as_double() * M_PI / 180.0;
+  delta_.e = act_cmds_unmixed(4) * this->get_parameter("max_elevator_deflection_angle").as_double() * M_PI / 180.0;;
   delta_.t = act_cmds_unmixed(0);
-  delta_.r = act_cmds_unmixed(5);
+  delta_.r = act_cmds_unmixed(5) * this->get_parameter("max_rudder_deflection_angle").as_double() * M_PI / 180.0;;
 
   // Apply servo time delay
   Actuators delta_curr;
@@ -758,7 +764,7 @@ geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight
     + ((rho_) * (pow((prop_.D_prop), 3.0)) * (prop_.CQ_2) * (pow((Va), 2.0)));
 
   // Be sure that we have some significant airspeed before we run aerodynamics, and don't let NaNs get through
-  if (Va > 1.0 && std::isfinite(Va)) {
+  if (Va > 2.0 && std::isfinite(Va)) {
     double alpha = atan2(wr, ur);
     double beta = asin(vr / Va);
 

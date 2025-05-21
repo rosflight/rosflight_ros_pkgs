@@ -32,6 +32,7 @@
  */
 
 #include "standalone_sensors.hpp"
+#include <random>
 
 namespace rosflight_sim
 {
@@ -55,9 +56,14 @@ void StandaloneSensors::declare_parameters()
   //   hardware (i.e. not the cheap boards with the cheap sensors)
 
   // declare sensor parameters
-  this->declare_parameter("gyro_stdev", 0.0226);
+  this->declare_parameter("gyro_stdev", 0.00226);
   this->declare_parameter("gyro_bias_range", 0.25);
-  this->declare_parameter("gyro_bias_walk_stdev", 0.00001);
+  this->declare_parameter("gyro_bias_walk_stdev", 0.033);
+  this->declare_parameter("gyro_bias_model_tau", 400.0);
+  this->declare_parameter("gyro_bias_model_x0", 0.003);
+  this->declare_parameter("gyro_bias_model_y0", -0.002);
+  this->declare_parameter("gyro_bias_model_z0", 0.001);
+  this->declare_parameter("k_gyro", 20.0);
 
   this->declare_parameter("acc_stdev", 0.2);
   this->declare_parameter("acc_bias_range", 0.6);
@@ -108,6 +114,10 @@ void StandaloneSensors::initialize_sensors()
     gyro_bias_[i] = gyro_bias_range * uniform_distribution_(bias_generator_);
     acc_bias_[i] = acc_bias_range * uniform_distribution_(bias_generator_);
   }
+
+  gyro_bias_instability_ << this->get_parameter("gyro_bias_model_x0").as_double()
+                          , this->get_parameter("gyro_bias_model_y0").as_double()
+                          , this->get_parameter("gyro_bias_model_z0").as_double();
 
   baro_bias_ = this->get_parameter("baro_bias_range").as_double() * uniform_distribution_(bias_generator_);
   airspeed_bias_ = this->get_parameter("airspeed_bias_range").as_double() * uniform_distribution_(bias_generator_);
@@ -182,12 +192,25 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
     if (motors_spinning) {
       y_gyro[i] += gyro_stdev * normal_distribution_(noise_generator_);
     }
-
-    // bias Walk for bias
-    gyro_bias_[i] += gyro_bias_walk_stdev * normal_distribution_(noise_generator_);
-    y_gyro[i] += gyro_bias_[i];
   }
-  
+
+  // Add constant gyro bias
+  y_gyro += gyro_bias_;
+
+  // Add bias walk
+  y_gyro += gyro_bias_gauss_markov_eta_;
+
+  Eigen::Vector3d noise;
+  noise << gyro_bias_walk_stdev * normal_distribution_(noise_generator_)
+        , gyro_bias_walk_stdev * normal_distribution_(noise_generator_)
+        , gyro_bias_walk_stdev * normal_distribution_(noise_generator_);
+  double T_s = 1.0 / get_imu_update_frequency();
+  double k_gyro = this->get_parameter("k_gyro").as_double();
+  gyro_bias_gauss_markov_eta_ = std::exp(-k_gyro*T_s) * gyro_bias_gauss_markov_eta_ + T_s*noise;
+
+  // Add bias instability
+  y_gyro += bias_model();
+
   // Package angular velocity into output message
   out_msg.angular_velocity.x = y_gyro[0];
   out_msg.angular_velocity.y = y_gyro[1];
@@ -195,6 +218,14 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
 
   out_msg.header.stamp = this->now();
   return out_msg;
+}
+
+Eigen::Vector3d StandaloneSensors::bias_model() 
+{
+  double T = 1/get_imu_update_frequency();
+  double alpha = T/(T+this->get_parameter("gyro_bias_model_tau").as_double()); 
+  gyro_bias_instability_ *= (1 - alpha);
+  return gyro_bias_instability_;
 }
 
 sensor_msgs::msg::Temperature StandaloneSensors::imu_temperature_update(const rosflight_msgs::msg::SimState & state)

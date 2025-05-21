@@ -75,17 +75,24 @@ private:
 
   // TODO: Should we initialize this as non zero?
   Eigen::Vector3d gnss_gauss_markov_eta_ = Eigen::Vector3d::Zero();
+  Eigen::Vector3d gyro_bias_gauss_markov_eta_ = Eigen::Vector3d::Zero();
   Eigen::Vector3d mag_gauss_markov_eta_ = Eigen::Vector3d::Zero();
-  Eigen::Vector3d inertial_magnetic_field_;
+  Eigen::Vector3d inertial_magnetic_field_ = Eigen::Vector3d::Zero();
+  Eigen::Vector3d gyro_bias_instability_ = Eigen::Vector3d::Zero();
 
   double rho_ = 1.225;
 
   // Bias
-  double gyro_bias_[3] = {0, 0, 0};
-  double acc_bias_[3] = {0, 0, 0};
-  double mag_bias_[3] = {0, 0, 0};
+  Eigen::Vector3d gyro_bias_ = Eigen::Vector3d::Zero();
+  Eigen::Vector3d acc_bias_ = Eigen::Vector3d::Zero();
+  Eigen::Vector3d mag_bias_ = Eigen::Vector3d::Zero();
   double baro_bias_ = 0;
   double airspeed_bias_ = 0;
+
+  /**
+   * @brief Computes a first-order model of the gyro bias instability
+   */
+  Eigen::Vector3d bias_model();
 
   /**
    *  @brief Declares all of the parameters with the ROS2 parameter system. Called during initialization
