@@ -127,8 +127,8 @@ void StandaloneSensors::initialize_sensors()
   double declination = this->get_parameter("declination").as_double();
   double total_intensity = this->get_parameter("total_intensity").as_double();
   inertial_magnetic_field_ << cos(inclination) * cos(declination)
-                           , cos(inclination) * sin(declination)
-                           , sin(inclination);                     // In NED coordinates
+                            , cos(inclination) * sin(declination)
+                            , sin(inclination);                     // In NED coordinates
   inertial_magnetic_field_.normalize();
   inertial_magnetic_field_ *= total_intensity;
 }
@@ -173,11 +173,12 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
     }
 
     // Perform bias Walk for biases
+    // TODO: Do we need to scale this by dt? Look at what people do. The faster you run the imu, the faster the bias will change.
     acc_bias_[i] += acc_bias_walk_stdev * normal_distribution_(noise_generator_);
     y_acc[i] += acc_bias_[i];
   }
-  // Package acceleration into the output message
 
+  // Package acceleration into the output message
   out_msg.linear_acceleration.x = y_acc[0];
   out_msg.linear_acceleration.y = y_acc[1];
   out_msg.linear_acceleration.z = y_acc[2];
@@ -287,6 +288,7 @@ rosflight_msgs::msg::Barometer StandaloneSensors::baro_update(const rosflight_ms
 
   // Perform bias walk
   double baro_bias_walk_stdev = this->get_parameter("baro_bias_walk_stdev").as_double(); 
+  // TODO: Scale this by dt -- otherwise bias will change faster with a faster baro rate
   baro_bias_ += baro_bias_walk_stdev * normal_distribution_(noise_generator_);
 
   // Add bias walk
@@ -305,12 +307,12 @@ rosflight_msgs::msg::GNSS StandaloneSensors::gnss_update(const rosflight_msgs::m
 {
   rosflight_msgs::msg::GNSS out_msg;
 
-  // Compute GNSS location 
-  Eigen::Vector3d local_pose;
-  local_pose << state.pose.position.x, state.pose.position.y, state.pose.position.z; // inertial NED (m)
+  // Compute GNSS location
+  Eigen::Vector3d body_pose;
+  body_pose << state.pose.position.x, state.pose.position.y, state.pose.position.z; // inertial NED (m)
 
   // Add random walk, then update random walk
-  local_pose += gnss_gauss_markov_eta_;
+  body_pose += gnss_gauss_markov_eta_;
 
   double T_s = 1.0/get_gnss_update_frequency();
   double h_std = this->get_parameter("horizontal_gnss_stdev").as_double();
@@ -325,23 +327,23 @@ rosflight_msgs::msg::GNSS StandaloneSensors::gnss_update(const rosflight_msgs::m
   double init_lat = this->get_parameter("origin_latitude").as_double();
   double init_lon = this->get_parameter("origin_longitude").as_double();
   double init_alt = this->get_parameter("origin_altitude").as_double();
-  double lat = 180.0 / (EARTH_RADIUS * M_PI) * local_pose(0) + init_lat;
+  double lat = 180.0 / (EARTH_RADIUS * M_PI) * body_pose(0) + init_lat;
   double lon = 180.0 / (EARTH_RADIUS * M_PI) 
-    / cos(init_lat * M_PI / 180.0) * local_pose(1) + init_lon;
-  double alt = -local_pose(2) + init_alt;
+    / cos(init_lat * M_PI / 180.0) * body_pose(1) + init_lon;
+  double alt = -body_pose(2) + init_alt;
 
   out_msg.lat = lat;
   out_msg.lon = lon;
   out_msg.alt = alt;
 
   // Compute GNSS velocity
-  Eigen::Vector3d local_vel;
-  local_vel << state.twist.linear.x, state.twist.linear.y, state.twist.linear.z;  // NED
+  Eigen::Vector3d body_vel;
+  body_vel << state.twist.linear.x, state.twist.linear.y, state.twist.linear.z;  // NED
   double vel_std = this->get_parameter("gnss_velocity_stdev").as_double();
   Eigen::Vector3d vel_noise(vel_std * normal_distribution_(noise_generator_),
                             vel_std * normal_distribution_(noise_generator_),
                             vel_std * normal_distribution_(noise_generator_));
-  local_vel += vel_noise;
+  body_vel += vel_noise;
 
   // Body to inertial rotation
   Eigen::Quaterniond q_body_to_inertial(state.pose.orientation.w,
@@ -349,7 +351,7 @@ rosflight_msgs::msg::GNSS StandaloneSensors::gnss_update(const rosflight_msgs::m
                                         state.pose.orientation.y,
                                         state.pose.orientation.z);
 
-  Eigen::Vector3d global_vel = q_body_to_inertial * local_vel;
+  Eigen::Vector3d global_vel = q_body_to_inertial * body_vel;
   out_msg.vel_n = global_vel(0);
   out_msg.vel_e = global_vel(1);
   out_msg.vel_d = global_vel(2);
@@ -414,6 +416,7 @@ rosflight_msgs::msg::Airspeed StandaloneSensors::diff_pressure_update(const rosf
   y_as += airspeed_stdev * normal_distribution_(noise_generator_);
 
   // Perform bias walk
+  // TODO: Scale this by dt
   airspeed_bias_ += airspeed_bias_walk_stdev * normal_distribution_(noise_generator_);
   y_as += airspeed_bias_;
 

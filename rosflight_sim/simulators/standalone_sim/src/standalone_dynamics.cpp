@@ -165,6 +165,8 @@ Eigen::VectorXd StandaloneDynamics::add_ground_collision_forces(Eigen::VectorXd 
 void StandaloneDynamics::rk4(Eigen::VectorXd state, Eigen::VectorXd forces_moments, double dt)
 {
   // RK4
+  // TODO: Check the vector addition here... Circle plus for the quaternion states?
+  // Look up rk4 for quats
   Eigen::VectorXd k1 = f(state, forces_moments);
   Eigen::VectorXd k2 = f(state + dt/2 * k1, forces_moments);
   Eigen::VectorXd k3 = f(state + dt/2 * k2, forces_moments);
