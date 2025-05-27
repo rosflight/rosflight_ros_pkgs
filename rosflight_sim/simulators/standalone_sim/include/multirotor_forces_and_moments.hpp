@@ -36,13 +36,14 @@
 #ifndef ROSFLIGHT_SIM_MULTIROTOR_FORCES_AND_MOMENTS_H
 #define ROSFLIGHT_SIM_MULTIROTOR_FORCES_AND_MOMENTS_H
 
+#include <cmath>
 #include <cstdint>
-#include <eigen3/Eigen/Dense>
-#include <rclcpp/rclcpp.hpp>
 
-#include <geometry_msgs/msg/twist_stamped.hpp>
+#include <geometry_msgs/msg/vector3_stamped.hpp>
+#include <Eigen/Geometry>
 
-#include <rosflight_sim/mav_forces_and_moments.hpp>
+#include "rosflight_sim/forces_and_moments_interface.hpp"
+#include "rosflight_msgs/msg/sim_state.hpp"
 
 namespace rosflight_sim
 {
@@ -53,12 +54,9 @@ namespace rosflight_sim
  * other and need to be provided as a set. Notifying the user of missing parameters helps avoid
  * inadvertently using an incomplete set of parameters.
  */
-class Multirotor : public MAVForcesAndMoments
+class Multirotor : public ForcesAndMomentsInterface
 {
 private:
-  rclcpp::Node::SharedPtr node_;
-  Eigen::Vector3d wind_;
-  
   struct Prop
   {
     // Prop thrust constant coeffs.
@@ -103,30 +101,25 @@ private:
   void declare_multirotor_params();
 
 public:
-  /**
-   * @param node ROS2 node to obtain parameters from. Usually the node provided by the Gazebo model
-   * plugin.
-   */
-  explicit Multirotor(rclcpp::Node::SharedPtr node);
+  explicit Multirotor();
   ~Multirotor();
-
-  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr forces_moments_pub_;
 
   /**
    * @brief Calculates forces and moments based on current state and aerodynamic forces.
    *
    * @param x Current state of aircraft
-   * @param act_cmds Actuator commands
-   * @return 6x1 eigen matrix of calculated forces and moments
+   * @param wind 3-vector of current wind acting on the aircraft in the inertial frame
+   * @param act_cmds Array of actuator commands
+   * @return geometry_msgs::msg::WrenchStamped object with calculated forces and moments
    */
-  Eigen::Matrix<double, 6, 1> update_forces_and_torques(CurrentState x,
-                                                        const int act_cmds[]) override;
+  geometry_msgs::msg::WrenchStamped update_forces_and_torques(rosflight_msgs::msg::SimState x,
+                                                              geometry_msgs::msg::Vector3Stamped wind,
+                                                              std::array<uint16_t, NUM_TOTAL_OUTPUTS> act_cmds) override;
+
   /**
-   * @brief Sets the wind speed to use when calculating the forces and moments.
-   *
-   * @param wind Eigen vector of wind speeds
-   */
-  void set_wind(Eigen::Vector3d wind) override;
+  * @brief Queries rosflight_io for any changed parameters
+  */
+  void get_firmware_parameters() override;
 };
 
 } // namespace rosflight_sim

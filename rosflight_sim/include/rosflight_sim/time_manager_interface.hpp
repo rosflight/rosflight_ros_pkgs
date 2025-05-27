@@ -1,8 +1,7 @@
 /*
  * Software License Agreement (BSD-3 License)
  *
- * Copyright (c) 2017 Daniel Koch, James Jackson and Gary Ellingson, BYU MAGICC Lab.
- * Copyright (c) 2023 Brandon Sutherland, AeroVironment Inc.
+ * Copyright (c) 2024 Jacob Moore
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,44 +31,38 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
-#define ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
+#ifndef ROSFLIGHT_SIM_TIME_MANAGER_H
+#define ROSFLIGHT_SIM_TIME_MANAGER_H
 
 #include <chrono>
 
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp/executors.hpp>
+#include <rosgraph_msgs/msg/clock.hpp>
 #include <std_srvs/srv/trigger.hpp>
 
 namespace rosflight_sim
 {
-/**
- * @brief This class serves as the simulation loop manager. It contains a service 
- * that initializes one iteration of SIL simulation.
- */
-class ROSflightSIL : public rclcpp::Node
+
+class TimeManagerInterface : public rclcpp::Node
 {
 public:
-  ROSflightSIL();
+  TimeManagerInterface();
+
+  std::chrono::microseconds get_clock_duration_us() { return clock_duration_us_; }
 
 private:
-  // Timer that ticks the simulation
-  rclcpp::CallbackGroup::SharedPtr timer_cb_group_;
-  rclcpp::TimerBase::SharedPtr simulation_loop_timer_;
+  rclcpp::TimerBase::SharedPtr sim_clock_timer_;
+  rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr sim_time_pubber_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr play_pause_srvs_;
 
-  // Service call can be used to tick the firmware externally 
-  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr run_SIL_iteration_srvs_;
+  std::chrono::microseconds clock_duration_us_;
 
-  // Service clients
-  rclcpp::CallbackGroup::SharedPtr client_cb_group_;
-  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr firmware_run_client_;
+  bool node_initialized_ = false;
+  bool is_paused_ = false;
 
-  /**
-   * @brief Iterates the simulation once by calling services belonging to the 
-   * SILboard, the Dynamics, and the Forces and Moments nodes
-   */
-  bool iterate_simulation(const std_srvs::srv::Trigger::Request::SharedPtr & req,
-                          const std_srvs::srv::Trigger::Response::SharedPtr & res);
+  virtual void update_time() = 0;
+  virtual unsigned long int get_seconds() = 0;
+  virtual unsigned int get_nanoseconds() = 0;
 
   /**
    *  @brief Declares all of the parameters with the ROS2 parameter system. Called during initialization
@@ -91,10 +84,13 @@ private:
   rcl_interfaces::msg::SetParametersResult
   parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
 
-  void reset_timers();
-  bool call_firmware();
+  void set_timers(double default_pub_rate_us, double real_time_multiplier);
+  void publish_sim_time();
+
+  bool toggle_pause_callback(const std_srvs::srv::Trigger::Request::SharedPtr & req,
+                             const std_srvs::srv::Trigger::Response::SharedPtr & res);
 };
 
-} // namespace rosflight_sim
+}   // rosflight_sim
 
-#endif // ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
+#endif    // ROSFLIGHT_SIM_TIME_MANAGER_H

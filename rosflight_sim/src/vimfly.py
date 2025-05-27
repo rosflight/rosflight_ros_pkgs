@@ -24,7 +24,7 @@ class VimFly:
         self.font = pygame.font.SysFont("monospace", 18)
 
         # create publisher for RC commands.
-        self.rc_pub = self.node.create_publisher(RCRaw, 'RC', 10)
+        self.rc_pub = self.node.create_publisher(RCRaw, 'sim/RC', 10)
         
         # TODO: swap these hardcoded vals to params
         self.rate = 30

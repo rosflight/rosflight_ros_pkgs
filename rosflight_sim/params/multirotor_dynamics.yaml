@@ -1,7 +1,7 @@
 # Parameters for ROSflight software-in-the-loop simulation.
 # Mass and inertia parameters are defined in multirotor.urdf.xacro.
 
-/multirotor/rosflight_sil:
+/**:
   ros__parameters:
     # Common Global Physical Parameters
     rho: 1.225

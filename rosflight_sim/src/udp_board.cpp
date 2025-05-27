@@ -35,7 +35,6 @@
  */
 
 #include "rosflight_sim/udp_board.hpp"
-#include <iostream>
 
 using boost::asio::ip::udp;
 

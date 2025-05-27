@@ -8,7 +8,7 @@
 # Jz: 0.618
 # Jxz: 0.06
 
-/fixedwing/rosflight_sil:
+/**:  # Apply to any node that we load it to
   ros__parameters:
     rho: 1.2682
     mass: 4.5
@@ -34,7 +34,10 @@
     I_0 : 1.5                     # no-load (zero torque) current (A)
 
     servo_tau: .01
-    max_deflection_angle: 40. # Maximum deflection of the control surfaces in degrees.
+    servo_refresh_rate: 0.003
+    max_aileron_deflection_angle: 40. # Maximum deflection of the control surfaces in degrees.
+    max_rudder_deflection_angle: 40. # Maximum deflection of the control surfaces in degrees.
+    max_elevator_deflection_angle: 40. # Maximum deflection of the control surfaces in degrees.
 
     # Anaconda done for C_L
 

@@ -72,7 +72,6 @@
 #include <rosflight_msgs/msg/command.hpp>
 #include <rosflight_msgs/msg/error.hpp>
 #include <rosflight_msgs/msg/gnss.hpp>
-#include <rosflight_msgs/msg/gnss_full.hpp>
 #include <rosflight_msgs/msg/output_raw.hpp>
 #include <rosflight_msgs/msg/rc_raw.hpp>
 #include <rosflight_msgs/msg/status.hpp>
@@ -247,7 +246,7 @@ private:
    *
    * @param msg RC channels raw message.
    */
-  void handle_rc_channels_raw_msg(const mavlink_message_t & msg);
+  void handle_rc_channels_msg(const mavlink_message_t & msg);
   /**
    * @brief Handles differential pressure MAVLink messages.
    *
@@ -275,48 +274,11 @@ private:
   /**
    * @brief Handles ROSflight GNSS MAVLink messages.
    *
-   * Receives GNSS data from MAVLink, and uses that to publish "gnss" topic and all three
-   * "navsat_compact" topics.
+   * Receives GNSS data from MAVLink, and uses that to publish "gnss" topic.
    *
    * @param msg ROSflight GNSS message.
    */
   void handle_rosflight_gnss_msg(const mavlink_message_t & msg);
-  /**
-   * @brief Handles ROSflight GNSS full MAVLink messages.
-   *
-   * Receives "full" GNSS data from MAVLink and publishes it on "gnss_full" topic.
-   *
-   * @param msg ROSflight GNSS full message.
-   */
-  void handle_rosflight_gnss_full_msg(const mavlink_message_t & msg);
-  /**
-   * @brief Handles named value integer MAVLink messages.
-   *
-   * Receives named int messages from MAVLink and publishes it on "named_value/int/{value name}"
-   * topic. Won't create topic if firmware never sends these messages.
-   *
-   * @param msg Named value integer message.
-   */
-  void handle_named_value_int_msg(const mavlink_message_t & msg);
-  /**
-   * @brief Handles named value float MAVLink messages.
-   *
-   * Receives named float messages from MAVLink and publishes it on "named_value/float/{value name}"
-   * topic. Won't create topic if firmware never sends these messages.
-   *
-   * @param msg Named value float message.
-   */
-  void handle_named_value_float_msg(const mavlink_message_t & msg);
-  /**
-   * @brief Handles named command struct MAVLink messages.
-   *
-   * Receives named command struct messages from MAVLink and publishes it on
-   * "named_value/command_struct/{value name}" topic. Won't create topic if
-   * firmware never sends these messages.
-   *
-   * @param msg Named command struct message.
-   */
-  void handle_named_command_struct_msg(const mavlink_message_t & msg);
   /**
    * @brief Handles rangefinder MAVLink messages.
    *
@@ -523,6 +485,18 @@ private:
    */
   bool rebootToBootloaderSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr & req,
                                      const std_srvs::srv::Trigger::Response::SharedPtr & res);
+  /**
+   * @brief "all_params_received" service callback.
+   *
+   * This function is called anytime the "all_params_received" ROS service is called. It returns
+   * true if all the parameters have been received from the firmware.
+   *
+   * @param req ROS Trigger service request.
+   * @param res ROS Trigger service response.
+   * @return True
+   */
+  bool checkIfAllParamsReceivedCallback(const std_srvs::srv::Trigger::Request::SharedPtr & req,
+                                        const std_srvs::srv::Trigger::Response::SharedPtr & res);
 
   // timer callbacks
   /**
@@ -583,8 +557,12 @@ private:
   /// "external_attitude" ROS topic subscription.
   rclcpp::Subscription<rosflight_msgs::msg::Attitude>::SharedPtr extatt_sub_;
 
-  /// "unsaved_params" ROS topic publisher.
+  /// "status/unsaved_params" ROS topic publisher.
   rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr unsaved_params_pub_;
+  /// "status/rosflight_errors" ROS topic publisher.
+  rclcpp::Publisher<rosflight_msgs::msg::Error>::SharedPtr error_pub_;
+  /// "status/params_changed" ROS topic publisher.
+  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr params_changed_pub_;
   /// "imu/data" ROS topic publisher.
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
   /// "imu/temperature" ROS topic publisher.
@@ -601,14 +579,6 @@ private:
   rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr sonar_pub_;
   /// "gnss" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::GNSS>::SharedPtr gnss_pub_;
-  /// "gnss_full" ROS topic publisher.
-  rclcpp::Publisher<rosflight_msgs::msg::GNSSFull>::SharedPtr gnss_full_pub_;
-  /// "navsat_compat/fix" ROS topic publisher.
-  rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr nav_sat_fix_pub_;
-  /// "navsat_compat/vel" ROS topic publisher.
-  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_stamped_pub_;
-  /// "navsat_compat/time_reference" ROS topic publisher.
-  rclcpp::Publisher<sensor_msgs::msg::TimeReference>::SharedPtr time_reference_pub_;
   /// "magnetometer" ROS topic publisher.
   rclcpp::Publisher<sensor_msgs::msg::MagneticField>::SharedPtr mag_pub_;
   /// "attitude" ROS topic publisher.
@@ -621,18 +591,8 @@ private:
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr version_pub_;
   /// "lidar" ROS topic publisher.
   rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr lidar_pub_;
-  /// "rosflight_errors" ROS topic publisher.
-  rclcpp::Publisher<rosflight_msgs::msg::Error>::SharedPtr error_pub_;
   /// "battery" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::BatteryStatus>::SharedPtr battery_status_pub_;
-  /// "named_value/int/" ROS topic publisher.
-  std::map<std::string, rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr> named_value_int_pubs_;
-  /// "named_value/float/" ROS topic publisher.
-  std::map<std::string, rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr>
-    named_value_float_pubs_;
-  /// "named_value/command_struct/" ROS topic publisher.
-  std::map<std::string, rclcpp::Publisher<rosflight_msgs::msg::Command>::SharedPtr>
-    named_command_struct_pubs_;
 
   /// "param_get" ROS service.
   rclcpp::Service<rosflight_msgs::srv::ParamGet>::SharedPtr param_get_srv_;
@@ -656,6 +616,8 @@ private:
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr reboot_srv_;
   /// "reboot_to_bootloader" ROS service.
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr reboot_bootloader_srv_;
+  /// "all_params_received" ROS service.
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr check_if_all_params_received_srv_;
 
   /// ROS timer for param requests.
   rclcpp::TimerBase::SharedPtr param_timer_;

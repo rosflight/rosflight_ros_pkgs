@@ -51,8 +51,8 @@ Author: Gary Ellingson
       <surface>
         <friction>
           <ode>
-            <mu>0.00</mu>
-            <mu2>0.00</mu2>
+            <mu>0.01</mu>
+            <mu2>0.01</mu2>
           </ode>
         </friction>
       </surface>
