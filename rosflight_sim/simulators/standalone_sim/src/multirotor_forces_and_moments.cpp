@@ -121,7 +121,7 @@ geometry_msgs::msg::WrenchStamped Multirotor::update_forces_and_torques(rosfligh
                                                                         std::array<uint16_t, 14> act_cmds)
 {
   // Note that the motor commands should not be unmixed here for the multirotor aircraft, since the
-  // values are already motor outputs.
+  // values are already raw motor outputs.
 
   // The maximum voltage of the battery.
   double V_max = this->get_parameter("V_max").as_double();
@@ -131,19 +131,17 @@ geometry_msgs::msg::WrenchStamped Multirotor::update_forces_and_torques(rosfligh
 
   // Get airspeed vector for drag force calculation (rotate wind into
   // body frame and subtract from inertial velocity in body frame)
-  geometry_msgs::msg::Vector3Stamped V_wind;  // in body frame
-  geometry_msgs::msg::TransformStamped rot;
-  rot.transform.rotation = x.pose.orientation;
-  tf2::doTransform(wind, V_wind, rot);
-  geometry_msgs::msg::Vector3Stamped V_airspeed;
+  Eigen::Quaterniond q_body_to_inertial(x.pose.orientation.w,
+                                        x.pose.orientation.x,
+                                        x.pose.orientation.y,
+                                        x.pose.orientation.z);
+  Eigen::Vector3d v_wind_inertial(wind.vector.x, wind.vector.y, wind.vector.z); // In inertial frame
+  Eigen::Vector3d v_wind_body = q_body_to_inertial.inverse() * v_wind_inertial; // Rotate to body frame
 
   // Compute airspeed
   // Va = [ur, vr, wr] = V_ground - V_wind
-  Eigen::Vector3d Vg(x.twist.linear.x, x.twist.linear.y, x.twist.linear.z);
-  double ur = Vg(0) - V_wind.vector.x;
-  double vr = Vg(1) - V_wind.vector.y;
-  double wr = Vg(2) - V_wind.vector.z;
-  Eigen::Vector3d Va(ur, vr, wr);
+  Eigen::Vector3d Vg(x.twist.linear.x, x.twist.linear.y, x.twist.linear.z); // Inertial velocities in body frame
+  Eigen::Vector3d Va = Vg - v_wind_body;
 
   // TODO: Would be better to compute the vector force/torque contributed by each motor,
   // not assume that the motors are aligned vertically

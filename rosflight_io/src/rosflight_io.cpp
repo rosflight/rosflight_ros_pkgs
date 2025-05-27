@@ -38,7 +38,6 @@
  * @author Brandon Sutherland <brandonsutherland2\@gmail.com>
  */
 
-#include <cstdint>
 #ifdef ROSFLIGHT_VERSION
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x) // Somehow, C++ requires two macros to convert a macro to a string
@@ -974,9 +973,9 @@ bool ROSflightIO::checkIfAllParamsReceivedCallback(
   const std_srvs::srv::Trigger::Response::SharedPtr & res)
 {
   res->success = mavrosflight_->param.got_all_params();
-  res->message = "Not all params recieved from firmware.";
+  res->message = "Not all params received from firmware.";
   if (res->success) {
-    res->message = "All params recieved from firmware.";
+    res->message = "All params received from firmware.";
   }
   return true;
 }

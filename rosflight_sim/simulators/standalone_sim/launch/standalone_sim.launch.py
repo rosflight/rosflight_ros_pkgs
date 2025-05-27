@@ -77,7 +77,8 @@ def generate_launch_description():
             ),
             Node(
                 package="rosflight_sim",
-                executable="rviz_sim_publisher",
+                executable="standalone_viz_transcriber",
+                name='standalone_viz_transcriber',
                 output="screen",
                 parameters=[{"sim_aircraft_file": sim_aircraft_file}, param_file]
             ),

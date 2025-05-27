@@ -10,12 +10,13 @@
   <author>Gary Ellingson</author>
   <author email="daniel.p.koch@gmail.com">Daniel Koch</author>
   <author email="brandonsutherland2@gmail.com">Brandon Sutherland</author>
+  <author email="jacobmoor2@gmail.com">Jacob Moore</author>
 
   <license>BSD</license>
 
   <url type="website">https://rosflight.org</url>
-  <url type="repository">https://github.com/rosflight/rosflight</url>
-  <url type="bugtracker">https://github.com/rosflight/rosflight/issues</url>
+  <url type="repository">https://github.com/rosflight/rosflight_ros_pkgs</url>
+  <url type="bugtracker">https://github.com/rosflight/rosflight_ros_pkgs/issues</url>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>

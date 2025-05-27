@@ -37,9 +37,8 @@
 
 #include <random>
 
-#include <Eigen/Core>
+#include <Eigen/Geometry>
 #include <geometry_msgs/msg/transform_stamped.hpp>
-#include <tf2_eigen/tf2_eigen.hpp>
 
 #include "rosflight_sim/sensor_interface.hpp"
 #include "rosflight_msgs/msg/sim_state.hpp"

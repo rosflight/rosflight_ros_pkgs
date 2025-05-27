@@ -3,7 +3,7 @@
     gravity: 9.81
     mass: 3.5
 
-/sensors:
+/standalone_sensors:
   ros__parameters:
     gyro_stdev: 0.0226
     gyro_bias_range: 0.25
@@ -33,7 +33,7 @@
     gnss_velocity_stdev: 0.01
     k_gnss: 0.0009091
 
-/dynamics:
+/standalone_dynamics:
   ros__parameters:
     Jxx: 0.24855
     Jxy: 0.0
@@ -42,13 +42,13 @@
     Jyz: 0.0
     Jzz: 0.618
 
-/rviz_sim_publisher:
+/standalone_viz_transcriber:
   ros__parameters:
     aircraft_scale: 5.0
     path_publish_modulo: 10
     max_path_history: 10000
 
-/time_manager:
+/standalone_time_manager:
   ros__parameters:
     real_time_multiplier: 1.0
     default_pub_rate_us: 100.0

@@ -138,12 +138,12 @@ public:
   ForcesAndMomentsInterface();
 
   /**
-   * @brief Interface function for calculating the current MAV forces and moments.
+   * @brief Calculates forces and moments based on current state and aerodynamic forces.
    *
-   * @param x Current state of MAV
-   * @param wind Current wind acting on the MAV
-   * @param act_cmds Current MAV commands
-   * @return Calculated forces and moments
+   * @param x Current state of aircraft
+   * @param wind 3-vector of current wind acting on the aircraft in the inertial frame
+   * @param act_cmds Array of actuator commands
+   * @return geometry_msgs::msg::WrenchStamped object with calculated forces and moments
    */
   virtual geometry_msgs::msg::WrenchStamped update_forces_and_torques(rosflight_msgs::msg::SimState x,
                                                                       geometry_msgs::msg::Vector3Stamped wind,

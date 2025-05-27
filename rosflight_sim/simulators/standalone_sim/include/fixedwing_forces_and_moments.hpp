@@ -39,10 +39,9 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/parameter_value.hpp>
-#include <geometry_msgs/msg/transform_stamped.hpp>
 #include <geometry_msgs/msg/vector3_stamped.hpp>
 #include <geometry_msgs/msg/wrench_stamped.hpp>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <Eigen/Geometry>
 
 #include "rosflight_sim/forces_and_moments_interface.hpp"
 #include "rosflight_msgs/msg/sim_state.hpp"
@@ -153,9 +152,9 @@ public:
    * @brief Calculates forces and moments based on current state and aerodynamic forces.
    *
    * @param x Current state of aircraft
-   * @param wind Current wind acting on the aircraft
-   * @param act_cmds Actuator commands
-   * @return 6x1 eigen matrix of calculated forces and moments
+   * @param wind 3-vector of current wind acting on the aircraft in the inertial frame
+   * @param act_cmds Array of actuator commands
+   * @return geometry_msgs::msg::WrenchStamped object with calculated forces and moments
    */
   geometry_msgs::msg::WrenchStamped update_forces_and_torques(rosflight_msgs::msg::SimState x,
                                                               geometry_msgs::msg::Vector3Stamped wind,

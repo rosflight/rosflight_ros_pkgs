@@ -3,7 +3,7 @@
 
   <!-- Forces And Moments Plugin -->
   <xacro:macro name="generic_multirotor" params="namespace parent_link">
-    <xacro:rosflight_sil_plugin
+    <xacro:gazebo_dynamics_plugin
       namespace="${namespace}"
       parent_link="${namespace}/base_link"
       mav_type="multirotor"
@@ -11,7 +11,7 @@
   </xacro:macro>
 
   <xacro:macro name="generic_fixedwing" params="namespace parent_link">
-    <xacro:rosflight_sil_plugin
+    <xacro:gazebo_dynamics_plugin
       namespace="${namespace}"
       parent_link="${namespace}/base_link"
       mav_type="fixedwing"
@@ -19,7 +19,7 @@
   </xacro:macro>
 
   <!-- Macro to add a gazebo_dynamics plugin. -->
-  <xacro:macro name="rosflight_sil_plugin"
+  <xacro:macro name="gazebo_dynamics_plugin"
                params="namespace parent_link mav_type parent_frame_id">
     <gazebo>
       <plugin filename="libgazebo_dynamics_plugin.so" name="dynamics">

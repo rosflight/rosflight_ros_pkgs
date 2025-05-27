@@ -31,13 +31,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "standalone_sim.hpp"
+#include "standalone_viz_transcriber.hpp"
 
 namespace rosflight_sim
 {
 
 RvizPublisher::RvizPublisher()
-    : Node("rviz_sim_publisher")
+    : Node("standalone_viz_transcriber")
 {
   declare_parameters();
   parameter_callback_handle_ = this->add_on_set_parameters_callback(

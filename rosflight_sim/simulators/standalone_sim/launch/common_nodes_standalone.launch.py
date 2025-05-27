@@ -45,6 +45,7 @@ def generate_launch_description():
     rosflight_sil_node = Node(
         package="rosflight_sim",
         executable="rosflight_sil_manager",
+        name='rosflight_sil_manager',
         output="screen",
         parameters=[{"use_sim_time": use_sim_time, "use_timer": True}],
     )
@@ -53,6 +54,7 @@ def generate_launch_description():
     sil_board_node = Node(
         package="rosflight_sim",
         executable="sil_board",
+        name='sil_board',
         output="screen",
         parameters=[{"use_sim_time": use_sim_time}],
     )
@@ -61,6 +63,7 @@ def generate_launch_description():
     standalone_sensor_node = Node(
         package="rosflight_sim",
         executable="standalone_sensors",
+        name='standalone_sensors',
         output="screen",
         parameters=[{"use_sim_time": use_sim_time}, param_file],
     )
@@ -69,6 +72,7 @@ def generate_launch_description():
     standalone_dynamics_node = Node(
         package="rosflight_sim",
         executable="standalone_dynamics",
+        name='standalone_dynamics',
         output="screen",
         parameters=[{"use_sim_time": use_sim_time}, param_file]
     )
@@ -77,6 +81,7 @@ def generate_launch_description():
     rosflight_io_node = Node(
         package="rosflight_io",
         executable="rosflight_io",
+        name='rosflight_io',
         output="screen",
         parameters=[{"udp": True,
                      "use_sim_time": use_sim_time}],
@@ -86,6 +91,7 @@ def generate_launch_description():
     rc_joy_node = Node(
         package="rosflight_sim",
         executable="rc.py",
+        name='rc',
         parameters=[{"use_vimfly": use_vimfly, "use_sim_time": use_sim_time}],
     )
 
@@ -93,6 +99,7 @@ def generate_launch_description():
     time_manager_node = Node(
         package="rosflight_sim",
         executable="standalone_time_manager",
+        name='standalone_time_manager',
         output="screen",
         condition=IfCondition(use_sim_time),
         parameters=[param_file]

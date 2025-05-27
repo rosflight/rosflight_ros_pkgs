@@ -280,6 +280,7 @@ rosflight_msgs::msg::SimState StandaloneDynamics::compute_truth()
 
 geometry_msgs::msg::Vector3Stamped StandaloneDynamics::compute_wind_truth()
 {
+  // Wind in the inertial frame
   current_wind_truth_.header.stamp = this->now();
   // TODO: Add wind
   return current_wind_truth_;

@@ -62,6 +62,7 @@ def generate_launch_description():
     mr_forces_moments_node = Node(
         package="rosflight_sim",
         executable="multirotor_forces_and_moments",
+        name='multirotor_forces_and_moments',
         output="screen",
         parameters=[
             os.path.join(get_package_share_directory('rosflight_sim'),

@@ -39,7 +39,6 @@
 
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-#include <tf2_eigen/tf2_eigen.hpp>
 
 #include "rosflight_sim/dynamics_interface.hpp"
 #include "rosflight_msgs/srv/set_sim_state.hpp"

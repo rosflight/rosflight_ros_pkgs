@@ -80,6 +80,7 @@ void DynamicsInterface::forces_callback(const geometry_msgs::msg::WrenchStamped 
   truth_state_pub_->publish(truth);
 
   // Compute wind truth
+  // Wind should be in the inertial frame
   geometry_msgs::msg::Vector3Stamped wind_truth = compute_wind_truth();
   wind_truth.header.stamp = this->get_clock()->now();
   wind_truth_pub_->publish(wind_truth);

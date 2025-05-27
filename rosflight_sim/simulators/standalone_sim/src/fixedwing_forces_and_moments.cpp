@@ -162,6 +162,7 @@ void Fixedwing::declare_fixedwing_params()
 
 void Fixedwing::update_params_from_ROS()
 {
+  // TODO: use the param manager from rosplane -- will streamline this code.
   if (!this->get_parameter("rho", rho_)) {
     RCLCPP_ERROR(this->get_logger(), "Param 'rho' not defined");
   }
@@ -691,7 +692,8 @@ geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight
     }
   }
 
-  // Unmix the actuator commands
+  // Unmix the actuator commands -- Note that the primary_mixing_matrix_ written here is
+  // M, not M^{-1} as defined in Small Unmanned Aircraft, Ch. 14
   Eigen::VectorXd act_cmds_unmixed = primary_mixing_matrix_ * act_cmds_vect;
 
   // Act cmds unmixed are {Fx, Fy, Fz, Qx, Qy, Qz}
@@ -721,16 +723,17 @@ geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight
   double r = x.twist.angular.z;
 
   // Calculate airspeed
-  geometry_msgs::msg::Vector3Stamped V_wind;  // in body frame
-  geometry_msgs::msg::TransformStamped rot;
-  rot.transform.rotation = x.pose.orientation;
-  tf2::doTransform(wind, V_wind, rot);
-  geometry_msgs::msg::Vector3Stamped V_airspeed;
+  Eigen::Quaterniond q_body_to_inertial(x.pose.orientation.w,
+                                        x.pose.orientation.x,
+                                        x.pose.orientation.y,
+                                        x.pose.orientation.z);
+  Eigen::Vector3d v_wind_inertial(wind.vector.x, wind.vector.y, wind.vector.z); // In inertial frame
+  Eigen::Vector3d v_wind_body = q_body_to_inertial.inverse() * v_wind_inertial; // Rotate to body frame
 
   // Va = [ur, vr, wr] = V_ground - V_wind
-  double ur = x.twist.linear.x - V_wind.vector.x;
-  double vr = x.twist.linear.y - V_wind.vector.y;
-  double wr = x.twist.linear.z - V_wind.vector.z;
+  double ur = x.twist.linear.x - v_wind_body(0);
+  double vr = x.twist.linear.y - v_wind_body(1);
+  double wr = x.twist.linear.z - v_wind_body(2);
 
   double Va = sqrt(pow(ur,2.0) + pow(vr,2.0) + pow(wr,2.0));
 

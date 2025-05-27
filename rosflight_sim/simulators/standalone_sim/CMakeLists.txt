@@ -23,18 +23,17 @@ find_package(rosflight_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(tf2 REQUIRED)
-find_package(tf2_eigen REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(visualization_msgs REQUIRED)
 
 # Rosflight Standalone sim
-add_executable(rviz_sim_publisher
-  src/standalone_sim.cpp)
-target_include_directories(rviz_sim_publisher
+add_executable(standalone_viz_transcriber
+  src/standalone_viz_transcriber.cpp)
+target_include_directories(standalone_viz_transcriber
   PRIVATE
     include)
-ament_target_dependencies(rviz_sim_publisher
+ament_target_dependencies(standalone_viz_transcriber
   geometry_msgs
   rclcpp
   rosflight_msgs
@@ -48,7 +47,7 @@ ament_export_dependencies(rclcpp
   rosflight_msgs
   visualization_msgs)
 install(
-  TARGETS rviz_sim_publisher
+  TARGETS standalone_viz_transcriber
   DESTINATION lib/${PROJECT_NAME})
 
 # Time Manager
@@ -77,8 +76,6 @@ ament_target_dependencies(multirotor_forces_and_moments
   rclcpp
   std_srvs
   geometry_msgs
-  tf2_eigen
-  tf2_geometry_msgs
   rosflight_msgs)
 install(
   TARGETS multirotor_forces_and_moments
@@ -97,8 +94,6 @@ ament_target_dependencies(fixedwing_forces_and_moments
   rclcpp
   std_srvs
   geometry_msgs
-  tf2_eigen
-  tf2_geometry_msgs
   rosflight_msgs)
 install(
   TARGETS fixedwing_forces_and_moments
@@ -113,7 +108,7 @@ target_include_directories(standalone_sensors
     include
     simulators/standalone_sim/include)
 target_link_libraries(standalone_sensors Eigen3::Eigen)
-ament_target_dependencies(standalone_sensors rclcpp sensor_msgs rosflight_msgs geometry_msgs tf2_eigen)
+ament_target_dependencies(standalone_sensors rclcpp sensor_msgs rosflight_msgs geometry_msgs)
 install(
   TARGETS standalone_sensors
   DESTINATION lib/${PROJECT_NAME})
@@ -130,14 +125,12 @@ target_link_libraries(standalone_dynamics
   Eigen3::Eigen)
 ament_target_dependencies(standalone_dynamics
   geometry_msgs
-  tf2_eigen
   tf2_geometry_msgs
   std_srvs
   rclcpp
   rosflight_msgs)
 ament_export_dependencies(standalone_dynamics
   geometry_msgs
-  tf2_eigen
   tf2_geometry_msgs
   std_srvs
   rclcpp
