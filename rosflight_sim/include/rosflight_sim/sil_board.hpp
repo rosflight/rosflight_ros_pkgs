@@ -78,9 +78,9 @@ private:
   rosflight_msgs::msg::RCRaw latestRC_;
   bool rc_received_ = false;
   bool new_rc_data_available_;
-  rclcpp::Time last_rc_message_; // TODO: This doesn't seem like it is used anywhere...
+  rclcpp::Time last_rc_message_; // TODO: This isn't actually used anywhere... Do we need to handle rc_message time out in SIL board?
 
-  // TODO: figure out where to define the mav_type_. Previously it was defined by Gazebo I believe
+  // TODO: figure out where to define the mav_type_. Previously it was defined by Gazebo in a xacro file, I think. Do we need it anymore?
   std::string mav_type_;
   std::array<uint16_t, 14> pwm_outputs_ = {0}; // assumes maximum of 14 channels
 
@@ -129,12 +129,6 @@ private:
   void diff_pressure_data_callback(const rosflight_msgs::msg::Airspeed & msg);
   void sonar_data_callback(const sensor_msgs::msg::Range & msg);
   void battery_data_callback(const rosflight_msgs::msg::BatteryStatus & msg);
-
-  // TODO: These values don't seem to be used anywhere...
-  // GazeboVector prev_vel_1_;
-  // GazeboVector prev_vel_2_;
-  // GazeboVector prev_vel_3_;
-  // gazebo::common::Time last_time_;
 
   float battery_voltage_multiplier_{1.0};
   float battery_current_multiplier_{1.0};
