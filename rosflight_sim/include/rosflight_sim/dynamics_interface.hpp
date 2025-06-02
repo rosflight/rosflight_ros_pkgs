@@ -1,8 +1,7 @@
 /*
  * Software License Agreement (BSD-3 License)
  *
- * Copyright (c) 2017 Daniel Koch, James Jackson and Gary Ellingson, BYU MAGICC Lab.
- * Copyright (c) 2023 Brandon Sutherland, AeroVironment Inc.
+ * Copyright (c) 2024 Jacob Moore
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,44 +31,36 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
-#define ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
+#ifndef ROSFLIGHT_SIM_SENSOR_INTERFACE_H
+#define ROSFLIGHT_SIM_SENSOR_INTERFACE_H
 
-#include <chrono>
-
+#include <geometry_msgs/msg/vector3_stamped.hpp>
+#include <geometry_msgs/msg/wrench_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp/executors.hpp>
 #include <std_srvs/srv/trigger.hpp>
+
+#include "rosflight_msgs/msg/sim_state.hpp"
 
 namespace rosflight_sim
 {
-/**
- * @brief This class serves as the simulation loop manager. It contains a service 
- * that initializes one iteration of SIL simulation.
- */
-class ROSflightSIL : public rclcpp::Node
+
+class DynamicsInterface : public rclcpp::Node
 {
 public:
-  ROSflightSIL();
+  DynamicsInterface();
+
 
 private:
-  // Timer that ticks the simulation
-  rclcpp::CallbackGroup::SharedPtr timer_cb_group_;
-  rclcpp::TimerBase::SharedPtr simulation_loop_timer_;
+  virtual void apply_forces_and_torques(const geometry_msgs::msg::WrenchStamped & msg) = 0;
+  virtual rosflight_msgs::msg::SimState compute_truth() = 0;
+  virtual geometry_msgs::msg::Vector3Stamped compute_wind_truth() = 0;
 
-  // Service call can be used to tick the firmware externally 
-  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr run_SIL_iteration_srvs_;
+  // ROS2 interfaces
+  rclcpp::Publisher<rosflight_msgs::msg::SimState>::SharedPtr truth_state_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::Vector3Stamped>::SharedPtr wind_truth_pub_;
+  rclcpp::Subscription<geometry_msgs::msg::WrenchStamped>::SharedPtr forces_moments_sub_;
 
-  // Service clients
-  rclcpp::CallbackGroup::SharedPtr client_cb_group_;
-  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr firmware_run_client_;
-
-  /**
-   * @brief Iterates the simulation once by calling services belonging to the 
-   * SILboard, the Dynamics, and the Forces and Moments nodes
-   */
-  bool iterate_simulation(const std_srvs::srv::Trigger::Request::SharedPtr & req,
-                          const std_srvs::srv::Trigger::Response::SharedPtr & res);
+  void forces_callback(const geometry_msgs::msg::WrenchStamped & msg);
 
   /**
    *  @brief Declares all of the parameters with the ROS2 parameter system. Called during initialization
@@ -90,11 +81,8 @@ private:
    */
   rcl_interfaces::msg::SetParametersResult
   parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
-
-  void reset_timers();
-  bool call_firmware();
 };
 
 } // namespace rosflight_sim
 
-#endif // ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
+#endif // ROSFLIGHT_SIM_SENSOR_INTERFACE_H

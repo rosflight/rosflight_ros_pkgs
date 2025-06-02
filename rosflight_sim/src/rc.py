@@ -164,7 +164,7 @@ class RC(Node):
             self.vim_fly = VimFly()
             return
         
-        self.rc_publisher = self.create_publisher(RCRaw, 'RC', 10)
+        self.rc_publisher = self.create_publisher(RCRaw, 'sim/RC', 10)
         self.timer = self.create_timer(1.0 / 50, self.timer_callback)
 
         # Transmitter detected, initialize joystick

@@ -32,69 +32,57 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
-#define ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
+#ifndef ROSFLIGHT_SIM_SIL_BOARD_ROS_H
+#define ROSFLIGHT_SIM_SIL_BOARD_ROS_H
 
 #include <chrono>
 
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp/executors.hpp>
 #include <std_srvs/srv/trigger.hpp>
+
+#include "rosflight_msgs/msg/pwm_output.hpp"
+#include "rosflight_sim/sil_board.hpp"
 
 namespace rosflight_sim
 {
 /**
- * @brief This class serves as the simulation loop manager. It contains a service 
- * that initializes one iteration of SIL simulation.
+ * @brief ROSflight firmware board implementation for simulator. This class handles sensors,
+ * actuators, and FCU clock and memory for the firmware. It also adds a simulated serial delay. It
+ * inherits from UDP board, which establishes a communication link over UDP.
  */
-class ROSflightSIL : public rclcpp::Node
+class SILBoardROS : public rclcpp::Node
 {
 public:
-  ROSflightSIL();
+  SILBoardROS();
 
 private:
-  // Timer that ticks the simulation
-  rclcpp::CallbackGroup::SharedPtr timer_cb_group_;
-  rclcpp::TimerBase::SharedPtr simulation_loop_timer_;
-
-  // Service call can be used to tick the firmware externally 
-  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr run_SIL_iteration_srvs_;
-
-  // Service clients
-  rclcpp::CallbackGroup::SharedPtr client_cb_group_;
-  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr firmware_run_client_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr firmware_run_srvs_;
+  rclcpp::TimerBase::SharedPtr initialize_timer_;
+  rclcpp::Publisher<rosflight_msgs::msg::PwmOutput>::SharedPtr pwm_out_pub_;
 
   /**
-   * @brief Iterates the simulation once by calling services belonging to the 
-   * SILboard, the Dynamics, and the Forces and Moments nodes
+   * @brief Calls firmware.run()
    */
-  bool iterate_simulation(const std_srvs::srv::Trigger::Request::SharedPtr & req,
-                          const std_srvs::srv::Trigger::Response::SharedPtr & res);
+  bool run_firmware(const std_srvs::srv::Trigger::Request::SharedPtr & req,
+                    const std_srvs::srv::Trigger::Response::SharedPtr & res);
 
   /**
-   *  @brief Declares all of the parameters with the ROS2 parameter system. Called during initialization
+   * @brief Initializes the board and the firmware. Since the SIL board needs a reference to the 
+   * containing node, the node must be instantiated before passing the reference to the board. This is
+   * why this initialization code is not done in the construtor.
    */
-  void declare_parameters();
+  void initialize_members();
+  void init_timer_callback();
 
-  /**
-   * ROS2 parameter system interface. This connects ROS2 parameters with the defined update callback,
-   * parametersCallback.
-   */
-  OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
+  // Components of the firmware
+  std::shared_ptr<SILBoard> board_;
+  std::shared_ptr<rosflight_firmware::Mavlink> comm_;
+  std::shared_ptr<rosflight_firmware::ROSflight> firmware_;
 
-  /**
-   * Callback for when parameters are changed using ROS2 parameter system.
-   * This takes all new changed params and updates the appropriate parameters in the params_ object.
-   * @param parameters Set of updated parameters.
-   * @return Service result object that tells the requester the result of the param update.
-   */
-  rcl_interfaces::msg::SetParametersResult
-  parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
-
-  void reset_timers();
-  bool call_firmware();
+  bool is_initialized_ = false;
 };
 
 } // namespace rosflight_sim
 
-#endif // ROSFLIGHT_SIM_ROSFLIGHT_SIL_H
+#endif // ROSFLIGHT_SIM_SIL_BOARD_ROS_H
+

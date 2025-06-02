@@ -1,12 +1,13 @@
 """
-File: fixedwing.launch.py
+File: gazebo_rf_sim.launch.py
 Author: Brandon Sutherland
-Created: June 13, 2023
-Last Modified: July 17, 2023
+Created: June 15, 2023
+Last Modified: July 21, 2023
 Description: ROS2 launch file used to launch Gazebo with the rosflight SIL.
 """
 
 import os
+import sys
 from pathlib import Path
 
 import xacro
@@ -19,7 +20,23 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    """Launches a multirotor SIL vehicle in Gazebo"""
+    """Launches a SIL vehicle in Gazebo"""
+
+    # aircraft = LaunchConfiguration('aircraft')
+    # TODO: We have to parse it in two places, the parent file and this file, since we 
+    # need that info in both. LaunchConfiguration cannot be converted to a string by anything
+    # other than the other launch actions... There is potentially a way to use the Command launch
+    # action, which evaluates a command (i.e. evaluates the xacro command)
+    # TODO: I think we could structure this so that we only need one XXXX_gazebo.launch.py....
+    aircraft = 'anaconda' # default aircraft
+    aircraft_3d_file = 'skyhunter'
+    for arg in sys.argv:
+        if arg.startswith("aircraft:="):
+            aircraft = arg.split(":=")[1]
+
+    if aircraft == 'multirotor':
+        aircraft_3d_file = 'multirotor'
+
 
     # Launch Arguments
     x = LaunchConfiguration('x')
@@ -36,7 +53,7 @@ def generate_launch_description():
     )
     yaw = LaunchConfiguration('yaw')
     yaw_launch_arg = DeclareLaunchArgument(
-        'yaw', default_value=TextSubstitution(text='0')
+        'yaw', default_value=TextSubstitution(text='4.71')
     )
     paused = LaunchConfiguration('paused')
     paused_launch_arg = DeclareLaunchArgument(
@@ -53,7 +70,7 @@ def generate_launch_description():
     world_file = LaunchConfiguration('world_file')
     world_file_launch_arg = DeclareLaunchArgument(
         'world_file', default_value=TextSubstitution(text=os.path.join(
-            get_package_share_directory('rosflight_sim'), 'resources', 'runway.world'
+            get_package_share_directory('rosflight_sim'), 'gazebo_resource/runway.world'
         ))
     )
     tf_prefix = LaunchConfiguration('tf_prefix')
@@ -62,7 +79,7 @@ def generate_launch_description():
     )
     robot_namespace = LaunchConfiguration('robot_namespace')
     robot_namespace_launch_argument = DeclareLaunchArgument(
-        'robot_namespace', default_value=TextSubstitution(text="multirotor")
+        'robot_namespace', default_value=TextSubstitution(text='fixedwing')
     )
     gazebo_namespace = LaunchConfiguration('gazebo_namespace')
     gazebo_namespace_launch_argument = DeclareLaunchArgument(
@@ -82,22 +99,24 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
-            'paused': paused,
+            'pause': paused,
             'gui': gui,
             'verbose': verbose,
             'world': world_file,
-            'params_file': os.path.join(get_package_share_directory('rosflight_sim'), 'params', 'multirotor_dynamics.yaml'),
+            'params_file': os.path.join(get_package_share_directory('rosflight_sim'), 'params', f'{aircraft}_dynamics.yaml')
         }.items()
     )
 
     # Render xacro file
-    xacro_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'), 'xacro', 'multirotor.urdf.xacro')
-    urdf_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'), 'resources', 'multirotor.urdf')
+    xacro_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'),
+                                         f'xacro/{aircraft}.urdf.xacro')
+    urdf_filepath_string = os.path.join(get_package_share_directory('rosflight_sim'),
+                                        f'gazebo_resource/{aircraft}.urdf')
     robot_description = xacro.process_file(
         xacro_filepath_string, mappings={
             'mesh_file_location': os.path.join(
                 get_package_share_directory('rosflight_sim'),
-                'resources', 'multirotor.dae'
+                f'common_resource/{aircraft_3d_file}.dae'
             )
         }
     ).toxml()

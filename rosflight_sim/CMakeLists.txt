@@ -14,22 +14,12 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
 endif(NOT CMAKE_BUILD_TYPE)
 
-# Since Gazebo doesn't have an arm64 target, skip this package if gazebo is not found
-find_package(gazebo_ros QUIET)
-if(NOT gazebo_FOUND)
-  install(CODE "message(\"Gazebo not found, skipping ${PROJECT_NAME}\")")
-  return()
-endif()
-
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
-find_package(gazebo_dev)
-find_package(gazebo_plugins REQUIRED)
-find_package(gazebo_ros REQUIRED)
-find_package(geometry_msgs REQUIRED)
-find_package(nav_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(rosflight_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
@@ -91,11 +81,10 @@ add_library(rosflight_firmware
   include/rosflight_sim/rosflight_firmware/src/command_manager.cpp
   include/rosflight_sim/rosflight_firmware/src/sensors.cpp
   include/rosflight_sim/rosflight_firmware/src/comm_manager.cpp
-
   include/rosflight_sim/rosflight_firmware/comms/mavlink/mavlink.cpp
-
   include/rosflight_sim/rosflight_firmware/lib/turbomath/turbomath.cpp
 )
+target_include_directories(rosflight_firmware PRIVATE ${FIRMWARE_INCLUDE_DIRS})
 target_link_libraries(rosflight_firmware Eigen3::Eigen)
 target_compile_definitions(rosflight_firmware PUBLIC
   GIT_VERSION_HASH=0x${GIT_VERSION_HASH}
@@ -120,78 +109,62 @@ include_directories(include
   ${ament_INCLUDE_DIRS}
   ${rclcpp_INLCUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
-  ${GAZEBO_INCLUDE_DIRS}
   ${SDFormat_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
 )
-link_directories(${GAZEBO_LIBRARY_DIRS})
 
-add_library(rosflight_sil_plugin SHARED
-  src/rosflight_sil.cpp
-  src/sil_board.cpp
-  src/udp_board.cpp
-  src/multirotor_forces_and_moments.cpp
-  src/fixedwing_forces_and_moments.cpp
-)
-target_link_libraries(rosflight_sil_plugin
-  rosflight_firmware
-  ${rclcpp_INLCUDE_DIRS}
-  ${ament_INCLUDE_DIRS}
-  ${GAZEBO_LIBRARIES}
-  ${Boost_LIBRARIES}
-)
-ament_target_dependencies(rosflight_sil_plugin
-  rclcpp
-  geometry_msgs
-  nav_msgs
-  rosflight_msgs
-  gazebo_ros
-)
-ament_export_targets(rosflight_sil_pluginTargets HAS_LIBRARY_TARGET)
-ament_export_dependencies(
-  rclcpp
-  geometry_msgs
-  nav_msgs
-  rosflight_msgs
-  gazebo_ros
-)
+##################
+##  Executables ##
+##################
 
+# ROSflightSIL
+add_executable(rosflight_sil_manager
+  src/rosflight_sil.cpp)
+target_include_directories(rosflight_sil_manager
+  PRIVATE include)
+ament_target_dependencies(rosflight_sil_manager rclcpp std_srvs rosflight_msgs)
 install(
-  TARGETS rosflight_sil_plugin
-  EXPORT rosflight_sil_pluginTargets
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
+  TARGETS rosflight_sil_manager
+  DESTINATION lib/${PROJECT_NAME})
 
+# SILBoard
+add_executable(sil_board
+  src/sil_board_ros.cpp
+  src/sil_board.cpp
+  src/udp_board.cpp)
+target_link_libraries(sil_board
+  rosflight_firmware
+  ${Boost_LIBRARIES})
+target_include_directories(sil_board
+  PRIVATE
+    include)
+ament_target_dependencies(sil_board rclcpp std_srvs sensor_msgs rosflight_msgs)
+install(
+  TARGETS sil_board
+  DESTINATION lib/${PROJECT_NAME})
+
+# Gazebo dynamics and simulator
+add_subdirectory(simulators/gazebo_sim)
+
+# Standalone simulator
+add_subdirectory(simulators/standalone_sim)
 
 #############
 ## Install ##
 #############
 
 install(
-  DIRECTORY include/${PROJECT_NAME}
+  DIRECTORY params
+  DESTINATION share/${PROJECT_NAME}
+)
+
+install(
+  DIRECTORY include/rosflight_sim
   DESTINATION include/${PROJECT_NAME}
 )
 
 install(
   DIRECTORY launch
-  DESTINATION share/${PROJECT_NAME}
-)
-
-install(
-  DIRECTORY xacro
-  DESTINATION share/${PROJECT_NAME}
-)
-
-install(
-  DIRECTORY resources
-  DESTINATION share/${PROJECT_NAME}
-)
-
-install(
-  DIRECTORY params
   DESTINATION share/${PROJECT_NAME}
 )
 

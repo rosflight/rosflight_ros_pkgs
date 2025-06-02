@@ -35,23 +35,20 @@
 #ifndef ROSFLIGHT_SIM_SIL_BOARD_H
 #define ROSFLIGHT_SIM_SIL_BOARD_H
 
-#include "sensors.h"
-#include <cmath>
-#include <cstdbool>
-#include <cstddef>
-#include <cstdint>
+#include <queue>
 
-#include <gazebo/common/Plugin.hh>
-#include <gazebo/common/common.hh>
-#include <gazebo/gazebo.hh>
-#include <gazebo/physics/physics.hh>
-
-#include <geometry_msgs/msg/twist_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <rosflight_msgs/msg/rc_raw.hpp>
+#include <sensor_msgs/msg/imu.hpp>
+#include <sensor_msgs/msg/magnetic_field.hpp>
+#include <sensor_msgs/msg/range.hpp>
+#include <sensor_msgs/msg/temperature.hpp>
 
-#include <rosflight_sim/gz_compat.hpp>
-#include <rosflight_sim/udp_board.hpp>
+#include "rosflight_msgs/msg/airspeed.hpp"
+#include "rosflight_msgs/msg/barometer.hpp"
+#include "rosflight_msgs/msg/battery_status.hpp"
+#include "rosflight_msgs/msg/gnss.hpp"
+#include "rosflight_msgs/msg/rc_raw.hpp"
+#include "rosflight_sim/udp_board.hpp"
 
 namespace rosflight_sim
 {
@@ -63,112 +60,59 @@ namespace rosflight_sim
 class SILBoard : public UDPBoard
 {
 private:
-  GazeboVector inertial_magnetic_field_;
-
-  double imu_update_rate_ = 0;
-  double mag_update_rate_ = 0;
-  double gnss_update_rate_ = 0;
-  double baro_update_rate_ = 0;
-  double diff_pressure_update_rate_ = 0;
-  double sonar_update_rate_ = 0;
-  double rc_update_rate_ = 0;
-  double battery_update_rate_ = 0;
-
   long serial_delay_ns_ = 0;
   std::queue<std::tuple<long, uint8_t>> serial_delay_queue_;
 
-  double gyro_stdev_ = 0;
-  double gyro_bias_walk_stdev_ = 0;
-  double gyro_bias_range_ = 0;
-  double k_gyro_ = 1.0;
-  ignition::math::Vector3d gyro_bias_eta_;
-  ignition::math::Vector3d bias_instability_;
-  double gyro_bias_model_tau_;
-
-
-  double acc_stdev_ = 0;
-  double acc_bias_range_ = 0;
-  double acc_bias_walk_stdev_ = 0;
-
-  double mass_ = 0; // Use actual values since these are divisors.
-  double rho_ = 0;  // This will prevent a division by zero.
-
-  double baro_bias_walk_stdev_ = 0;
-  double baro_stdev_ = 0;
-  double baro_bias_range_ = 0;
-
-  double mag_stdev_ = 0;
-  ignition::math::Vector3d mag_gauss_markov_eta_;
-  double k_mag_ = 0;
-
-  double airspeed_bias_walk_stdev_ = 0;
-  double airspeed_stdev_ = 0;
-  double airspeed_bias_range_ = 0;
-
-  double sonar_stdev_ = 0;
-  double sonar_max_range_ = 0;
-  double sonar_min_range_ = 0;
-
-  double horizontal_gnss_stdev_ = 0;
-  double vertical_gnss_stdev_ = 0;
-  double gnss_velocity_stdev_ = 0;
-  ignition::math::Vector3d gnss_gauss_markov_eta_;
-  double k_gnss_ = 0;
-
-  double f_x = 0;
-  double f_y = 0;
-  double f_z = 0;
-
-  GazeboVector gyro_bias_;
-  GazeboVector acc_bias_;
-  GazeboVector mag_bias_;
-  double baro_bias_ = 0;
-  double airspeed_bias_ = 0;
-
-  std::default_random_engine bias_generator_;
-  std::default_random_engine noise_generator_;
-  std::normal_distribution<double> normal_distribution_;
-  std::uniform_real_distribution<double> uniform_distribution_;
-
-  GazeboVector gravity_;
-  double origin_latitude_ = 0;
-  double origin_longitude_ = 0;
-  double origin_altitude_ = 0;
-
-  gazebo::physics::WorldPtr world_;
-  gazebo::physics::ModelPtr model_;
-  gazebo::physics::LinkPtr link_;
-
+  // ROS interface objects
   rclcpp::Node::SharedPtr node_;
+  rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_data_sub_;
+  rclcpp::Subscription<sensor_msgs::msg::Temperature>::SharedPtr imu_temperature_data_sub_;
+  rclcpp::Subscription<sensor_msgs::msg::MagneticField>::SharedPtr mag_data_sub_;
+  rclcpp::Subscription<rosflight_msgs::msg::Barometer>::SharedPtr baro_data_sub_;
+  rclcpp::Subscription<rosflight_msgs::msg::GNSS>::SharedPtr gnss_data_sub_;
+  rclcpp::Subscription<rosflight_msgs::msg::Airspeed>::SharedPtr diff_pressure_data_sub_;
+  rclcpp::Subscription<sensor_msgs::msg::Range>::SharedPtr sonar_data_sub_;
+  rclcpp::Subscription<rosflight_msgs::msg::BatteryStatus>::SharedPtr battery_data_sub_;
+
   rclcpp::Subscription<rosflight_msgs::msg::RCRaw>::SharedPtr rc_sub_;
-  rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr forces_sub_;
   rosflight_msgs::msg::RCRaw latestRC_;
   bool rc_received_ = false;
-  rclcpp::Time last_rc_message_;
+  bool new_rc_data_available_;
+  rclcpp::Time last_rc_message_; // TODO: This isn't actually used anywhere... Do we need to handle rc_message time out in SIL board?
 
+  // TODO: figure out where to define the mav_type_. Previously it was defined by Gazebo in a xacro file, I think. Do we need it anymore?
   std::string mav_type_;
-  int pwm_outputs_[14] = {0}; // assumes maximum of 14 channels
+  std::array<uint16_t, 14> pwm_outputs_ = {0}; // assumes maximum of 14 channels
 
   // Time variables
-  gazebo::common::Time boot_time_;
-  uint64_t next_imu_update_time_us_ = 0;
-  uint64_t next_mag_update_time_us_ = 0;
-  uint64_t next_gnss_update_time_us_ = 0;
-  uint64_t next_baro_update_time_us_ = 0;
-  uint64_t next_diff_pressure_update_time_us_ = 0;
-  uint64_t next_sonar_update_time_us_ = 0;
-  uint64_t next_rc_update_time_us_ = 0;
-  uint64_t next_battery_update_time_us_ = 0;
-  uint64_t imu_update_period_us_ = 0;
-  uint64_t mag_update_period_us_ = 0;
-  uint64_t gnss_update_period_us_ = 0;
-  uint64_t baro_update_period_us_ = 0;
-  uint64_t diff_pressure_update_period_us_ = 0;
-  uint64_t sonar_update_period_us_ = 0;
-  uint64_t rc_update_period_us_ = 0;
-  uint64_t battery_update_period_us_ = 0;
-  
-  ignition::math::Vector3d bias_model();
+  rclcpp::Time boot_time_;
+
+  bool new_imu_data_available_ = false;
+  bool new_imu_temperature_data_available_ = false;
+  bool new_mag_data_available_ = false;
+  bool new_baro_data_available_ = false;
+  bool new_gnss_data_available_ = false;
+  bool new_diff_pressure_data_available_ = false;
+  bool new_sonar_data_available_ = false;
+  bool new_battery_data_available_ = false;
+
+  bool imu_present_ = false;
+  bool mag_present_ = false;
+  bool baro_present_ = false;
+  bool gnss_present_ = false;
+  bool diff_pressure_present_ = false;
+  bool sonar_present_ = false;
+  bool battery_present_ = false;
+
+  // Persistent data
+  sensor_msgs::msg::Imu imu_data_;
+  sensor_msgs::msg::Temperature imu_temperature_data_;
+  sensor_msgs::msg::MagneticField mag_data_;
+  rosflight_msgs::msg::Barometer baro_data_;
+  rosflight_msgs::msg::GNSS gnss_data_;
+  rosflight_msgs::msg::Airspeed diff_pressure_data_;
+  sensor_msgs::msg::Range sonar_data_;
+  rosflight_msgs::msg::BatteryStatus battery_data_;
 
   /**
    * @brief Callback function to update RC values when new values are received.
@@ -176,32 +120,23 @@ private:
    * @param msg ROSflight RC message published on /RC topic
    */
   void RC_callback(const rosflight_msgs::msg::RCRaw & msg);
-  /**
-   * @brief Callback function to update the aerodynamic forces.
-   *
-   * @param msg Geometry message that contains the forces and moments.
-   */
-  void forces_callback(const geometry_msgs::msg::TwistStamped & msg);
-  /**
-   * @brief Checks the current pwm value for throttle to see if the motor pwm is above minimum, and that
-   * the motors should be spinning.
-   *
-   * @return true if throttle pwm is greater than 1100, false if less than or equal to.
-   */
-  bool motors_spinning();
+  // Subscription callbacks
+  void imu_data_callback(const sensor_msgs::msg::Imu & msg);
+  void imu_temperature_data_callback(const sensor_msgs::msg::Temperature & msg);
+  void mag_data_callback(const sensor_msgs::msg::MagneticField & msg);
+  void baro_data_callback(const rosflight_msgs::msg::Barometer & msg);
+  void gnss_data_callback(const rosflight_msgs::msg::GNSS & msg);
+  void diff_pressure_data_callback(const rosflight_msgs::msg::Airspeed & msg);
+  void sonar_data_callback(const sensor_msgs::msg::Range & msg);
+  void battery_data_callback(const rosflight_msgs::msg::BatteryStatus & msg);
 
-  GazeboVector prev_vel_1_;
-  GazeboVector prev_vel_2_;
-  GazeboVector prev_vel_3_;
-  gazebo::common::Time last_time_;
-
-  float battery_voltage_multiplier{1.0};
-  float battery_current_multiplier{1.0};
+  float battery_voltage_multiplier_{1.0};
+  float battery_current_multiplier_{1.0};
   static constexpr size_t BACKUP_SRAM_SIZE{1024};
   uint8_t backup_memory_[BACKUP_SRAM_SIZE] = {0};
 
 public:
-  SILBoard();
+  SILBoard(rclcpp::Node::SharedPtr node);
 
   // setup
   /**
@@ -211,17 +146,17 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void board_reset(bool bootloader) override{};
+  void board_reset(bool bootloader) override {};
 
   // clock
   /**
-   * @brief Gets current FCU time in milliseconds based on Gazebo time.
+   * @brief Gets current FCU time in milliseconds based on node time.
    *
    * @return Current FCU time in milliseconds.
    */
   uint32_t clock_millis() override;
   /**
-   * @brief Gets current FCU time in microseconds based on Gazebo time.
+   * @brief Gets current FCU time in microseconds based on node time.
    *
    * @return Current FCU time in microseconds
    */
@@ -229,7 +164,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void clock_delay(uint32_t milliseconds) override{};
+  void clock_delay(uint32_t milliseconds) override {};
 
   // serial
   /**
@@ -247,10 +182,9 @@ public:
 
   // sensors
   /**
-   * @brief Initializes all the sensors within Gazebo, using provided sensor parameters.
+   * @brief Initializes all the sensors within the selected simulator, using provided sensor parameters.
    */
   void sensors_init() override;
-
   /**
    * @brief Checks if there is new IMU data ready to be processed.
    *
@@ -258,7 +192,7 @@ public:
    */
   bool imu_has_new_data() override;
   /**
-   * @brief Generates simulated IMU data from truth data from Gazebo. Utilizes noise, bias, and walk
+   * @brief Generates simulated IMU data from truth data. Utilizes noise, bias, and walk
    * parameters provided. All data is returned through the values given as the function arguments.
    *
    * @param accel Acceleration values to populate.
@@ -279,7 +213,7 @@ public:
    */
   bool mag_present() override;
   /**
-   * @brief Generates magnetometer data based on Gazebo orientation and given noise/bias parameters.
+   * @brief Generates magnetometer data based on truth orientation and given noise/bias parameters.
    *
    * @param mag Magnetometer values to populate.
    * @return true if successful.
@@ -298,7 +232,7 @@ public:
    */
   bool baro_present() override;
   /**
-   * @brief Generates barometer measurement based on Gazebo altitude and noise/bias parameters.
+   * @brief Generates barometer measurement based on truth altitude and noise/bias parameters.
    *
    * @param pressure Pressure value to populate.
    * @param temperature Temperature value to populate.
@@ -319,7 +253,7 @@ public:
    */
   bool diff_pressure_present() override;
   /**
-   * @brief Generates a differential pressure measurement based on Gazebo speed and noise/bias
+   * @brief Generates a differential pressure measurement based on truth speed and noise/bias
    * parameters.
    *
    * @param diff_pressure Differential pressure value to populate.
@@ -342,7 +276,7 @@ public:
    */
   bool sonar_present() override;
   /**
-   * @brief Generates sonar reading based on min/max range and noise parameters. Based on Gazebo
+   * @brief Generates sonar reading based on min/max range and noise parameters. Based on truth
    * altitude value.
    *
    * @param range measurement to update.
@@ -412,7 +346,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void rc_init(rc_type_t rc_type) override{};
+  void rc_init(rc_type_t rc_type) override {};
   /**
    * @brief Function used to check if RC connection is present. Currently returns false if anything
    * is ever published on RC.
@@ -431,7 +365,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void memory_init() override{};
+  void memory_init() override {};
   /**
    * @brief Reads data from memory file.
    *
@@ -453,34 +387,34 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led0_on() override{};
+  void led0_on() override {};
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led0_off() override{};
+  void led0_off() override {};
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led0_toggle() override{};
+  void led0_toggle() override {};
 
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led1_on() override{};
+  void led1_on() override {};
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led1_off() override{};
+  void led1_off() override {};
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led1_toggle() override{};
+  void led1_toggle() override {};
 
   // Backup Memory
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void backup_memory_init() override{};
+  void backup_memory_init() override {};
   /**
    * @brief Reads data from backup memory object.
    *
@@ -511,15 +445,13 @@ public:
    */
   bool gnss_present() override;
   /**
-   * @brief Generates GNSS data based on Gazebo truth and noise/bias parameters.
+   * @brief Generates GNSS data based on truth and noise/bias parameters.
    *
    * @param gnss GNSSData object to update.
-   * @param gnss_full GNSSFull object to update.
    *
    * @return true if successful.
    */
-  bool gnss_read(rosflight_firmware::GNSSData * gnss,
-                 rosflight_firmware::GNSSFull * gnss_full) override;
+  bool gnss_read(rosflight_firmware::GNSSData * gnss) override;
   /**
    * @brief Checks to see if it has been enough time to warrant new data.
    *
@@ -560,28 +492,16 @@ public:
    */
   void battery_current_set_multiplier(double multiplier) override;
 
-  // Gazebo stuff
-  /**
-   * @brief Initializes the firmware with ROS parameters and Gazebo data types.
-   *
-   * @param link Gazebo link pointer, provided by ModelPlugin::Load function
-   * @param world Gazebo world pointer, provided by ModelPlugin::Load function
-   * @param model Gazebo model pointer, provided by ModelPlugin::Load function
-   * @param node ROS node pointer, provided by ModelPlugin::Load function
-   * @param mav_type Simulation type
-   */
-  void gazebo_setup(gazebo::physics::LinkPtr link, gazebo::physics::WorldPtr world,
-                    gazebo::physics::ModelPtr model, rclcpp::Node::SharedPtr node,
-                    std::string mav_type);
-  inline const int * get_outputs() const { return pwm_outputs_; }
-  gazebo::common::SphericalCoordinates sph_coord_;
+  inline const std::array<uint16_t, 14> & get_outputs() const { return pwm_outputs_; }
 
   // TODO: implement these if necessary
-  bool imu_present() override { return true; }
+  bool imu_present() override;
   uint16_t sensors_errors_count() override { return 0; }
   uint16_t sensors_init_message_count() override { return 0; }
   bool sensors_init_message_good(uint16_t i) override { return true; }
   uint16_t sensors_init_message(char *message, uint16_t size, uint16_t i) { return 0; }
+
+  void declare_parameters();
 };
 
 } // namespace rosflight_sim

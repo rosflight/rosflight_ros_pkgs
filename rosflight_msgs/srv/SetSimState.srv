@@ -1,0 +1,6 @@
+# Service type used to set the state of the simulation to an arbitrary state
+
+rosflight_msgs/SimState state
+---
+bool success
+string message

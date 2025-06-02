@@ -28,10 +28,11 @@ set(msg_files
   "msg/Command.msg"
   "msg/Error.msg"
   "msg/GNSS.msg"
-  "msg/GNSSFull.msg"
   "msg/OutputRaw.msg"
+  "msg/PwmOutput.msg"
   "msg/RCRaw.msg"
   "msg/Status.msg"
+  "msg/SimState.msg"
   )
 
 # declare the service files to generate code for
@@ -39,6 +40,7 @@ set(srv_files
   "srv/ParamFile.srv"
   "srv/ParamGet.srv"
   "srv/ParamSet.srv"
+  "srv/SetSimState.srv"
   )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
