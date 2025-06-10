@@ -83,13 +83,13 @@ constexpr double deg2Rad(double x) { return M_PI / 180.0 * x; }
 // clock
 uint32_t SILBoard::clock_millis()
 {
-  uint32_t millis = (node_->get_clock()->now().nanoseconds() - boot_time_.nanoseconds()) * 1e-6;
+  uint32_t millis = (node_->get_clock()->now().nanoseconds() - boot_time_.nanoseconds()) / 1'000'000;
   return millis;
 }
 
 uint64_t SILBoard::clock_micros()
 {
-  uint64_t micros = (node_->get_clock()->now().nanoseconds() - boot_time_.nanoseconds()) * 1e-3;
+  uint64_t micros = (node_->get_clock()->now().nanoseconds() - boot_time_.nanoseconds()) / 1'000;
   return micros;
 }
 
@@ -211,8 +211,8 @@ bool SILBoard::imu_read(rosflight_firmware::ImuStruct * imu)
 
   // TODO: is this right?
   // Time the data was read
-  imu->header.timestamp = imu_data_.header.stamp.sec * 1e6
-    + imu_data_.header.stamp.nanosec * 1e-3;
+  imu->header.timestamp = imu_data_.header.stamp.sec * 1'000'000
+    + imu_data_.header.stamp.nanosec / 1'000;
 
   return true;
 }
@@ -227,8 +227,8 @@ bool SILBoard::mag_read(rosflight_firmware::MagStruct * mag)
   mag->flux[1] = mag_data_.magnetic_field.y;
   mag->flux[2] = mag_data_.magnetic_field.z;
 
-  mag->header.timestamp = mag_data_.header.stamp.sec * 1e6
-    + mag_data_.header.stamp.nanosec * 1e-3;
+  mag->header.timestamp = mag_data_.header.stamp.sec * 1'000'000
+    + mag_data_.header.stamp.nanosec / 1'000;
   return true;
 }
 
@@ -240,8 +240,8 @@ bool SILBoard::baro_read(rosflight_firmware::PressureStruct * baro)
   baro->pressure = baro_data_.pressure;
   baro->temperature = baro_data_.temperature;
   
-  baro->header.timestamp = baro_data_.header.stamp.sec * 1e6
-    + baro_data_.header.stamp.nanosec * 1e-3;
+  baro->header.timestamp = baro_data_.header.stamp.sec * 1'000'000
+    + baro_data_.header.stamp.nanosec / 1'000;
   return true;
 }
 
@@ -252,8 +252,8 @@ bool SILBoard::diff_pressure_read(rosflight_firmware::PressureStruct * diff_pres
 
   diff_pressure->pressure = diff_pressure_data_.differential_pressure;
   diff_pressure->temperature = diff_pressure_data_.temperature;
-  diff_pressure->header.timestamp = diff_pressure_data_.header.stamp.sec * 1e6
-    + diff_pressure_data_.header.stamp.nanosec * 1e-3;
+  diff_pressure->header.timestamp = diff_pressure_data_.header.stamp.sec * 1'000'000
+    + diff_pressure_data_.header.stamp.nanosec / 1'000;
   return true;
 }
 
@@ -273,8 +273,8 @@ bool SILBoard::battery_read(rosflight_firmware::BatteryStruct * batt)
 
   batt->voltage = battery_data_.voltage * battery_voltage_multiplier_;
   batt->current = battery_data_.current * battery_current_multiplier_;
-  batt->header.timestamp = battery_data_.header.stamp.sec * 1e6
-    + battery_data_.header.stamp.nanosec * 1e-3;
+  batt->header.timestamp = battery_data_.header.stamp.sec * 1'000'000
+    + battery_data_.header.stamp.nanosec / 1'000;
   return true;
 }
 
@@ -285,8 +285,8 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss)
 
   gnss->unix_seconds = gnss_data_.header.stamp.sec;
   gnss->nano = gnss_data_.header.stamp.nanosec;
-  gnss->time_of_week = gnss->unix_seconds * 1e6
-    + gnss->nano * 1e-3;  // Only used internal to the firmware. Pseudo GNSS iTOW in ms
+  gnss->time_of_week = gnss->unix_seconds * 1'000'000
+    + gnss->nano / 1'000;  // Only used internal to the firmware. Pseudo GNSS iTOW in ms
 
   // Cast to rosflight_firmware::GNSSFixType first for error checking from enum class
   gnss->fix_type = static_cast<uint8_t>(
@@ -304,8 +304,8 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss)
   gnss->vel_d = (int32_t) gnss_data_.vel_d * 1e3; // m to mm
   gnss->speed_accy = (uint32_t) gnss_data_.speed_accuracy * 1e3; // m to mm
 
-  gnss->header.timestamp = gnss_data_.header.stamp.sec * 1e6
-    + gnss_data_.header.stamp.nanosec * 1e-3;
+  gnss->header.timestamp = gnss_data_.header.stamp.sec * 1'000'000
+    + gnss_data_.header.stamp.nanosec / 1'000;
 
   return true;
 }
