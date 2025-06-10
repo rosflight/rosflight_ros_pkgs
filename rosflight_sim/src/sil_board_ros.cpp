@@ -33,7 +33,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "rosflight_sim/rosflight_firmware/include/rosflight.h"
 #include "rosflight_sim/sil_board_ros.hpp"
 
 namespace rosflight_sim

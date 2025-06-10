@@ -40,6 +40,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <std_srvs/srv/trigger.hpp>
 
+#include "rosflight.h"
 #include "rosflight_msgs/msg/pwm_output.hpp"
 #include "rosflight_sim/sil_board.hpp"
 
