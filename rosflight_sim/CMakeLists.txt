@@ -29,19 +29,8 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 ## Firmware ##
 ##############
 
-set(FIRMWARE_INCLUDE_DIRS
-  include/rosflight_sim/rosflight_firmware/include/
-  include/rosflight_sim/rosflight_firmware/lib/
-  include/rosflight_sim/rosflight_firmware/comms/
-  include/rosflight_sim/rosflight_firmware/test/
-)
-
-include_directories(
-  ${FIRMWARE_INCLUDE_DIRS}
-)
-
 # clone firmware submodule if it is missing
-set(FIRMWARE_SUBMODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/rosflight_sim/rosflight_firmware")
+set(FIRMWARE_SUBMODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../rosflight_firmware")
 if(NOT EXISTS "${FIRMWARE_SUBMODULE_DIR}/.git")
   message(STATUS "Firmware submodule not found at ${FIRMWARE_SUBMODULE_DIR}")
   execute_process(
@@ -49,6 +38,18 @@ if(NOT EXISTS "${FIRMWARE_SUBMODULE_DIR}/.git")
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   )
 endif()
+
+set(FIRMWARE_INCLUDE_DIRS
+  ../rosflight_firmware/include/
+  ../rosflight_firmware/include/interface/
+  ../rosflight_firmware/lib/
+  ../rosflight_firmware/comms/
+  ../rosflight_firmware/test/
+)
+
+include_directories(
+  ${FIRMWARE_INCLUDE_DIRS}
+)
 
 # Git information
 execute_process(COMMAND git rev-parse --short=8 HEAD
@@ -71,18 +72,18 @@ endif()
 
 # rosflight_firmware
 add_library(rosflight_firmware
-  include/rosflight_sim/rosflight_firmware/src/rosflight.cpp
-  include/rosflight_sim/rosflight_firmware/src/estimator.cpp
-  include/rosflight_sim/rosflight_firmware/src/mixer.cpp
-  include/rosflight_sim/rosflight_firmware/src/controller.cpp
-  include/rosflight_sim/rosflight_firmware/src/param.cpp
-  include/rosflight_sim/rosflight_firmware/src/state_manager.cpp
-  include/rosflight_sim/rosflight_firmware/src/rc.cpp
-  include/rosflight_sim/rosflight_firmware/src/command_manager.cpp
-  include/rosflight_sim/rosflight_firmware/src/sensors.cpp
-  include/rosflight_sim/rosflight_firmware/src/comm_manager.cpp
-  include/rosflight_sim/rosflight_firmware/comms/mavlink/mavlink.cpp
-  include/rosflight_sim/rosflight_firmware/lib/turbomath/turbomath.cpp
+  ${FIRMWARE_SUBMODULE_DIR}/src/rosflight.cpp
+  ${FIRMWARE_SUBMODULE_DIR}/src/estimator.cpp
+  ${FIRMWARE_SUBMODULE_DIR}/src/mixer.cpp
+  ${FIRMWARE_SUBMODULE_DIR}/src/controller.cpp
+  ${FIRMWARE_SUBMODULE_DIR}/src/param.cpp
+  ${FIRMWARE_SUBMODULE_DIR}/src/state_manager.cpp
+  ${FIRMWARE_SUBMODULE_DIR}/src/rc.cpp
+  ${FIRMWARE_SUBMODULE_DIR}/src/command_manager.cpp
+  ${FIRMWARE_SUBMODULE_DIR}/src/sensors.cpp
+  ${FIRMWARE_SUBMODULE_DIR}/src/comm_manager.cpp
+  ${FIRMWARE_SUBMODULE_DIR}/comms/mavlink/mavlink.cpp
+  ${FIRMWARE_SUBMODULE_DIR}/lib/turbomath/turbomath.cpp
 )
 target_include_directories(rosflight_firmware PRIVATE ${FIRMWARE_INCLUDE_DIRS})
 target_link_libraries(rosflight_firmware Eigen3::Eigen)

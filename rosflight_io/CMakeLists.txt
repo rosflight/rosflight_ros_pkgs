@@ -32,16 +32,29 @@ find_package(Eigen3 REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
 
-## Look for and clone MAVLINK if it is missing
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/include/rosflight_io/mavlink/v1.0/.git")
-  message(STATUS "MAVLink submodule not found at ${CMAKE_CURRENT_SOURCE_DIR}/include/rosflight/mavlink/v1.0")
+# clone firmware submodule if it is missing
+set(FIRMWARE_SUBMODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../rosflight_firmware")
+if(NOT EXISTS "${FIRMWARE_SUBMODULE_DIR}/.git")
+  message(STATUS "Firmware submodule not found at ${FIRMWARE_SUBMODULE_DIR}")
   execute_process(
-    COMMAND git submodule update --init --recursive
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          COMMAND git submodule update --init --recursive
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   )
 endif()
 
-execute_process(COMMAND git describe --tags --abbrev=8 --always --dirty --long WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_VARIABLE GIT_VERSION_STRING RESULT_VARIABLE GIT_RESULT)
+set(FIRMWARE_INCLUDE_DIRS
+  ../rosflight_firmware/include/
+  ../rosflight_firmware/include/interface/
+  ../rosflight_firmware/lib/
+  ../rosflight_firmware/comms/
+  # ../rosflight_firmware/test/
+)
+
+# Determine ROSflight version
+execute_process(
+  COMMAND git describe --tags --abbrev=8 --always --dirty --long
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_VERSION_STRING RESULT_VARIABLE GIT_RESULT)
 if(GIT_RESULT EQUAL 0)
   string(REGEX REPLACE "\n$" "" GIT_VERSION_STRING "${GIT_VERSION_STRING}") # remove trailing newline
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DROSFLIGHT_VERSION=${GIT_VERSION_STRING}")
@@ -60,6 +73,7 @@ include_directories(include
   ${Boost_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
   ${YAML_CPP_INCLUDEDIR}
+  ${FIRMWARE_INCLUDE_DIRS}
   )
 
 # mavrosflight library
