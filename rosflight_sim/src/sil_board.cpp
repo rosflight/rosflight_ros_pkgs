@@ -149,6 +149,7 @@ void SILBoard::sensors_init()
 void SILBoard::imu_data_callback(const sensor_msgs::msg::Imu & msg)
 {
   imu_data_ = msg;
+  imu_has_new_data_available_ = true;
 }
 
 void SILBoard::imu_temperature_data_callback(const sensor_msgs::msg::Temperature & msg)
@@ -159,35 +160,44 @@ void SILBoard::imu_temperature_data_callback(const sensor_msgs::msg::Temperature
 void SILBoard::mag_data_callback(const sensor_msgs::msg::MagneticField & msg)
 {
   mag_data_ = msg;
+  mag_has_new_data_available_ = true;
 }
 
 void SILBoard::baro_data_callback(const rosflight_msgs::msg::Barometer & msg)
 {
   baro_data_ = msg;
+  baro_has_new_data_available_ = true;
 }
 
 void SILBoard::gnss_data_callback(const rosflight_msgs::msg::GNSS & msg)
 {
   gnss_data_ = msg;
+  gnss_has_new_data_available_ = true;
 }
 
 void SILBoard::diff_pressure_data_callback(const rosflight_msgs::msg::Airspeed & msg)
 {
   diff_pressure_data_ = msg;
+  diff_pressure_has_new_data_available_ = true;
 }
 
 void SILBoard::sonar_data_callback(const sensor_msgs::msg::Range & msg)
 {
   sonar_data_ = msg;
+  sonar_has_new_data_available_ = true;
 }
 
 void SILBoard::battery_data_callback(const rosflight_msgs::msg::BatteryStatus & msg)
 {
   battery_data_ = msg;
+  battery_has_new_data_available_ = true;
 }
 
 bool SILBoard::imu_read(rosflight_firmware::ImuStruct * imu)
 {
+  if (!imu_has_new_data_available_) { return false; }
+  imu_has_new_data_available_ = false;
+
   // Populate the data from the last imu data received by the sensor
   imu->accel[0] = imu_data_.linear_acceleration.x;
   imu->accel[1] = imu_data_.linear_acceleration.y;
@@ -209,6 +219,9 @@ bool SILBoard::imu_read(rosflight_firmware::ImuStruct * imu)
 
 bool SILBoard::mag_read(rosflight_firmware::MagStruct * mag)
 {
+  if (!mag_has_new_data_available_) { return false; }
+  mag_has_new_data_available_ = false;
+
   // TODO: should this be in tesla or nanotesla?
   mag->flux[0] = mag_data_.magnetic_field.x;
   mag->flux[1] = mag_data_.magnetic_field.y;
@@ -221,6 +234,9 @@ bool SILBoard::mag_read(rosflight_firmware::MagStruct * mag)
 
 bool SILBoard::baro_read(rosflight_firmware::PressureStruct * baro)
 {
+  if (!baro_has_new_data_available_) { return false; }
+  baro_has_new_data_available_ = false;
+
   baro->pressure = baro_data_.pressure;
   baro->temperature = baro_data_.temperature;
   
@@ -231,6 +247,9 @@ bool SILBoard::baro_read(rosflight_firmware::PressureStruct * baro)
 
 bool SILBoard::diff_pressure_read(rosflight_firmware::PressureStruct * diff_pressure)
 {
+  if (!diff_pressure_has_new_data_available_) { return false; }
+  diff_pressure_has_new_data_available_ = false;
+
   diff_pressure->pressure = diff_pressure_data_.differential_pressure;
   diff_pressure->temperature = diff_pressure_data_.temperature;
   diff_pressure->header.timestamp = diff_pressure_data_.header.stamp.sec * 1e6
@@ -240,12 +259,18 @@ bool SILBoard::diff_pressure_read(rosflight_firmware::PressureStruct * diff_pres
 
 bool SILBoard::sonar_read(rosflight_firmware::RangeStruct * sonar)
 {
+  if (!sonar_has_new_data_available_) { return false; }
+  sonar_has_new_data_available_ = false;
+
   sonar->range = sonar_data_.range;
   return true;
 }
 
 bool SILBoard::battery_read(rosflight_firmware::BatteryStruct * batt)
 {
+  if (!battery_has_new_data_available_) { return false; }
+  battery_has_new_data_available_ = false;
+
   batt->voltage = battery_data_.voltage * battery_voltage_multiplier_;
   batt->current = battery_data_.current * battery_current_multiplier_;
   batt->header.timestamp = battery_data_.header.stamp.sec * 1e6
@@ -255,6 +280,9 @@ bool SILBoard::battery_read(rosflight_firmware::BatteryStruct * batt)
 
 bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss)
 {
+  if (!gnss_has_new_data_available_) { return false; }
+  gnss_has_new_data_available_ = false;
+
   gnss->unix_seconds = gnss_data_.header.stamp.sec;
   gnss->nano = gnss_data_.header.stamp.nanosec;
   gnss->time_of_week = gnss->unix_seconds * 1e6
