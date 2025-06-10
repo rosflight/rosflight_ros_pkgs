@@ -49,6 +49,7 @@
 #include "rosflight_msgs/msg/gnss.hpp"
 #include "rosflight_msgs/msg/rc_raw.hpp"
 #include "rosflight_sim/udp_board.hpp"
+#include "rosflight_structs.h"
 
 namespace rosflight_sim
 {
@@ -86,23 +87,6 @@ private:
 
   // Time variables
   rclcpp::Time boot_time_;
-
-  bool new_imu_data_available_ = false;
-  bool new_imu_temperature_data_available_ = false;
-  bool new_mag_data_available_ = false;
-  bool new_baro_data_available_ = false;
-  bool new_gnss_data_available_ = false;
-  bool new_diff_pressure_data_available_ = false;
-  bool new_sonar_data_available_ = false;
-  bool new_battery_data_available_ = false;
-
-  bool imu_present_ = false;
-  bool mag_present_ = false;
-  bool baro_present_ = false;
-  bool gnss_present_ = false;
-  bool diff_pressure_present_ = false;
-  bool sonar_present_ = false;
-  bool battery_present_ = false;
 
   // Persistent data
   sensor_msgs::msg::Imu imu_data_;
@@ -186,112 +170,43 @@ public:
    */
   void sensors_init() override;
   /**
-   * @brief Checks if there is new IMU data ready to be processed.
+   * @brief Returns simulated IMU data from sensors node
    *
-   * @return true if unprocessed IMU data exists.
+   * @param imu rosflight_firmware imu data structure to fill
    */
-  bool imu_has_new_data() override;
-  /**
-   * @brief Generates simulated IMU data from truth data. Utilizes noise, bias, and walk
-   * parameters provided. All data is returned through the values given as the function arguments.
-   *
-   * @param accel Acceleration values to populate.
-   * @param temperature IMU temperature value to populate.
-   * @param gyro Gyro values to populate.
-   * @param time_us Time value to populate.
-   */
-  bool imu_read(float accel[3], float * temperature, float gyro[3], uint64_t * time_us) override;
-  /**
-   * @brief Prints a ROS error stating that the IMU is not responding.
-   */
-  void imu_not_responding_error() override;
+  bool imu_read(rosflight_firmware::ImuStruct * imu) override;
 
   /**
-   * @brief Function used to check if a magnetometer is present. Currently always returns true.
+   * @brief Returns magnetometer data generated from sensors node
    *
-   * @return true
-   */
-  bool mag_present() override;
-  /**
-   * @brief Generates magnetometer data based on truth orientation and given noise/bias parameters.
-   *
-   * @param mag Magnetometer values to populate.
+   * @param mag rosflight_firmware mag data structure to fill
    * @return true if successful.
    */
-  bool mag_read(float mag[3]) override;
-  /**
-   * @brief Checks to see if it has been enough time to warrant new data.
-   * @return true if mag has new data.
-   */
-  bool mag_has_new_data() override;
+  bool mag_read(rosflight_firmware::MagStruct * mag) override;
 
   /**
-   * @brief Function used to check if a barometer is present. Currently returns true.
+   * @brief Returns baro data generated from sensors node
    *
-   * @return true
-   */
-  bool baro_present() override;
-  /**
-   * @brief Generates barometer measurement based on truth altitude and noise/bias parameters.
-   *
-   * @param pressure Pressure value to populate.
-   * @param temperature Temperature value to populate.
-   *
+   * @param baro rosflight_firmware baro data structure to fill
    * @return true if successful.
    */
-  bool baro_read(float * pressure, float * temperature) override;
-  /**
-   * @brief Checks to see if it has been enough time to warrant new data.
-   * @return true if baro has new data.
-   */
-  bool baro_has_new_data() override;
+  bool baro_read(rosflight_firmware::PressureStruct * baro) override;
 
   /**
-   * @brief Checks if a pitot tube sensor is present. Returns true if sim is a fixedwing sim.
+   * @brief Returns diff_pressure data generated from sensors node
    *
-   * @return true if fixedwing sim, false otherwise.
-   */
-  bool diff_pressure_present() override;
-  /**
-   * @brief Generates a differential pressure measurement based on truth speed and noise/bias
-   * parameters.
-   *
-   * @param diff_pressure Differential pressure value to populate.
-   * @param temperature Temperature value to populate.
-   *
+   * @param diff_pressure rosflight_firmware diff_pressure data structure to fill
    * @return true if successful.
    */
-  bool diff_pressure_read(float * diff_pressure, float * temperature) override;
-  /**
-   * @brief Checks to see if it has been enough time to warrant new data.
-   *
-   * @return true if diff_pressure sensor has new data.
-   */
-  bool diff_pressure_has_new_data() override;
+  bool diff_pressure_read(rosflight_firmware::PressureStruct * diff_pressure) override;
 
   /**
-   * @brief Function used to see if a sonar altitude sensor is present. Currently returns true.
+   * @brief Returns sonar data generated from sensors node
    *
-   * @return true
-   */
-  bool sonar_present() override;
-  /**
-   * @brief Generates sonar reading based on min/max range and noise parameters. Based on truth
-   * altitude value.
-   *
-   * @param range measurement to update.
-   *
-   * @note Currently does not take UAV attitude into account, only absolute altitude.
-   *
+   * @param sonar rosflight_firmware sonar data structure to fill
    * @return true if successful.
    */
-  bool sonar_read(float * range) override;
-  /**
-   * @brief Checks to see if it has been enough time to warrant new data.
-   *
-   * @return true if sonar sensor has new data.
-   */
-  bool sonar_has_new_data() override;
+  bool sonar_read(rosflight_firmware::RangeStruct * sonar) override;
 
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)
@@ -301,34 +216,18 @@ public:
    * @note Does not use function arguments. Refresh rate is determined by RC publish rate, idle
    * value is hard coded.
    *
-   * @param refresh_rate Does nothing. Follows /RC topic's publish rate.
-   * @param idle_pwm Does nothing. Hardcoded.
+   * @param rate Does nothing. Follows /RC topic's publish rate.
+   * @param channels Does nothing. Hardcoded
    */
-  void pwm_init(uint32_t refresh_rate, uint16_t idle_pwm) override;
-  /**
-   * @brief Initializes RC PWM values to idle values.
-   *
-   * @note Calls pwm_init method. Parameters are not used in SIL board.
-   *
-   * @param rate The refresh rate of the channel
-   * @param channels The number of channels to write to.
-   */
-  void pwm_init_multi(const float *rate, uint32_t channels) override;
+  void pwm_init(const float * rate, uint32_t channels) override;
   /**
    * @brief Writes PWM value to given channel, from a value between 0 and 1. The value is scaled to
    * 1000 to 2000 and then written to the channel.
    *
-   * @param channel Channel to write PWM to.
    * @param value Value between 0 and 1, to write to channel.
+   * @param channels number of PWM channels
    */
-  void pwm_write(uint8_t channel, float value) override;
-  /**
-   * @brief Writes PWM value to given channels, using pwm_write method. 
-   *
-   * @param channel Channel to write PWM to.
-   * @param value Array of values between 0 and 1, to write to channel.
-   */
-  void pwm_write_multi(float *value, uint32_t channels) override;
+  void pwm_write(float * value, uint32_t channels) override;
   /**
    * @brief Sets all PWM values to 1000.
    */
@@ -339,27 +238,14 @@ public:
    * @brief Gets latest RC values published on /RC. If nothing in publishing on /RC, values are set
    * to idle.
    *
-   * @param channel Channel to read value from.
-   * @return 0.5
+   * @param sonar rosflight_firmware sonar data structure to fill
+   * @return true if successful.
    */
-  float rc_read(uint8_t chan) override;
+  bool rc_read(rosflight_firmware::RcStruct * rc_struct) override;
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
   void rc_init(rc_type_t rc_type) override {};
-  /**
-   * @brief Function used to check if RC connection is present. Currently returns false if anything
-   * is ever published on RC.
-   *
-   * @return False if /RC has had a message published, true otherwise.
-   */
-  bool rc_lost() override;
-  /**
-   * @brief Checks to see if it has been enough time to warrant new data.
-   *
-   * @return true if rc has new data.
-   */
-  bool rc_has_new_data() override;
 
   // non-volatile memory
   /**
@@ -439,12 +325,6 @@ public:
    */
   void backup_memory_clear(size_t len) override;
   /**
-   * @brief Function used to check if GNSS is present. Currenlty returns true.
-   *
-   * @return true
-   */
-  bool gnss_present() override;
-  /**
    * @brief Generates GNSS data based on truth and noise/bias parameters.
    *
    * @param gnss GNSSData object to update.
@@ -453,32 +333,13 @@ public:
    */
   bool gnss_read(rosflight_firmware::GNSSData * gnss) override;
   /**
-   * @brief Checks to see if it has been enough time to warrant new data.
-   *
-   * @return true
-   */
-  bool gnss_has_new_data() override;
-  /**
-   * @brief Function used to check if a battery is present. Currenlty returns true.
-   *
-   * @return true
-   */
-  bool battery_present() override;
-  /**
-   * @brief Checks to see if it has been enough time to warrant new data.
-   *
-   * @return true if battery has new data.
-   */
-  bool battery_has_new_data() override;
-  /**
    * @brief Creates battery data based on sim model.
    *
-   * @param voltage The voltage float to update
-   * @param current The current float to update
+   * @param batt rosflight_firmware batt struct
    *
    * @return true if successful.
    */
-  bool battery_read(float * voltage, float * current) override;
+  bool battery_read(rosflight_firmware::BatteryStruct * batt) override;
   /**
    * @brief Sets battery voltage calibration constant.
    *
@@ -494,8 +355,7 @@ public:
 
   inline const std::array<uint16_t, 14> & get_outputs() const { return pwm_outputs_; }
 
-  // TODO: implement these if necessary
-  bool imu_present() override;
+  // Unused virtual functions
   uint16_t sensors_errors_count() override { return 0; }
   uint16_t sensors_init_message_count() override { return 0; }
   bool sensors_init_message_good(uint16_t i) override { return true; }
