@@ -88,6 +88,14 @@ private:
   // Time variables
   rclcpp::Time boot_time_;
 
+  bool imu_has_new_data_available_ = false;
+  bool baro_has_new_data_available_ = false;
+  bool mag_has_new_data_available_ = false;
+  bool diff_pressure_has_new_data_available_ = false;
+  bool gnss_has_new_data_available_ = false;
+  bool sonar_has_new_data_available_ = false;
+  bool battery_has_new_data_available_ = false;
+
   // Persistent data
   sensor_msgs::msg::Imu imu_data_;
   sensor_msgs::msg::Temperature imu_temperature_data_;
