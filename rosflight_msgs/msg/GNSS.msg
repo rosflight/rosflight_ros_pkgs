@@ -14,7 +14,7 @@ uint8 fix_type # fix type, as defined in the UBX protocol, enums defined above
 uint8 num_sat
 float64 lat                   # deg DDS
 float64 lon                   # deg DDS
-float32 alt                 # m above ellipsoid
+float32 alt                 # m above mean sea level
 float32 horizontal_accuracy # m
 float32 vertical_accuracy   # m
 

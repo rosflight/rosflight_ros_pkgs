@@ -267,7 +267,7 @@ bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss)
   gnss->num_sat = gnss_data_.num_sat;
   gnss->lat = (int32_t) gnss_data_.lat * 1e7; // Convert DDS into 100's of nanodegrees
   gnss->lon = (int32_t) gnss_data_.lon * 1e7; // Convert DDS into 100's of nanodegrees
-  gnss->height_ellipsoid = (int32_t) gnss_data_.alt * 1e3; // m to mm
+  gnss->height_msl = (int32_t) gnss_data_.alt * 1e3; // m to mm
   gnss->h_acc = (uint32_t) gnss_data_.horizontal_accuracy * 1e3; // m to mm
   gnss->v_acc = (uint32_t) gnss_data_.vertical_accuracy * 1e3; // m to mm
 
