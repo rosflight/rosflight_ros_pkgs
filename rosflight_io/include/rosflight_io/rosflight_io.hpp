@@ -581,7 +581,7 @@ private:
   * @param data The Eigen::Matrix that contains the calibration data.
   * @return Coeffecients for the fit.
   */
-  Eigen::VectorXf ellipsoid_least_squares(Eigen::MatrixXf data);
+  Eigen::VectorXd ellipsoid_least_squares(Eigen::MatrixXd data);
 
   /// "command" ROS topic subscription.
   rclcpp::Subscription<rosflight_msgs::msg::Command>::SharedPtr command_sub_;
@@ -672,7 +672,7 @@ private:
   std::string frame_id_;
   
   /// Matrix of the magnetometer calibration data.
-  Eigen::MatrixXf mag_calibration_data_;
+  Eigen::MatrixXd mag_calibration_data_;
 
   /// The current accels measured by the IMU, used for mag calibration.
   Eigen::Vector3f current_accels_;
