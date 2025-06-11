@@ -980,11 +980,8 @@ bool ROSflightIO::calibrateMagSrvCallback(
                                    std::bind(&ROSflightIO::calibrateMag, this));
 
   res->success = true;
-
-  // TODO: Make it so you can manually toggle this on and off.
   
   return true;
-
 }
 
 void ROSflightIO::calibrateMag() {
@@ -1004,7 +1001,6 @@ void ROSflightIO::calibrateMag() {
     mag_calibration_data_.resize(0,3);
   }
   
-  // TODO: Print out orientation and publish on feedback topic.
   if (reorienting_) {
     // Analyze the oreientation and print it out.
     float threshold = 2.0;
@@ -1014,7 +1010,6 @@ void ROSflightIO::calibrateMag() {
     float accel_y = current_accels_(1);
     float accel_z = current_accels_(2);
     
-    // TODO: Case and switch statement?
     if (abs(accel_x - 9.81) < threshold) {
       // Body x face down.
       current_candidate_index_ = orientation_index::X_DOWN;
@@ -1076,10 +1071,10 @@ void ROSflightIO::calibrateMag() {
 
     Eigen::MatrixXd current_orientation_data = mag_calibration_data_.bottomRows(mag_calibration_data_.rows() - current_orientation_index_);
     // Calculate the centroid.
-    Eigen::Vector3d centroid = current_orientation_data.colwise().mean();
+    Eigen::RowVector3d centroid = current_orientation_data.colwise().mean();
 
     // Subtact centroid, because it is sampled from a convex hull, the origin is now interior to the ellipse.
-    Eigen::MatrixXd centered_data = current_orientation_data.colwise() - centroid;
+    Eigen::MatrixXd centered_data = current_orientation_data.rowwise() - centroid;
 
     // Bin the data since the orientation into 10 bins, must be at least 3 bins.
     int num_bins = 10;
@@ -1138,7 +1133,7 @@ void ROSflightIO::calibrateMag() {
       angle_counts[bin]++;
     }
 
-    int min_number_of_points_in_bin = 20;
+    int min_number_of_points_in_bin = 100;
 
     if (*std::min_element(angle_counts.begin(),angle_counts.end()) > min_number_of_points_in_bin) {
       completed_mag_orientations_.insert(current_candidate_index_);
@@ -1205,7 +1200,7 @@ void ROSflightIO::calibrateMag() {
 
     RCLCPP_INFO(this->get_logger(), "Calibration complete.");
 
-    // TODO: Stop the timer!
+    mag_calibration_timer_->cancel();
   }
 }
 
