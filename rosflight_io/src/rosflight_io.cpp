@@ -38,8 +38,6 @@
  * @author Brandon Sutherland <brandonsutherland2\@gmail.com>
  */
 
-#include <rclcpp/logging.hpp>
-#include <std_srvs/srv/detail/trigger__struct.hpp>
 #ifdef ROSFLIGHT_VERSION
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x) // Somehow, C++ requires two macros to convert a macro to a string
@@ -54,10 +52,14 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
+#include <fstream>
+#include <sstream>
+
 #include <rosflight_io/rosflight_io.hpp>
 
 namespace rosflight_io
 {
+
 ROSflightIO::ROSflightIO()
     : Node("rosflight_io")
     , convenience_parameters_{}
@@ -707,7 +709,7 @@ void ROSflightIO::handle_small_mag_msg(const mavlink_message_t & msg)
   }
   mag_pub_->publish(mag_msg);
   if (calibrate_mag_) { // HACK: This will likely be slow. But it may not matter! Consider only grabbing one in 4 of the measurements as well.
-    Eigen::RowVector3f new_row;
+    Eigen::RowVector3d new_row;
     new_row << mag.xmag, mag.ymag, mag.zmag;
     mag_calibration_data_.conservativeResize(mag_calibration_data_.rows()+1, Eigen::NoChange);
     mag_calibration_data_.row(mag_calibration_data_.rows() - 1) = new_row;
@@ -1153,23 +1155,23 @@ void ROSflightIO::calibrateMag() {
 
     num_times_checked_ += 1;
 
-    Eigen::MatrixXf current_orientation_data = mag_calibration_data_.bottomRows(mag_calibration_data_.rows() - current_orientation_index_);
+    Eigen::MatrixXd current_orientation_data = mag_calibration_data_.bottomRows(mag_calibration_data_.rows() - current_orientation_index_);
     // Calculate the centroid.
-    Eigen::Vector3f centroid = current_orientation_data.colwise().mean();
+    Eigen::Vector3d centroid = current_orientation_data.colwise().mean();
 
     // Subtact centroid, because it is sampled from a convex hull, the origin is now interior to the ellipse.
-    Eigen::MatrixXf centered_data = current_orientation_data.colwise() - centroid;
+    Eigen::MatrixXd centered_data = current_orientation_data.colwise() - centroid;
 
     // Bin the data since the orientation into 10 bins, must be at least 3 bins.
     int num_bins = 10;
-    std::vector<Eigen::Vector3f> binned_values;
+    std::vector<Eigen::Vector3d> binned_values;
 
     int bin_index_start = 0;
 
     int length_of_bin = int(current_orientation_data.rows()/ num_bins);
     
     for (int i = 0; i < num_bins; i++) {
-      binned_values.push_back(current_orientation_data.middleRows(bin_index_start, length_of_bin).colwise().mean());
+      binned_values.push_back(centered_data.middleRows(bin_index_start, length_of_bin).colwise().mean());
       bin_index_start += length_of_bin;
     }
 
@@ -1178,20 +1180,20 @@ void ROSflightIO::calibrateMag() {
     // Grab 2 random binned values, use the first 2 of the shuffled vector.
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::vector<Eigen::Vector3f> shuffled_binned_values = binned_values;
+    std::vector<Eigen::Vector3d> shuffled_binned_values = binned_values;
     std::shuffle(shuffled_binned_values.begin(),shuffled_binned_values.end(), gen);
 
     // Define the normal vector.
-    Eigen::Vector3f point_1 = shuffled_binned_values[0];
-    Eigen::Vector3f point_2 = shuffled_binned_values[1];
+    Eigen::Vector3d point_1 = shuffled_binned_values[0];
+    Eigen::Vector3d point_2 = shuffled_binned_values[1];
 
-    Eigen::Vector3f plane_basis_x = point_1; 
+    Eigen::Vector3d plane_basis_x = point_1; 
     plane_basis_x.normalize();
 
-    Eigen::Vector3f normal = (plane_basis_x).cross(point_2);
+    Eigen::Vector3d normal = (plane_basis_x).cross(point_2);
     normal.normalize();
 
-    Eigen::Vector3f plane_basis_y = plane_basis_x.cross(normal);
+    Eigen::Vector3d plane_basis_y = plane_basis_x.cross(normal);
 
     // Project the binned values onto the plane. This is just in case the user doesn't rotate the vehile in a flat manner.
     // (turns pringles into ellipses.)
@@ -1200,8 +1202,8 @@ void ROSflightIO::calibrateMag() {
     
     std::vector<int> angle_counts(num_bins, 0);
     for (int i = 0; i < centered_data.rows(); i++) {
-      Eigen::Vector3f point = centered_data.row(i);
-      Eigen::Vector3f projected_point = point - point.dot(normal)*normal;
+      Eigen::Vector3d point = centered_data.row(i);
+      Eigen::Vector3d projected_point = point - point.dot(normal)*normal;
 
       float x_coord_2D = plane_basis_x.dot(projected_point);
       float y_coord_2D = plane_basis_y.dot(projected_point);
@@ -1218,8 +1220,6 @@ void ROSflightIO::calibrateMag() {
     }
 
     int min_number_of_points_in_bin = 20;
-
-    RCLCPP_INFO_STREAM(this->get_logger(), "angles: " << angle_counts[0] << ", " << angle_counts[1] << ", " << angle_counts[2] << ", " << angle_counts[3] << ", " << angle_counts[4] << ", " << angle_counts[5] << ", " << angle_counts[6] << ", " << angle_counts[7] << ", " << angle_counts[8] << ", " << angle_counts[9] << ", ");
 
     if (*std::min_element(angle_counts.begin(),angle_counts.end()) > min_number_of_points_in_bin) {
       completed_mag_orientations_.insert(current_candidate_index_);
@@ -1246,7 +1246,7 @@ void ROSflightIO::calibrateMag() {
     // This gives us the best fit of the equation of an ellipsoid.
     auto coeffs = ellipsoid_least_squares(mag_calibration_data_);
 
-    Eigen::Matrix3f correction_matrix;
+    Eigen::Matrix3d correction_matrix;
     correction_matrix << coeffs(0), coeffs(1), coeffs(2),
                          coeffs(1), coeffs(3), coeffs(4),
                          coeffs(2), coeffs(4), coeffs(5);
@@ -1259,30 +1259,30 @@ void ROSflightIO::calibrateMag() {
       determinant = -determinant;
     }
 
-    Eigen::Vector3f offset_terms;
+    Eigen::Vector3d offset_terms;
     offset_terms << coeffs(6), coeffs(7), coeffs(8);
 
     // Find hard iron offsets
-    Eigen::Vector3f hard_iron_offset = -0.5*(correction_matrix.inverse()*offset_terms);
-    
+    Eigen::Vector3d hard_iron_offset = -0.5*(correction_matrix.inverse()*offset_terms);
+
     // Soft iron correction terms.
     float third_root_determinant = std::cbrt(determinant); // Scaling term. Adjusts the result close to the unit sphere.
-    Eigen::Matrix3f soft_iron_correction = (correction_matrix/third_root_determinant).sqrt();
+    Eigen::Matrix3d soft_iron_correction = (correction_matrix/third_root_determinant).sqrt();
 
     // TODO: Change the params of board. mavrosflight_->param.set_param_value(req->name, req->value);
-    mavrosflight_->param.set_param_value("MAG_X_BIAS", hard_iron_offset(0));
-    mavrosflight_->param.set_param_value("MAG_Y_BIAS", hard_iron_offset(1));
-    mavrosflight_->param.set_param_value("MAG_Z_BIAS", hard_iron_offset(2));
-    
-    mavrosflight_->param.set_param_value("MAG_A11_COMP", soft_iron_correction(0,0));
-    mavrosflight_->param.set_param_value("MAG_A12_COMP", soft_iron_correction(0,1));
-    mavrosflight_->param.set_param_value("MAG_A13_COMP", soft_iron_correction(0,2));
-    mavrosflight_->param.set_param_value("MAG_A21_COMP", soft_iron_correction(1,0));
-    mavrosflight_->param.set_param_value("MAG_A22_COMP", soft_iron_correction(1,1));
-    mavrosflight_->param.set_param_value("MAG_A23_COMP", soft_iron_correction(1,2));
-    mavrosflight_->param.set_param_value("MAG_A31_COMP", soft_iron_correction(2,0));
-    mavrosflight_->param.set_param_value("MAG_A32_COMP", soft_iron_correction(2,1));
-    mavrosflight_->param.set_param_value("MAG_A33_COMP", soft_iron_correction(2,2));
+    mavrosflight_->param.set_param_value("MAG_X_BIAS", float(hard_iron_offset(0)));
+    mavrosflight_->param.set_param_value("MAG_Y_BIAS", float(hard_iron_offset(1)));
+    mavrosflight_->param.set_param_value("MAG_Z_BIAS", float(hard_iron_offset(2)));
+
+    mavrosflight_->param.set_param_value("MAG_A11_COMP", float(soft_iron_correction(0,0)));
+    mavrosflight_->param.set_param_value("MAG_A12_COMP", float(soft_iron_correction(0,1)));
+    mavrosflight_->param.set_param_value("MAG_A13_COMP", float(soft_iron_correction(0,2)));
+    mavrosflight_->param.set_param_value("MAG_A21_COMP", float(soft_iron_correction(1,0)));
+    mavrosflight_->param.set_param_value("MAG_A22_COMP", float(soft_iron_correction(1,1)));
+    mavrosflight_->param.set_param_value("MAG_A23_COMP", float(soft_iron_correction(1,2)));
+    mavrosflight_->param.set_param_value("MAG_A31_COMP", float(soft_iron_correction(2,0)));
+    mavrosflight_->param.set_param_value("MAG_A32_COMP", float(soft_iron_correction(2,1)));
+    mavrosflight_->param.set_param_value("MAG_A33_COMP", float(soft_iron_correction(2,2)));
 
     RCLCPP_INFO(this->get_logger(), "Calibration complete.");
 
@@ -1290,34 +1290,31 @@ void ROSflightIO::calibrateMag() {
   }
 }
 
-Eigen::VectorXf ROSflightIO::ellipsoid_least_squares(Eigen::MatrixXf data){
-  Eigen::VectorXf x = data.col(0);
-  Eigen::VectorXf y = data.col(1);
-  Eigen::VectorXf z = data.col(2);
+Eigen::VectorXd ROSflightIO::ellipsoid_least_squares(Eigen::MatrixXd data){
+  Eigen::VectorXd x = data.col(0);
+  Eigen::VectorXd y = data.col(1);
+  Eigen::VectorXd z = data.col(2);
 
-  Eigen::MatrixXf A = Eigen::MatrixXf::Zero(x.rows(),10);
+  Eigen::MatrixXd A = Eigen::MatrixXd::Zero(x.rows(),10);
   A.col(0) = x.cwiseProduct(x);
-  A.col(1) = x.cwiseProduct(y);
-  A.col(2) = x.cwiseProduct(z);
+  A.col(1) = 2*x.cwiseProduct(y);
+  A.col(2) = 2*x.cwiseProduct(z);
   A.col(3) = y.cwiseProduct(y);
-  A.col(4) = y.cwiseProduct(z);
+  A.col(4) = 2*y.cwiseProduct(z);
   A.col(5) = z.cwiseProduct(z);
   A.col(6) = x;
   A.col(7) = y;
   A.col(8) = z;
-  A.col(9) = Eigen::VectorXf::Ones(x.cols());
-  
-  // TODO: Compare the accuracy of Jacobi vs BDC to see what works better for our application.
-  
-  Eigen::JacobiSVD<Eigen::MatrixXf> svd(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
-  
-  // TODO: Compare svd.solve to selecting the last singular vector.
-  
-  Eigen::MatrixXf V = svd.matrixV();
+  A.col(9) = Eigen::VectorXd::Ones(x.rows());
+  RCLCPP_INFO_STREAM(this->get_logger(), "A:\n" << A(0,0));
 
-  RCLCPP_INFO_STREAM(this->get_logger(), "V:\n" << V);
+  RCLCPP_INFO_STREAM(this->get_logger(), "A_scaled:\n" << A(0,0));
+  
+  Eigen::JacobiSVD<Eigen::MatrixXd> svd(A, Eigen::FullPivHouseholderQRPreconditioner | Eigen::ComputeFullU | Eigen::ComputeFullV);
+  
+  Eigen::MatrixXd V = svd.matrixV();
 
-  return V.col(10);
+  return V.col(9);
 }
 
 bool ROSflightIO::rebootSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr & req,

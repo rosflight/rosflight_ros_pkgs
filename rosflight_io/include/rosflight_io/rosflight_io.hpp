@@ -582,7 +582,7 @@ private:
   * @param data The Eigen::Matrix that contains the calibration data.
   * @return Coeffecients for the fit.
   */
-  Eigen::VectorXf ellipsoid_least_squares(Eigen::MatrixXf data);
+  Eigen::VectorXd ellipsoid_least_squares(Eigen::MatrixXd data);
 
   /**
   * @brief Declares all the ROS2 parameters for the node.
@@ -693,7 +693,7 @@ private:
   std::string frame_id_;
   
   /// Matrix of the magnetometer calibration data.
-  Eigen::MatrixXf mag_calibration_data_;
+  Eigen::MatrixXd mag_calibration_data_;
 
   /// The current accels measured by the IMU, used for mag calibration.
   Eigen::Vector3f current_accels_;
