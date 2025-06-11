@@ -79,7 +79,8 @@ private:
   rosflight_msgs::msg::RCRaw latestRC_;
   bool rc_received_ = false;
   bool new_rc_data_available_;
-  rclcpp::Time last_rc_message_; // TODO: This isn't actually used anywhere... Do we need to handle rc_message time out in SIL board?
+  rclcpp::Time
+    last_rc_message_; // TODO: This isn't actually used anywhere... Do we need to handle rc_message time out in SIL board?
 
   // TODO: figure out where to define the mav_type_. Previously it was defined by Gazebo in a xacro file, I think. Do we need it anymore?
   std::string mav_type_;
@@ -335,11 +336,11 @@ public:
   /**
    * @brief Generates GNSS data based on truth and noise/bias parameters.
    *
-   * @param gnss GNSSData object to update.
+   * @param gnss GnssStruct object to update.
    *
    * @return true if successful.
    */
-  bool gnss_read(rosflight_firmware::GNSSData * gnss) override;
+  bool gnss_read(rosflight_firmware::GnssStruct * gnss) override;
   /**
    * @brief Creates battery data based on sim model.
    *
@@ -367,7 +368,7 @@ public:
   uint16_t sensors_errors_count() override { return 0; }
   uint16_t sensors_init_message_count() override { return 0; }
   bool sensors_init_message_good(uint16_t i) override { return true; }
-  uint16_t sensors_init_message(char *message, uint16_t size, uint16_t i) { return 0; }
+  uint16_t sensors_init_message(char * message, uint16_t size, uint16_t i) { return 0; }
 
   void declare_parameters();
 };

@@ -278,7 +278,7 @@ bool SILBoard::battery_read(rosflight_firmware::BatteryStruct * batt)
   return true;
 }
 
-bool SILBoard::gnss_read(rosflight_firmware::GNSSData * gnss)
+bool SILBoard::gnss_read(rosflight_firmware::GnssStruct * gnss)
 {
   if (!gnss_has_new_data_available_) { return false; }
   gnss_has_new_data_available_ = false;
