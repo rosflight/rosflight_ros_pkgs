@@ -149,7 +149,7 @@ void SILBoard::sensors_init()
 void SILBoard::imu_data_callback(const sensor_msgs::msg::Imu & msg)
 {
   imu_data_ = msg;
-  // Convert the rosflight_timestamp (the header) portion of the messsage to be the fcu time that
+  // Convert the rosflight_timestamp (the header) portion of the message to be the fcu time that
   // we read it. Only required on gnss and imu messages since they are the only ones with timestamp
   // passed from firmware through rosflight_io via mavlink.
   imu_data_.header.stamp = rclcpp::Time(clock_micros() * 1'000);
@@ -176,7 +176,7 @@ void SILBoard::baro_data_callback(const rosflight_msgs::msg::Barometer & msg)
 void SILBoard::gnss_data_callback(const rosflight_msgs::msg::GNSS & msg)
 {
   gnss_data_ = msg;
-  // Convert the rosflight_timestamp (the header) portion of the messsage to be the fcu time that
+  // Convert the rosflight_timestamp (the header) portion of the message to be the fcu time that
   // we read it. Only required on gnss and imu messages since they are the only ones with timestamp
   // passed from firmware through rosflight_io via mavlink.
   gnss_data_.header.stamp = rclcpp::Time(clock_micros() * 1'000);
