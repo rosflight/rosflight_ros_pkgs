@@ -149,6 +149,10 @@ void SILBoard::sensors_init()
 void SILBoard::imu_data_callback(const sensor_msgs::msg::Imu & msg)
 {
   imu_data_ = msg;
+  // Convert the rosflight_timestamp (the header) portion of the message to be the fcu time that
+  // we read it. Only required on gnss and imu messages since they are the only ones with timestamp
+  // passed from firmware through rosflight_io via mavlink.
+  imu_data_.header.stamp = rclcpp::Time(clock_micros() * 1'000);
   imu_has_new_data_available_ = true;
 }
 
@@ -172,6 +176,10 @@ void SILBoard::baro_data_callback(const rosflight_msgs::msg::Barometer & msg)
 void SILBoard::gnss_data_callback(const rosflight_msgs::msg::GNSS & msg)
 {
   gnss_data_ = msg;
+  // Convert the rosflight_timestamp (the header) portion of the message to be the fcu time that
+  // we read it. Only required on gnss and imu messages since they are the only ones with timestamp
+  // passed from firmware through rosflight_io via mavlink.
+  gnss_data_.header.stamp = rclcpp::Time(clock_micros() * 1'000);
   gnss_has_new_data_available_ = true;
 }
 
@@ -283,8 +291,8 @@ bool SILBoard::gnss_read(rosflight_firmware::GnssStruct * gnss)
   if (!gnss_has_new_data_available_) { return false; }
   gnss_has_new_data_available_ = false;
 
-  gnss->unix_seconds = gnss_data_.header.stamp.sec;
-  gnss->nano = gnss_data_.header.stamp.nanosec;
+  gnss->unix_seconds = gnss_data_.gnss_unix_seconds;
+  gnss->nano = gnss_data_.gnss_unix_nanos;
   gnss->time_of_week = gnss->unix_seconds * 1'000'000
     + gnss->nano / 1'000;  // Only used internal to the firmware. Pseudo GNSS iTOW in ms
 
@@ -293,16 +301,16 @@ bool SILBoard::gnss_read(rosflight_firmware::GnssStruct * gnss)
     static_cast<rosflight_firmware::GNSSFixType>(gnss_data_.fix_type));
 
   gnss->num_sat = gnss_data_.num_sat;
-  gnss->lat = (int32_t) gnss_data_.lat * 1e7; // Convert DDS into 100's of nanodegrees
-  gnss->lon = (int32_t) gnss_data_.lon * 1e7; // Convert DDS into 100's of nanodegrees
-  gnss->height_msl = (int32_t) gnss_data_.alt * 1e3; // m to mm
-  gnss->h_acc = (uint32_t) gnss_data_.horizontal_accuracy * 1e3; // m to mm
-  gnss->v_acc = (uint32_t) gnss_data_.vertical_accuracy * 1e3; // m to mm
+  gnss->lat = static_cast<int32_t>(gnss_data_.lat * 1e7); // Convert DDS into 100's of nanodegrees
+  gnss->lon = static_cast<int32_t>(gnss_data_.lon * 1e7); // Convert DDS into 100's of nanodegrees
+  gnss->height_msl = static_cast<int32_t>(gnss_data_.alt * 1e3); // m to mm
+  gnss->h_acc = static_cast<uint32_t>(gnss_data_.horizontal_accuracy * 1e3); // m to mm
+  gnss->v_acc = static_cast<uint32_t>(gnss_data_.vertical_accuracy * 1e3); // m to mm
 
-  gnss->vel_n = (int32_t) gnss_data_.vel_n * 1e3; // m to mm
-  gnss->vel_e = (int32_t) gnss_data_.vel_e * 1e3; // m to mm
-  gnss->vel_d = (int32_t) gnss_data_.vel_d * 1e3; // m to mm
-  gnss->speed_accy = (uint32_t) gnss_data_.speed_accuracy * 1e3; // m to mm
+  gnss->vel_n = static_cast<int32_t>(gnss_data_.vel_n * 1e3); // m to mm
+  gnss->vel_e = static_cast<int32_t>(gnss_data_.vel_e * 1e3); // m to mm
+  gnss->vel_d = static_cast<int32_t>(gnss_data_.vel_d * 1e3); // m to mm
+  gnss->speed_accy = static_cast<uint32_t>(gnss_data_.speed_accuracy * 1e3); // m to mm
 
   gnss->header.timestamp = gnss_data_.header.stamp.sec * 1'000'000
     + gnss_data_.header.stamp.nanosec / 1'000;

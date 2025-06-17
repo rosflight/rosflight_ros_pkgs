@@ -746,12 +746,7 @@ void ROSflightIO::handle_rosflight_gnss_msg(const mavlink_message_t & msg)
   mavlink_rosflight_gnss_t gnss;
   mavlink_msg_rosflight_gnss_decode(&msg, &gnss);
 
-  // TODO: We pass the gnss time to the fcu_time_to_ros_time... this eventually adds an offset
-  // to the gnss time (the offset between system time and fcu time).
-  // Why are we saying that gnss time = fcu time?
-  // TODO: Fix the ROS GNSS message header so that it says that the header is the GPS time
-  uint64_t gnss_us = (uint64_t) (gnss.seconds * 1e6 + gnss.nanos * 1e-3);
-  rclcpp::Time stamp = fcu_time_to_ros_time(std::chrono::microseconds(gnss_us));
+  rclcpp::Time stamp = fcu_time_to_ros_time(std::chrono::microseconds(gnss.rosflight_timestamp));
   rosflight_msgs::msg::GNSS gnss_msg;
   gnss_msg.header.stamp = stamp;
   gnss_msg.header.frame_id = "NED";
@@ -766,7 +761,8 @@ void ROSflightIO::handle_rosflight_gnss_msg(const mavlink_message_t & msg)
   gnss_msg.horizontal_accuracy = gnss.h_acc;
   gnss_msg.vertical_accuracy = gnss.v_acc;
   gnss_msg.speed_accuracy = gnss.s_acc;
-  gnss_msg.rosflight_timestamp = gnss.rosflight_timestamp;
+  gnss_msg.gnss_unix_seconds = gnss.seconds;
+  gnss_msg.gnss_unix_nanos = gnss.nanos;
   if (gnss_pub_ == nullptr) {
     gnss_pub_ = this->create_publisher<rosflight_msgs::msg::GNSS>("gnss", 1);
   }
