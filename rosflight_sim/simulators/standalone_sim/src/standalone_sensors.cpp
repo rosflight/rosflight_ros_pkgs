@@ -32,6 +32,7 @@
  */
 
 #include "standalone_sensors.hpp"
+#include <cstdint>
 #include <random>
 
 namespace rosflight_sim
@@ -217,7 +218,7 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
   out_msg.angular_velocity.y = y_gyro[1];
   out_msg.angular_velocity.z = y_gyro[2];
 
-  out_msg.header.stamp = this->now();
+  out_msg.header.stamp = this->get_clock()->now();
   return out_msg;
 }
 
@@ -267,7 +268,7 @@ sensor_msgs::msg::MagneticField StandaloneSensors::mag_update(const rosflight_ms
   out_msg.magnetic_field.y = y_mag[1];
   out_msg.magnetic_field.z = y_mag[2];
 
-  out_msg.header.stamp = this->now();
+  out_msg.header.stamp = this->get_clock()->now();
   return out_msg;
 }
 
@@ -299,7 +300,7 @@ rosflight_msgs::msg::Barometer StandaloneSensors::baro_update(const rosflight_ms
   out_msg.pressure = (float) y_baro;
   out_msg.temperature = 27.0f + 273.15f;
 
-  out_msg.header.stamp = this->now();
+  out_msg.header.stamp = this->get_clock()->now();
   return out_msg;
 }
 
@@ -364,8 +365,12 @@ rosflight_msgs::msg::GNSS StandaloneSensors::gnss_update(const rosflight_msgs::m
   out_msg.vertical_accuracy = v_std;
   out_msg.speed_accuracy = vel_std;
 
-  // Add GNSS time
-  out_msg.header.stamp = this->now();
+  // GNSS time
+  out_msg.gnss_unix_seconds = static_cast<int64_t>(this->get_clock()->now().seconds());
+  out_msg.gnss_unix_nanos = static_cast<int32_t>(this->get_clock()->now().nanoseconds() - out_msg.gnss_unix_seconds * 1'000'000'000); // nanoseconds() returns time since unix epoch, not just fractional time
+
+  // Estimated ROS time of the last packet
+  out_msg.header.stamp = this->get_clock()->now();
 
   return out_msg;
 }
@@ -386,7 +391,7 @@ sensor_msgs::msg::Range StandaloneSensors::sonar_update(const rosflight_msgs::ms
     out_msg.range = (float) (alt + sonar_stdev * normal_distribution_(noise_generator_));
   }
 
-  out_msg.header.stamp = this->now();
+  out_msg.header.stamp = this->get_clock()->now();
   return out_msg;
 }
 
@@ -425,7 +430,7 @@ rosflight_msgs::msg::Airspeed StandaloneSensors::diff_pressure_update(const rosf
   out_msg.differential_pressure = (float) y_as;
   out_msg.temperature = 27.0 + 273.15;
 
-  out_msg.header.stamp = this->now();
+  out_msg.header.stamp = this->get_clock()->now();
   return out_msg;
 }
 
@@ -437,7 +442,7 @@ rosflight_msgs::msg::BatteryStatus StandaloneSensors::battery_update(const rosfl
   out_msg.voltage = 15;
   out_msg.current = 1;
 
-  out_msg.header.stamp = this->now();
+  out_msg.header.stamp = this->get_clock()->now();
   return out_msg;
 }
 

@@ -1,6 +1,6 @@
 # GNSS
 
-std_msgs/Header header # Estimated ROS time at moment of measurement
+std_msgs/Header header # Estimated ROS time at moment of measurement, timestamp of the last received packet
 
 uint8 GNSS_FIX_TYPE_NO_FIX = 0
 uint8 GNSS_FIX_TYPE_DEAD_RECKONING_ONLY = 1
@@ -23,4 +23,5 @@ float32 vel_e                 # m/s
 float32 vel_d                 # m/s
 float32 speed_accuracy        # m/s
 
-float64 rosflight_timestamp # microseconds, timestamp of the last received packet
+int64 gnss_unix_seconds # Reported GNSS time (aka UNIX time), seconds
+int32 gnss_unix_nanos   # Reported GNSS fractional time (aka UNIX time), nanoseconds
