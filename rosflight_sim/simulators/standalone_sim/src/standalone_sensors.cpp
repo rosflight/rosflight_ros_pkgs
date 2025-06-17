@@ -366,11 +366,12 @@ rosflight_msgs::msg::GNSS StandaloneSensors::gnss_update(const rosflight_msgs::m
   out_msg.speed_accuracy = vel_std;
 
   // GNSS time
-  out_msg.gnss_unix_seconds = static_cast<int64_t>(this->get_clock()->now().seconds());
-  out_msg.gnss_unix_nanos = static_cast<int32_t>(this->get_clock()->now().nanoseconds() - out_msg.gnss_unix_seconds * 1'000'000'000); // nanoseconds() returns time since unix epoch, not just fractional time
+  int64_t now = static_cast<int64_t>(this->get_clock()->now().nanoseconds()); // nanoseconds() returns time since unix epoch, not just fractional time
+  out_msg.gnss_unix_seconds = now / 1'000'000'000;
+  out_msg.gnss_unix_nanos = static_cast<int32_t>(now % 1'000'000'000);
 
   // Estimated ROS time of the last packet
-  out_msg.header.stamp = this->get_clock()->now();
+  out_msg.header.stamp = rclcpp::Time(now);
 
   return out_msg;
 }
