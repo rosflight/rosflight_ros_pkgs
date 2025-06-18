@@ -59,6 +59,7 @@ namespace rosflight_io
 {
 ROSflightIO::ROSflightIO()
     : Node("rosflight_io")
+    , convenience_parameters_{}
     , prev_status_()
 {
   command_sub_ = this->create_subscription<rosflight_msgs::msg::Command>(
@@ -120,14 +121,8 @@ ROSflightIO::ROSflightIO()
     std::bind(&ROSflightIO::checkIfAllParamsReceivedCallback, this, std::placeholders::_1,
               std::placeholders::_2));
 
-  this->declare_parameter("udp", rclcpp::PARAMETER_BOOL);
-  this->declare_parameter("bind_host", rclcpp::PARAMETER_STRING);
-  this->declare_parameter("bind_port", rclcpp::PARAMETER_INTEGER);
-  this->declare_parameter("remote_host", rclcpp::PARAMETER_STRING);
-  this->declare_parameter("remote_port", rclcpp::PARAMETER_INTEGER);
-  this->declare_parameter("port", rclcpp::PARAMETER_STRING);
-  this->declare_parameter("baud_rate", rclcpp::PARAMETER_INTEGER);
-  this->declare_parameter("frame_id", rclcpp::PARAMETER_STRING);
+  declare_parameters();
+  parameter_callback_handle_ = this->add_on_set_parameters_callback(std::bind(&ROSflightIO::parameters_callback, this, std::placeholders::_1));
 
   if (this->get_parameter_or("udp", false)) {
     auto bind_host = this->get_parameter_or<std::string>("bind_host", "localhost");
@@ -191,6 +186,86 @@ ROSflightIO::ROSflightIO()
   heartbeat_timer_ =
     this->create_wall_timer(std::chrono::seconds(HEARTBEAT_PERIOD),
                             std::bind(&ROSflightIO::heartbeatTimerCallback, this), nullptr);
+}
+
+void ROSflightIO::declare_parameters()
+{
+  this->declare_parameter("udp", rclcpp::PARAMETER_BOOL);
+  this->declare_parameter("bind_host", rclcpp::PARAMETER_STRING);
+  this->declare_parameter("bind_port", rclcpp::PARAMETER_INTEGER);
+  this->declare_parameter("remote_host", rclcpp::PARAMETER_STRING);
+  this->declare_parameter("remote_port", rclcpp::PARAMETER_INTEGER);
+  this->declare_parameter("port", rclcpp::PARAMETER_STRING);
+  this->declare_parameter("baud_rate", rclcpp::PARAMETER_INTEGER);
+  this->declare_parameter("frame_id", rclcpp::PARAMETER_STRING);
+
+  // Convenience parameters for access to the firmware control gains
+  convenience_parameters_ = {
+    "PID_ROLL_RATE_I",
+    "PID_ROLL_RATE_P",
+    "PID_ROLL_RATE_D",
+    "PID_PITCH_RATE_P",
+    "PID_PITCH_RATE_I",
+    "PID_PITCH_RATE_D",
+    "PID_YAW_RATE_P",
+    "PID_YAW_RATE_I",
+    "PID_YAW_RATE_D",
+    "PID_ROLL_ANG_P",
+    "PID_ROLL_ANG_I",
+    "PID_ROLL_ANG_D",
+    "PID_PITCH_ANG_P",
+    "PID_PITCH_ANG_I",
+    "PID_PITCH_ANG_D"
+  };
+  for (auto param : convenience_parameters_) {
+    this->declare_parameter(param, rclcpp::PARAMETER_DOUBLE);
+  }
+}
+
+rcl_interfaces::msg::SetParametersResult
+ROSflightIO::parameters_callback(const std::vector<rclcpp::Parameter> & parameters)
+{
+  rcl_interfaces::msg::SetParametersResult result;
+  result.successful = false;
+  result.reason = "One of the parameters is not a parameter of ROSflightIO.";
+
+  for (const auto & param : parameters) {
+    std::string name = param.get_name();
+    if (convenience_parameters_.count(name) != 0) {
+      double value;
+      if (!mavrosflight_->param.get_param_value(name, &value)) {
+        result.reason = "Parameter " + name + " does not exist in the firmware.";
+        return result;
+      }
+
+      if (value == param.as_double()) {
+        result.reason = "Parameter is already set with that value!";
+        result.successful = true;
+      } else {
+        auto req = std::make_shared<rosflight_msgs::srv::ParamSet::Request>();
+        auto res = std::make_shared<rosflight_msgs::srv::ParamSet::Response>();
+        req->value = param.as_double();
+        req->name = name;
+
+        paramSetSrvCallback(req, res);
+
+        result.successful = res->exists;
+        result.reason = "success";
+      }
+    }
+  }
+
+  return result;
+}
+
+void ROSflightIO::load_convenience_parameters()
+{
+  // Load any parameters from the firmware into the ROS2 parameters for easy read and write access.
+  double value;
+  for (auto param : convenience_parameters_) {
+    mavrosflight_->param.get_param_value(param, &value);
+    this->set_parameter(rclcpp::Parameter(param, value));
+  }
 }
 
 ROSflightIO::~ROSflightIO()
@@ -275,6 +350,11 @@ void ROSflightIO::on_param_value_updated(std::string name, double value)
     std_msgs::msg::Bool params_changed;
     params_changed.data = true;
     params_changed_pub_->publish(params_changed);
+  }
+
+  // Updated the ROS2 parameter if applicable. This keeps the ROS2 parameters in sync.
+  if (convenience_parameters_.count(name) != 0) {
+    this->set_parameter(rclcpp::Parameter(name, value));
   }
 }
 
@@ -885,6 +965,8 @@ void ROSflightIO::paramTimerCallback()
   if (mavrosflight_->param.got_all_params()) {
     param_timer_->cancel();
     RCLCPP_INFO(this->get_logger(), "Received all parameters");
+
+    load_convenience_parameters();
   } else {
     mavrosflight_->param.request_params();
     RCLCPP_ERROR(this->get_logger(),
