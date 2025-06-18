@@ -61,6 +61,7 @@ ROSflightIO::ROSflightIO()
     : Node("rosflight_io")
     , convenience_parameters_{}
     , prev_status_()
+    , magnetometer_calibrator_(1.0, 40, 0.95)
 {
   command_sub_ = this->create_subscription<rosflight_msgs::msg::Command>(
     "command", 1, std::bind(&ROSflightIO::commandCallback, this, std::placeholders::_1));
@@ -705,11 +706,8 @@ void ROSflightIO::handle_small_mag_msg(const mavlink_message_t & msg)
     mag_pub_ = this->create_publisher<sensor_msgs::msg::MagneticField>("magnetometer", 1);
   }
   mag_pub_->publish(mag_msg);
-  if (calibrate_mag_) { // HACK: This will likely be slow. But it may not matter! Consider only grabbing one in 4 of the measurements as well.
-    Eigen::RowVector3d new_row;
-    new_row << mag.xmag, mag.ymag, mag.zmag;
-    mag_calibration_data_.conservativeResize(mag_calibration_data_.rows()+1, Eigen::NoChange);
-    mag_calibration_data_.row(mag_calibration_data_.rows() - 1) = new_row;
+  if (calibrate_mag_) {
+    magnetometer_calibrator_.update_mag(mag.xmag, mag.ymag, mag.zmag);
   }
 }
 
@@ -1058,210 +1056,23 @@ bool ROSflightIO::calibrateMagSrvCallback(
                                    std::bind(&ROSflightIO::calibrateMag, this));
 
   res->success = true;
+  res->message = "Beginning Calibration";
+
+  // Create magnetometer calibrator 
   
   return true;
 }
 
 void ROSflightIO::calibrateMag() {
 
-  enum orientation_index {
-    X_DOWN,
-    X_UP,
-    Y_DOWN,
-    Y_UP,
-    Z_DOWN,
-    Z_UP
-  };
-  
-  if (calibrate_mag_ == false) {
-    calibrate_mag_ = true;
-    reorienting_ = true;
-    mag_calibration_data_.resize(0,3);
+  if (magnetometer_calibrator_.calibrating()) {
+    RCLCPP_INFO(this->get_logger(), magnetometer_calibrator_.feedback().c_str());
   }
-  
-  if (reorienting_) {
-    // Analyze the oreientation and print it out.
-    float threshold = 2.0;
-    float consecutive_interval_threshold = 20;
-    
-    float accel_x = current_accels_(0);
-    float accel_y = current_accels_(1);
-    float accel_z = current_accels_(2);
-    
-    if (abs(accel_x - 9.81) < threshold) {
-      // Body x face down.
-      current_candidate_index_ = orientation_index::X_DOWN;
-    }
-    else if (abs(accel_x + 9.81) < threshold) {
-      // Body x face up.
-      current_candidate_index_ = orientation_index::X_UP;
-    }
-    else if (abs(accel_y - 9.81) < threshold) {
-      // Body y face down.
-      current_candidate_index_ = orientation_index::Y_DOWN;
-    }
-    else if (abs(accel_y + 9.81) < threshold) {
-      // Body y face up.
-      current_candidate_index_ = orientation_index::Y_UP;
-    }
-    else if (abs(accel_z - 9.81) < threshold) {
-      // Body z face down.
-      current_candidate_index_ = orientation_index::Z_DOWN;
-    }
-    else if (abs(accel_z + 9.81) < threshold) {
-      // Body z face up.
-      current_candidate_index_ = orientation_index::Z_UP;
-    }
+  else {
 
-    for (unsigned long i = 0; i < orientations_.size(); i++) {
+    Eigen::Vector3d hard_iron_offset = magnetometer_calibrator_.get_hard_iron_offset();
+    Eigen::Matrix3d soft_iron_correction = magnetometer_calibrator_.get_soft_iron_correction();
 
-      if (i != current_candidate_index_) {
-        orientations_[i] = 0;
-      }
-      else {
-        orientations_[i] += 1;
-      }
-
-    }
-
-    if (orientations_[current_candidate_index_] >= consecutive_interval_threshold &&
-                          completed_mag_orientations_.find(current_candidate_index_) == completed_mag_orientations_.end()) {
-      RCLCPP_INFO(this->get_logger(), "ORIENTATION FIXED. BEGIN ROTATIONS.");
-      current_orientation_index_ = mag_calibration_data_.rows() - 1;
-      reorienting_ = false;
-      num_times_checked_ = 1;
-    }
-    else if (completed_mag_orientations_.find(current_candidate_index_) != completed_mag_orientations_.end()){
-      RCLCPP_INFO(this->get_logger(), "THIS ORIENTATION WAS ALREADY COMPLETED.");
-      return;
-    }
-    else {
-      RCLCPP_INFO(this->get_logger(), "NO ORIENTATION FOUND. HOLD IN DESIRED ORIENTATION FOR ~2 SEC.");
-      return;
-    }
-  } 
-  
-  unsigned long rotation_complete_check_interval = 200; // Check every ~2 seconds.
-  
-  if (((mag_calibration_data_.rows() - current_orientation_index_) / (num_times_checked_ * rotation_complete_check_interval)) >= 1 && !all_orientation_data_gathered_) {
-
-    num_times_checked_ += 1;
-
-    Eigen::MatrixXd current_orientation_data = mag_calibration_data_.bottomRows(mag_calibration_data_.rows() - current_orientation_index_);
-    // Calculate the centroid.
-    Eigen::RowVector3d centroid = current_orientation_data.colwise().mean();
-
-    // Subtact centroid, because it is sampled from a convex hull, the origin is now interior to the ellipse.
-    Eigen::MatrixXd centered_data = current_orientation_data.rowwise() - centroid;
-
-    // Bin the data since the orientation into 10 bins, must be at least 3 bins.
-    int num_bins = 10;
-    std::vector<Eigen::Vector3d> binned_values;
-
-    int bin_index_start = 0;
-
-    int length_of_bin = int(current_orientation_data.rows()/ num_bins);
-    
-    for (int i = 0; i < num_bins; i++) {
-      binned_values.push_back(centered_data.middleRows(bin_index_start, length_of_bin).colwise().mean());
-      bin_index_start += length_of_bin;
-    }
-
-    // Define a plane and project binned values onto it.
-
-    // Grab 2 random binned values, use the first 2 of the shuffled vector.
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::vector<Eigen::Vector3d> shuffled_binned_values = binned_values;
-    std::shuffle(shuffled_binned_values.begin(),shuffled_binned_values.end(), gen);
-
-    // Define the normal vector.
-    Eigen::Vector3d point_1 = shuffled_binned_values[0];
-    Eigen::Vector3d point_2 = shuffled_binned_values[1];
-
-    Eigen::Vector3d plane_basis_x = point_1; 
-    plane_basis_x.normalize();
-
-    Eigen::Vector3d normal = (plane_basis_x).cross(point_2);
-    normal.normalize();
-
-    Eigen::Vector3d plane_basis_y = plane_basis_x.cross(normal);
-
-    // Project the binned values onto the plane. This is just in case the user doesn't rotate the vehile in a flat manner.
-    // (turns pringles into ellipses.)
-    // Use atan2 to find the angle.
-    float bin_widths = 2*M_PI/num_bins;
-    
-    std::vector<int> angle_counts(num_bins, 0);
-    for (int i = 0; i < centered_data.rows(); i++) {
-      Eigen::Vector3d point = centered_data.row(i);
-      Eigen::Vector3d projected_point = point - point.dot(normal)*normal;
-
-      float x_coord_2D = plane_basis_x.dot(projected_point);
-      float y_coord_2D = plane_basis_y.dot(projected_point);
-      float angle = std::atan2(y_coord_2D, x_coord_2D);
-
-      int bin = int((angle+M_PI)/bin_widths);
-      if (bin < 0) {
-        bin = 0;
-      }
-      else if (bin >= num_bins) {
-        bin = num_bins - 1;
-      }
-      angle_counts[bin]++;
-    }
-
-    int min_number_of_points_in_bin = 100;
-
-    if (*std::min_element(angle_counts.begin(),angle_counts.end()) > min_number_of_points_in_bin) {
-      completed_mag_orientations_.insert(current_candidate_index_);
-      if (completed_mag_orientations_.size() == 6) {
-        all_orientation_data_gathered_ = true;
-        reorienting_ = false;
-        RCLCPP_INFO(this->get_logger(), "ALL ORIENTATIONS COVERED, PERFORMING CALIBRATION.");
-      }
-      else {
-        reorienting_ = true;
-        RCLCPP_INFO(this->get_logger(), "ENOUGH DATA GATHERED FOR THIS ORIENTATION, REORIENT.");
-      }
-    }
-    else {
-      RCLCPP_INFO(this->get_logger(), "ADDITIONAL DATA REQUIRED, BE SURE TO COVER A FULL CIRCLE.");
-    }
-  }
-  
-  // When all of the data is collected, run the calibration.
-  if (all_orientation_data_gathered_) {
-    calibrate_mag_ = false;
-
-    // Get the least squares fit to the coeffecients of the equation x^2 + x*y + x*z + y^2 + y*z + z^2 + x + y + z + 1 = 0
-    // This gives us the best fit of the equation of an ellipsoid.
-    auto coeffs = ellipsoid_least_squares(mag_calibration_data_);
-
-    Eigen::Matrix3d correction_matrix;
-    correction_matrix << coeffs(0), coeffs(1), coeffs(2),
-                         coeffs(1), coeffs(3), coeffs(4),
-                         coeffs(2), coeffs(4), coeffs(5);
-
-    float determinant = correction_matrix.determinant();
-
-    if (determinant < 0) {
-      correction_matrix = -correction_matrix;
-      coeffs = -coeffs;
-      determinant = -determinant;
-    }
-
-    Eigen::Vector3d offset_terms;
-    offset_terms << coeffs(6), coeffs(7), coeffs(8);
-
-    // Find hard iron offsets
-    Eigen::Vector3d hard_iron_offset = -0.5*(correction_matrix.inverse()*offset_terms);
-
-    // Soft iron correction terms.
-    float third_root_determinant = std::cbrt(determinant); // Scaling term. Adjusts the result close to the unit sphere.
-    Eigen::Matrix3d soft_iron_correction = (correction_matrix/third_root_determinant).sqrt();
-
-    // TODO: Change the params of board. mavrosflight_->param.set_param_value(req->name, req->value);
     mavrosflight_->param.set_param_value("MAG_X_BIAS", float(hard_iron_offset(0)));
     mavrosflight_->param.set_param_value("MAG_Y_BIAS", float(hard_iron_offset(1)));
     mavrosflight_->param.set_param_value("MAG_Z_BIAS", float(hard_iron_offset(2)));
@@ -1280,33 +1091,6 @@ void ROSflightIO::calibrateMag() {
 
     mag_calibration_timer_->cancel();
   }
-}
-
-Eigen::VectorXd ROSflightIO::ellipsoid_least_squares(Eigen::MatrixXd data){
-  Eigen::VectorXd x = data.col(0);
-  Eigen::VectorXd y = data.col(1);
-  Eigen::VectorXd z = data.col(2);
-
-  Eigen::MatrixXd A = Eigen::MatrixXd::Zero(x.rows(),10);
-  A.col(0) = x.cwiseProduct(x);
-  A.col(1) = 2*x.cwiseProduct(y);
-  A.col(2) = 2*x.cwiseProduct(z);
-  A.col(3) = y.cwiseProduct(y);
-  A.col(4) = 2*y.cwiseProduct(z);
-  A.col(5) = z.cwiseProduct(z);
-  A.col(6) = x;
-  A.col(7) = y;
-  A.col(8) = z;
-  A.col(9) = Eigen::VectorXd::Ones(x.rows());
-  RCLCPP_INFO_STREAM(this->get_logger(), "A:\n" << A(0,0));
-
-  RCLCPP_INFO_STREAM(this->get_logger(), "A_scaled:\n" << A(0,0));
-  
-  Eigen::JacobiSVD<Eigen::MatrixXd> svd(A, Eigen::FullPivHouseholderQRPreconditioner | Eigen::ComputeFullU | Eigen::ComputeFullV);
-  
-  Eigen::MatrixXd V = svd.matrixV();
-
-  return V.col(9);
 }
 
 bool ROSflightIO::rebootSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr & req,

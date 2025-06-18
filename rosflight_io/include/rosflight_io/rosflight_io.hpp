@@ -39,11 +39,9 @@
  * @author Brandon Sutherland <brandonsutherland2\@gmail.com>
  * @author Ian Reid <ian.young.reid\@gmail.com>
  */
-
 #ifndef ROSFLIGHT_IO_MAVROSFLIGHT_ROS_H
 #define ROSFLIGHT_IO_MAVROSFLIGHT_ROS_H
 
-#include <map>
 #include <set>
 #include <string>
 #include <unordered_set>
@@ -94,6 +92,8 @@
 #include <rosflight_io/mavrosflight/mavlink_listener_interface.hpp>
 #include <rosflight_io/mavrosflight/mavrosflight.hpp>
 #include <rosflight_io/mavrosflight/param_listener_interface.hpp>
+
+#include "magnetometer_calibration.hpp"
 
 namespace rosflight_io
 {
@@ -691,6 +691,8 @@ private:
 
   /// Frame ID string, used to include frame in published ROS message.
   std::string frame_id_;
+
+  MagnetometerCalibrator magnetometer_calibrator_;
   
   /// Matrix of the magnetometer calibration data.
   Eigen::MatrixXd mag_calibration_data_;

@@ -99,6 +99,7 @@ ament_target_dependencies(mavrosflight rclcpp)
 add_executable(rosflight_io
   src/rosflight_io_node.cpp
   src/rosflight_io.cpp
+  src/magnetometer_calibration.cpp
   )
 target_compile_options(rosflight_io PRIVATE -Wno-address-of-packed-member)
 target_link_libraries(rosflight_io
