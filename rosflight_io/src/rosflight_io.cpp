@@ -217,7 +217,7 @@ void ROSflightIO::declare_parameters()
     "PID_PITCH_ANG_I",
     "PID_PITCH_ANG_D"
   };
-  for (auto param : convenience_parameters_) {
+  for (const auto& param : convenience_parameters_) {
     this->declare_parameter(param, rclcpp::PARAMETER_DOUBLE);
   }
 }
@@ -262,9 +262,12 @@ void ROSflightIO::load_convenience_parameters()
 {
   // Load any parameters from the firmware into the ROS2 parameters for easy read and write access.
   double value;
-  for (auto param : convenience_parameters_) {
-    mavrosflight_->param.get_param_value(param, &value);
-    this->set_parameter(rclcpp::Parameter(param, value));
+  for (const auto& param : convenience_parameters_) {
+    if (mavrosflight_->param.get_param_value(param, &value)) {
+      this->set_parameter(rclcpp::Parameter(param, value));
+    } else {
+      RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!", param.c_str());
+    }
   }
 }
 
