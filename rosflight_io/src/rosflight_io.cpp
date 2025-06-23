@@ -226,19 +226,19 @@ rcl_interfaces::msg::SetParametersResult
 ROSflightIO::parameters_callback(const std::vector<rclcpp::Parameter> & parameters)
 {
   rcl_interfaces::msg::SetParametersResult result;
-  result.successful = false;
-  result.reason = "One of the parameters is not a parameter of ROSflightIO.";
+  result.successful = true;
 
   for (const auto & param : parameters) {
     std::string name = param.get_name();
     if (convenience_parameters_.count(name) != 0) {
       double value;
       if (!mavrosflight_->param.get_param_value(name, &value)) {
+        result.successful = false;
         result.reason = "Parameter " + name + " does not exist in the firmware.";
         return result;
       }
 
-      if (value == param.as_double()) {
+      if (abs(value - param.as_double()) < 1e-6) {
         result.reason = "Parameter is already set with that value!";
         result.successful = true;
       } else {
