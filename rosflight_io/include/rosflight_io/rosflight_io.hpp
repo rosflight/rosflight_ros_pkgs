@@ -43,6 +43,7 @@
 
 #include <map>
 #include <string>
+#include <unordered_set>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -550,6 +551,22 @@ private:
    */
   rclcpp::Time fcu_time_to_ros_time(std::chrono::nanoseconds fcu_time);
 
+  /**
+  * @brief Declares all the ROS2 parameters for the node.
+  */
+  void declare_parameters();
+  /**
+   * @brief loads parameters from firmware to ROS2 on boot (when all params have been received)
+   * as a convenience for easy read/write access from ROS2
+   */
+  void load_convenience_parameters();
+  /**
+  * @brief Handles any parameter changes to the node.
+  *
+  * @param parameters Vector of rclcpp::Parameters passed by ROS2 when params are changed.
+  */
+  rcl_interfaces::msg::SetParametersResult parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
+
   /// "command" ROS topic subscription.
   rclcpp::Subscription<rosflight_msgs::msg::Command>::SharedPtr command_sub_;
   /// "aux_command" ROS topic subscription.
@@ -618,6 +635,10 @@ private:
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr reboot_bootloader_srv_;
   /// "all_params_received" ROS service.
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr check_if_all_params_received_srv_;
+
+  /// Handle for the ROS2 parameter callback
+  OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
+  std::unordered_set<std::string> convenience_parameters_;
 
   /// ROS timer for param requests.
   rclcpp::TimerBase::SharedPtr param_timer_;
