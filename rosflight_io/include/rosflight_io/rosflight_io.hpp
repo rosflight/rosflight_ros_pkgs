@@ -43,7 +43,7 @@
 
 #include <map>
 #include <string>
-#include <set>
+#include <unordered_set>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -638,7 +638,7 @@ private:
 
   /// Handle for the ROS2 parameter callback
   OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
-  std::set<std::string> convenience_parameters_;
+  std::unordered_set<std::string> convenience_parameters_;
 
   /// ROS timer for param requests.
   rclcpp::TimerBase::SharedPtr param_timer_;
