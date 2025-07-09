@@ -166,7 +166,7 @@ void MagnetometerCalibrator::check_orientation_data()
       angle_counts[bin]++;
     }
 
-    int min_number_of_points_in_bin = 100;
+    int min_number_of_points_in_bin = 40;
 
     if (*std::min_element(angle_counts.begin(),angle_counts.end()) > min_number_of_points_in_bin) {
       completed_orientations_.insert(current_orientation_);
@@ -240,7 +240,7 @@ void MagnetometerCalibrator::find_orientation()
     return;
   }
   else {
-    feedback_ = "NO ORIENTATION FOUND. HOLD IN DESIRED ORIENTATION FOR ~2 SEC.";
+    feedback_ = "DETECTING NEW ORIENTATION. HOLD FOR ~2 SEC.";
     return;
   }
 

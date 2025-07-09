@@ -1046,6 +1046,21 @@ bool ROSflightIO::calibrateBaroSrvCallback(const std_srvs::srv::Trigger::Request
 bool ROSflightIO::calibrateMagSrvCallback(
   const std_srvs::srv::Trigger::Request::SharedPtr & req,
   const std_srvs::srv::Trigger::Response::SharedPtr & res) {
+ 
+  // Reset the mag compensation to get a clean calibration.
+  mavrosflight_->param.set_param_value("MAG_X_BIAS", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_Y_BIAS", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_Z_BIAS", 0.0f);
+  
+  mavrosflight_->param.set_param_value("MAG_A11_COMP", 1.0f);
+  mavrosflight_->param.set_param_value("MAG_A12_COMP", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_A13_COMP", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_A21_COMP", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_A22_COMP", 1.0f);
+  mavrosflight_->param.set_param_value("MAG_A23_COMP", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_A31_COMP", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_A32_COMP", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_A33_COMP", 1.0f);
 
   float frequency = 10.0;
 
@@ -1054,7 +1069,8 @@ bool ROSflightIO::calibrateMagSrvCallback(
   // Set timer to trigger bound callback while calibrating.
   mag_calibration_timer_ = rclcpp::create_timer(this, this->get_clock(), timer_period,
                                    std::bind(&ROSflightIO::calibrateMag, this));
-
+  
+  calibrate_mag_ = true;
   res->success = true;
   res->message = "Beginning Calibration";
 
