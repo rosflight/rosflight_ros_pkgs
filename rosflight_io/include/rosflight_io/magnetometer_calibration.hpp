@@ -36,10 +36,10 @@
 #ifndef MAG_CALIBRATION_ROS_H
 #define MAG_CALIBRATION_ROS_H
 
-#include <set>
+#include <unordered_set>
 #include <Eigen/Dense>
+#include <Eigen/SVD>
 #include <string>
-#include <unsupported/Eigen/MatrixFunctions>
 #include <random>
 
 namespace rosflight_io
@@ -120,7 +120,7 @@ private:
 
   float consecutive_orientation_threshold_;
 
-  std::set<Orientation> completed_orientations_;
+  std::unordered_set<Orientation> completed_orientations_;
 
   std::string feedback_;
 

@@ -592,10 +592,9 @@ void ROSflightIO::handle_small_imu_msg(const mavlink_message_t & msg)
   imu_temp_pub_->publish(temp_msg);
 
   if (calibrate_mag_) { // alpha filter the calibrated mag accel.
-    float alpha = 0.95;
     Eigen::Vector3f instant_accel;
     instant_accel << imu.xacc, imu.yacc, imu.zacc;
-    current_accels_ = current_accels_*alpha + (1-alpha)*instant_accel;
+    magnetometer_calibrator_.update_accel(instant_accel);
   }
 }
 
@@ -1106,6 +1105,7 @@ void ROSflightIO::calibrateMag() {
     RCLCPP_INFO(this->get_logger(), "Calibration complete.");
 
     mag_calibration_timer_->cancel();
+    calibrate_mag_ = false;
   }
 }
 

@@ -70,28 +70,32 @@ bool MagnetometerCalibrator::calibrating()
 
 void MagnetometerCalibrator::calibrate()
 {
-    auto coeffs = ellipsoid_least_squares(mag_calibration_data_);
+  auto coeffs = ellipsoid_least_squares(mag_calibration_data_);
 
-    Eigen::Matrix3d correction_matrix;
-    correction_matrix << coeffs(0), coeffs(1), coeffs(2),
-                         coeffs(1), coeffs(3), coeffs(4),
-                         coeffs(2), coeffs(4), coeffs(5);
+  Eigen::Matrix3d correction_matrix;
+  correction_matrix << coeffs(0), coeffs(1), coeffs(2),
+                       coeffs(1), coeffs(3), coeffs(4),
+                       coeffs(2), coeffs(4), coeffs(5);
 
-    float determinant = correction_matrix.determinant();
+  float determinant = correction_matrix.determinant();
 
-    if (determinant < 0) {
-      correction_matrix = -correction_matrix;
-      coeffs = -coeffs;
-      determinant = -determinant;
-    }
+  if (determinant < 0) {
+    correction_matrix = -correction_matrix;
+    coeffs = -coeffs;
+    determinant = -determinant;
+  }
 
-    Eigen::Vector3d offset_terms;
-    offset_terms << coeffs(6), coeffs(7), coeffs(8);
+  Eigen::Vector3d offset_terms;
+  offset_terms << coeffs(6), coeffs(7), coeffs(8);
 
-    hard_iron_offset_ = -0.5*(correction_matrix.inverse()*offset_terms);
+  hard_iron_offset_ = -0.5*(correction_matrix.inverse()*offset_terms);
 
-    float third_root_determinant = std::cbrt(determinant); // Scaling term. Adjusts the result close to the unit sphere.
-    soft_iron_correction_ = (correction_matrix/third_root_determinant).sqrt();
+  float third_root_determinant = std::cbrt(determinant); // Scaling term. Adjusts the result close to the unit sphere.
+  soft_iron_correction_ = (correction_matrix/third_root_determinant);
+
+  Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> e_solver(soft_iron_correction_);
+  Eigen::Vector3d sqrt_e_values = e_solver.eigenvalues().cwiseSqrt();
+  soft_iron_correction_ = e_solver.eigenvectors() * sqrt_e_values.asDiagonal() * e_solver.eigenvectors().transpose();
 }
 
 void MagnetometerCalibrator::check_orientation_data()

@@ -577,12 +577,6 @@ private:
    * @return ROS time object of current ROS time.
    */
   rclcpp::Time fcu_time_to_ros_time(std::chrono::nanoseconds fcu_time);
-  /**
-  * @brief Computes a linear least squares fit of the data onto an ellipsoid.
-  * @param data The Eigen::Matrix that contains the calibration data.
-  * @return Coeffecients for the fit.
-  */
-  Eigen::VectorXd ellipsoid_least_squares(Eigen::MatrixXd data);
 
   /**
   * @brief Declares all the ROS2 parameters for the node.
