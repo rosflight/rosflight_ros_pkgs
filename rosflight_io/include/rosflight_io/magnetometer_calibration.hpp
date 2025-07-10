@@ -63,7 +63,7 @@ namespace rosflight_io
 
 /**
  * @class MagnetometerCalibrator
- * @brief Object that calculates the calibration values for the magneotometer.
+ * @brief Object that calculates the calibration values for the magnetometer.
  *
  * This uses the assumption that the correction matrix is symmetric and uses 
  * a least squares approach to fit an ellipsoid to the calibration data.
