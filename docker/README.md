@@ -25,7 +25,7 @@ Make sure you have installed the Docker engine, as well as the Docker Compose ut
 
 ## Building
 
-1. Navigate to `/path/to/your/rosflight_ws`. It is important that you do it from the `rosflight_ws` repository.
+1. Navigate to `/path/to/your/rosflight_ws` for the next commands. You could run these commands from the `src/rosflight_ros_pkgs/docker` directory if you want (changing the file paths as necessary).
 2. Build with:
     ```bash
     docker compose -f src/rosflight_ros_pkgs/docker/compose.yaml build
