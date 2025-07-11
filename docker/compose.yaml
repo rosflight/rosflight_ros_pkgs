@@ -1,0 +1,37 @@
+services:
+  rosflight:
+    # Build image
+    build:
+      context: ../../..
+      dockerfile: src/rosflight_ros_pkgs/docker/Dockerfile
+      args:
+        - ROS_DISTRO=humble
+
+    # Enable interactive shell
+    stdin_open: true
+    tty: true
+
+    # Mount volumes
+    volumes:
+      # Workspace
+      - ../../..:/rosflight_ws
+      # USB devices
+      - /dev:/dev
+      # Needed for displaying graphics
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+
+    # Set environment variables
+    environment:
+      # Needed for displaying graphics
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+
+    # Give sudo access for USB devices and graphics
+    # NOTE: This is not secure.
+    privileged: true
+
+    # Give access to host network
+    network_mode: host
+
+    # Give access to host memory, letting local containers avoid network
+    ipc: host
