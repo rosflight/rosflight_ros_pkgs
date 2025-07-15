@@ -11,7 +11,6 @@
 /**:  # Apply to any node that we load it to
   ros__parameters:
     rho: 1.2682
-    mass: 4.5
 
     wing_s: .52
     wing_b: 2.08

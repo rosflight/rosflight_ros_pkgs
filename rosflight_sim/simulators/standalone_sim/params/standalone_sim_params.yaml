@@ -1,7 +1,7 @@
+# Note that mass and other parameters may be set in the launch file
 /**:
   ros__parameters:
     gravity: 9.81
-    mass: 3.5
 
 /standalone_sensors:
   ros__parameters:

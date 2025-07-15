@@ -62,7 +62,6 @@ Fixedwing::Fixedwing()
 void Fixedwing::declare_fixedwing_params()
 {
   this->declare_parameter("rho", rclcpp::PARAMETER_DOUBLE);
-  this->declare_parameter("mass", rclcpp::PARAMETER_DOUBLE);
 
   this->declare_parameter("wing_s", rclcpp::PARAMETER_DOUBLE);
   this->declare_parameter("wing_b", rclcpp::PARAMETER_DOUBLE);

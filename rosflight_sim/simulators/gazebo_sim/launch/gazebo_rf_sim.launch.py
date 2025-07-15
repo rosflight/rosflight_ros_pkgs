@@ -28,6 +28,11 @@ def generate_launch_description():
     # other than the other launch actions... There is potentially a way to use the Command launch
     # action, which evaluates a command (i.e. evaluates the xacro command)
     # TODO: I think we could structure this so that we only need one XXXX_gazebo.launch.py....
+    aircraft_arg_included_for_description = DeclareLaunchArgument(
+        "aircraft",
+        default_value="anaconda",
+        description="Aircraft to use. Determines the stl and the dynamics that will be used."
+    )
     aircraft = 'anaconda' # default aircraft
     aircraft_3d_file = 'skyhunter'
     for arg in sys.argv:
@@ -153,6 +158,7 @@ def generate_launch_description():
         gui_launch_arg,
         verbose_launch_arg,
         world_file_launch_arg,
+        aircraft_arg_included_for_description,
         tf_prefix_launch_argument,
         robot_namespace_launch_argument,
         gazebo_namespace_launch_argument,

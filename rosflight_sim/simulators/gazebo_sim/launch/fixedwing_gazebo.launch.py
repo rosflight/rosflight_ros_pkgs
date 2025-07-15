@@ -12,7 +12,7 @@ import sys
 from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, TextSubstitution
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 
@@ -27,6 +27,14 @@ def generate_launch_description():
         description="Whether the nodes will use sim time or not"
     )
     use_sim_time = LaunchConfiguration('use_sim_time')
+
+    vehicle_mass_arg = DeclareLaunchArgument(
+        "vehicle_mass",
+        default_value=TextSubstitution(text="4.5"),
+        description="Mass value for the vehicle"
+    )
+    vehicle_mass = LaunchConfiguration('vehicle_mass')
+
 
     # TODO: It would be better to use the launch argument configuration instead of manually parsing
     aircraft = 'anaconda' # default aircraft
@@ -44,6 +52,7 @@ def generate_launch_description():
         ]),
         launch_arguments={
             'robot_namespace': 'fixedwing'
+            'aircraft': 'anaconda'
         }.items()
     )
 
@@ -56,7 +65,8 @@ def generate_launch_description():
             )
         ]),
         launch_arguments={
-            'use_sim_time': use_sim_time
+            'use_sim_time': use_sim_time,
+            'vehicle_mass': vehicle_mass
         }.items()
     )
 
@@ -76,6 +86,7 @@ def generate_launch_description():
     return LaunchDescription(
         [
             use_sim_time_arg,
+            vehicle_mass_arg,
             simulator_launch_include,
             independent_nodes_include,
             fw_forces_moments_node,

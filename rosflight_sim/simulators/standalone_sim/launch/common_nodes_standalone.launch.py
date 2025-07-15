@@ -14,7 +14,7 @@ from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, TextSubstitution
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 
@@ -39,6 +39,13 @@ def generate_launch_description():
         description="Whether the rc node will use vimfly or not"
     )
     use_vimfly = LaunchConfiguration('use_vimfly')
+
+    vehicle_mass_arg = DeclareLaunchArgument(
+        "vehicle_mass",
+        default_value=TextSubstitution(text="3.5"),
+        description="Mass value for the vehicle"
+    )
+    vehicle_mass = LaunchConfiguration('vehicle_mass')
 
 
     # Start Rosflight SIL
@@ -65,7 +72,7 @@ def generate_launch_description():
         executable="standalone_sensors",
         name='standalone_sensors',
         output="screen",
-        parameters=[{"use_sim_time": use_sim_time}, param_file],
+        parameters=[param_file, {"use_sim_time": use_sim_time, "mass": vehicle_mass}],
     )
 
     # Start dynamics node
@@ -74,7 +81,7 @@ def generate_launch_description():
         executable="standalone_dynamics",
         name='standalone_dynamics',
         output="screen",
-        parameters=[{"use_sim_time": use_sim_time}, param_file]
+        parameters=[param_file, {"use_sim_time": use_sim_time, "mass": vehicle_mass}]
     )
 
     # Start rosflight_io interface node
@@ -109,6 +116,7 @@ def generate_launch_description():
         [
             use_sim_time_arg,
             use_vimfly_arg,
+            vehicle_mass_arg,
             rosflight_sil_node,
             sil_board_node,
             standalone_sensor_node,
