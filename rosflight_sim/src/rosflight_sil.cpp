@@ -79,12 +79,11 @@ rcl_interfaces::msg::SetParametersResult
 ROSflightSIL::parameters_callback(const std::vector<rclcpp::Parameter> & parameters)
 {
   rcl_interfaces::msg::SetParametersResult result;
-  result.successful = false;
-  result.reason = "One of the parameters is not a parameter of ROSflightSIL.";
+  result.successful = true;
 
   for (const auto & param : parameters) {
-    if (param.get_name() == "simulation_loop_frequency") {
-      reset_timers();
+    if (param.get_name() == "simulation_loop_frequency" || param.get_name() == "use_timer") {
+      reset_timer_flag_ = true;
     }
   }
 
@@ -93,9 +92,9 @@ ROSflightSIL::parameters_callback(const std::vector<rclcpp::Parameter> & paramet
 
 void ROSflightSIL::reset_timers()
 {
-  if (this->get_parameter("use_timer").as_bool()) {
-    simulation_loop_timer_->cancel();
+  simulation_loop_timer_->cancel();
 
+  if (this->get_parameter("use_timer").as_bool()) {
     auto sim_loop_time_us = std::chrono::microseconds(static_cast<long>(1.0 / this->get_parameter("simulation_loop_frequency").as_double() * 1e6));
     simulation_loop_timer_ = rclcpp::create_timer(this, this->get_clock(), sim_loop_time_us, std::bind(&ROSflightSIL::call_firmware, this));
   }
@@ -111,6 +110,11 @@ bool ROSflightSIL::iterate_simulation(const std_srvs::srv::Trigger::Request::Sha
 
 bool ROSflightSIL::call_firmware()
 {
+  if (reset_timer_flag_) {
+    reset_timers();
+    reset_timer_flag_ = false;
+  }
+
   auto service_wait_for_exist = std::chrono::milliseconds(this->get_parameter("service_exists_timeout_ms").as_int());
   auto service_wait_for_result = std::chrono::milliseconds(this->get_parameter("service_result_timeout_ms").as_int());
 

@@ -56,6 +56,7 @@ private:
   // Timer that ticks the simulation
   rclcpp::CallbackGroup::SharedPtr timer_cb_group_;
   rclcpp::TimerBase::SharedPtr simulation_loop_timer_;
+  bool reset_timer_flag_ = false;
 
   // Service call can be used to tick the firmware externally 
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr run_SIL_iteration_srvs_;
