@@ -3,6 +3,7 @@
  *
  * Copyright (c) 2017 Daniel Koch and James Jackson, BYU MAGICC Lab.
  * Copyright (c) 2023 Brandon Sutherland, AeroVironment Inc.
+ * Copyright (c) 2025 Ian Reid, BYU MAGICC Lab.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,14 +37,20 @@
  * @file rosflight_io.h
  * @author Daniel Koch <daniel.koch\@byu.edu>
  * @author Brandon Sutherland <brandonsutherland2\@gmail.com>
+ * @author Ian Reid <ian.young.reid\@gmail.com>
  */
-
 #ifndef ROSFLIGHT_IO_MAVROSFLIGHT_ROS_H
 #define ROSFLIGHT_IO_MAVROSFLIGHT_ROS_H
 
-#include <map>
+#include <set>
 #include <string>
 #include <unordered_set>
+#include <Eigen/Dense>
+#include <unsupported/Eigen/MatrixFunctions>
+#include <vector>
+#include <random>
+#include <algorithm>
+#include <cstdlib>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -85,6 +92,8 @@
 #include <rosflight_io/mavrosflight/mavlink_listener_interface.hpp>
 #include <rosflight_io/mavrosflight/mavrosflight.hpp>
 #include <rosflight_io/mavrosflight/param_listener_interface.hpp>
+
+#include "magnetometer_calibration.hpp"
 
 namespace rosflight_io
 {
@@ -451,6 +460,18 @@ private:
   bool calibrateBaroSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr & req,
                                 const std_srvs::srv::Trigger::Response::SharedPtr & res);
   /**
+   * @brief "calibrate_mag" service callback.
+   *
+   * This function is called anytime the "calibrate_mag" ROS service is called. It signals the
+   * firmware through MAVROSflight to calibrate the magnetometer sensor.
+   *
+   * @param req ROS Trigger service request.
+   * @param res ROS Trigger service response.
+   * @return True
+   */
+  bool calibrateMagSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr & req,
+                                const std_srvs::srv::Trigger::Response::SharedPtr & res);
+  /**
    * @brief "calibrate_airspeed" service callback.
    *
    * This function is called anytime the "calibrate_airspeed" ROS service is called. It signals the
@@ -515,12 +536,18 @@ private:
    */
   void versionTimerCallback();
   /**
-   * @brief Callback for the heat beat request timer.
+   * @brief Callback for the heartbeat request timer.
    *
    * This function is called repeatedly for the entire lifespan of ROSflightIO. It sends a request
    * for the firmware to send a heartbeat message.
    */
   void heartbeatTimerCallback();
+  /**
+   * @brief Callback for the magnetometer calibration.
+   *
+   * This function collects mag data and then calibrates the magnetometer.
+   */
+  void calibrateMag();
 
   // helpers
   /**
@@ -623,6 +650,8 @@ private:
   rclcpp::Service<rosflight_msgs::srv::ParamFile>::SharedPtr param_load_from_file_srv_;
   /// "calibrate_imu" ROS service.
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr imu_calibrate_bias_srv_;
+  /// "calibrate_mag" ROS service.
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr mag_calibrate_srv_;
   /// "calibrate_rc_trim" ROS service.
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr calibrate_rc_srv_;
   /// "calibrate_baro" ROS service.
@@ -646,6 +675,8 @@ private:
   rclcpp::TimerBase::SharedPtr version_timer_;
   /// ROS timer for heartbeat requests.
   rclcpp::TimerBase::SharedPtr heartbeat_timer_;
+  /// ROS timer for magnetometer calibration
+  rclcpp::TimerBase::SharedPtr mag_calibration_timer_;
 
   /// Quaternion ROS message, for passing quaternion data between functions.
   geometry_msgs::msg::Quaternion attitude_quat_;
@@ -654,6 +685,37 @@ private:
 
   /// Frame ID string, used to include frame in published ROS message.
   std::string frame_id_;
+
+  MagnetometerCalibrator magnetometer_calibrator_;
+  
+  /// Matrix of the magnetometer calibration data.
+  Eigen::MatrixXd mag_calibration_data_;
+
+  /// The current accels measured by the IMU, used for mag calibration.
+  Eigen::Vector3f current_accels_;
+  
+  /// Indicates if the FCU is reorienting before next calibration step.
+  bool reorienting_ = false;
+  /// The count of how many consecutive measurements have happened in a particular orientation.
+  //                               xd,xu,yd,yu,zd,zu
+  std::vector<int> orientations_ = {0, 0, 0, 0, 0, 0};
+  
+  /// The number of times that an orientation has been checked to see if full coverage has been attained.
+  int num_times_checked_;
+  
+  /// Whether all of the mag data from every orientation has been gathered
+  bool all_orientation_data_gathered_ = false;
+  
+  /// The index in mag_calibration_data_ where this current orientation data starts.
+  unsigned long current_orientation_index_;
+
+  /// The best guess for the orientation of the FCU so far for mag calibration.
+  unsigned long current_candidate_index_;
+
+  std::set<int> completed_mag_orientations_;
+  
+  /// Flag of wether to collect calibration data.
+  bool calibrate_mag_;
 
   /// Pointer to Mavlink communication object, used by MavROSflight.
   mavrosflight::MavlinkComm * mavlink_comm_;

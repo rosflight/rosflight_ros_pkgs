@@ -48,19 +48,20 @@
 #include <rosflight_io/mavrosflight/mavlink_udp.hpp>
 #include <rosflight_io/mavrosflight/serial_exception.hpp>
 #include <string>
-#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Matrix3x3.h> // Swap to Eigen!
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-#include <utility>
 
 #include <rosflight_io/rosflight_io.hpp>
 
 namespace rosflight_io
 {
+
 ROSflightIO::ROSflightIO()
     : Node("rosflight_io")
     , convenience_parameters_{}
     , prev_status_()
+    , magnetometer_calibrator_(1.0, 40, 0.95)
 {
   command_sub_ = this->create_subscription<rosflight_msgs::msg::Command>(
     "command", 1, std::bind(&ROSflightIO::commandCallback, this, std::placeholders::_1));
@@ -104,6 +105,10 @@ ROSflightIO::ROSflightIO()
   imu_calibrate_bias_srv_ = this->create_service<std_srvs::srv::Trigger>(
     "calibrate_imu",
     std::bind(&ROSflightIO::calibrateImuBiasSrvCallback, this, std::placeholders::_1,
+              std::placeholders::_2));
+  mag_calibrate_srv_ = this->create_service<std_srvs::srv::Trigger>(
+    "calibrate_mag",
+    std::bind(&ROSflightIO::calibrateMagSrvCallback, this, std::placeholders::_1,
               std::placeholders::_2));
   calibrate_rc_srv_ = this->create_service<std_srvs::srv::Trigger>(
     "calibrate_rc_trim",
@@ -585,6 +590,12 @@ void ROSflightIO::handle_small_imu_msg(const mavlink_message_t & msg)
     imu_temp_pub_ = this->create_publisher<sensor_msgs::msg::Temperature>("imu/temperature", 1);
   }
   imu_temp_pub_->publish(temp_msg);
+
+  if (calibrate_mag_) { // alpha filter the calibrated mag accel.
+    Eigen::Vector3f instant_accel;
+    instant_accel << imu.xacc, imu.yacc, imu.zacc;
+    magnetometer_calibrator_.update_accel(instant_accel);
+  }
 }
 
 void ROSflightIO::handle_rosflight_output_raw_msg(const mavlink_message_t & msg)
@@ -694,6 +705,9 @@ void ROSflightIO::handle_small_mag_msg(const mavlink_message_t & msg)
     mag_pub_ = this->create_publisher<sensor_msgs::msg::MagneticField>("magnetometer", 1);
   }
   mag_pub_->publish(mag_msg);
+  if (calibrate_mag_) {
+    magnetometer_calibrator_.update_mag(mag.xmag, mag.ymag, mag.zmag);
+  }
 }
 
 void ROSflightIO::handle_small_range_msg(const mavlink_message_t & msg)
@@ -1026,6 +1040,73 @@ bool ROSflightIO::calibrateBaroSrvCallback(const std_srvs::srv::Trigger::Request
   mavrosflight_->comm.send_message(msg);
   res->success = true;
   return true;
+}
+
+bool ROSflightIO::calibrateMagSrvCallback(
+  const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  const std_srvs::srv::Trigger::Response::SharedPtr & res) {
+ 
+  // Reset the mag compensation to get a clean calibration.
+  mavrosflight_->param.set_param_value("MAG_X_BIAS", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_Y_BIAS", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_Z_BIAS", 0.0f);
+  
+  mavrosflight_->param.set_param_value("MAG_A11_COMP", 1.0f);
+  mavrosflight_->param.set_param_value("MAG_A12_COMP", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_A13_COMP", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_A21_COMP", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_A22_COMP", 1.0f);
+  mavrosflight_->param.set_param_value("MAG_A23_COMP", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_A31_COMP", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_A32_COMP", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_A33_COMP", 1.0f);
+
+  float frequency = 10.0;
+
+  auto timer_period = std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000));
+
+  // Set timer to trigger bound callback while calibrating.
+  mag_calibration_timer_ = rclcpp::create_timer(this, this->get_clock(), timer_period,
+                                   std::bind(&ROSflightIO::calibrateMag, this));
+  
+  calibrate_mag_ = true;
+  res->success = true;
+  res->message = "Beginning Calibration";
+
+  // Create magnetometer calibrator 
+  
+  return true;
+}
+
+void ROSflightIO::calibrateMag() {
+
+  if (magnetometer_calibrator_.calibrating()) {
+    RCLCPP_INFO(this->get_logger(), magnetometer_calibrator_.feedback().c_str());
+  }
+  else {
+
+    Eigen::Vector3d hard_iron_offset = magnetometer_calibrator_.get_hard_iron_offset();
+    Eigen::Matrix3d soft_iron_correction = magnetometer_calibrator_.get_soft_iron_correction();
+
+    mavrosflight_->param.set_param_value("MAG_X_BIAS", float(hard_iron_offset(0)));
+    mavrosflight_->param.set_param_value("MAG_Y_BIAS", float(hard_iron_offset(1)));
+    mavrosflight_->param.set_param_value("MAG_Z_BIAS", float(hard_iron_offset(2)));
+
+    mavrosflight_->param.set_param_value("MAG_A11_COMP", float(soft_iron_correction(0,0)));
+    mavrosflight_->param.set_param_value("MAG_A12_COMP", float(soft_iron_correction(0,1)));
+    mavrosflight_->param.set_param_value("MAG_A13_COMP", float(soft_iron_correction(0,2)));
+    mavrosflight_->param.set_param_value("MAG_A21_COMP", float(soft_iron_correction(1,0)));
+    mavrosflight_->param.set_param_value("MAG_A22_COMP", float(soft_iron_correction(1,1)));
+    mavrosflight_->param.set_param_value("MAG_A23_COMP", float(soft_iron_correction(1,2)));
+    mavrosflight_->param.set_param_value("MAG_A31_COMP", float(soft_iron_correction(2,0)));
+    mavrosflight_->param.set_param_value("MAG_A32_COMP", float(soft_iron_correction(2,1)));
+    mavrosflight_->param.set_param_value("MAG_A33_COMP", float(soft_iron_correction(2,2)));
+
+    RCLCPP_INFO(this->get_logger(), "Calibration complete.");
+
+    mag_calibration_timer_->cancel();
+    calibrate_mag_ = false;
+  }
 }
 
 bool ROSflightIO::rebootSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr & req,
