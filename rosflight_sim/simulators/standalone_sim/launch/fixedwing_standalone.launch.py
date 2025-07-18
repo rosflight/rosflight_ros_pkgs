@@ -23,7 +23,7 @@ def generate_launch_description():
     # Declare launch arguments
     use_sim_time_arg = DeclareLaunchArgument(
         "use_sim_time",
-        default_value="true",
+        default_value="false",
         description="Whether the nodes will use sim time or not"
     )
     use_sim_time = LaunchConfiguration('use_sim_time')

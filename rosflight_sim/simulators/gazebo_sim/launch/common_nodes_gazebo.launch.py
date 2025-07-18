@@ -79,7 +79,6 @@ def generate_launch_description():
     rc_joy_node = Node(
         package="rosflight_sim",
         executable="rc.py",
-        name="rc",
         parameters=[{"use_vimfly": use_vimfly, "use_sim_time": use_sim_time}],
     )
 
