@@ -217,7 +217,6 @@ bool SILBoard::imu_read(rosflight_firmware::ImuStruct * imu)
   imu->gyro[1] = imu_data_.angular_velocity.y;
   imu->gyro[2] = imu_data_.angular_velocity.z;
 
-  // TODO: is this right?
   // Time the data was read
   imu->header.timestamp = imu_data_.header.stamp.sec * 1'000'000
     + imu_data_.header.stamp.nanosec / 1'000;
@@ -292,9 +291,7 @@ bool SILBoard::gnss_read(rosflight_firmware::GnssStruct * gnss)
   gnss_has_new_data_available_ = false;
 
   gnss->unix_seconds = gnss_data_.gnss_unix_seconds;
-  gnss->nano = gnss_data_.gnss_unix_nanos;
-  gnss->time_of_week = gnss->unix_seconds * 1'000'000
-    + gnss->nano / 1'000;  // Only used internal to the firmware. Pseudo GNSS iTOW in ms
+  gnss->unix_nanos = gnss_data_.gnss_unix_nanos;
 
   // Cast to rosflight_firmware::GNSSFixType first for error checking from enum class
   gnss->fix_type = static_cast<uint8_t>(
@@ -332,7 +329,7 @@ void SILBoard::battery_current_set_multiplier(double multiplier)
 void SILBoard::pwm_init(const float * rate, uint32_t channels)
 {
   rc_received_ = false;
-  // TODO: Switch channel assignments to be a ROS parameter
+  // TODO: Switch channel assignments to mirror the firmware parameters.
   latestRC_.values[0] = 1500; // x
   latestRC_.values[1] = 1500; // y
   latestRC_.values[3] = 1500; // z
