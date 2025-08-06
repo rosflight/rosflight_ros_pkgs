@@ -298,16 +298,16 @@ bool SILBoard::gnss_read(rosflight_firmware::GnssStruct * gnss)
     static_cast<rosflight_firmware::GNSSFixType>(gnss_data_.fix_type));
 
   gnss->num_sat = gnss_data_.num_sat;
-  gnss->lat = static_cast<int32_t>(gnss_data_.lat * 1e7); // Convert DDS into 100's of nanodegrees
-  gnss->lon = static_cast<int32_t>(gnss_data_.lon * 1e7); // Convert DDS into 100's of nanodegrees
-  gnss->height_msl = static_cast<int32_t>(gnss_data_.alt * 1e3); // m to mm
-  gnss->h_acc = static_cast<uint32_t>(gnss_data_.horizontal_accuracy * 1e3); // m to mm
-  gnss->v_acc = static_cast<uint32_t>(gnss_data_.vertical_accuracy * 1e3); // m to mm
+  gnss->lat = gnss_data_.lat;
+  gnss->lon = gnss_data_.lon;
+  gnss->height_msl = gnss_data_.alt;
+  gnss->h_acc = gnss_data_.horizontal_accuracy;
+  gnss->v_acc = gnss_data_.vertical_accuracy;
 
-  gnss->vel_n = static_cast<int32_t>(gnss_data_.vel_n * 1e3); // m to mm
-  gnss->vel_e = static_cast<int32_t>(gnss_data_.vel_e * 1e3); // m to mm
-  gnss->vel_d = static_cast<int32_t>(gnss_data_.vel_d * 1e3); // m to mm
-  gnss->speed_accy = static_cast<uint32_t>(gnss_data_.speed_accuracy * 1e3); // m to mm
+  gnss->vel_n = gnss_data_.vel_n;
+  gnss->vel_e = gnss_data_.vel_e;
+  gnss->vel_d = gnss_data_.vel_d;
+  gnss->speed_accy = gnss_data_.speed_accuracy;
 
   gnss->header.timestamp = gnss_data_.header.stamp.sec * 1'000'000
     + gnss_data_.header.stamp.nanosec / 1'000;
