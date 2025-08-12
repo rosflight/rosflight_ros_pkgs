@@ -217,7 +217,6 @@ bool SILBoard::imu_read(rosflight_firmware::ImuStruct * imu)
   imu->gyro[1] = imu_data_.angular_velocity.y;
   imu->gyro[2] = imu_data_.angular_velocity.z;
 
-  // TODO: is this right?
   // Time the data was read
   imu->header.timestamp = imu_data_.header.stamp.sec * 1'000'000
     + imu_data_.header.stamp.nanosec / 1'000;
@@ -292,25 +291,23 @@ bool SILBoard::gnss_read(rosflight_firmware::GnssStruct * gnss)
   gnss_has_new_data_available_ = false;
 
   gnss->unix_seconds = gnss_data_.gnss_unix_seconds;
-  gnss->nano = gnss_data_.gnss_unix_nanos;
-  gnss->time_of_week = gnss->unix_seconds * 1'000'000
-    + gnss->nano / 1'000;  // Only used internal to the firmware. Pseudo GNSS iTOW in ms
+  gnss->unix_nanos = gnss_data_.gnss_unix_nanos;
 
   // Cast to rosflight_firmware::GNSSFixType first for error checking from enum class
   gnss->fix_type = static_cast<uint8_t>(
     static_cast<rosflight_firmware::GNSSFixType>(gnss_data_.fix_type));
 
   gnss->num_sat = gnss_data_.num_sat;
-  gnss->lat = static_cast<int32_t>(gnss_data_.lat * 1e7); // Convert DDS into 100's of nanodegrees
-  gnss->lon = static_cast<int32_t>(gnss_data_.lon * 1e7); // Convert DDS into 100's of nanodegrees
-  gnss->height_msl = static_cast<int32_t>(gnss_data_.alt * 1e3); // m to mm
-  gnss->h_acc = static_cast<uint32_t>(gnss_data_.horizontal_accuracy * 1e3); // m to mm
-  gnss->v_acc = static_cast<uint32_t>(gnss_data_.vertical_accuracy * 1e3); // m to mm
+  gnss->lat = gnss_data_.lat;
+  gnss->lon = gnss_data_.lon;
+  gnss->height_msl = gnss_data_.alt;
+  gnss->h_acc = gnss_data_.horizontal_accuracy;
+  gnss->v_acc = gnss_data_.vertical_accuracy;
 
-  gnss->vel_n = static_cast<int32_t>(gnss_data_.vel_n * 1e3); // m to mm
-  gnss->vel_e = static_cast<int32_t>(gnss_data_.vel_e * 1e3); // m to mm
-  gnss->vel_d = static_cast<int32_t>(gnss_data_.vel_d * 1e3); // m to mm
-  gnss->speed_accy = static_cast<uint32_t>(gnss_data_.speed_accuracy * 1e3); // m to mm
+  gnss->vel_n = gnss_data_.vel_n;
+  gnss->vel_e = gnss_data_.vel_e;
+  gnss->vel_d = gnss_data_.vel_d;
+  gnss->speed_accy = gnss_data_.speed_accuracy;
 
   gnss->header.timestamp = gnss_data_.header.stamp.sec * 1'000'000
     + gnss_data_.header.stamp.nanosec / 1'000;
@@ -332,7 +329,7 @@ void SILBoard::battery_current_set_multiplier(double multiplier)
 void SILBoard::pwm_init(const float * rate, uint32_t channels)
 {
   rc_received_ = false;
-  // TODO: Switch channel assignments to be a ROS parameter
+  // TODO: Switch channel assignments to mirror the firmware parameters.
   latestRC_.values[0] = 1500; // x
   latestRC_.values[1] = 1500; // y
   latestRC_.values[3] = 1500; // z

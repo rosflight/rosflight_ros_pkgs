@@ -71,6 +71,7 @@ void Fixedwing::declare_fixedwing_params()
   this->declare_parameter("wing_epsilon", rclcpp::PARAMETER_DOUBLE);
   this->declare_parameter("wing_alpha0", rclcpp::PARAMETER_DOUBLE);
 
+  // RC command channel configuration
   this->declare_parameter("max_aileron_deflection_angle", 40.);
   this->declare_parameter("max_elevator_deflection_angle", 40.);
   this->declare_parameter("max_rudder_deflection_angle", 40.);
@@ -148,12 +149,6 @@ void Fixedwing::declare_fixedwing_params()
   this->declare_parameter("V_max", rclcpp::PARAMETER_DOUBLE);
   this->declare_parameter("R_motor", rclcpp::PARAMETER_DOUBLE);
   this->declare_parameter("I_0", rclcpp::PARAMETER_DOUBLE);
-
-  // RC command channel configuration
-  // TODO: Correct these values!
-  this->declare_parameter("aileron_max_deflection_rad", 1.0);
-  this->declare_parameter("elevator_max_deflection_rad", 1.0);
-  this->declare_parameter("rudder_max_deflection_rad", 1.0);
 
   // Servo time delay parameters
   this->declare_parameter("servo_refresh_rate", 0.003);
