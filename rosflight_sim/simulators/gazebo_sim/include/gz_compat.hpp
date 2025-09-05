@@ -46,6 +46,7 @@
 using GazeboVector = ignition::math::Vector3d;
 using GazeboPose = ignition::math::Pose3d;
 using GazeboQuaternion = ignition::math::Quaterniond;
+using GazeboMatrix3 = ignition::math::Matrix3d;
 
 #define GZ_COMPAT_GET_X(VECTOR) (VECTOR).X()
 #define GZ_COMPAT_GET_Y(VECTOR) (VECTOR).Y()
@@ -61,8 +62,11 @@ using GazeboQuaternion = ignition::math::Quaterniond;
 #define GZ_COMPAT_GET_SIM_TIME(WORLD_PTR) (WORLD_PTR)->SimTime()
 #define GZ_COMPAT_GET_RELATIVE_LINEAR_VEL(LINK_PTR) (LINK_PTR)->RelativeLinearVel()
 #define GZ_COMPAT_GET_WORLD_LINEAR_VEL(LINK_PTR) (LINK_PTR)->WorldLinearVel()
+#define GZ_COMPAT_SET_WORLD_LINEAR_VEL(LINK_PTR, VALUE) (LINK_PTR)->SetLinearVel(VALUE)
 #define GZ_COMPAT_GET_RELATIVE_ANGULAR_VEL(LINK_PTR) (LINK_PTR)->RelativeAngularVel()
+#define GZ_COMPAT_SET_ANGULAR_VEL(LINK_PTR, VALUE) (LINK_PTR)->SetAngularVel(VALUE)
 #define GZ_COMPAT_GET_WORLD_COG_POSE(LINK_PTR) (LINK_PTR)->WorldCoGPose()
+#define GZ_COMPAT_SET_WORLD_COG_POSE(LINK_PTR, VALUE) (LINK_PTR)->SetWorldPose(VALUE)
 #define GZ_COMPAT_GET_WORLD_POSE(LINK_PTR) (LINK_PTR)->WorldPose()
 #define GZ_COMPAT_GET_RELATIVE_FORCE(LINK_PTR) (LINK_PTR)->RelativeForce()
 #define GZ_COMPAT_GET_ENTITY(WORLD_PTR, FRAME_ID_PTR) (WORLD_PTR)->EntityByName((FRAME_ID_PTR))
@@ -73,5 +77,8 @@ using GazeboQuaternion = ignition::math::Quaterniond;
 #define GZ_COMPAT_DISCONNECT_WORLD_UPDATE_BEGIN(CONNECTION) (CONNECTION).reset()
 #define GZ_COMPAT_GET_GRAVITY(WORLD_PTR) (WORLD_PTR)->Gravity()
 #define GZ_COMPAT_GET_MASS(INERTIAL_PTR) (INERTIAL_PTR)->Mass()
+#define GZ_COMPAT_GET_RELATIVE_MOI(INERTIAL_PTR) (INERTIAL_PTR)->MOI()
+#define GZ_COMPAT_ADD_COG_FORCE(LINK, VALUE) (link_)->AddForce(VALUE)
+#define GZ_COMPAT_ADD_COG_TORQUE(LINK, VALUE) (link_)->AddTorque(VALUE)
 
 #endif // ROSFLIGHT_SIM_GZ_COMPAT_H

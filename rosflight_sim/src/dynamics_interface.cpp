@@ -50,6 +50,11 @@ DynamicsInterface::DynamicsInterface()
   forces_moments_sub_ = this->create_subscription<geometry_msgs::msg::WrenchStamped>(
     "forces_and_moments", 1,
     std::bind(&DynamicsInterface::forces_callback, this, std::placeholders::_1));
+
+  // Initialize service server
+  set_sim_state_srvs_ = this->create_service<rosflight_msgs::srv::SetSimState>(
+    "dynamics/set_sim_state",
+    std::bind(&DynamicsInterface::set_sim_state_callback, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void DynamicsInterface::declare_parameters()
@@ -84,6 +89,14 @@ void DynamicsInterface::forces_callback(const geometry_msgs::msg::WrenchStamped 
   geometry_msgs::msg::Vector3Stamped wind_truth = compute_wind_truth();
   wind_truth.header.stamp = this->get_clock()->now();
   wind_truth_pub_->publish(wind_truth);
+}
+
+bool DynamicsInterface::set_sim_state_callback(const rosflight_msgs::srv::SetSimState::Request::SharedPtr req,
+                                               const rosflight_msgs::srv::SetSimState::Response::SharedPtr res)
+{
+  res->success = set_sim_state(req->state);
+  res->message = res->success ? "Sim state set." : "Sim state not set!";
+  return true;
 }
 
 } // namespace rosflight_sim

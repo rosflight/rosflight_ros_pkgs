@@ -114,4 +114,43 @@ geometry_msgs::msg::Vector3Stamped GazeboDynamics::compute_wind_truth()
   return current_wind;
 }
 
+bool GazeboDynamics::set_sim_state(const rosflight_msgs::msg::SimState state)
+{
+  // TODO: Check that this rotation is correct direction.
+  GazeboPose new_pose{state.pose.position.x,
+                      state.pose.position.y,
+                      state.pose.position.z,
+                      state.pose.orientation.w,
+                      state.pose.orientation.x,
+                      state.pose.orientation.y,
+                      state.pose.orientation.z};
+  GZ_COMPAT_SET_WORLD_COG_POSE(link_, new_pose);
+
+  GazeboVector lin_vel{state.twist.linear.x, state.twist.linear.y, state.twist.linear.z};
+  GazeboVector ang_vel{state.twist.angular.x, state.twist.angular.y, state.twist.angular.z};
+  GZ_COMPAT_SET_WORLD_LINEAR_VEL(link_, lin_vel);
+  GZ_COMPAT_SET_ANGULAR_VEL(link_, ang_vel);
+
+  // Can't add accels directly... Have to set forces and torques that produce those accels.
+  GazeboVector lin_acc{state.acceleration.linear.x, state.acceleration.linear.y, state.acceleration.linear.z};
+  GazeboVector ang_acc{state.acceleration.angular.x, state.acceleration.angular.y, state.acceleration.angular.z};
+
+  // Parse the inertia parameters
+  double mass = link_->GetInertial()->Mass();
+  GazeboMatrix3 I_body = link_->GetInertial()->MOI();
+
+  // Get world rotation of the link
+  GazeboQuaternion q = GZ_COMPAT_GET_ROT(GZ_COMPAT_GET_WORLD_COG_POSE(link_));
+  GazeboMatrix3 R(q);
+  GazeboMatrix3 I_world = R * I_body * R.Transposed();
+
+  GazeboVector force = mass * lin_acc;
+  GazeboVector torque = I_world  * ang_acc;
+
+  GZ_COMPAT_ADD_COG_FORCE(link_, force);
+  GZ_COMPAT_ADD_COG_TORQUE(link_, torque);
+
+  return true;
+}
+
 } // namespace rosflight_sim

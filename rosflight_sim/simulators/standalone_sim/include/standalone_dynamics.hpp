@@ -41,7 +41,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include "rosflight_sim/dynamics_interface.hpp"
-#include "rosflight_msgs/srv/set_sim_state.hpp"
+#include "rosflight_msgs/msg/sim_state.hpp"
 
 namespace rosflight_sim
 {
@@ -55,6 +55,7 @@ private:
   void apply_forces_and_torques(const geometry_msgs::msg::WrenchStamped & forces_torques) override;
   rosflight_msgs::msg::SimState compute_truth() override;
   geometry_msgs::msg::Vector3Stamped compute_wind_truth() override;
+  bool set_sim_state(const rosflight_msgs::msg::SimState state) override;
 
   // Persistent variables
   rosflight_msgs::msg::SimState current_truth_state_;
@@ -76,11 +77,6 @@ private:
   Eigen::VectorXd add_ground_collision_forces(Eigen::VectorXd forces);
 
   void declare_parameters();
-
-  // Service definitions used for initialization
-  rclcpp::Service<rosflight_msgs::srv::SetSimState>::SharedPtr set_sim_state_srvs_;
-  bool set_sim_state(const rosflight_msgs::srv::SetSimState::Request::SharedPtr req,
-                     const rosflight_msgs::srv::SetSimState::Response::SharedPtr res);
 };
 
 } // namespace rosflight_sim

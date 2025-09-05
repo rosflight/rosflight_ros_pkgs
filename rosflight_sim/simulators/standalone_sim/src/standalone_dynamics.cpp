@@ -44,11 +44,6 @@ StandaloneDynamics::StandaloneDynamics()
   // TODO: parameter callback...
 
   compute_inertia_matrix();
-
-  // Initialize service server
-  set_sim_state_srvs_ = this->create_service<rosflight_msgs::srv::SetSimState>(
-    "dynamics/set_sim_state",
-    std::bind(&StandaloneDynamics::set_sim_state, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void StandaloneDynamics::declare_parameters()
@@ -262,14 +257,9 @@ Eigen::VectorXd StandaloneDynamics::f(Eigen::VectorXd state, Eigen::VectorXd for
   return out;
 }
 
-bool StandaloneDynamics::set_sim_state(const rosflight_msgs::srv::SetSimState::Request::SharedPtr req,
-                    const rosflight_msgs::srv::SetSimState::Response::SharedPtr res)
+bool StandaloneDynamics::set_sim_state(const rosflight_msgs::msg::SimState state)
 {
-  current_truth_state_ = req->state;
-
-  res->success = true;
-  res->message = "Sim state set.";
-
+  current_truth_state_ = state;
   return true;
 }
 

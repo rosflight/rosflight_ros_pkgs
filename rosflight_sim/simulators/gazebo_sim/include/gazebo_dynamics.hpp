@@ -41,8 +41,9 @@
 #include <gazebo/physics/physics.hh>
 #include <gazebo_ros/node.hpp>
 
-#include "rosflight_sim/dynamics_interface.hpp"
 #include "gz_compat.hpp"
+#include "rosflight_msgs/msg/sim_state.hpp"
+#include "rosflight_sim/dynamics_interface.hpp"
 // #include "gazebo_dynamics_plugin.hpp"
 
 namespace rosflight_sim
@@ -57,6 +58,7 @@ private:
   void apply_forces_and_torques(const geometry_msgs::msg::WrenchStamped & forces_torques) override;
   rosflight_msgs::msg::SimState compute_truth() override;
   geometry_msgs::msg::Vector3Stamped compute_wind_truth() override;
+  bool set_sim_state(const rosflight_msgs::msg::SimState state) override;
 
   gazebo::physics::LinkPtr link_;
   std::string link_name_;

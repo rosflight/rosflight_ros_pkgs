@@ -40,6 +40,7 @@
 #include <std_srvs/srv/trigger.hpp>
 
 #include "rosflight_msgs/msg/sim_state.hpp"
+#include "rosflight_msgs/srv/set_sim_state.hpp"
 
 namespace rosflight_sim
 {
@@ -54,11 +55,13 @@ private:
   virtual void apply_forces_and_torques(const geometry_msgs::msg::WrenchStamped & msg) = 0;
   virtual rosflight_msgs::msg::SimState compute_truth() = 0;
   virtual geometry_msgs::msg::Vector3Stamped compute_wind_truth() = 0;
+  virtual bool set_sim_state(const rosflight_msgs::msg::SimState state) = 0;
 
   // ROS2 interfaces
   rclcpp::Publisher<rosflight_msgs::msg::SimState>::SharedPtr truth_state_pub_;
   rclcpp::Publisher<geometry_msgs::msg::Vector3Stamped>::SharedPtr wind_truth_pub_;
   rclcpp::Subscription<geometry_msgs::msg::WrenchStamped>::SharedPtr forces_moments_sub_;
+  rclcpp::Service<rosflight_msgs::srv::SetSimState>::SharedPtr set_sim_state_srvs_;
 
   void forces_callback(const geometry_msgs::msg::WrenchStamped & msg);
 
@@ -81,6 +84,14 @@ private:
    */
   rcl_interfaces::msg::SetParametersResult
   parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
+
+  /**
+  * @brief Service callback to set the simulation state to a particular value
+  * @param req: Pointer to SetSimState Request object
+  * @param res: Pointer to SetSimState Response object
+  */
+  bool set_sim_state_callback(const rosflight_msgs::srv::SetSimState::Request::SharedPtr req,
+                              const rosflight_msgs::srv::SetSimState::Response::SharedPtr res);
 };
 
 } // namespace rosflight_sim
