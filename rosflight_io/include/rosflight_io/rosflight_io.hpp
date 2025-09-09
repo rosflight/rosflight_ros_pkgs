@@ -60,6 +60,7 @@
 #include <std_msgs/msg/bool.hpp>
 #include <std_msgs/msg/float32.hpp>
 #include <std_msgs/msg/int32.hpp>
+#include <std_msgs/msg/int64.hpp>
 #include <std_msgs/msg/string.hpp>
 
 #include <sensor_msgs/msg/fluid_pressure.hpp>
@@ -324,6 +325,10 @@ private:
    * @param msg Battery status message.
    */
   void handle_battery_status_msg(const mavlink_message_t & msg);
+
+  void handle_offboard_control_msg(const mavlink_message_t & msg);
+  rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr serial_delay_pub_;
+  int64_t start_time_ = 0;
 
   /**
    * @brief Parses firmware and git version strings into consistent format.

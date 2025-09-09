@@ -337,11 +337,27 @@ void ROSflightIO::handle_mavlink_message(const mavlink_message_t & msg)
     case MAVLINK_MSG_ID_ROSFLIGHT_BATTERY_STATUS:
       handle_battery_status_msg(msg);
       break;
+    // timing experiment
+    case MAVLINK_MSG_ID_OFFBOARD_CONTROL:
+      handle_offboard_control_msg(msg);
+      break;
     default:
       RCLCPP_DEBUG(this->get_logger(), "rosflight_io: Got unhandled mavlink message ID %d",
                    msg.msgid);
       break;
   }
+}
+
+void ROSflightIO::handle_offboard_control_msg(const mavlink_message_t & msg)
+{
+  // This function is for a timing experiment. Usually we don't get offboard command messages back.
+  if (serial_delay_pub_ == nullptr) {
+    serial_delay_pub_ = this->create_publisher<std_msgs::msg::Int64>("serial_time_delay", 10);
+  }
+
+  std_msgs::msg::Int64 out;
+  out.data = this->get_clock()->now().nanoseconds() - start_time_;
+  serial_delay_pub_->publish(out);
 }
 
 void ROSflightIO::on_new_param_received(std::string name, double value)
@@ -881,6 +897,10 @@ void ROSflightIO::commandCallback(const rosflight_msgs::msg::Command::ConstShare
 
   mavlink_message_t mavlink_msg;
   mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg, mode, ignore, Qx, Qy, Qz, Fx, Fy, Fz);
+
+  // timing experiment
+  start_time_ = this->get_clock()->now().nanoseconds();
+
   mavrosflight_->comm.send_message(mavlink_msg);
 }
 
