@@ -329,6 +329,8 @@ private:
   void handle_offboard_control_msg(const mavlink_message_t & msg);
   rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr serial_delay_pub_;
   int64_t start_time_ = 0;
+  int64_t sec_divisor_ = 100'000'000;
+  int64_t divisor_ = 10'000;
 
   /**
    * @brief Parses firmware and git version strings into consistent format.
