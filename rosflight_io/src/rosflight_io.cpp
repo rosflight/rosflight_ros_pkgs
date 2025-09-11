@@ -38,6 +38,7 @@
  * @author Brandon Sutherland <brandonsutherland2\@gmail.com>
  */
 
+#include <cstdint>
 #ifdef ROSFLIGHT_VERSION
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x) // Somehow, C++ requires two macros to convert a macro to a string
@@ -53,6 +54,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include <rosflight_io/rosflight_io.hpp>
+#include <iomanip>
 
 namespace rosflight_io
 {
@@ -355,8 +357,37 @@ void ROSflightIO::handle_offboard_control_msg(const mavlink_message_t & msg)
     serial_delay_pub_ = this->create_publisher<std_msgs::msg::Int64>("serial_time_delay", 10);
   }
 
+  mavlink_offboard_control_t off;
+  mavlink_msg_offboard_control_decode(&msg, &off);
+
   std_msgs::msg::Int64 out;
-  out.data = this->get_clock()->now().nanoseconds() - start_time_;
+  int64_t curr_time = this->get_clock()->now().nanoseconds() % sec_divisor_;
+
+  // int64_t msec_part = curr_time / divisor_;
+  // int64_t frac_ms_part = curr_time % divisor_;
+
+  int64_t off_msec = static_cast<int64_t>(std::roundf(off.Fy)) * divisor_;
+  int64_t off_frac = static_cast<int64_t>(std::roundf(off.Fz));
+  off_msec = off_msec + off_frac;
+
+  out.data = curr_time - off_msec;
+  if (out.data < 0) {
+    out.data += sec_divisor_;
+  }
+
+  // float y = static_cast<float>(msec_part);
+  // float z = static_cast<float>(frac_ms_part);
+  //
+  // out.data = static_cast<int64_t>((y - off.Fy)*divisor_ + (z - off.Fz));
+  // std::cout << "curr_time: " << curr_time << std::endl;
+  // std::cout << "y        : " << std::fixed << std::roundf(y)*divisor_ << std::endl;
+  // std::cout << "z        : " << std::fixed << (z) << std::endl;
+  // std::cout << "out      : " << out.data << std::endl;
+  // if (out.data < 0) {
+  //   out.data = static_cast<int64_t>((y - off.Fy)*divisor_ + (z - off.Fz));
+  //   std::cout << "******************************************************************" << std::endl;
+  // }
+
   serial_delay_pub_->publish(out);
 }
 
@@ -895,11 +926,18 @@ void ROSflightIO::commandCallback(const rosflight_msgs::msg::Command::ConstShare
   float Fy = msg->fy;
   float Fz = msg->fz;
 
+  // timing experiment
+  int64_t curr_time = this->get_clock()->now().nanoseconds() % sec_divisor_;
+
+  int64_t msec_part = curr_time / divisor_;
+  int64_t frac_ms_part = curr_time % divisor_;
+
+  // Convert to float if you really want floats
+  Fy = (static_cast<float>(msec_part));
+  Fz = static_cast<float>(frac_ms_part);
+
   mavlink_message_t mavlink_msg;
   mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg, mode, ignore, Qx, Qy, Qz, Fx, Fy, Fz);
-
-  // timing experiment
-  start_time_ = this->get_clock()->now().nanoseconds();
 
   mavrosflight_->comm.send_message(mavlink_msg);
 }
