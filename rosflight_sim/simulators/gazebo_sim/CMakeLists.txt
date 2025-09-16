@@ -17,7 +17,7 @@ endif(NOT CMAKE_BUILD_TYPE)
 # Since Gazebo doesn't have an arm64 target, skip this package if gazebo is not found
 find_package(gazebo_ros QUIET)
 if(NOT gazebo_FOUND)
-  install(CODE "message(\"Gazebo not found, skipping Gazebo sim")
+  install(CODE "message(\"Gazebo not found, skipping Gazebo sim\")")
   return()
 endif()
 
