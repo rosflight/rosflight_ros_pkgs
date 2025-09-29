@@ -162,6 +162,7 @@ private:
   LiftCoeff Cell_;
   LiftCoeff Cn_;
 
+  double max_deflection_angle_; // What is this used for?
   double servo_tau_;
   double servo_refresh_rate_; // refresh rate TODO: find a way to programmatically set this.
   double max_aileron_deflection_angle_;
