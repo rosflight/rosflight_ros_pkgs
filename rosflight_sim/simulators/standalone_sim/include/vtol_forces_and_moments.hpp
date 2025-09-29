@@ -57,8 +57,10 @@ namespace rosflight_sim
 class VTOL : public ForcesAndMomentsInterface
 {
 private:
-  double V_max_;
   bool paramsHaveChanged_;
+  // Shared parameters
+  double V_max_;
+  double rho_;
 
   //Multi-rotor variables--------------------------
 
@@ -99,11 +101,12 @@ private:
 
   int num_rotors_;
   std::vector<MR_Motor> motors_;
+  double cross_sectional_area_; // m^2
+  double mr_CD_;
+  double CD_induced_;
+  std::vector<double> ground_effect_coeffs_;
 
   //Fixed-wing variables--------------------------------
-
-  // physical parameters
-  double rho_;
 
   // aerodynamic coefficients
   struct WingCoeff
@@ -160,7 +163,10 @@ private:
   LiftCoeff Cn_;
 
   double servo_tau_;
-  double max_deflection_angle_;
+  double servo_refresh_rate_; // refresh rate TODO: find a way to programmatically set this.
+  double max_aileron_deflection_angle_;
+  double max_elevator_deflection_angle_;
+  double max_rudder_deflection_angle_;
 
   // not constants
   // actuators

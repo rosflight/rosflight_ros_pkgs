@@ -34,7 +34,6 @@
 
 
 /* TODO
-- Make sure all declared variables are updates in update() and called locally
 - Combine forces and moments from mr and fw into one return (make fw_forces and fw_torques)
 */
 
@@ -211,29 +210,29 @@ void VTOL::update_params_from_ROS()
   /* Load Rotor Configuration */
   motors_.resize(num_rotors_);
 
-  MR_Prop prop_;
+  MR_Prop prop;
 
-  if (!this->get_parameter("mr_CT_0", prop_.CT_0)) {
+  if (!this->get_parameter("mr_CT_0", prop.CT_0)) {
     RCLCPP_ERROR(this->get_logger(), "Param 'CT_0' not defined");
   }
-  if (!this->get_parameter("mr_CT_1", prop_.CT_1)) {
+  if (!this->get_parameter("mr_CT_1", prop.CT_1)) {
     RCLCPP_ERROR(this->get_logger(), "Param 'CT_1' not defined");
   }
-  if (!this->get_parameter("mr_CT_2", prop_.CT_2)) {
+  if (!this->get_parameter("mr_CT_2", prop.CT_2)) {
     RCLCPP_ERROR(this->get_logger(), "Param 'CT_2' not defined");
   }
 
-  if (!this->get_parameter("mr_CQ_0", prop_.CQ_0)) {
+  if (!this->get_parameter("mr_CQ_0", prop.CQ_0)) {
     RCLCPP_ERROR(this->get_logger(), "Param 'CQ_0' not defined");
   }
-  if (!this->get_parameter("mr_CQ_1", prop_.CQ_1)) {
+  if (!this->get_parameter("mr_CQ_1", prop.CQ_1)) {
     RCLCPP_ERROR(this->get_logger(), "Param 'CQ_1' not defined");
   }
-  if (!this->get_parameter("mr_CQ_2", prop_.CQ_2)) {
+  if (!this->get_parameter("mr_CQ_2", prop.CQ_2)) {
     RCLCPP_ERROR(this->get_logger(), "Param 'CQ_2' not defined");
   }
 
-  if (!this->get_parameter("mr_D_prop", prop_.diam)) {
+  if (!this->get_parameter("mr_D_prop", prop.diam)) {
     RCLCPP_ERROR(this->get_logger(), "Param 'D_prop' not defined");
   }
 
@@ -250,27 +249,40 @@ void VTOL::update_params_from_ROS()
     RCLCPP_ERROR(this->get_logger(), "Param 'rotor_rotation_directions' not defined");
   }
 
-  MR_Motor motor_characteristics_;
-  motor_characteristics_.prop = prop_;
-  if (!this->get_parameter("mr_R_motor", motor_characteristics_.R)) {
+  MR_Motor motor_characteristics;
+  motor_characteristics.prop = prop;
+  if (!this->get_parameter("mr_R_motor", motor_characteristics.R)) {
     RCLCPP_ERROR(this->get_logger(), "Param 'R_motor' not defined");
   }
-  if (!this->get_parameter("mr_I_0", motor_characteristics_.I_0)) {
+  if (!this->get_parameter("mr_I_0", motor_characteristics.I_0)) {
     RCLCPP_ERROR(this->get_logger(), "Param 'I_0' not defined");
   }
-  if (!this->get_parameter("mr_KQ", motor_characteristics_.KQ)) {
+  if (!this->get_parameter("mr_KQ", motor_characteristics.KQ)) {
     RCLCPP_ERROR(this->get_logger(), "Param 'KQ' not defined");
   }
 
-
   for (int i = 0; i < num_rotors_; i++) {
-    MR_Motor motor = motor_characteristics_;
+    MR_Motor motor = motor_characteristics;
     motor.dist = dists[i];
     motor.radial_angle = angles[i] * M_PI / 180.0;
     motor.direction = rotation_dirs[i];
     motor.command = 0.0;
     motors_[i] = motor;
   }
+
+  if (!this->get_parameter("A_c", cross_sectional_area_)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'A_c' not defined");
+  }
+  if (!this->get_parameter("mr_CD", mr_CD_)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'mr_CD' not defined");
+  }
+  if (!this->get_parameter("CD_induced", CD_induced_)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'CD_induced' not defined");
+  }
+  if (!this->get_parameter("ground_effect_coeffs", ground_effect_coeffs_)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'ground_effect_coeffs' not defined");
+  }
+
 
   // Fixedwing params ---------------------------------------
   if (!this->get_parameter("rho", rho_)) {
@@ -335,10 +347,6 @@ void VTOL::update_params_from_ROS()
   }
   if (!this->get_parameter("fw_I_0", fw_motor_.I_0)) {
     RCLCPP_ERROR(this->get_logger(), "Param 'I_0' not defined");
-  }
-
-  if (!this->get_parameter("servo_tau", servo_tau_)) {
-    RCLCPP_ERROR(this->get_logger(), "Param 'servo_tau' not defined");
   }
 
   // Lift Params
@@ -514,6 +522,22 @@ void VTOL::update_params_from_ROS()
   if (!this->get_parameter("C_Y_delta_r", CY_.delta_r)) {
     RCLCPP_ERROR(this->get_logger(), "Param 'C_Y_delta_r' not defined");
   }
+
+  if (!this->get_parameter("servo_tau", servo_tau_)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'servo_tau' not defined");
+  }
+  if (!this->get_parameter("servo_refresh_rate", servo_refresh_rate_)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'servo_refresh_rate' not defined");
+  }
+  if (!this->get_parameter("max_aileron_deflection_angle", max_aileron_deflection_angle_)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'max_aileron_deflection_angle' not defined");
+  }
+  if (!this->get_parameter("max_elevator_deflection_angle", max_elevator_deflection_angle_)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'max_elevator_deflection_angle' not defined");
+  }
+  if (!this->get_parameter("max_rudder_deflection_angle", max_rudder_deflection_angle_)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'max_rudder_deflection_angle' not defined");
+  }
 }
 
 rcl_interfaces::msg::SetParametersResult VTOL::parameters_callback(const std::vector<rclcpp::Parameter> & parameters)
@@ -643,10 +667,7 @@ geometry_msgs::msg::WrenchStamped VTOL::update_forces_and_torques(rosflight_msgs
   }
 
   // Compute aerodynamic drag forces on the body of the vehicle
-  double cross_sectional_area = this->get_parameter("A_c").as_double(); // m^2
-  double CD = this->get_parameter("CD").as_double();
-
-  double drag = 0.5 * rho_ * cross_sectional_area * CD * pow(mr_Va.norm(), 2);
+  double drag = 0.5 * rho_ * cross_sectional_area_ * mr_CD_ * pow(mr_Va.norm(), 2);
   Eigen::Vector3d drag_force;
 
   if (mr_Va.norm() < 0.001) {
@@ -656,22 +677,19 @@ geometry_msgs::msg::WrenchStamped VTOL::update_forces_and_torques(rosflight_msgs
   }
 
   // Compute the drag force induced from the propellers
-  double CD_induced = this->get_parameter("CD_induced").as_double();
-
   Eigen::Matrix3d drag_matrix;
-  drag_matrix << -total_thrust*CD_induced, 0.0, 0.0,
-                 0.0, -total_thrust*CD_induced, 0.0,
+  drag_matrix << -total_thrust*CD_induced_, 0.0, 0.0,
+                 0.0, -total_thrust*CD_induced_, 0.0,
                  0.0, 0.0, 0.0;
 
   Eigen::Vector3d induced_drag_force = drag_matrix * mr_Va;
 
   // Apply Ground Effect
-  std::vector<double> ground_effect_coeffs = this->get_parameter("ground_effect").as_double_array();
-  double ground_effect_force = max(0.0, ground_effect_coeffs[0]*pow(-x.pose.position.z, 4) +
-                                        ground_effect_coeffs[1]*pow(-x.pose.position.z, 3) +
-                                        ground_effect_coeffs[2]*pow(-x.pose.position.z, 2) +
-                                        ground_effect_coeffs[3]*-x.pose.position.z +
-                                        ground_effect_coeffs[4]);
+  double ground_effect_force = max(0.0, ground_effect_coeffs_[0]*pow(-x.pose.position.z, 4) +
+                                        ground_effect_coeffs_[1]*pow(-x.pose.position.z, 3) +
+                                        ground_effect_coeffs_[2]*pow(-x.pose.position.z, 2) +
+                                        ground_effect_coeffs_[3]*-x.pose.position.z +
+                                        ground_effect_coeffs_[4]);
   Eigen::Vector3d ground_effect(0.0, 0.0, -ground_effect_force);
 
 
@@ -722,15 +740,15 @@ geometry_msgs::msg::WrenchStamped VTOL::update_forces_and_torques(rosflight_msgs
   // Act cmds unmixed are {Fx, Fy, Fz, Qx, Qy, Qz}
   // Scale the unmixed commands by the maximum control surface deflection angle
   // TODO: Does doing it this way make sense for a vtail configuration?
-  delta_.a = act_cmds_unmixed(3) * this->get_parameter("max_aileron_deflection_angle").as_double() * M_PI / 180.0;
-  delta_.e = act_cmds_unmixed(4) * this->get_parameter("max_elevator_deflection_angle").as_double() * M_PI / 180.0;;
+  delta_.a = act_cmds_unmixed(3) * max_aileron_deflection_angle_ * M_PI / 180.0;
+  delta_.e = act_cmds_unmixed(4) * max_elevator_deflection_angle_ * M_PI / 180.0;;
   delta_.t = act_cmds_unmixed(0);
-  delta_.r = act_cmds_unmixed(5) * this->get_parameter("max_rudder_deflection_angle").as_double() * M_PI / 180.0;;
+  delta_.r = act_cmds_unmixed(5) * max_rudder_deflection_angle_ * M_PI / 180.0;;
 
   // Apply servo time delay
   Actuators delta_curr;
 
-  float Ts = this->get_parameter("servo_refresh_rate").as_double(); // refresh rate TODO: find a way to programmatically set this.
+  float Ts = servo_refresh_rate_; 
   delta_curr.a = 1 / (2 * servo_tau_ / Ts + 1)
     * (delta_prev_command_.a + delta_.a + (2 * servo_tau_ / Ts - 1) * delta_prev_.a);
   delta_curr.e = 1 / (2 * servo_tau_ / Ts + 1)
