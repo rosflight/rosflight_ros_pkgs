@@ -57,6 +57,7 @@ namespace rosflight_sim
 class VTOL : public ForcesAndMomentsInterface
 {
 private:
+  double V_max_;
   bool paramsHaveChanged_;
 
   //Multi-rotor variables--------------------------
