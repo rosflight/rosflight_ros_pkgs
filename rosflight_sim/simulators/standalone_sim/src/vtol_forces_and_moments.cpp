@@ -34,7 +34,7 @@
 
 
 /* TODO
-- Combine forces and moments from mr and fw into one return (make fw_forces and fw_torques)
+- 
 */
 
 #include "vtol_forces_and_moments.hpp"
@@ -880,22 +880,15 @@ geometry_msgs::msg::WrenchStamped VTOL::update_forces_and_torques(rosflight_msgs
   rclcpp::Time now = this->get_clock()->now();
   forces.header.stamp = now;
 
+  // Add multi-rotor forces and moments to the fixed-wing values
+  forces.wrench.force.x += mr_body_forces(0);
+  forces.wrench.force.y += mr_body_forces(1);
+  forces.wrench.force.z += mr_body_forces(2);
+  forces.wrench.torque.x += mr_body_torques(0);
+  forces.wrench.torque.y += mr_body_torques(1);
+  forces.wrench.torque.z += mr_body_torques(2);
+
   return forces;
-
-
-  // Package up message and return
-  geometry_msgs::msg::WrenchStamped msg;
-
-  msg.header.stamp = this->get_clock()->now();
-
-  msg.wrench.force.x = mr_body_forces(0);
-  msg.wrench.force.y = mr_body_forces(1);
-  msg.wrench.force.z = mr_body_forces(2);
-  msg.wrench.torque.x = mr_body_torques(0);
-  msg.wrench.torque.y = mr_body_torques(1);
-  msg.wrench.torque.z = mr_body_torques(2);
-
-  return msg;
 }
 
 void VTOL::get_firmware_parameters()
