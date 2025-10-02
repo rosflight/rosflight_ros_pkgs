@@ -34,6 +34,7 @@ target_include_directories(standalone_viz_transcriber
   PRIVATE
     include)
 ament_target_dependencies(standalone_viz_transcriber
+  ament_index_cpp
   geometry_msgs
   rclcpp
   rosflight_msgs
