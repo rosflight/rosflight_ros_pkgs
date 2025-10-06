@@ -3,6 +3,10 @@
 
 /**:
   ros__parameters:
+    mass: 3.5
+
+/multirotor_forces_and_moments:
+  ros__parameters:
     # Common Global Physical Parameters
     rho: 1.225
 
@@ -46,3 +50,12 @@
 
     # Ground Effect Model
     ground_effect: [ -55.3516, 181.8265, -203.9874, 85.3735, -7.6619 ]
+
+/standalone_dynamics:
+  ros__parameters:
+    Jxx: 0.08
+    Jxy: 0.0
+    Jxz: 0.0
+    Jyy: 0.08
+    Jyz: 0.0
+    Jzz: 0.12
