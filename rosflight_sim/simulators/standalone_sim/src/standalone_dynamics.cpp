@@ -94,7 +94,7 @@ void StandaloneDynamics::apply_forces_and_torques(const geometry_msgs::msg::Wren
   fm = add_ground_collision_forces(fm);
 
   // Fill in state Eigen vectors
-  Eigen::VectorXd state(19);
+  Eigen::VectorXd state(13);
   state << current_truth_state_.pose.position.x,
   current_truth_state_.pose.position.y,
   current_truth_state_.pose.position.z,
@@ -107,8 +107,7 @@ void StandaloneDynamics::apply_forces_and_torques(const geometry_msgs::msg::Wren
   current_truth_state_.pose.orientation.z,
   current_truth_state_.twist.angular.x,
   current_truth_state_.twist.angular.y,
-  current_truth_state_.twist.angular.z,
-  0, 0, 0, 0, 0, 0; // Add zeros for the acceleration - don't keep state history of acceleration states
+  current_truth_state_.twist.angular.z;
 
   // integrate forces and torques
   rk4(state, fm, dt);
@@ -183,12 +182,30 @@ void StandaloneDynamics::rk4(Eigen::VectorXd state, Eigen::VectorXd forces_momen
   current_truth_state_.twist.angular.x = state(10);
   current_truth_state_.twist.angular.y = state(11);
   current_truth_state_.twist.angular.z = state(12);
-  current_truth_state_.acceleration.linear.x = state(13) / dt;
-  current_truth_state_.acceleration.linear.y = state(14) / dt;
-  current_truth_state_.acceleration.linear.z = state(15) / dt;
-  current_truth_state_.acceleration.angular.x = state(16) / dt;
-  current_truth_state_.acceleration.angular.y = state(17) / dt;
-  current_truth_state_.acceleration.angular.z = state(18) / dt;
+
+  Eigen::VectorXd accels = compute_accels_with_updated_state(state, forces_moments);
+  current_truth_state_.acceleration.linear.x = accels(0);
+  current_truth_state_.acceleration.linear.y = accels(1);
+  current_truth_state_.acceleration.linear.z = accels(2);
+  current_truth_state_.acceleration.angular.x = accels(3);
+  current_truth_state_.acceleration.angular.y = accels(4);
+  current_truth_state_.acceleration.angular.z = accels(5);
+}
+
+Eigen::VectorXd StandaloneDynamics::compute_accels_with_updated_state(Eigen::VectorXd state, Eigen::VectorXd forces_moments)
+{
+  Eigen::Vector3d force = forces_moments.head(3);
+  Eigen::Vector3d torques = forces_moments.tail(3);
+  Eigen::Vector3d uvw = state.segment(3,3);
+  Eigen::Vector3d pqr = state.segment(10,3);
+  double mass = this->get_parameter("mass").as_double();
+
+  Eigen::Vector3d pqr_dot = J_inv_ * (-pqr.cross(J_ * pqr) + torques);
+  Eigen::Vector3d uvw_dot = force / mass - pqr.cross(uvw);
+
+  Eigen::VectorXd accels(6);
+  accels<< uvw_dot, pqr_dot;
+  return accels;
 }
 
 double StandaloneDynamics::compute_dt(double now)
@@ -226,7 +243,7 @@ Eigen::VectorXd StandaloneDynamics::f(Eigen::VectorXd state, Eigen::VectorXd for
 
   // Compute x_dot = f(x, u)
   // Taken from Small Unmanned Aircraft: Theory and Practice by Beard, McLain
-  Eigen::VectorXd out(19);
+  Eigen::VectorXd out(16);
 
   // pn pe pd
   Eigen::Quaterniond q_body_to_inertial(quat(0), quat(1), quat(2), quat(3));
@@ -236,7 +253,6 @@ Eigen::VectorXd StandaloneDynamics::f(Eigen::VectorXd state, Eigen::VectorXd for
   // uvw -- force is in body frame
   Eigen::Vector3d uvw_dot = force / mass - pqr.cross(uvw);
   out.segment(3,3) = uvw_dot;
-  out.segment(13,3) = uvw_dot;
 
   // quat
   Eigen::Matrix4d omega_skew;
@@ -250,7 +266,6 @@ Eigen::VectorXd StandaloneDynamics::f(Eigen::VectorXd state, Eigen::VectorXd for
   // pqr
   Eigen::Vector3d pqr_dot = J_inv_ * (-pqr.cross(J_ * pqr) + torques);
   out.segment(10,3) = pqr_dot;
-  out.segment(16,3) = pqr_dot;
 
   return out;
 }
