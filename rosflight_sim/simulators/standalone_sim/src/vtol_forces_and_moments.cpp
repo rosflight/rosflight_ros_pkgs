@@ -279,8 +279,8 @@ void VTOL::update_params_from_ROS()
   if (!this->get_parameter("CD_induced", CD_induced_)) {
     RCLCPP_ERROR(this->get_logger(), "Param 'CD_induced' not defined");
   }
-  if (!this->get_parameter("ground_effect_coeffs", ground_effect_coeffs_)) {
-    RCLCPP_ERROR(this->get_logger(), "Param 'ground_effect_coeffs' not defined");
+  if (!this->get_parameter("ground_effect", ground_effect_coeffs_)) {
+    RCLCPP_ERROR(this->get_logger(), "Param 'ground_effect' not defined");
   }
 
 
