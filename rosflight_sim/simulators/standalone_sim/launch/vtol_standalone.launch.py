@@ -41,7 +41,7 @@ def generate_launch_description():
             )
         ]),
         launch_arguments={
-            'sim_aircraft_file': os.path.join("common_resource", "multirotor.dae") # Diff
+            'sim_aircraft_file': os.path.join("common_resource", "skyvtol.dae") # Diff
         }.items()
     )
 
