@@ -1,0 +1,158 @@
+# Parameters for ROSflight software-in-the-loop simulation, based on RMRC Anaconda UAV.
+# Authors: Ian Reid and Phil Tokumaru
+
+# Mass and inertia parameters are defined in fixedwing.urdf.xacro.
+# Mass: 4.5
+# Jx: 0.24855
+# Jy: 0.3784
+# Jz: 0.618
+# Jxz: 0.06
+
+/**:  # Apply to any node that we load it to
+  ros__parameters:
+
+    # Fixed-wing --------------------------------------------------------
+    
+    rho: 1.2682
+    mass: 4.5
+
+    wing_s: .52
+    wing_b: 2.08
+    wing_c: 0.2350
+    wing_M: 50.0
+    wing_epsilon: 0.9 # revisit -- may not need this for the calculation
+    wing_alpha0: 0.05236
+    
+    fw_D_prop : 0.381 # prop diameter in m (15 in)
+    fw_CT_0 : 0.06288743
+    fw_CT_1 : -0.02704452
+    fw_CT_2 : -0.31320732
+    fw_CQ_0 :  0.00614891
+    fw_CQ_1 : -0.0106795
+    fw_CQ_2 : -0.011779
+    KV : 560.0        # Motor speed constant from datasheet in RPM/V
+    fw_KQ : 0.01705                       #((1 /(KV_rpm_per_volt)) *60) / (2 *M_PI) Back-emf constant, KV in V-s/rad, Motor torque constant, KQ in N-m/A
+    V_max : 24.0                  # voltage for 6s battery at 4 volts per cell
+    fw_R_motor : 0.042              # ohms
+    fw_I_0 : 1.5                     # no-load (zero torque) current (A)
+
+    servo_tau: .01
+    servo_refresh_rate: 0.003
+    max_aileron_deflection_angle: 40. # Maximum deflection of the control surfaces in degrees.
+    max_rudder_deflection_angle: 40. # Maximum deflection of the control surfaces in degrees.
+    max_elevator_deflection_angle: 40. # Maximum deflection of the control surfaces in degrees.
+
+    # Anaconda done for C_L
+
+    C_L_O: .506
+    C_L_alpha: 5.61
+    C_L_beta: 0.0
+    C_L_p: 0.0
+    C_L_q: 7.95
+    C_L_r: 0.0
+    C_L_delta_a: 0.0
+    C_L_delta_e: 0.13
+    C_L_delta_r: 0.0
+
+    # Anaconda done for C_D
+
+    C_D_O: 0.043
+    C_D_alpha: 0.03
+    C_D_beta: 0.0
+    C_D_p: 0.043
+    C_D_q: 0.0
+    C_D_r: 0.0
+    C_D_delta_a: 0.0
+    C_D_delta_e: 0.0135
+    C_D_delta_r: 0.0
+
+    C_ell_O: 0.0
+    C_ell_alpha: 0.00
+    C_ell_beta: -0.13
+    C_ell_p: -0.51
+    C_ell_q: 0.0
+    C_ell_r: 0.25
+    C_ell_delta_a: 0.17
+    C_ell_delta_e: 0.0
+    C_ell_delta_r: 0.0024
+
+    C_m_O: 0.135
+    C_m_alpha: -2.74
+    C_m_beta: 0.0
+    C_m_p: 0.0
+    C_m_q: -38.21
+    C_m_r: 0.0
+    C_m_delta_a: 0.0
+    C_m_delta_e: -.99
+    C_m_delta_r: 0.0
+
+    C_n_O: 0.0
+    C_n_alpha: 0.0
+    C_n_beta: 0.1301
+    C_n_p: -0.0364
+    C_n_q: 0.0
+    C_n_r: -0.1541
+    C_n_delta_a: -0.011
+    C_n_delta_e: 0.0
+    C_n_delta_r: -0.069
+
+    # Anaconda done for C_Y
+
+    C_Y_O: 0.0
+    C_Y_alpha: 0.00
+    C_Y_beta: -0.98
+    C_Y_p: 0.0
+    C_Y_q: 0.0
+    C_Y_r: 0.0
+    C_Y_delta_a: 0.075
+    C_Y_delta_e: 0.0
+    C_Y_delta_r: .19
+
+
+    # Multi-rotor -----------------------------------------------------
+
+
+    # Common Global Physical Parameters
+    #rho: 1.225
+
+    # Dynamics
+    num_rotors: 4
+    rotor_positions: [ 0.1926,  0.230, -0.0762,
+                      -0.1907,  0.205, -0.0762,
+                      -0.1907, -0.205, -0.0762,
+                       0.1926, -0.230, -0.0762 ]
+    
+    rotor_dists: [.25, .25, .25, .25]
+    rotor_radial_angles: [45., 135., 225., 315.]
+    rotor_rotation_directions: [ -1, 1, -1, 1 ]
+    
+    # Prop Model
+    # Thrust
+    mr_CT_0: 0.08729101
+    mr_CT_1: -0.11006411
+    mr_CT_2: -0.12928596
+
+    # Torque
+    mr_CQ_0: 0.00428594
+    mr_CQ_1: 0.00146105
+    mr_CQ_2: -0.01440988
+
+    # Diameter (m)
+    mr_D_prop: 0.381
+    
+    # Motor Specs
+    V_max : 24.0                  # voltage for 6s battery at 4 volts per cell
+    mr_R_motor : 0.042               # ohms
+    mr_I_0 : 1.5                     # no-load (zero torque) current (A)
+    mr_KQ : 0.028937                 #((1 /(KV_rpm_per_volt)) *60) / (2 *M_PI) Back-emf constant, KV in V-s/rad, Motor torque constant, KQ in N-m/A
+
+    # Drag Model
+    mr_CD: 2.05                      # Coeffecient of drag for a rough cube face on into flow.
+    A_c: 0.04                     # Crossectional Area to use in Drag.
+
+    # Induced Drag Model
+    CD_induced: 0.05
+
+    # Ground Effect Model
+    ground_effect: [ -55.3516, 181.8265, -203.9874, 85.3735, -7.6619 ]
+

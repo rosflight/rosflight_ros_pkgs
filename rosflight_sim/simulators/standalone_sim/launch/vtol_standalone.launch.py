@@ -18,7 +18,7 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    """This is a launch file that runs the bare minimum requirements fly a multirotor in a standalone simulator"""
+    """This is a launch file that runs the bare minimum requirements fly a vtol in a standalone simulator"""
 
     # Declare launch arguments
     use_sim_time_arg = DeclareLaunchArgument(
@@ -66,7 +66,7 @@ def generate_launch_description():
         output="screen",
         parameters=[
             os.path.join(get_package_share_directory('rosflight_sim'),
-                                 'params', 'multirotor_dynamics.yaml'), # Diff
+                                 'params', 'vtol_dynamics.yaml'), # Diff
             {"use_sim_time": use_sim_time},
         ],
     )
