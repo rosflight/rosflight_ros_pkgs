@@ -79,8 +79,8 @@ rcl_interfaces::msg::SetParametersResult
 ROSflightSIL::parameters_callback(const std::vector<rclcpp::Parameter> & parameters)
 {
   rcl_interfaces::msg::SetParametersResult result;
-  result.successful = false;
-  result.reason = "One of the parameters is not a parameter of ROSflightSIL.";
+  result.successful = true;
+  result.reason = "";
 
   for (const auto & param : parameters) {
     if (param.get_name() == "simulation_loop_frequency") {
