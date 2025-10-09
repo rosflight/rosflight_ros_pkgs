@@ -44,10 +44,10 @@ namespace rosflight_sim
 VTOL::VTOL()
     : ForcesAndMomentsInterface()
     , paramsHaveChanged_(false)
+    , rho_(0)
     //multirotor variables
     , num_rotors_(0)
     //fixedwing variables
-    , rho_(0)
     , wing_()
     , fw_prop_()
     , fw_motor_()
@@ -572,17 +572,17 @@ geometry_msgs::msg::WrenchStamped VTOL::update_forces_and_torques(rosflight_msgs
 
   // Get airspeed vector for drag force calculation (rotate wind into
   // body frame and subtract from inertial velocity in body frame)
-  Eigen::Quaterniond q_body_to_inertial(x.pose.orientation.w,
+  Eigen::Quaterniond mr_q_body_to_inertial(x.pose.orientation.w,
                                         x.pose.orientation.x,
                                         x.pose.orientation.y,
                                         x.pose.orientation.z);
-  Eigen::Vector3d v_wind_inertial(wind.vector.x, wind.vector.y, wind.vector.z); // In inertial frame
-  Eigen::Vector3d v_wind_body = q_body_to_inertial.inverse() * v_wind_inertial; // Rotate to body frame
+  Eigen::Vector3d mr_v_wind_inertial(wind.vector.x, wind.vector.y, wind.vector.z); // In inertial frame
+  Eigen::Vector3d mr_v_wind_body = mr_q_body_to_inertial.inverse() * mr_v_wind_inertial; // Rotate to body frame
 
   // Compute airspeed
   // mr_Va = [ur, vr, wr] = V_ground - V_wind
   Eigen::Vector3d Vg(x.twist.linear.x, x.twist.linear.y, x.twist.linear.z); // Inertial velocities in body frame
-  Eigen::Vector3d mr_Va = Vg - v_wind_body;
+  Eigen::Vector3d mr_Va = Vg - mr_v_wind_body;
 
   // TODO: Would be better to compute the vector force/torque contributed by each motor,
   // not assume that the motors are aligned vertically
@@ -764,17 +764,17 @@ geometry_msgs::msg::WrenchStamped VTOL::update_forces_and_torques(rosflight_msgs
   double r = x.twist.angular.z;
 
   // Calculate airspeed
-  Eigen::Quaterniond q_body_to_inertial(x.pose.orientation.w,
+  Eigen::Quaterniond fw_q_body_to_inertial(x.pose.orientation.w,
                                         x.pose.orientation.x,
                                         x.pose.orientation.y,
                                         x.pose.orientation.z);
-  Eigen::Vector3d v_wind_inertial(wind.vector.x, wind.vector.y, wind.vector.z); // In inertial frame
-  Eigen::Vector3d v_wind_body = q_body_to_inertial.inverse() * v_wind_inertial; // Rotate to body frame
+  Eigen::Vector3d fw_v_wind_inertial(wind.vector.x, wind.vector.y, wind.vector.z); // In inertial frame
+  Eigen::Vector3d fw_v_wind_body = fw_q_body_to_inertial.inverse() * fw_v_wind_inertial; // Rotate to body frame
 
   // Va = [ur, vr, wr] = V_ground - V_wind
-  double ur = x.twist.linear.x - v_wind_body(0);
-  double vr = x.twist.linear.y - v_wind_body(1);
-  double wr = x.twist.linear.z - v_wind_body(2);
+  double ur = x.twist.linear.x - fw_v_wind_body(0);
+  double vr = x.twist.linear.y - fw_v_wind_body(1);
+  double wr = x.twist.linear.z - fw_v_wind_body(2);
 
   double fw_Va = sqrt(pow(ur,2.0) + pow(vr,2.0) + pow(wr,2.0));
 
