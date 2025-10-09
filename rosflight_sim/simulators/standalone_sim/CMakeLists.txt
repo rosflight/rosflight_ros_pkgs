@@ -100,6 +100,24 @@ install(
   TARGETS fixedwing_forces_and_moments
   DESTINATION lib/${PROJECT_NAME})
 
+# VTOL Forces And Moments
+add_executable(vtol_forces_and_moments
+  ../../src/forces_and_moments_interface.cpp
+  src/vtol_forces_and_moments.cpp)
+target_include_directories(vtol_forces_and_moments
+  PRIVATE
+    ../../include
+    include)
+target_link_libraries(vtol_forces_and_moments Eigen3::Eigen)
+ament_target_dependencies(vtol_forces_and_moments
+  rclcpp
+  std_srvs
+  geometry_msgs
+  rosflight_msgs)
+install(
+  TARGETS vtol_forces_and_moments
+  DESTINATION lib/${PROJECT_NAME})
+
 # Standalone Sensors
 add_executable(standalone_sensors
   ../../src/sensor_interface.cpp
