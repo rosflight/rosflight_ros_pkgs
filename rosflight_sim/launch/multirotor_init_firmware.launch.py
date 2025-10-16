@@ -25,7 +25,7 @@ def generate_launch_description():
             '/param_load_from_file ',
             'rosflight_msgs/srv/ParamFile ',
             '"{filename: "' + os.path.join(
-                get_package_share_directory('rosflight_sim'), 'params/multirotor_firmware.yaml"}'
+                get_package_share_directory('rosflight_sim'), 'params/multirotor_firmware/multirotor_combined.yaml"}'
             ) + '"'
         ]],
         shell=True
