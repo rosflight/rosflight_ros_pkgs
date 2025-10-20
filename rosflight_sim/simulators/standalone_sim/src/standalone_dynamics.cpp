@@ -39,6 +39,8 @@ namespace rosflight_sim
 StandaloneDynamics::StandaloneDynamics()
   : DynamicsInterface()
 {
+  current_truth_state_ = rosflight_msgs::msg::SimState();
+
   // Declare parameters and set up the callback for changing parameters
   declare_parameters();
   // TODO: parameter callback...
@@ -96,18 +98,18 @@ void StandaloneDynamics::apply_forces_and_torques(const geometry_msgs::msg::Wren
   // Fill in state Eigen vectors
   Eigen::VectorXd state(13);
   state << current_truth_state_.pose.position.x,
-  current_truth_state_.pose.position.y,
-  current_truth_state_.pose.position.z,
-  current_truth_state_.twist.linear.x,
-  current_truth_state_.twist.linear.y,
-  current_truth_state_.twist.linear.z,
-  current_truth_state_.pose.orientation.w,
-  current_truth_state_.pose.orientation.x,
-  current_truth_state_.pose.orientation.y,
-  current_truth_state_.pose.orientation.z,
-  current_truth_state_.twist.angular.x,
-  current_truth_state_.twist.angular.y,
-  current_truth_state_.twist.angular.z;
+           current_truth_state_.pose.position.y,
+           current_truth_state_.pose.position.z,
+           current_truth_state_.twist.linear.x,
+           current_truth_state_.twist.linear.y,
+           current_truth_state_.twist.linear.z,
+           current_truth_state_.pose.orientation.w,
+           current_truth_state_.pose.orientation.x,
+           current_truth_state_.pose.orientation.y,
+           current_truth_state_.pose.orientation.z,
+           current_truth_state_.twist.angular.x,
+           current_truth_state_.twist.angular.y,
+           current_truth_state_.twist.angular.z;
 
   // integrate forces and torques
   rk4(state, fm, dt);
@@ -130,27 +132,41 @@ Eigen::VectorXd StandaloneDynamics::add_gravity_forces(Eigen::VectorXd forces)
 Eigen::VectorXd StandaloneDynamics::add_ground_collision_forces(Eigen::VectorXd forces)
 {
   // Low fidelity approximation of what actually might happen
-  current_truth_state_.pose.position.z = std::min(0.0, current_truth_state_.pose.position.z);
-
-  if (current_truth_state_.pose.position.z > -0.1) { // NED frame
+  // TODO: Current hypothesis: I am setting the forces equal to zero, but I am not setting the cross terms in the accelerations equal to zero.
+  // Thus, the f/m portion of accel is zero, but the omega cross v term may not be zero.
+  if (current_truth_state_.pose.position.z > -0.01) { // NED frame
     // If close to the ground
+    current_truth_state_.pose.position.z = std::min(0.0, current_truth_state_.pose.position.z);
 
-    if (forces(2) > 0.0) {
+    Eigen::Quaterniond q_body_to_inertial{current_truth_state_.pose.orientation.w, 
+                                          current_truth_state_.pose.orientation.x,
+                                          current_truth_state_.pose.orientation.y,
+                                          current_truth_state_.pose.orientation.z};
+    Eigen::Vector3d forces_in_body_frame = forces.segment(0,3);
+    Eigen::Vector3d moments_in_body_frame = forces.segment(3,3);
+    Eigen::Vector3d forces_in_inertial_frame = q_body_to_inertial * forces_in_body_frame;
+    Eigen::Vector3d moments_in_inertial_frame = q_body_to_inertial * moments_in_body_frame;
+
+    if (forces_in_inertial_frame(2) > 0.0) {
       // If down force is positive, set it to zero.
-      forces(2) = 0.0;
+      forces_in_inertial_frame(2) = 0.0;
+      forces.segment(0,3) = q_body_to_inertial.inverse() * forces_in_inertial_frame;
     }
 
-    // Also set roll and pitch to zero if pointing into ground
-    tf2::Quaternion q(current_truth_state_.pose.orientation.x,
-                      current_truth_state_.pose.orientation.y,
-                      current_truth_state_.pose.orientation.z,
-                      current_truth_state_.pose.orientation.w);
-    tf2::Matrix3x3 m(q);
-    double roll, pitch, yaw;
-    m.getRPY(roll, pitch, yaw);
-
-    q.setRPY(0.0,pitch,yaw);
-    current_truth_state_.pose.orientation = tf2::toMsg(q);
+    // Also set roll moments to zero if close to the ground
+    moments_in_inertial_frame(0) = 0.0;
+    moments_in_inertial_frame(2) = 0.0;
+    forces.segment(3,3) = q_body_to_inertial.inverse() * moments_in_inertial_frame;
+    // tf2::Quaternion q(current_truth_state_.pose.orientation.x,
+    //                   current_truth_state_.pose.orientation.y,
+    //                   current_truth_state_.pose.orientation.z,
+    //                   current_truth_state_.pose.orientation.w);
+    // tf2::Matrix3x3 m(q);
+    // double roll, pitch, yaw;
+    // m.getRPY(roll, pitch, yaw);
+    //
+    // q.setRPY(0.0,pitch,yaw);
+    // current_truth_state_.pose.orientation = tf2::toMsg(q);
   }
 
   return forces;
@@ -196,15 +212,13 @@ Eigen::VectorXd StandaloneDynamics::compute_accels_with_updated_state(Eigen::Vec
 {
   Eigen::Vector3d force = forces_moments.head(3);
   Eigen::Vector3d torques = forces_moments.tail(3);
-  Eigen::Vector3d uvw = state.segment(3,3);
-  Eigen::Vector3d pqr = state.segment(10,3);
   double mass = this->get_parameter("mass").as_double();
 
-  Eigen::Vector3d pqr_dot = J_inv_ * (-pqr.cross(J_ * pqr) + torques);
-  Eigen::Vector3d uvw_dot = force / mass - pqr.cross(uvw);
+  Eigen::Vector3d lin_accel = force / mass;
+  Eigen::Vector3d angular_accel = J_inv_ * torques;
 
   Eigen::VectorXd accels(6);
-  accels<< uvw_dot, pqr_dot;
+  accels<< lin_accel, angular_accel;
   return accels;
 }
 
@@ -230,8 +244,6 @@ Eigen::VectorXd StandaloneDynamics::f(Eigen::VectorXd state, Eigen::VectorXd for
   // u v w      - Inertial velocities in body frame
   // quaternion - Rotation from body to inertial
   // p q r      - Angular velocity about center of mass in body frame
-  // accel      - Linear acceleration expressed in body frame
-  // alpha      - Angular acceleration expressed in body frame
 
   // Extract needed terms
   Eigen::Vector3d uvw = state.segment(3,3);
