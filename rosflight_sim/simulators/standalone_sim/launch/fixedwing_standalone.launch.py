@@ -80,7 +80,6 @@ def generate_launch_description():
         parameters=[{"use_sim_time": use_sim_time}, dynamics_param_file]
     )
 
-
     return LaunchDescription(
         [
             use_sim_time_arg,

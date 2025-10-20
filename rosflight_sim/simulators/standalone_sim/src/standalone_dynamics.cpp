@@ -218,7 +218,7 @@ Eigen::VectorXd StandaloneDynamics::compute_accels_with_updated_state(Eigen::Vec
   Eigen::Vector3d angular_accel = J_inv_ * torques;
 
   Eigen::VectorXd accels(6);
-  accels<< lin_accel, angular_accel;
+  accels << lin_accel, angular_accel;
   return accels;
 }
 
@@ -255,7 +255,7 @@ Eigen::VectorXd StandaloneDynamics::f(Eigen::VectorXd state, Eigen::VectorXd for
 
   // Compute x_dot = f(x, u)
   // Taken from Small Unmanned Aircraft: Theory and Practice by Beard, McLain
-  Eigen::VectorXd out(16);
+  Eigen::VectorXd out(13);
 
   // pn pe pd
   Eigen::Quaterniond q_body_to_inertial(quat(0), quat(1), quat(2), quat(3));
