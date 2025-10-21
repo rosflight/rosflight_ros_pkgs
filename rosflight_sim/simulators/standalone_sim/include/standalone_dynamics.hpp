@@ -71,6 +71,7 @@ private:
 
   void rk4(Eigen::VectorXd state, Eigen::VectorXd forces_moments, double dt);
   double compute_dt(double now);
+  Eigen::VectorXd compute_accels_with_updated_state(Eigen::VectorXd state, Eigen::VectorXd forces_moments);
 
   void compute_inertia_matrix();
   Eigen::VectorXd add_gravity_forces(Eigen::VectorXd forces);

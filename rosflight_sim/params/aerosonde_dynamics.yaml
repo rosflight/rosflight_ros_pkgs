@@ -7,7 +7,12 @@
 # Jz: 1.759
 # Jxz: 0.1204
 
-/fixedwing/rosflight_sil:
+/**:
+  ros__parameters:
+    rho: 1.2682
+    mass: 11.0
+
+/fixedwing_forces_and_moments:
   ros__parameters:
     rho: 1.2682
     mass: 11.0
@@ -94,3 +99,12 @@
     C_Y_delta_a: 0.075
     C_Y_delta_e: 0.0
     C_Y_delta_r: 0.19
+
+/standalone_dynamics:
+  ros__parameters:
+    Jxx: 0.8224
+    Jxy: 0.0
+    Jxz: 0.1204
+    Jyy: 1.135
+    Jyz: 0.0
+    Jzz: 1.759

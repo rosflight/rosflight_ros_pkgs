@@ -80,7 +80,7 @@ def generate_launch_description():
                 executable="standalone_viz_transcriber",
                 name='standalone_viz_transcriber',
                 output="screen",
-                parameters=[{"sim_aircraft_file": sim_aircraft_file}, param_file]
+                parameters=[{"sim_aircraft_file": sim_aircraft_file}, param_file],
             ),
         ]
     )

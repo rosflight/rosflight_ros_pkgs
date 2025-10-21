@@ -787,7 +787,7 @@ geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight
     double CZ_q_a = -CD_.q * sa - CL_.q * ca;
     double CZ_deltaE_a = -CD_.delta_e * sa - CL_.delta_e * ca;
 
-    forces.wrench.force.x = 0.5 * (rho_) *Va * Va * wing_.S
+    forces.wrench.force.x = 0.5 * (rho_) * Va * Va * wing_.S
         * (CX_a + (CX_q_a * wing_.c * q) / (2.0 * Va) + CX_deltaE_a * delta_curr.e)
       + Prop_Force;
 

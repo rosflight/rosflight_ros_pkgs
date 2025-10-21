@@ -19,6 +19,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     """This is a launch file that runs the bare minimum requirements fly a multirotor in a standalone simulator"""
+    dynamics_param_file = os.path.join(get_package_share_directory('rosflight_sim'), 'params', 'multirotor_dynamics.yaml')
 
     # Declare launch arguments
     use_sim_time_arg = DeclareLaunchArgument(
@@ -54,7 +55,8 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
-            'use_sim_time': use_sim_time
+            'use_sim_time': use_sim_time,
+            'dynamics_param_file': dynamics_param_file,
         }.items()
     )
 
@@ -65,10 +67,17 @@ def generate_launch_description():
         name='multirotor_forces_and_moments',
         output="screen",
         parameters=[
-            os.path.join(get_package_share_directory('rosflight_sim'),
-                                 'params', 'multirotor_dynamics.yaml'),
-            {"use_sim_time": use_sim_time},
+            {"use_sim_time": use_sim_time}, dynamics_param_file
         ],
+    )
+
+    # Start dynamics node
+    standalone_dynamics_node = Node(
+        package="rosflight_sim",
+        executable="standalone_dynamics",
+        name='standalone_dynamics',
+        output="screen",
+        parameters=[{"use_sim_time": use_sim_time}, dynamics_param_file]
     )
 
     return LaunchDescription(
@@ -77,5 +86,6 @@ def generate_launch_description():
             simulator_launch_include,
             common_nodes_include,
             mr_forces_moments_node,
+            standalone_dynamics_node,
         ]
     )

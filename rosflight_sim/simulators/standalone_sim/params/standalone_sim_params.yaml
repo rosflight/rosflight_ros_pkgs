@@ -1,7 +1,6 @@
 /**:
   ros__parameters:
     gravity: 9.81
-    mass: 3.5
 
 /standalone_sensors:
   ros__parameters:
@@ -33,18 +32,9 @@
     gnss_velocity_stdev: 0.01
     k_gnss: 0.0009091
 
-/standalone_dynamics:
-  ros__parameters:
-    Jxx: 0.24855
-    Jxy: 0.0
-    Jxz: 0.06
-    Jyy: 0.3784
-    Jyz: 0.0
-    Jzz: 0.618
-
 /standalone_viz_transcriber:
   ros__parameters:
-    aircraft_scale: 5.0
+    aircraft_scale: 2.0
     path_publish_modulo: 10
     max_path_history: 10000
 

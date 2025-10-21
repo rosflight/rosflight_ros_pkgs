@@ -37,6 +37,12 @@ def generate_launch_description():
     )
     use_vimfly = LaunchConfiguration('use_vimfly')
 
+    dynamics_param_file_arg = DeclareLaunchArgument(
+        "dynamics_param_file",
+        default_value="",
+        description="Parameter file that contains the dynamics of the vehicle, containing the vehicle mass parameter."
+    )
+    dynamics_param_file = LaunchConfiguration("dynamics_param_file")
 
     # Start Rosflight SIL
     rosflight_sil_node = Node(
@@ -62,7 +68,7 @@ def generate_launch_description():
         executable="standalone_sensors",
         name="standalone_sensors",
         output="screen",
-        parameters=[{"use_sim_time": use_sim_time}],
+        parameters=[{"use_sim_time": use_sim_time}, dynamics_param_file],
     )
 
     # Start rosflight_io interface node
@@ -86,6 +92,7 @@ def generate_launch_description():
         [
             use_sim_time_arg,
             use_vimfly_arg,
+            dynamics_param_file_arg,
             rosflight_sil_node,
             sil_board_node,
             standalone_sensor_node,
