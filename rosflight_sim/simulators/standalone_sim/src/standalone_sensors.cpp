@@ -128,7 +128,7 @@ void StandaloneSensors::initialize_sensors()
   double declination = this->get_parameter("declination").as_double();
   double total_intensity = this->get_parameter("total_intensity").as_double();
   inertial_magnetic_field_ << cos(inclination) * cos(declination)
-                            , cos(inclination) * sin(declination)
+                            , -cos(inclination) * sin(declination)
                             , sin(inclination);                     // In NED coordinates
   inertial_magnetic_field_.normalize();
   inertial_magnetic_field_ *= total_intensity;
