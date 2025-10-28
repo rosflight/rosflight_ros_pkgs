@@ -1,21 +1,59 @@
-# Parameters for ROSflight software-in-the-loop simulation, based on RMRC Anaconda UAV.
-# Authors: Ian Reid and Phil Tokumaru
+# Parameters for ROSflight software-in-the-loop simulation.
+# Mass and inertia parameters are defined in multirotor.urdf.xacro.
 
-# Mass and inertia parameters are defined in fixedwing.urdf.xacro.
-# Mass: 4.5
-# Jx: 0.24855
-# Jy: 0.3784
-# Jz: 0.618
-# Jxz: 0.06
-
-/**:  # Apply to any node that we load it to
+/**: # Apply to any node that we load it to
   ros__parameters:
-
-    # Fixed-wing --------------------------------------------------------
-    
-    rho: 1.2682
     mass: 4.5
 
+/vtol_forces_and_moments:
+  ros__parameters:
+    # Common Global Physical Parameters
+    rho: 1.225
+
+    # Multirotor -------------------------------------------
+
+    # Dynamics
+    num_rotors: 4
+    rotor_positions: [ 0.1926,  0.230, -0.0762,
+                      -0.1907,  0.205, -0.0762,
+                      -0.1907, -0.205, -0.0762,
+                       0.1926, -0.230, -0.0762 ]
+    
+    rotor_dists: [.25, .25, .25, .25]
+    rotor_radial_angles: [45., 135., 225., 315.]
+    rotor_rotation_directions: [ -1, 1, -1, 1 ]
+    
+    # Prop Model
+    # Thrust
+    mr_CT_0: 0.08729101
+    mr_CT_1: -0.11006411
+    mr_CT_2: -0.12928596
+
+    # Torque
+    mr_CQ_0: 0.00428594
+    mr_CQ_1: 0.00146105
+    mr_CQ_2: -0.01440988
+
+    # Diameter (m)
+    mr_D_prop: 0.381
+    
+    # Motor Specs
+    V_max : 24.0                  # voltage for 6s battery at 4 volts per cell
+    mr_R_motor : 0.042               # ohms
+    mr_I_0 : 1.5                     # no-load (zero torque) current (A)
+    mr_KQ : 0.028937                 #((1 /(KV_rpm_per_volt)) *60) / (2 *M_PI) Back-emf constant, KV in V-s/rad, Motor torque constant, KQ in N-m/A
+
+    # Drag Model
+    mr_CD: 2.05                      # Coeffecient of drag for a rough cube face on into flow.
+    A_c: 0.04                     # Crossectional Area to use in Drag.
+
+    # Induced Drag Model
+    CD_induced: 0.05
+
+    # Ground Effect Model
+    ground_effect: [ -55.3516, 181.8265, -203.9874, 85.3735, -7.6619 ]
+
+    # Fixed-wing -------------------------------------------
     wing_s: .52
     wing_b: 2.08
     wing_c: 0.2350
@@ -108,51 +146,11 @@
     C_Y_delta_e: 0.0
     C_Y_delta_r: .19
 
-
-    # Multi-rotor -----------------------------------------------------
-
-
-    # Common Global Physical Parameters
-    #rho: 1.225
-
-    # Dynamics
-    num_rotors: 4
-    rotor_positions: [ 0.1926,  0.230, -0.0762,
-                      -0.1907,  0.205, -0.0762,
-                      -0.1907, -0.205, -0.0762,
-                       0.1926, -0.230, -0.0762 ]
-    
-    rotor_dists: [.25, .25, .25, .25]
-    rotor_radial_angles: [45., 135., 225., 315.]
-    rotor_rotation_directions: [ -1, 1, -1, 1 ]
-    
-    # Prop Model
-    # Thrust
-    mr_CT_0: 0.08729101
-    mr_CT_1: -0.11006411
-    mr_CT_2: -0.12928596
-
-    # Torque
-    mr_CQ_0: 0.00428594
-    mr_CQ_1: 0.00146105
-    mr_CQ_2: -0.01440988
-
-    # Diameter (m)
-    mr_D_prop: 0.381
-    
-    # Motor Specs
-    V_max : 24.0                  # voltage for 6s battery at 4 volts per cell
-    mr_R_motor : 0.042               # ohms
-    mr_I_0 : 1.5                     # no-load (zero torque) current (A)
-    mr_KQ : 0.028937                 #((1 /(KV_rpm_per_volt)) *60) / (2 *M_PI) Back-emf constant, KV in V-s/rad, Motor torque constant, KQ in N-m/A
-
-    # Drag Model
-    mr_CD: 2.05                      # Coeffecient of drag for a rough cube face on into flow.
-    A_c: 0.04                     # Crossectional Area to use in Drag.
-
-    # Induced Drag Model
-    CD_induced: 0.05
-
-    # Ground Effect Model
-    ground_effect: [ -55.3516, 181.8265, -203.9874, 85.3735, -7.6619 ]
-
+/standalone_dynamics:
+  ros__parameters:
+    Jxx: 0.24855
+    Jxy: 0.0
+    Jxz: 0.06
+    Jyy: 0.3784
+    Jyz: 0.0
+    Jzz: 0.618
