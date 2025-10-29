@@ -1,0 +1,107 @@
+# Parameters for ROSflight software-in-the-loop simulation, based on RMRC Anaconda UAV.
+# Authors: Ian Reid and Phil Tokumaru
+
+# Mass and inertia parameters are defined in fixedwing.urdf.xacro.
+#Mass: 4.524  #orig Mass: 4.5
+#Jx .27   #orig Jx: 0.24855
+#Jy .367  #orig Jy: 0.3784
+#Jz .638  #orig Jz: 0.618
+#Jxz .057  #orig Jxz: 0.06
+#cgx .089 behind wing LE
+#cgy 0 from leading edge wing
+#cgz .051m below wing leading edge 
+#start alpha is 3deg up, wing geo up 2 deg, tail up 1.25 deg (best trimmmed state)
+#trim at about 15 m/s 
+#static margin 15.5%
+#reynolds number 300000 
+#mach .04
+
+#conventions, roll left (negative roll), pitch down, yaw left (positive?)
+
+#OpenVSP test
+
+/**:
+  ros__parameters:
+    rho: 1.204 #orig 1.2682, not sure why i did it at 1.204 tbh, ill change that later 
+    mass: 4.524
+    wing_s: .474 #orig .52
+    wing_b: 2.018 #orig 2.08
+    wing_c: .241 #orig .235
+    wing_M: 50.0
+    wing_epsilon: 0.9 
+    wing_alpha0: .05236 #3 deg in rad, orig was 0.0
+    
+    # dont edit
+    D_prop : 0.381 # prop diameter in m (15 in)
+    CT_0 : 0.06288743
+    CT_1 : -0.02704452
+    CT_2 : -0.31320732
+    CQ_0 :  0.00614891
+    CQ_1 : -0.0106795
+    CQ_2 : -0.011779
+    KV : 560.0        # Motor speed constant from datasheet in RPM/V
+    KQ : 0.01705      # ((1 /(KV_rpm_per_volt)) *60) / (2 *M_PI) Back-emf constant, KV in V-s/rad, Motor torque constant, KQ in N-m/A
+    V_max : 24.0      # voltage for 6s battery at 4 volts per cell
+    R_motor : 0.042   # ohms
+    I_0 : 1.5         # no-load (zero torque) current (A)
+    servo_tau: .01
+
+    C_L_O: .623 #orig .51
+    C_L_alpha: 5.06686 #orig 5.61
+    C_L_beta: .00017 #orig was 0
+    C_L_p: -0.0032795 #orig was 0
+    C_L_q: 7.8676829 #orig 7.95
+    C_L_r: .00023 #orig 0.0
+    C_L_delta_a: -0.0169216 #orig 0.0
+    C_L_delta_e: 0.4522919 #orig .09 
+    C_L_delta_r: -0.0011681 #orig 0.0
+
+    C_D_O: 0.0339017 #orig 0.063
+    C_D_alpha: 0.2959908 #orig 0.03 
+    C_D_beta: 0.0004163 #orig 0.0 
+    C_D_p: 0.0345 #orig 0.2
+    C_D_q:  0.261925 #orig 0.0 
+    C_D_r: -0.0035853 #orig 0.0 
+    C_D_delta_a: 0.0018376 #orig 0.0 
+    C_D_delta_e: 0.0265891 #orig 0.09 
+    C_D_delta_r: 0.0016033 #orig 0.0 
+
+    C_ell_O: -0.0000388 #orig 0.0
+    C_ell_alpha: -0.0001263 #orig 0.00
+    C_ell_beta:  -0.0019502 #orig -.13
+    C_ell_p: -0.525495 #orig -0.51
+    C_ell_q:  -0.0083974 #orig 0.0
+    C_ell_r: 0.1099468 #orig 0.25
+    C_ell_delta_a: 0.1635 #orig 0.14
+    C_ell_delta_e: -0.0000603 #orig 0.0
+    C_ell_delta_r: -0.0105643 #orig 0.0024
+
+    C_m_O: -0.0103936 #orig 0.0135
+    C_m_alpha: -0.8643947 #orig -2.74
+    C_m_beta: -0.040988 #orig 0.0
+    C_m_p: -0.0050803 #orig 0.0
+    C_m_q: -13.5973378  #orig -38.21
+    C_m_r: 0.0019695 #orig 0.0
+    C_m_delta_a: 0.0067418 #orig 0.0
+    C_m_delta_e: -0.75 #orig -.55
+    C_m_delta_r: 0.0003607 #orig 0.0
+
+    C_n_O: -0.0000005 #orig 0.0
+    C_n_alpha: 0.0026822 #orig 0.0
+    C_n_beta:  0.059947 #orig 0.073
+    C_n_p: -0.0797711 #orig 0.069
+    C_n_q: 0.0012396 #orig 0.0
+    C_n_r: -0.1 #orig -0.095
+    C_n_delta_a: 0.0 #orig -0.011
+    C_n_delta_e: 0.0000395 #orig 0.0
+    C_n_delta_r: -0.035 #orig -0.01
+
+    C_Y_O: 0.0000003 #orig 0.0
+    C_Y_alpha: -0.0063057 #orig 0.00
+    C_Y_beta:  -0.167815 #orig -.98
+    C_Y_p: 0.0489344 #orig 0.07
+    C_Y_q: -0.0033798 #orig 0.0
+    C_Y_r:  0.1296921 #orig 0.0
+    C_Y_delta_a: -0.0002552 #orig 0.075 
+    C_Y_delta_e: -0.0001251 #orig 0.0
+    C_Y_delta_r: 0.17874 #orig .1
