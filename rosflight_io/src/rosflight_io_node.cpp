@@ -41,8 +41,43 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rosflight_io/rosflight_io.hpp>
 
+#include <pthread.h>
+#include <sys/types.h>
+#include <sched.h>
+#include <sys/resource.h>
+#include <unistd.h>
+
+#include <string>
+#include <memory>
+#include <thread>
+
+void set_thread_scheduling(std::thread::native_handle_type thread, int policy, int sched_priority)
+{
+  struct sched_param param;
+  param.sched_priority = sched_priority;
+  auto ret = pthread_setschedparam(thread, policy, &param);
+  if (ret > 0) {
+    throw std::runtime_error("Couldn't set scheduling priority and policy. Error code: " + std::string(strerror(errno)));
+  }
+}
+
 int main(int argc, char ** argv)
 {
+  // Force flush of the stdout buffer.
+  setvbuf(stdout, NULL, _IONBF, BUFSIZ);
+
+  // The middleware threads are created on the node construction.
+  // Since the main thread settings are configured before the middleware threads
+  // are created, the middleware threads will inherit the scheduling settings.
+  // From: https://linux.die.net/man/3/pthread_create
+  // "The new thread inherits copies of the calling thread's capability sets
+  // (see capabilities(7)) and CPU affinity mask (see sched_setaffinity(2))."
+
+  int policy = SCHED_RR;
+  int priority = 97;
+
+  set_thread_scheduling(pthread_self(), policy, priority);
+
   rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<rosflight_io::ROSflightIO>());
   rclcpp::shutdown();
