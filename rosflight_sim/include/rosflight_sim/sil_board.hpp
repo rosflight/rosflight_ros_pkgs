@@ -49,7 +49,6 @@
 #include "rosflight_msgs/msg/gnss.hpp"
 #include "rosflight_msgs/msg/rc_raw.hpp"
 #include "rosflight_sim/udp_board.hpp"
-#include "rosflight_structs.h"
 
 namespace rosflight_sim
 {
