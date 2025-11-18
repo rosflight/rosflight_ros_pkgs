@@ -1,5 +1,5 @@
 # Parameters for ROSflight software-in-the-loop simulation, based on RMRC Anaconda UAV.
-# Authors: Ian Reid and Phil Tokumaru
+# Authors: Ian Reid, Phil Tokumaru and Joseph Ritchie
 
 # Mass and inertia parameters are defined in fixedwing.urdf.xacro.
 #Mass: 4.524  #orig Mass: 4.5
@@ -22,14 +22,14 @@
 
 /**:
   ros__parameters:
-    rho: 1.204 #orig 1.2682, not sure why i did it at 1.204 tbh, ill change that later 
+    rho: 1.204 
     mass: 4.524
-    wing_s: .474 #orig .52
-    wing_b: 2.018 #orig 2.08
-    wing_c: .241 #orig .235
+    wing_s: .474 
+    wing_b: 2.018 
+    wing_c: .241 
     wing_M: 50.0
     wing_epsilon: 0.9 
-    wing_alpha0: .05236 #3 deg in rad, orig was 0.0
+    wing_alpha0: .05236 #3 deg in rad
     
     # dont edit
     D_prop : 0.381 # prop diameter in m (15 in)
@@ -46,62 +46,62 @@
     I_0 : 1.5         # no-load (zero torque) current (A)
     servo_tau: .01
 
-    C_L_O: .623 #orig .51
-    C_L_alpha: 5.06686 #orig 5.61
-    C_L_beta: .00017 #orig was 0
-    C_L_p: -0.0032795 #orig was 0
-    C_L_q: 7.8676829 #orig 7.95
-    C_L_r: .00023 #orig 0.0
-    C_L_delta_a: -0.0169216 #orig 0.0
-    C_L_delta_e: 0.4522919 #orig .09 
-    C_L_delta_r: -0.0011681 #orig 0.0
+    C_L_O: .623 
+    C_L_alpha: 5.06686 
+    C_L_beta: .00017 
+    C_L_p: -0.0032795 
+    C_L_q: 7.8676829 
+    C_L_r: .00023 
+    C_L_delta_a: -0.0169216 
+    C_L_delta_e: 0.4522919 
+    C_L_delta_r: -0.0011681 
 
-    C_D_O: 0.0339017 #orig 0.063
-    C_D_alpha: 0.2959908 #orig 0.03 
-    C_D_beta: 0.0004163 #orig 0.0 
-    C_D_p: 0.0345 #orig 0.2
-    C_D_q:  0.261925 #orig 0.0 
-    C_D_r: -0.0035853 #orig 0.0 
-    C_D_delta_a: 0.0018376 #orig 0.0 
-    C_D_delta_e: 0.0265891 #orig 0.09 
-    C_D_delta_r: 0.0016033 #orig 0.0 
+    C_D_O: 0.0339017 
+    C_D_alpha: 0.2959908 
+    C_D_beta: 0.0004163 
+    C_D_p: 0.0345 
+    C_D_q:  0.261925 
+    C_D_r: -0.0035853 
+    C_D_delta_a: 0.0018376 
+    C_D_delta_e: 0.0265891
+    C_D_delta_r: 0.0016033 
 
-    C_ell_O: -0.0000388 #orig 0.0
-    C_ell_alpha: -0.0001263 #orig 0.00
-    C_ell_beta:  -0.0019502 #orig -.13
-    C_ell_p: -0.525495 #orig -0.51
-    C_ell_q:  -0.0083974 #orig 0.0
-    C_ell_r: 0.1099468 #orig 0.25
-    C_ell_delta_a: 0.1635 #orig 0.14
-    C_ell_delta_e: -0.0000603 #orig 0.0
-    C_ell_delta_r: -0.0105643 #orig 0.0024
+    C_ell_O: -0.0000388 
+    C_ell_alpha: -0.0001263 
+    C_ell_beta:  -0.0019502 
+    C_ell_p: -0.525495 
+    C_ell_q:  -0.0083974 
+    C_ell_r: 0.1099468 
+    C_ell_delta_a: 0.1635 
+    C_ell_delta_e: -0.0000603 
+    C_ell_delta_r: -0.0105643 
 
-    C_m_O: -0.0103936 #orig 0.0135
-    C_m_alpha: -0.8643947 #orig -2.74
-    C_m_beta: -0.040988 #orig 0.0
-    C_m_p: -0.0050803 #orig 0.0
-    C_m_q: -13.5973378  #orig -38.21
-    C_m_r: 0.0019695 #orig 0.0
-    C_m_delta_a: 0.0067418 #orig 0.0
-    C_m_delta_e: -0.75 #orig -.55
-    C_m_delta_r: 0.0003607 #orig 0.0
+    C_m_O: -0.0103936 
+    C_m_alpha: -0.8643947 
+    C_m_beta: -0.040988 
+    C_m_p: -0.0050803 
+    C_m_q: -13.5973378  
+    C_m_r: 0.0019695 
+    C_m_delta_a: 0.0067418 
+    C_m_delta_e: -0.75 
+    C_m_delta_r: 0.0003607 
 
-    C_n_O: -0.0000005 #orig 0.0
-    C_n_alpha: 0.0026822 #orig 0.0
-    C_n_beta:  0.059947 #orig 0.073
-    C_n_p: -0.0797711 #orig 0.069
-    C_n_q: 0.0012396 #orig 0.0
-    C_n_r: -0.1 #orig -0.095
-    C_n_delta_a: 0.0 #orig -0.011
-    C_n_delta_e: 0.0000395 #orig 0.0
-    C_n_delta_r: -0.035 #orig -0.01
+    C_n_O: -0.0000005 
+    C_n_alpha: 0.0026822 
+    C_n_beta:  0.059947 
+    C_n_p: -0.0797711 
+    C_n_q: 0.0012396 
+    C_n_r: -0.1 
+    C_n_delta_a: 0.0 
+    C_n_delta_e: 0.0000395 
+    C_n_delta_r: -0.035 
 
-    C_Y_O: 0.0000003 #orig 0.0
-    C_Y_alpha: -0.0063057 #orig 0.00
-    C_Y_beta:  -0.167815 #orig -.98
-    C_Y_p: 0.0489344 #orig 0.07
-    C_Y_q: -0.0033798 #orig 0.0
-    C_Y_r:  0.1296921 #orig 0.0
-    C_Y_delta_a: -0.0002552 #orig 0.075 
-    C_Y_delta_e: -0.0001251 #orig 0.0
-    C_Y_delta_r: 0.17874 #orig .1
+    C_Y_O: 0.0000003 
+    C_Y_alpha: -0.0063057 
+    C_Y_beta:  -0.167815 
+    C_Y_p: 0.0489344 
+    C_Y_q: -0.0033798 
+    C_Y_r:  0.1296921 
+    C_Y_delta_a: -0.0002552 
+    C_Y_delta_e: -0.0001251 
+    C_Y_delta_r: 0.17874

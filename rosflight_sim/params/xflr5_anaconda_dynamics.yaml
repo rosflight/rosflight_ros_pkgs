@@ -1,5 +1,5 @@
 # Parameters for ROSflight software-in-the-loop simulation, based on RMRC Anaconda UAV.
-# Authors: Ian Reid and Phil Tokumaru
+# Authors: Ian Reid, Phil Tokumaru and Joseph Ritchie
 
 # Mass and inertia parameters are defined in fixedwing.urdf.xacro.
 #Mass: 4.5  #orig Mass: 4.5
@@ -20,11 +20,11 @@
 
 /**:
   ros__parameters:
-    rho: 1.225 #orig 1.2682, not sure why i did it at 1.204 tbh, ill change that later 
+    rho: 1.225
     mass: 4.5
-    wing_s: .485 #orig .52
-    wing_b: 2.06 #orig 2.08
-    wing_c: .237 #orig .235
+    wing_s: .485
+    wing_b: 2.06
+    wing_c: .237
     wing_M: 50.0
     wing_epsilon: 0.9 
     wing_alpha0: 0.05236 #3 deg in rad, orig was 0.0
@@ -44,63 +44,63 @@
     I_0 : 1.5         # no-load (zero torque) current (A)
     servo_tau: .01
 
-    C_L_O: .6015 #orig .51
-    C_L_alpha: 5.159 #orig 5.61
-    C_L_beta: 0.0 #orig was 0 (xflr does not output cl)
-    C_L_p: 0.0 #orig was 0 (xflr does not output)
-    C_L_q: 7.699 #orig 7.95
-    C_L_r: 0.0 #orig 0.0
-    C_L_delta_a: .00008 #orig 0.0 (used Czd)
-    C_L_delta_e: -.47351 #orig .09 (used Czd)
-    C_L_delta_r: .00002 #orig 0.0 (used Czd)
+    C_L_O: .6015
+    C_L_alpha: 5.159
+    C_L_beta: 0.0 # (xflr does not output cl)
+    C_L_p: 0.0 # (xflr does not output)
+    C_L_q: 7.699 
+    C_L_r: 0.0
+    C_L_delta_a: .00008 # (used Czd)
+    C_L_delta_e: -.47351 # (used Czd)
+    C_L_delta_r: .00002 # (used Czd)
 
-    C_D_O: .02680 #orig 0.063 (i dont think this includes all types of drag)
-    C_D_alpha: 0.37633 #orig 0.03 (xflr does not output)
-    C_D_beta: 0.0 #orig 0.0 (xflr does not output)
-    C_D_p: 0.0345 #orig 0.2 (xflr does not output)
-    C_D_q: 0.0 #orig 0.0 (xflr does not output)
-    C_D_r: 0.0 #orig 0.0  (xflr does not output)
-    C_D_delta_a: -.00015 #orig 0.0 (used CXd)
-    C_D_delta_e: -.02301 #orig 0.09 (used CXd)
-    C_D_delta_r: -.00011 #orig 0.0 (used CXd)
+    C_D_O: .02680 # (i dont think this includes all types of drag)
+    C_D_alpha: 0.37633 # (xflr does not output)
+    C_D_beta: 0.0 # (xflr does not output)
+    C_D_p: 0.0345 # (xflr does not output)
+    C_D_q: 0.0 # (xflr does not output)
+    C_D_r: 0.0 # (xflr does not output)
+    C_D_delta_a: -.00015 # (used CXd)
+    C_D_delta_e: -.02301 # (used CXd)
+    C_D_delta_r: -.00011 # (used CXd)
 
-    C_ell_O: 0.0 #orig 0.0 (xflr does not output)
-    C_ell_alpha: 0.0 #orig 0.00 (xflr does not output)
-    C_ell_beta:  0.01246 #orig -.13 
-    C_ell_p: -0.54011 #orig -0.51
-    C_ell_q:  0.0 #orig 0.0 (xflr does not output)
-    C_ell_r: 0.13397 #orig 0.25
-    C_ell_delta_a: -.34438 #orig 0.14
-    C_ell_delta_e: 0.0 #orig 0.0
-    C_ell_delta_r: .01157 #orig 0.0024
+    C_ell_O: 0.0 # (xflr does not output)
+    C_ell_alpha: 0.0 # (xflr does not output)
+    C_ell_beta:  0.01246
+    C_ell_p: -0.54011
+    C_ell_q:  0.0 # (xflr does not output)
+    C_ell_r: 0.13397
+    C_ell_delta_a: -.34438
+    C_ell_delta_e: 0.0
+    C_ell_delta_r: .01157
 
-    C_m_O: .00341 #orig 0.0135
-    C_m_alpha:  -1.04911 #orig -2.74
-    C_m_beta: 0.0 #orig 0.0 (xflr does not output)
-    C_m_p: 0.0 #orig 0.0 (xflr does not output)
-    C_m_q: -13.35474  #orig -38.21
-    C_m_r: 0.0 #orig 0.0 (xflr does not output)
-    C_m_delta_a: .00002 #orig 0.0 (used Cmd)
-    C_m_delta_e: -1.517 #orig -.55 (used Cmd)
-    C_m_delta_r: .00003 #orig 0.0 (used Cmd)
+    C_m_O: .00341
+    C_m_alpha:  -1.04911
+    C_m_beta: 0.0 # (xflr does not output)
+    C_m_p: 0.0 # (xflr does not output)
+    C_m_q: -13.35474
+    C_m_r: 0.0 # (xflr does not output)
+    C_m_delta_a: .00002 # (used Cmd)
+    C_m_delta_e: -1.517 # (used Cmd)
+    C_m_delta_r: .00003 # (used Cmd)
 
-    C_n_O: 0.0 #orig 0.0
-    C_n_alpha: 0.0 #orig 0.0 (xflr does not output)
-    C_n_beta:  0.07602 #orig 0.073
-    C_n_p: -0.09729 #orig 0.069
-    C_n_q: 0.0 #orig 0.0 (xflr does not output)
-    C_n_r: -0.05842 #orig -0.095
-    C_n_delta_a:  -0.00676 #orig -0.011
-    C_n_delta_e: 0.0 #orig 0.0
-    C_n_delta_r: 0.09178 #orig -0.01
+    C_n_O: 0.0
+    C_n_alpha: 0.0 # (xflr does not output)
+    C_n_beta:  0.07602
+    C_n_p: -0.09729
+    C_n_q: 0.0
+    C_n_r: -0.05842
+    C_n_delta_a:  -0.00676
+    C_n_delta_e: 0.0
+    C_n_delta_r: 0.09178
 
-    C_Y_O: 0.0 #orig 0.0
-    C_Y_alpha: 0.0 #orig 0.00 (xflr does not output)
-    C_Y_beta: -0.20270 #orig -.98
-    C_Y_p:  0.02144 #orig 0.07
-    C_Y_q: 0.0 #orig 0.0 (xflr does not output)
-    C_Y_r:  0.16491 #orig 0.0
-    C_Y_delta_a: 0.00953 #orig 0.075 
-    C_Y_delta_e: 0.0 #orig 0.0
-    C_Y_delta_r: -0.22822 #orig .1
+    C_Y_O: 0.0
+    C_Y_alpha: 0.0 # (xflr does not output)
+    C_Y_beta: -0.20270
+    C_Y_p:  0.02144 
+    C_Y_q: 0.0 # (xflr does not output)
+    C_Y_r:  0.16491
+    C_Y_delta_a: 0.00953
+    C_Y_delta_e: 0.0
+    C_Y_delta_r: -0.22822
 
