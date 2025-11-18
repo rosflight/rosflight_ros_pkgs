@@ -58,6 +58,7 @@ public:
   */
   sensor_msgs::msg::Imu imu_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::WrenchStamped & forces) override;
   sensor_msgs::msg::Temperature imu_temperature_update(const rosflight_msgs::msg::SimState & state) override;
+  sensor_msgs::msg::Imu get_imu_biases() override;
   sensor_msgs::msg::MagneticField mag_update(const rosflight_msgs::msg::SimState & state) override;
   rosflight_msgs::msg::Barometer baro_update(const rosflight_msgs::msg::SimState & state) override;
   rosflight_msgs::msg::GNSS gnss_update(const rosflight_msgs::msg::SimState & state) override;
@@ -84,9 +85,12 @@ private:
   // Bias
   Eigen::Vector3d gyro_bias_ = Eigen::Vector3d::Zero();
   Eigen::Vector3d acc_bias_ = Eigen::Vector3d::Zero();
+  Eigen::Vector3d gyro_constant_bias_ = Eigen::Vector3d::Zero();
   Eigen::Vector3d mag_bias_ = Eigen::Vector3d::Zero();
   double baro_bias_ = 0;
   double airspeed_bias_ = 0;
+
+  void update_imu_biases();
 
   /**
    * @brief Computes a first-order model of the gyro bias instability
