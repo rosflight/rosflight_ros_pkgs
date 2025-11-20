@@ -61,7 +61,7 @@ SensorInterface::SensorInterface()
   imu_data_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("simulated_sensors/imu/data", 1);
   imu_temperature_pub_ =
     this->create_publisher<sensor_msgs::msg::Temperature>("simulated_sensors/imu/temperature", 1);
-  imu_bias_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("sim/imu_bias_truth", 1);
+  imu_bias_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("sim/truth_imu_bias", 1);
   mag_pub_ = this->create_publisher<sensor_msgs::msg::MagneticField>("simulated_sensors/mag", 1);
   baro_pub_ = this->create_publisher<rosflight_msgs::msg::Barometer>("simulated_sensors/baro", 1);
   gnss_pub_ = this->create_publisher<rosflight_msgs::msg::GNSS>("simulated_sensors/gnss", 1);
