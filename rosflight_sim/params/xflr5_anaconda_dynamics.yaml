@@ -1,0 +1,106 @@
+# Parameters for ROSflight software-in-the-loop simulation, based on RMRC Anaconda UAV.
+# Authors: Ian Reid, Phil Tokumaru and Joseph Ritchie
+
+# Mass and inertia parameters are defined in fixedwing.urdf.xacro.
+#Mass: 4.5  #orig Mass: 4.5
+#Jx .2466   #orig Jx: 0.24855
+#Jy .385  #orig Jy: 0.3784
+#Jz .6096  #orig Jz: 0.618
+#Jxz .0539  #orig Jxz: 0.06
+#cgx .089 behind wing LE
+#cgy 0 from leading edge wing
+#cgz .053m below wing leading edge 
+#start alpha is 3deg up, wing geo up 2 deg, tail up 0 deg (best trimmmed state)
+#trim at about 16 m/s 
+#Xcp is .085
+
+#conventions, roll left (negative roll?), pitch up, yaw left (Positive?)
+
+#Xflr5 test
+
+/**:
+  ros__parameters:
+    rho: 1.225
+    mass: 4.5
+    wing_s: .485
+    wing_b: 2.06
+    wing_c: .237
+    wing_M: 50.0
+    wing_epsilon: 0.9 
+    wing_alpha0: 0.05236 #3 deg in rad, orig was 0.0
+    
+    # dont edit
+    D_prop : 0.381 # prop diameter in m (15 in)
+    CT_0 : 0.06288743
+    CT_1 : -0.02704452
+    CT_2 : -0.31320732
+    CQ_0 :  0.00614891
+    CQ_1 : -0.0106795
+    CQ_2 : -0.011779
+    KV : 560.0        # Motor speed constant from datasheet in RPM/V
+    KQ : 0.01705      # ((1 /(KV_rpm_per_volt)) *60) / (2 *M_PI) Back-emf constant, KV in V-s/rad, Motor torque constant, KQ in N-m/A
+    V_max : 24.0      # voltage for 6s battery at 4 volts per cell
+    R_motor : 0.042   # ohms
+    I_0 : 1.5         # no-load (zero torque) current (A)
+    servo_tau: .01
+
+    C_L_O: .6015
+    C_L_alpha: 5.159
+    C_L_beta: 0.0 # (xflr does not output cl)
+    C_L_p: 0.0 # (xflr does not output)
+    C_L_q: 7.699 
+    C_L_r: 0.0
+    C_L_delta_a: .00008 # (used Czd)
+    C_L_delta_e: -.47351 # (used Czd)
+    C_L_delta_r: .00002 # (used Czd)
+
+    C_D_O: .02680 # (i dont think this includes all types of drag)
+    C_D_alpha: 0.37633 # (xflr does not output)
+    C_D_beta: 0.0 # (xflr does not output)
+    C_D_p: 0.0345 # (xflr does not output)
+    C_D_q: 0.0 # (xflr does not output)
+    C_D_r: 0.0 # (xflr does not output)
+    C_D_delta_a: -.00015 # (used CXd)
+    C_D_delta_e: -.02301 # (used CXd)
+    C_D_delta_r: -.00011 # (used CXd)
+
+    C_ell_O: 0.0 # (xflr does not output)
+    C_ell_alpha: 0.0 # (xflr does not output)
+    C_ell_beta:  0.01246
+    C_ell_p: -0.54011
+    C_ell_q:  0.0 # (xflr does not output)
+    C_ell_r: 0.13397
+    C_ell_delta_a: -.34438
+    C_ell_delta_e: 0.0
+    C_ell_delta_r: .01157
+
+    C_m_O: .00341
+    C_m_alpha:  -1.04911
+    C_m_beta: 0.0 # (xflr does not output)
+    C_m_p: 0.0 # (xflr does not output)
+    C_m_q: -13.35474
+    C_m_r: 0.0 # (xflr does not output)
+    C_m_delta_a: .00002 # (used Cmd)
+    C_m_delta_e: -1.517 # (used Cmd)
+    C_m_delta_r: .00003 # (used Cmd)
+
+    C_n_O: 0.0
+    C_n_alpha: 0.0 # (xflr does not output)
+    C_n_beta:  0.07602
+    C_n_p: -0.09729
+    C_n_q: 0.0
+    C_n_r: -0.05842
+    C_n_delta_a:  -0.00676
+    C_n_delta_e: 0.0
+    C_n_delta_r: 0.09178
+
+    C_Y_O: 0.0
+    C_Y_alpha: 0.0 # (xflr does not output)
+    C_Y_beta: -0.20270
+    C_Y_p:  0.02144 
+    C_Y_q: 0.0 # (xflr does not output)
+    C_Y_r:  0.16491
+    C_Y_delta_a: 0.00953
+    C_Y_delta_e: 0.0
+    C_Y_delta_r: -0.22822
+
