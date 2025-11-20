@@ -112,7 +112,7 @@ void StandaloneSensors::initialize_sensors()
   double gyro_bias_range = this->get_parameter("gyro_bias_range").as_double();
   double acc_bias_range = this->get_parameter("acc_bias_range").as_double();
   for (int i=0; i<3; ++i) {
-    gyro_bias_[i] = gyro_bias_range * uniform_distribution_(bias_generator_);
+    gyro_constant_bias_[i] = gyro_bias_range * uniform_distribution_(bias_generator_);
     acc_bias_[i] = acc_bias_range * uniform_distribution_(bias_generator_);
   }
 
@@ -147,6 +147,8 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
   Eigen::Vector3d gravity(0.0, 0.0, this->get_parameter("gravity").as_double());
   Eigen::Vector3d gravity_body = q_body_to_inertial.inverse() * gravity;
 
+  update_imu_biases();
+
   // Accelerometer measurement in the body frame
   Eigen::Vector3d y_acc;
 
@@ -166,7 +168,6 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
   bool motors_spinning = current_status.armed;
 
   double acc_stdev = this->get_parameter("acc_stdev").as_double(); 
-  double acc_bias_walk_stdev = this->get_parameter("acc_bias_walk_stdev").as_double(); 
   for (int i=0; i<3; ++i) {
     // Apply normal noise (only if armed, because most of the noise comes from motors
     if (motors_spinning) {
@@ -174,8 +175,6 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
     }
 
     // Perform bias Walk for biases
-    // TODO: Do we need to scale this by dt? Look at what people do. The faster you run the imu, the faster the bias will change.
-    acc_bias_[i] += acc_bias_walk_stdev * normal_distribution_(noise_generator_);
     y_acc[i] += acc_bias_[i];
   }
 
@@ -188,7 +187,6 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
   y_gyro << state.twist.angular.x, state.twist.angular.y, state.twist.angular.z;
 
   double gyro_stdev = this->get_parameter("gyro_stdev").as_double(); 
-  double gyro_bias_walk_stdev = this->get_parameter("gyro_bias_walk_stdev").as_double(); 
   for (int i=0; i<3; ++i) {
     // Normal Noise from motors
     if (motors_spinning) {
@@ -198,20 +196,6 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
 
   // Add constant gyro bias
   y_gyro += gyro_bias_;
-
-  // Add bias walk
-  y_gyro += gyro_bias_gauss_markov_eta_;
-
-  Eigen::Vector3d noise;
-  noise << gyro_bias_walk_stdev * normal_distribution_(noise_generator_)
-        , gyro_bias_walk_stdev * normal_distribution_(noise_generator_)
-        , gyro_bias_walk_stdev * normal_distribution_(noise_generator_);
-  double T_s = 1.0 / get_imu_update_frequency();
-  double k_gyro = this->get_parameter("k_gyro").as_double();
-  gyro_bias_gauss_markov_eta_ = std::exp(-k_gyro*T_s) * gyro_bias_gauss_markov_eta_ + T_s*noise;
-
-  // Add bias instability
-  y_gyro += bias_model();
 
   // Package angular velocity into output message
   out_msg.angular_velocity.x = y_gyro[0];
@@ -228,6 +212,42 @@ Eigen::Vector3d StandaloneSensors::bias_model()
   double alpha = T/(T+this->get_parameter("gyro_bias_model_tau").as_double()); 
   gyro_bias_instability_ *= (1 - alpha);
   return gyro_bias_instability_;
+}
+
+void StandaloneSensors::update_imu_biases()
+{
+  double gyro_bias_walk_stdev = this->get_parameter("gyro_bias_walk_stdev").as_double(); 
+  double acc_bias_walk_stdev = this->get_parameter("acc_bias_walk_stdev").as_double(); 
+
+  // TODO: Do we need to scale this by dt? Look at what people do. The faster you run the imu, the faster the bias will change.
+  acc_bias_[0] += acc_bias_walk_stdev * normal_distribution_(noise_generator_);
+  acc_bias_[1] += acc_bias_walk_stdev * normal_distribution_(noise_generator_);
+  acc_bias_[2] += acc_bias_walk_stdev * normal_distribution_(noise_generator_);
+
+  Eigen::Vector3d noise;
+  noise << gyro_bias_walk_stdev * normal_distribution_(noise_generator_)
+        , gyro_bias_walk_stdev * normal_distribution_(noise_generator_)
+        , gyro_bias_walk_stdev * normal_distribution_(noise_generator_);
+  double T_s = 1.0 / get_imu_update_frequency();
+  double k_gyro = this->get_parameter("k_gyro").as_double();
+  gyro_bias_gauss_markov_eta_ = std::exp(-k_gyro*T_s) * gyro_bias_gauss_markov_eta_ + T_s*noise;
+
+  gyro_bias_ = gyro_constant_bias_ + bias_model() + gyro_bias_gauss_markov_eta_;
+}
+
+sensor_msgs::msg::Imu StandaloneSensors::get_imu_biases()
+{
+  sensor_msgs::msg::Imu imu_biases;
+  
+  imu_biases.angular_velocity.x = gyro_bias_(0);
+  imu_biases.angular_velocity.y = gyro_bias_(1);
+  imu_biases.angular_velocity.z = gyro_bias_(2);
+  
+  imu_biases.linear_acceleration.x = acc_bias_(0);
+  imu_biases.linear_acceleration.y = acc_bias_(1);
+  imu_biases.linear_acceleration.z = acc_bias_(2);
+
+  return imu_biases;
 }
 
 sensor_msgs::msg::Temperature StandaloneSensors::imu_temperature_update(const rosflight_msgs::msg::SimState & state)

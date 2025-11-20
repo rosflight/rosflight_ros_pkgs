@@ -46,7 +46,7 @@ DynamicsInterface::DynamicsInterface()
 
   // Initialize publishers, subscribers, and services
   truth_state_pub_ = this->create_publisher<rosflight_msgs::msg::SimState>("sim/truth_state", 1);
-  wind_truth_pub_ = this->create_publisher<geometry_msgs::msg::Vector3Stamped>("sim/wind_truth", 1);
+  wind_truth_pub_ = this->create_publisher<geometry_msgs::msg::Vector3Stamped>("sim/truth_wind", 1);
   forces_moments_sub_ = this->create_subscription<geometry_msgs::msg::WrenchStamped>(
     "forces_and_moments", 1,
     std::bind(&DynamicsInterface::forces_callback, this, std::placeholders::_1));

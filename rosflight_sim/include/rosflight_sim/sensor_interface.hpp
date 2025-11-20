@@ -75,6 +75,7 @@ private:
   */
   virtual sensor_msgs::msg::Imu imu_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::WrenchStamped & forces) = 0;
   virtual sensor_msgs::msg::Temperature imu_temperature_update(const rosflight_msgs::msg::SimState & state) = 0;
+  virtual sensor_msgs::msg::Imu get_imu_biases() = 0;
   virtual sensor_msgs::msg::MagneticField mag_update(const rosflight_msgs::msg::SimState & state) = 0;
   virtual rosflight_msgs::msg::Barometer baro_update(const rosflight_msgs::msg::SimState & state) = 0;
   virtual rosflight_msgs::msg::GNSS gnss_update(const rosflight_msgs::msg::SimState & state) = 0;
@@ -85,6 +86,7 @@ private:
   // ROS2 interfaces
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_data_pub_;
   rclcpp::Publisher<sensor_msgs::msg::Temperature>::SharedPtr imu_temperature_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_bias_pub_;
   rclcpp::Publisher<sensor_msgs::msg::MagneticField>::SharedPtr mag_pub_;
   rclcpp::Publisher<rosflight_msgs::msg::Barometer>::SharedPtr baro_pub_;
   rclcpp::Publisher<rosflight_msgs::msg::GNSS>::SharedPtr gnss_pub_;
@@ -153,6 +155,7 @@ private:
    * @brief Timer callback to publish imu data
    */
   void imu_publish();
+  void imu_bias_publish();
   void mag_publish();
   void baro_publish();
   void gnss_publish();
