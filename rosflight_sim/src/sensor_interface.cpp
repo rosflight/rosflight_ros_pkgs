@@ -52,7 +52,7 @@ SensorInterface::SensorInterface()
   state_sub_ = this->create_subscription<rosflight_msgs::msg::SimState>(
     "sim/truth_state", 1, std::bind(&SensorInterface::sim_state_callback, this, std::placeholders::_1));
   wind_sub_ = this->create_subscription<geometry_msgs::msg::Vector3Stamped>(
-    "sim/wind_truth", 1, std::bind(&SensorInterface::wind_callback, this, std::placeholders::_1));
+    "sim/truth_wind", 1, std::bind(&SensorInterface::wind_callback, this, std::placeholders::_1));
   forces_sub_ = this->create_subscription<geometry_msgs::msg::WrenchStamped>(
     "forces_and_moments", 1,
     std::bind(&SensorInterface::forces_moments_callback, this, std::placeholders::_1));

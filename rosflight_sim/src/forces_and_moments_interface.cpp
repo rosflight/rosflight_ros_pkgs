@@ -53,7 +53,7 @@ ForcesAndMomentsInterface::ForcesAndMomentsInterface()
   truth_sub_ = this->create_subscription<rosflight_msgs::msg::SimState>(
     "sim/truth_state", 1, std::bind(&ForcesAndMomentsInterface::state_callback, this, std::placeholders::_1));
   wind_sub_ = this->create_subscription<geometry_msgs::msg::Vector3Stamped>(
-    "sim/wind_truth", 1, std::bind(&ForcesAndMomentsInterface::wind_callback, this, std::placeholders::_1));
+    "sim/truth_wind", 1, std::bind(&ForcesAndMomentsInterface::wind_callback, this, std::placeholders::_1));
   firware_out_sub_ = this->create_subscription<rosflight_msgs::msg::PwmOutput>(
     "sim/pwm_output", 1, std::bind(&ForcesAndMomentsInterface::firmware_output_callback, this, std::placeholders::_1));
 
