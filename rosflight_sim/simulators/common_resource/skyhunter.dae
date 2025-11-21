@@ -129,7 +129,7 @@
   </library_effects>
   <library_images>
     <image id="skyhunter_png" name="skyhunter_png">
-      <init_from>/home/jacob/MAGICC/rosflight_ws/src/rosflight_ros_pkgs/rosflight_sim/simulators/common_resource/skyhunter.png</init_from>
+      <init_from>skyhunter.png</init_from>
     </image>
   </library_images>
   <library_materials>

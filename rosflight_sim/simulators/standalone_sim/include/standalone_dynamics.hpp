@@ -36,6 +36,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <random>
 
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
@@ -69,8 +70,11 @@ private:
   */
   Eigen::VectorXd f(Eigen::VectorXd state, Eigen::VectorXd forces);
 
-  void rk4(Eigen::VectorXd state, Eigen::VectorXd forces_moments, double dt);
-  double compute_dt(double now);
+  double dt_;
+  double prev_time_;
+
+  void rk4(Eigen::VectorXd state, Eigen::VectorXd forces_moments);
+  void compute_dt(double now);
   Eigen::VectorXd compute_accels_with_updated_state(Eigen::VectorXd state, Eigen::VectorXd forces_moments);
 
   void compute_inertia_matrix();
@@ -78,6 +82,24 @@ private:
   Eigen::VectorXd add_ground_collision_forces(Eigen::VectorXd forces);
 
   void declare_parameters();
+  void set_steady_state_wind();
+  
+  Eigen::Vector3d steady_state_wind_;
+  
+  std::normal_distribution<double> normal_dist_;
+  std::mt19937 sample_;
+
+  struct Gust
+  {
+    Eigen::Vector3d gust_dir;
+    double magintude;
+    double duration;
+    double t;
+  };
+
+  std::vector<Gust> gusts_;
+
+  Eigen::Vector3d compute_gust(Gust& gust_params);
 };
 
 } // namespace rosflight_sim
