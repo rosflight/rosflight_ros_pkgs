@@ -17,9 +17,4 @@ uint8 IGNORE_FZ = 32
 std_msgs/Header header
 uint8 mode # offboard control mode for interpreting value fields
 uint8 ignore # bitmask for ignore specific setpoint values
-float32 qx
-float32 qy
-float32 qz
-float32 fx
-float32 fy
-float32 fz
+float32[10] u # u control channel interpreted according to mode

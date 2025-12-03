@@ -872,15 +872,10 @@ void ROSflightIO::commandCallback(const rosflight_msgs::msg::Command::ConstShare
   auto mode = (OFFBOARD_CONTROL_MODE) msg->mode;
   auto ignore = (OFFBOARD_CONTROL_IGNORE) msg->ignore;
 
-  float Qx = msg->qx;
-  float Qy = msg->qy;
-  float Qz = msg->qz;
-  float Fx = msg->fx;
-  float Fy = msg->fy;
-  float Fz = msg->fz;
+  float[10] u = msg->u;
 
   mavlink_message_t mavlink_msg;
-  mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg, mode, ignore, Qx, Qy, Qz, Fx, Fy, Fz);
+  mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg, mode, ignore, u);
   mavrosflight_->comm.send_message(mavlink_msg);
 }
 
