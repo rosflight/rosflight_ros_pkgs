@@ -44,8 +44,15 @@ StandaloneDynamics::StandaloneDynamics()
   // Declare parameters and set up the callback for changing parameters
   declare_parameters();
   // TODO: parameter callback...
+  
+  sample_ = std::mt19937(std::random_device{}());
+  normal_dist_ = std::normal_distribution<double>();
+
+  prev_time_ = 0.0;
 
   compute_inertia_matrix();
+
+  set_steady_state_wind();
 }
 
 void StandaloneDynamics::declare_parameters()
@@ -58,6 +65,20 @@ void StandaloneDynamics::declare_parameters()
   this->declare_parameter("Jyz", 0.0);
   this->declare_parameter("Jzz", 0.618);
   this->declare_parameter("gravity", 9.81);
+
+  this->declare_parameter("no_wind", false);
+  this->declare_parameter("use_random_wind", true);
+  this->declare_parameter("steady_state_wind", std::vector<double>{0.0, 0.0, 0.0});
+
+  this->declare_parameter("random_wind_mean", std::vector<double>{0.0, 0.0, 0.0});
+  this->declare_parameter("random_wind_std_dev", std::vector<double>{0.5, 0.5, 0.0});
+
+  this->declare_parameter("no_gusts", false);
+  this->declare_parameter("interoccurance_time_gust_s", 5.0);
+  this->declare_parameter("gust_magnitude_mean", 0.15);
+  this->declare_parameter("gust_magnitude_std_dev", 0.3);
+  this->declare_parameter("gust_duration_limits", std::vector<double>{0.5, 5.0});
+  this->declare_parameter("gust_dir_std_dev", 0.1);
 }
 
 void StandaloneDynamics::compute_inertia_matrix()
@@ -75,12 +96,34 @@ void StandaloneDynamics::compute_inertia_matrix()
   J_inv_ = J_.inverse();
 }
 
+void StandaloneDynamics::set_steady_state_wind()
+{
+  steady_state_wind_ = Eigen::Vector3d(0.0,0.0,0.0);
+
+  if (this->get_parameter("no_wind").as_bool()) {
+    return;
+  }
+
+  auto wind_params = this->get_parameter("steady_state_wind").as_double_array();
+
+  if (!this->get_parameter("use_random_wind").as_bool()) {
+    steady_state_wind_ = Eigen::Vector3d(wind_params[0], wind_params[1], wind_params[2]);
+  }
+  else {
+    std::vector<double> wind_means = this->get_parameter("random_wind_mean").as_double_array();
+    std::vector<double> wind_std_devs = this->get_parameter("random_wind_std_dev").as_double_array();
+    steady_state_wind_ = Eigen::Vector3d(wind_means[0] + normal_dist_(sample_)*wind_std_devs[0],
+                                      wind_means[1] + normal_dist_(sample_)*wind_std_devs[1],
+                                      wind_means[2] + normal_dist_(sample_)*wind_std_devs[2]);
+  }
+}
+
 void StandaloneDynamics::apply_forces_and_torques(const geometry_msgs::msg::WrenchStamped & forces_torques)
 {
-  double dt = compute_dt(forces_torques.header.stamp.sec + forces_torques.header.stamp.nanosec * 1e-9);
-  if (dt == 0.0) { return; } // Don't integrate if the timestep is zero
-
-  // Forces should aleady be in the body frame
+  compute_dt(forces_torques.header.stamp.sec + forces_torques.header.stamp.nanosec * 1e-9);
+  if (dt_ == 0.0) { return; } // Don't integrate if the timestep is zero
+  
+// Forces should aleady be in the body frame
   Eigen::VectorXd fm(6);
   fm << forces_torques.wrench.force.x,
         forces_torques.wrench.force.y,
@@ -112,7 +155,7 @@ void StandaloneDynamics::apply_forces_and_torques(const geometry_msgs::msg::Wren
            current_truth_state_.twist.angular.z;
 
   // integrate forces and torques
-  rk4(state, fm, dt);
+  rk4(state, fm);
 }
 
 Eigen::VectorXd StandaloneDynamics::add_gravity_forces(Eigen::VectorXd forces)
@@ -168,14 +211,14 @@ Eigen::VectorXd StandaloneDynamics::add_ground_collision_forces(Eigen::VectorXd 
   return forces;
 }
 
-void StandaloneDynamics::rk4(Eigen::VectorXd state, Eigen::VectorXd forces_moments, double dt)
+void StandaloneDynamics::rk4(Eigen::VectorXd state, Eigen::VectorXd forces_moments)
 {
   // RK4
   Eigen::VectorXd k1 = f(state, forces_moments);
-  Eigen::VectorXd k2 = f(state + dt/2 * k1, forces_moments);
-  Eigen::VectorXd k3 = f(state + dt/2 * k2, forces_moments);
-  Eigen::VectorXd k4 = f(state + dt * k3, forces_moments);
-  state += dt / 6 * (k1 + 2*k2 + 2*k3 + k4); // Integrate states
+  Eigen::VectorXd k2 = f(state + dt_/2 * k1, forces_moments);
+  Eigen::VectorXd k3 = f(state + dt_/2 * k2, forces_moments);
+  Eigen::VectorXd k4 = f(state + dt_ * k3, forces_moments);
+  state += dt_ / 6 * (k1 + 2*k2 + 2*k3 + k4); // Integrate states
 
   // Normalize the quaternion
   state.segment(6,4).normalize();
@@ -218,19 +261,16 @@ Eigen::VectorXd StandaloneDynamics::compute_accels_with_updated_state(Eigen::Vec
   return accels;
 }
 
-double StandaloneDynamics::compute_dt(double now)
+void StandaloneDynamics::compute_dt(double now)
 {
-  static double prev_time = 0;
-  if(prev_time == 0) {
-    prev_time = now;
-    return 0;
+  if(prev_time_ == 0) {
+    prev_time_ = now;
+    return;
   }
 
   // Calculate time
-  double dt = now - prev_time;
-  prev_time = now;
-
-  return dt;
+  dt_ = now - prev_time_;
+  prev_time_ = now;
 }
 
 Eigen::VectorXd StandaloneDynamics::f(Eigen::VectorXd state, Eigen::VectorXd forces_moments)
@@ -293,8 +333,77 @@ geometry_msgs::msg::Vector3Stamped StandaloneDynamics::compute_wind_truth()
 {
   // Wind in the inertial frame
   current_wind_truth_.header.stamp = this->now();
-  // TODO: Add wind
+  current_wind_truth_.vector.x = steady_state_wind_[0];
+  current_wind_truth_.vector.y = steady_state_wind_[1];
+  current_wind_truth_.vector.z = steady_state_wind_[2];
+  
+  if (this->get_parameter("no_gusts").as_bool() || dt_ == 0.0) {
+    return current_wind_truth_;
+  }
+
+  Eigen::Vector3d steady_state_wind_dir = steady_state_wind_.normalized();
+
+  // Conduct Bernoulli trial.
+  // lambda * dt
+  float bernoulli_probability = dt_/this->get_parameter("interoccurance_time_gust_s").as_double();
+  std::bernoulli_distribution is_gust(bernoulli_probability);
+
+  // If the Bernoulli trial is successful add a gust.
+  if (is_gust(sample_)) {
+    // Normally distributed but stricly positive gust magnitudes
+    float gust_mag = this->get_parameter("gust_magnitude_mean").as_double()
+                                         + this->get_parameter("gust_magnitude_std_dev").as_double()*normal_dist_(sample_);
+    
+    // Using small angle, this is roughly the deviation in radians
+    float std_dev_gust_dir = this->get_parameter("gust_dir_std_dev").as_double();
+
+    // Normally distributed direction of the gust centered on steady state wind direction.
+    Eigen::Vector3d gust_dir;
+    gust_dir[0] = steady_state_wind_dir[0] + std_dev_gust_dir*normal_dist_(sample_);
+    gust_dir[1] = steady_state_wind_dir[1] + std_dev_gust_dir*normal_dist_(sample_);
+    gust_dir[2] = steady_state_wind_dir[2] + std_dev_gust_dir*normal_dist_(sample_);
+    gust_dir = gust_dir.normalized();
+    
+    // Uniformily distributed duration of the gust.
+    std::vector<double> gust_duration_limits = this->get_parameter("gust_duration_limits").as_double_array();
+    std::uniform_real_distribution gust_duration_dist(gust_duration_limits[0], gust_duration_limits[1]);
+
+    double gust_duration = gust_duration_dist(sample_);
+    
+    // Add gust to queue of gusts.
+    Gust gust_to_add{gust_dir, gust_mag, gust_duration, 0.};
+    gusts_.push_back(gust_to_add);
+  }
+
+  Eigen::Vector3d cumulative_gust(0.0,0.0,0.0);
+  
+  // Compute the effect of each gust.
+  for (Gust& gust : gusts_) {
+    cumulative_gust += compute_gust(gust);
+  }
+
+  current_wind_truth_.vector.x += cumulative_gust[0];
+  current_wind_truth_.vector.y += cumulative_gust[1];
+  current_wind_truth_.vector.z += cumulative_gust[2];
+  
+  // Remove gust from queue if it has completed its duration.
+  gusts_.erase(
+    std::remove_if( gusts_.begin(), gusts_.end(),
+                   [](Gust gust) -> bool
+                   {return gust.t > gust.duration; }),
+                   gusts_.end());
+
   return current_wind_truth_;
+}
+
+Eigen::Vector3d StandaloneDynamics::compute_gust(Gust& gust) {
+  // This equation comes from Discrete Gust Model for Launch Vehicle Assessments by Frank B. Leahy (NASA, 2008).
+  // It models a wind gust as a 1-cosine wave with a variable magnitude and duration.
+  
+  float cur_mag = gust.magintude/2.0 * (1-cosf(2*M_PI/gust.duration * gust.t));
+  gust.t += dt_;
+
+  return gust.gust_dir * cur_mag;
 }
 
 } // namespace rosflight_sim
