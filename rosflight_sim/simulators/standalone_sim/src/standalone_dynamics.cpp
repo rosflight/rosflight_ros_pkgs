@@ -67,7 +67,7 @@ void StandaloneDynamics::declare_parameters()
   this->declare_parameter("gravity", 9.81);
 
   this->declare_parameter("no_wind", false);
-  this->declare_parameter("defined_wind", false);
+  this->declare_parameter("use_random_wind", true);
   this->declare_parameter("steady_state_wind", std::vector<double>{0.0, 0.0, 0.0});
 
   this->declare_parameter("random_wind_mean", std::vector<double>{0.0, 0.0, 0.0});
@@ -106,7 +106,7 @@ void StandaloneDynamics::set_steady_state_wind()
 
   auto wind_params = this->get_parameter("steady_state_wind").as_double_array();
 
-  if (this->get_parameter("defined_wind").as_bool()) {
+  if (!this->get_parameter("use_random_wind").as_bool()) {
     steady_state_wind_ = Eigen::Vector3d(wind_params[0], wind_params[1], wind_params[2]);
   }
   else {
@@ -331,7 +331,6 @@ rosflight_msgs::msg::SimState StandaloneDynamics::compute_truth()
 
 geometry_msgs::msg::Vector3Stamped StandaloneDynamics::compute_wind_truth()
 {
-  //
   // Wind in the inertial frame
   current_wind_truth_.header.stamp = this->now();
   current_wind_truth_.vector.x = steady_state_wind_[0];
