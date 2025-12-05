@@ -88,6 +88,10 @@ void StandaloneSensors::declare_parameters()
   this->declare_parameter("sonar_min_range", 0.25);
   this->declare_parameter("sonar_max_range", 8.0);
 
+  this->declare_parameter("battery_stdev", 0.3);
+  //TODO: Need to sync this parameter with the other in the firmware, or add documentation.
+  this->declare_parameter("battery_voltage", 23.0);
+
   // Get the desired altitude at the ground (for baro and LLA)
   this->declare_parameter("origin_altitude", 1387.0);
   this->declare_parameter("origin_latitude", 40.2463724);
@@ -460,7 +464,9 @@ rosflight_msgs::msg::BatteryStatus StandaloneSensors::battery_update(const rosfl
   rosflight_msgs::msg::BatteryStatus out_msg;
 
   // Send without battery and current multipliers. These will get added in the sil board
-  out_msg.voltage = 15;
+  double battery_stdev = this->get_parameter("battery_stdev").as_double();
+  out_msg.voltage = this->get_parameter("battery_voltage").as_double();
+  out_msg.voltage += battery_stdev * normal_distribution_(noise_generator_);
   out_msg.current = 1;
 
   out_msg.header.stamp = this->get_clock()->now();
