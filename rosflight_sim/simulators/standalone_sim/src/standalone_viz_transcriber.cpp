@@ -31,32 +31,74 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <vector>
+
+#include <ament_index_cpp/get_package_share_directory.hpp>
+#include <geometry_msgs/msg/point.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <visualization_msgs/msg/marker.hpp>
+
 #include "standalone_viz_transcriber.hpp"
+#include "rosflight_msgs/msg/sim_state.hpp"
 
 namespace rosflight_sim
 {
 
-RvizPublisher::RvizPublisher()
+StandaloneVizTranscriber::StandaloneVizTranscriber()
     : Node("standalone_viz_transcriber")
 {
   declare_parameters();
   parameter_callback_handle_ = this->add_on_set_parameters_callback(
-    std::bind(&RvizPublisher::parameters_callback, this, std::placeholders::_1));
+    std::bind(&StandaloneVizTranscriber::parameters_callback, this, std::placeholders::_1));
 
   rclcpp::QoS qos_transient_local_20_(20);
   qos_transient_local_20_.transient_local();
-  rviz_wp_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("rviz/waypoint",
-                                                                         qos_transient_local_20_);
   rviz_mesh_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("rviz/mesh", 5);
   rviz_aircraft_path_pub_ =
     this->create_publisher<visualization_msgs::msg::Marker>("rviz/mesh_path", 5);
 
   vehicle_state_sub_ = this->create_subscription<rosflight_msgs::msg::SimState>(
-    "sim/truth_state", 10, std::bind(&RvizPublisher::state_update_callback, this, std::placeholders::_1));
+    "sim/truth_state", 10, std::bind(&StandaloneVizTranscriber::state_update_callback, this, std::placeholders::_1));
 
+
+  initialize_aircraft_marker();
   aircraft_tf2_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+  rviz_mesh_pub_->publish(aircraft_);
 
-  // Initialize aircraft
+  i_ = 0;
+}
+
+void StandaloneVizTranscriber::declare_parameters()
+{
+  this->declare_parameter("sim_aircraft_file", "common_resource/skyhunter.dae");
+  this->declare_parameter("aircraft_scale", 5.0);
+  this->declare_parameter("path_publish_modulo", 10);
+  this->declare_parameter("max_path_history", 10000);
+}
+
+rcl_interfaces::msg::SetParametersResult
+StandaloneVizTranscriber::parameters_callback(const std::vector<rclcpp::Parameter> & parameters)
+{
+  rcl_interfaces::msg::SetParametersResult result;
+  result.successful = true;
+  result.reason = "success";
+
+  for (auto param : parameters) {
+    if (param.get_name() == "aircraft_scale") {
+      aircraft_.scale.x = param.as_double();
+      aircraft_.scale.y = param.as_double();
+      aircraft_.scale.z = param.as_double();
+    }
+  }
+
+  return result;
+}
+
+void StandaloneVizTranscriber::initialize_aircraft_marker()
+{
   aircraft_.header.frame_id = "stl_frame";
   aircraft_.ns = "vehicle";
   aircraft_.id = 0;
@@ -78,38 +120,9 @@ RvizPublisher::RvizPublisher()
   aircraft_.color.g = 0.67f;
   aircraft_.color.b = 0.67f;
   aircraft_.color.a = 1.0;
-  rviz_mesh_pub_->publish(aircraft_);
-
-  i_ = 0;
 }
 
-void RvizPublisher::declare_parameters()
-{
-  this->declare_parameter("sim_aircraft_file", "common_resource/skyhunter.dae");
-  this->declare_parameter("aircraft_scale", 5.0);
-  this->declare_parameter("path_publish_modulo", 10);
-  this->declare_parameter("max_path_history", 10000);
-}
-
-rcl_interfaces::msg::SetParametersResult
-RvizPublisher::parameters_callback(const std::vector<rclcpp::Parameter> & parameters)
-{
-  rcl_interfaces::msg::SetParametersResult result;
-  result.successful = true;
-  result.reason = "success";
-
-  for (auto param : parameters) {
-    if (param.get_name() == "aircraft_scale") {
-      aircraft_.scale.x = param.as_double();
-      aircraft_.scale.y = param.as_double();
-      aircraft_.scale.z = param.as_double();
-    }
-  }
-
-  return result;
-}
-
-void RvizPublisher::update_aircraft_history()
+void StandaloneVizTranscriber::update_aircraft_history()
 {
   rclcpp::Time now = this->get_clock()->now();
   aircraft_history_.header.stamp = now;
@@ -125,15 +138,14 @@ void RvizPublisher::update_aircraft_history()
   aircraft_history_.color.g = 0.0f;
   aircraft_history_.color.b = 0.0f;
   aircraft_history_.color.a = 1.0;
-  aircraft_history_.points = aircraft_history_points_;
 
   // Restrict length of history
-  if (aircraft_history_points_.size() > (uint64_t) this->get_parameter("max_path_history").as_int()) {
-    aircraft_history_points_.erase(aircraft_history_points_.begin());
+  if (aircraft_history_.points.size() > (uint64_t) this->get_parameter("max_path_history").as_int()) {
+    aircraft_history_.points.erase(aircraft_history_.points.begin());
   }
 }
 
-void RvizPublisher::update_mesh()
+void StandaloneVizTranscriber::update_mesh()
 {
   rclcpp::Time now = this->get_clock()->now();
   aircraft_.header.stamp = now;
@@ -157,17 +169,19 @@ void RvizPublisher::update_mesh()
     new_p.x = vehicle_state_.pose.position.x;
     new_p.y = vehicle_state_.pose.position.y;
     new_p.z = vehicle_state_.pose.position.z;
-    aircraft_history_points_.push_back(new_p);
+    aircraft_history_.points.push_back(new_p);
     update_aircraft_history();
 
     rviz_aircraft_path_pub_->publish(aircraft_history_);
+    i_ = 0;
   }
 
   aircraft_tf2_broadcaster_->sendTransform(t);
   rviz_mesh_pub_->publish(aircraft_);
+  ++i_;
 }
 
-void RvizPublisher::state_update_callback(const rosflight_msgs::msg::SimState & msg)
+void StandaloneVizTranscriber::state_update_callback(const rosflight_msgs::msg::SimState & msg)
 {
   vehicle_state_ = msg;
   update_mesh();
@@ -179,7 +193,7 @@ int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
 
-  auto node = std::make_shared<rosflight_sim::RvizPublisher>();
+  auto node = std::make_shared<rosflight_sim::StandaloneVizTranscriber>();
 
   rclcpp::spin(node);
 
