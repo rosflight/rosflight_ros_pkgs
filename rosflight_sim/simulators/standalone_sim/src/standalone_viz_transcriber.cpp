@@ -161,10 +161,12 @@ void RvizPublisher::update_mesh()
     update_aircraft_history();
 
     rviz_aircraft_path_pub_->publish(aircraft_history_);
+    i_ = 0;
   }
 
   aircraft_tf2_broadcaster_->sendTransform(t);
   rviz_mesh_pub_->publish(aircraft_);
+  ++i_;
 }
 
 void RvizPublisher::state_update_callback(const rosflight_msgs::msg::SimState & msg)
