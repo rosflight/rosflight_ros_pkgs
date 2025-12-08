@@ -872,7 +872,10 @@ void ROSflightIO::commandCallback(const rosflight_msgs::msg::Command::ConstShare
   auto mode = (OFFBOARD_CONTROL_MODE) msg->mode;
   auto ignore = (OFFBOARD_CONTROL_IGNORE) msg->ignore;
 
-  float[10] u = msg->u;
+  float u[10];
+  for (u_int64_t i = 0; i < msg->u.size(); i++) {
+    u[i] = msg->u[i];
+  }
 
   mavlink_message_t mavlink_msg;
   mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg, mode, ignore, u);
