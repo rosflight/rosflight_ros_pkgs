@@ -49,7 +49,7 @@ ForcesAndMomentsInterface::ForcesAndMomentsInterface()
   this->declare_parameter("invert_mixing_matrix", true);
 
   // Define ROS interfaces
-  forces_moments_pub_ = this->create_publisher<geometry_msgs::msg::WrenchStamped>("/forces_and_moments", 1);
+  forces_moments_pub_ = this->create_publisher<geometry_msgs::msg::WrenchStamped>("sim/forces_and_moments", 1);
   truth_sub_ = this->create_subscription<rosflight_msgs::msg::SimState>(
     "sim/truth_state", 1, std::bind(&ForcesAndMomentsInterface::state_callback, this, std::placeholders::_1));
   wind_sub_ = this->create_subscription<geometry_msgs::msg::Vector3Stamped>(

@@ -54,22 +54,22 @@ SensorInterface::SensorInterface()
   wind_sub_ = this->create_subscription<geometry_msgs::msg::Vector3Stamped>(
     "sim/truth_wind", 1, std::bind(&SensorInterface::wind_callback, this, std::placeholders::_1));
   forces_sub_ = this->create_subscription<geometry_msgs::msg::WrenchStamped>(
-    "forces_and_moments", 1,
+    "sim/forces_and_moments", 1,
     std::bind(&SensorInterface::forces_moments_callback, this, std::placeholders::_1));
 
   // Initialize publishers
-  imu_data_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("simulated_sensors/imu/data", 1);
+  imu_data_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("sim/sensors/imu/data", 1);
   imu_temperature_pub_ =
-    this->create_publisher<sensor_msgs::msg::Temperature>("simulated_sensors/imu/temperature", 1);
+    this->create_publisher<sensor_msgs::msg::Temperature>("sim/sensors/imu/temperature", 1);
   imu_bias_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("sim/truth_imu_bias", 1);
-  mag_pub_ = this->create_publisher<sensor_msgs::msg::MagneticField>("simulated_sensors/mag", 1);
-  baro_pub_ = this->create_publisher<rosflight_msgs::msg::Barometer>("simulated_sensors/baro", 1);
-  gnss_pub_ = this->create_publisher<rosflight_msgs::msg::GNSS>("simulated_sensors/gnss", 1);
+  mag_pub_ = this->create_publisher<sensor_msgs::msg::MagneticField>("sim/sensors/mag", 1);
+  baro_pub_ = this->create_publisher<rosflight_msgs::msg::Barometer>("sim/sensors/baro", 1);
+  gnss_pub_ = this->create_publisher<rosflight_msgs::msg::GNSS>("sim/sensors/gnss", 1);
   diff_pressure_pub_ =
-    this->create_publisher<rosflight_msgs::msg::Airspeed>("simulated_sensors/diff_pressure", 1);
-  sonar_pub_ = this->create_publisher<sensor_msgs::msg::Range>("simulated_sensors/sonar", 1);
+    this->create_publisher<rosflight_msgs::msg::Airspeed>("sim/sensors/diff_pressure", 1);
+  sonar_pub_ = this->create_publisher<sensor_msgs::msg::Range>("sim/sensors/sonar", 1);
   battery_pub_ =
-    this->create_publisher<rosflight_msgs::msg::BatteryStatus>("simulated_sensors/battery", 1);
+    this->create_publisher<rosflight_msgs::msg::BatteryStatus>("sim/sensors/battery", 1);
 
   // Initialize timers with the frequencies from the parameters
   imu_update_frequency_ = this->get_parameter("imu_update_frequency").as_double();

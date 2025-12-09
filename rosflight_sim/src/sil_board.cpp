@@ -121,28 +121,28 @@ uint16_t SILBoard::serial_bytes_available()
 void SILBoard::sensors_init()
 {
   // Initialize subscribers
-  imu_data_sub_ = node_->create_subscription<sensor_msgs::msg::Imu>("simulated_sensors/imu/data", 1,
+  imu_data_sub_ = node_->create_subscription<sensor_msgs::msg::Imu>("sim/sensors/imu/data", 1,
       std::bind(&SILBoard::imu_data_callback, this, std::placeholders::_1));
 
-  imu_temperature_data_sub_ = node_->create_subscription<sensor_msgs::msg::Temperature>("simulated_sensors/imu/temperature", 1,
+  imu_temperature_data_sub_ = node_->create_subscription<sensor_msgs::msg::Temperature>("sim/sensors/imu/temperature", 1,
       std::bind(&SILBoard::imu_temperature_data_callback, this, std::placeholders::_1));
 
-  mag_data_sub_ = node_->create_subscription<sensor_msgs::msg::MagneticField>("simulated_sensors/mag", 1,
+  mag_data_sub_ = node_->create_subscription<sensor_msgs::msg::MagneticField>("sim/sensors/mag", 1,
       std::bind(&SILBoard::mag_data_callback, this, std::placeholders::_1));
 
-  baro_data_sub_ = node_->create_subscription<rosflight_msgs::msg::Barometer>("simulated_sensors/baro", 1,
+  baro_data_sub_ = node_->create_subscription<rosflight_msgs::msg::Barometer>("sim/sensors/baro", 1,
       std::bind(&SILBoard::baro_data_callback, this, std::placeholders::_1));
 
-  gnss_data_sub_ = node_->create_subscription<rosflight_msgs::msg::GNSS>("simulated_sensors/gnss", 1,
+  gnss_data_sub_ = node_->create_subscription<rosflight_msgs::msg::GNSS>("sim/sensors/gnss", 1,
       std::bind(&SILBoard::gnss_data_callback, this, std::placeholders::_1));
 
-  diff_pressure_data_sub_ = node_->create_subscription<rosflight_msgs::msg::Airspeed>("simulated_sensors/diff_pressure", 1,
+  diff_pressure_data_sub_ = node_->create_subscription<rosflight_msgs::msg::Airspeed>("sim/sensors/diff_pressure", 1,
       std::bind(&SILBoard::diff_pressure_data_callback, this, std::placeholders::_1));
 
-  sonar_data_sub_ = node_->create_subscription<sensor_msgs::msg::Range>("simulated_sensors/sonar", 1,
+  sonar_data_sub_ = node_->create_subscription<sensor_msgs::msg::Range>("sim/sensors/sonar", 1,
       std::bind(&SILBoard::sonar_data_callback, this, std::placeholders::_1));
 
-  battery_data_sub_ = node_->create_subscription<rosflight_msgs::msg::BatteryStatus>("simulated_sensors/battery", 1,
+  battery_data_sub_ = node_->create_subscription<rosflight_msgs::msg::BatteryStatus>("sim/sensors/battery", 1,
       std::bind(&SILBoard::battery_data_callback, this, std::placeholders::_1));
 }
 
