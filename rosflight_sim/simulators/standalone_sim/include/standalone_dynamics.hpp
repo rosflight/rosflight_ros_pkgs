@@ -53,42 +53,6 @@ public:
   StandaloneDynamics();
 
 private:
-  void apply_forces_and_torques(const geometry_msgs::msg::WrenchStamped & forces_torques) override;
-  rosflight_msgs::msg::SimState compute_truth() override;
-  geometry_msgs::msg::Vector3Stamped compute_wind_truth() override;
-  bool set_sim_state(const rosflight_msgs::msg::SimState state) override;
-
-  // Persistent variables
-  rosflight_msgs::msg::SimState current_truth_state_;
-  geometry_msgs::msg::Vector3Stamped current_wind_truth_;
-  Eigen::Matrix3d J_;
-  Eigen::Matrix3d J_inv_;
-
-  /**
-  * @brief Equations of motion for the system.
-  * x_dot = f(x,u)
-  */
-  Eigen::VectorXd f(Eigen::VectorXd state, Eigen::VectorXd forces);
-
-  double dt_;
-  double prev_time_;
-
-  void rk4(Eigen::VectorXd state, Eigen::VectorXd forces_moments);
-  void compute_dt(double now);
-  Eigen::VectorXd compute_accels_with_updated_state(Eigen::VectorXd state, Eigen::VectorXd forces_moments);
-
-  void compute_inertia_matrix();
-  Eigen::VectorXd add_gravity_forces(Eigen::VectorXd forces);
-  Eigen::VectorXd add_ground_collision_forces(Eigen::VectorXd forces);
-
-  void declare_parameters();
-  void set_steady_state_wind();
-  
-  Eigen::Vector3d steady_state_wind_;
-  
-  std::normal_distribution<double> normal_dist_;
-  std::mt19937 sample_;
-
   struct Gust
   {
     Eigen::Vector3d gust_dir;
@@ -97,8 +61,49 @@ private:
     double t;
   };
 
+  void apply_forces_and_torques(const geometry_msgs::msg::WrenchStamped & forces_torques) override;
+  rosflight_msgs::msg::SimState compute_truth() override;
+  geometry_msgs::msg::Vector3Stamped compute_wind_truth() override;
+  bool set_sim_state(const rosflight_msgs::msg::SimState state) override;
+
+  /**
+   * Callback for when parameters are changed using ROS2 parameter system.
+   * This takes all new changed params and updates the appropriate parameters in the params_ object.
+   * @param parameters Set of updated parameters.
+   * @return Service result object that tells the requester the result of the param update.
+   */
+  rcl_interfaces::msg::SetParametersResult
+  parameters_callback(const std::vector<rclcpp::Parameter> & parameters) override;
+  void declare_parameters();
+
+  // Persistent variables
+  rosflight_msgs::msg::SimState current_truth_state_;
+  geometry_msgs::msg::Vector3Stamped current_wind_truth_;
+  Eigen::Matrix3d J_;
+  Eigen::Matrix3d J_inv_;
+  bool inertia_matrix_changed_;
+  bool wind_params_changed_;
+  double dt_;
+  double prev_time_;
+  Eigen::Vector3d steady_state_wind_;
+  std::normal_distribution<double> normal_dist_;
+  std::mt19937 sample_;
   std::vector<Gust> gusts_;
 
+  /**
+  * @brief Equations of motion for the system.
+  * x_dot = f(x,u)
+  */
+  Eigen::VectorXd f(Eigen::VectorXd state, Eigen::VectorXd forces);
+  void rk4(Eigen::VectorXd state, Eigen::VectorXd forces_moments);
+  void compute_dt(double now);
+  Eigen::VectorXd compute_accels_with_updated_state(Eigen::VectorXd state, Eigen::VectorXd forces_moments);
+
+  void compute_inertia_matrix();
+  Eigen::VectorXd add_gravity_forces(Eigen::VectorXd forces);
+  Eigen::VectorXd add_ground_collision_forces(Eigen::VectorXd forces);
+
+  void set_steady_state_wind();
   Eigen::Vector3d compute_gust(Gust& gust_params);
 };
 

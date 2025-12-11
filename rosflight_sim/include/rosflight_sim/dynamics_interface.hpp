@@ -50,6 +50,21 @@ class DynamicsInterface : public rclcpp::Node
 public:
   DynamicsInterface();
 
+protected:
+  /**
+   * ROS2 parameter system interface. This connects ROS2 parameters with the defined update callback,
+   * parametersCallback.
+   */
+  OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
+
+  /**
+   * Callback for when parameters are changed using ROS2 parameter system.
+   * This takes all new changed params and updates the appropriate parameters in the params_ object.
+   * @param parameters Set of updated parameters.
+   * @return Service result object that tells the requester the result of the param update.
+   */
+  virtual rcl_interfaces::msg::SetParametersResult
+  parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
 
 private:
   virtual void apply_forces_and_torques(const geometry_msgs::msg::WrenchStamped & msg) = 0;
@@ -69,21 +84,6 @@ private:
    *  @brief Declares all of the parameters with the ROS2 parameter system. Called during initialization
    */
   void declare_parameters();
-
-  /**
-   * ROS2 parameter system interface. This connects ROS2 parameters with the defined update callback,
-   * parametersCallback.
-   */
-  OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
-
-  /**
-   * Callback for when parameters are changed using ROS2 parameter system.
-   * This takes all new changed params and updates the appropriate parameters in the params_ object.
-   * @param parameters Set of updated parameters.
-   * @return Service result object that tells the requester the result of the param update.
-   */
-  rcl_interfaces::msg::SetParametersResult
-  parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
 
   /**
   * @brief Service callback to set the simulation state to a particular value
