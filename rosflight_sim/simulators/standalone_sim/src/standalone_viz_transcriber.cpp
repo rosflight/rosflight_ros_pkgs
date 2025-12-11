@@ -31,6 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cstdint>
 #include <vector>
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
@@ -140,8 +141,10 @@ void StandaloneVizTranscriber::update_aircraft_history()
   aircraft_history_.color.a = 1.0;
 
   // Restrict length of history
-  if (aircraft_history_.points.size() > (uint64_t) this->get_parameter("max_path_history").as_int()) {
-    aircraft_history_.points.erase(aircraft_history_.points.begin());
+  uint64_t max_path_history = static_cast<uint64_t>(this->get_parameter("max_path_history").as_int());
+  if (aircraft_history_.points.size() > max_path_history) {
+    uint64_t excess_points = aircraft_history_.points.size() - max_path_history;
+    aircraft_history_.points.erase(aircraft_history_.points.begin(), aircraft_history_.points.begin() + excess_points);
   }
 }
 
