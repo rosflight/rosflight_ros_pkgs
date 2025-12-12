@@ -38,20 +38,25 @@ namespace rosflight_sim
 
 StandaloneDynamics::StandaloneDynamics()
   : DynamicsInterface()
+  , J_{Eigen::Matrix3d::Identity()}
+  , J_inv_{Eigen::Matrix3d::Identity()}
+  , inertia_matrix_changed_{false}
+  , wind_params_changed_{false}
+  , dt_{0.0}
+  , prev_time_{0.0}
+  , steady_state_wind_{Eigen::Vector3d::Zero()}
 {
   current_truth_state_ = rosflight_msgs::msg::SimState();
 
   // Declare parameters and set up the callback for changing parameters
   declare_parameters();
-  // TODO: parameter callback...
-  
+  parameter_callback_handle_ = this->add_on_set_parameters_callback(
+    std::bind(&StandaloneDynamics::parameters_callback, this, std::placeholders::_1));
+
   sample_ = std::mt19937(std::random_device{}());
   normal_dist_ = std::normal_distribution<double>();
 
-  prev_time_ = 0.0;
-
   compute_inertia_matrix();
-
   set_steady_state_wind();
 }
 
@@ -66,19 +71,47 @@ void StandaloneDynamics::declare_parameters()
   this->declare_parameter("Jzz", 0.618);
   this->declare_parameter("gravity", 9.81);
 
-  this->declare_parameter("no_wind", false);
+  this->declare_parameter("sim_has_wind", false);
   this->declare_parameter("use_random_wind", true);
   this->declare_parameter("steady_state_wind", std::vector<double>{0.0, 0.0, 0.0});
 
   this->declare_parameter("random_wind_mean", std::vector<double>{0.0, 0.0, 0.0});
   this->declare_parameter("random_wind_std_dev", std::vector<double>{0.5, 0.5, 0.0});
 
-  this->declare_parameter("no_gusts", false);
+  this->declare_parameter("wind_has_gusts", false);
   this->declare_parameter("interoccurance_time_gust_s", 5.0);
   this->declare_parameter("gust_magnitude_mean", 0.15);
   this->declare_parameter("gust_magnitude_std_dev", 0.3);
   this->declare_parameter("gust_duration_limits", std::vector<double>{0.5, 5.0});
   this->declare_parameter("gust_dir_std_dev", 0.1);
+}
+
+rcl_interfaces::msg::SetParametersResult
+StandaloneDynamics::parameters_callback(const std::vector<rclcpp::Parameter> & parameters)
+{
+  rcl_interfaces::msg::SetParametersResult result = DynamicsInterface::parameters_callback(parameters);
+  if (!result.successful) {
+    return result;
+  }
+
+  for (const rclcpp::Parameter& param : parameters) {
+    if (param.get_name() == "Jxx"
+        || param.get_name() == "Jxy"
+        || param.get_name() == "Jxz"
+        || param.get_name() == "Jyy"
+        || param.get_name() == "Jyz"
+        || param.get_name() == "Jzz") {
+      inertia_matrix_changed_ = true;
+    } else if (param.get_name() == "sim_has_wind"
+               || param.get_name() == "use_random_wind"
+               || param.get_name() == "steady_state_wind"
+               || param.get_name() == "random_wind_mean"
+               || param.get_name() == "random_wind_std_dev") {
+      wind_params_changed_ = true;
+    }
+  }
+
+  return result;
 }
 
 void StandaloneDynamics::compute_inertia_matrix()
@@ -100,7 +133,7 @@ void StandaloneDynamics::set_steady_state_wind()
 {
   steady_state_wind_ = Eigen::Vector3d(0.0,0.0,0.0);
 
-  if (this->get_parameter("no_wind").as_bool()) {
+  if (!this->get_parameter("sim_has_wind").as_bool()) {
     return;
   }
 
@@ -122,8 +155,13 @@ void StandaloneDynamics::apply_forces_and_torques(const geometry_msgs::msg::Wren
 {
   compute_dt(forces_torques.header.stamp.sec + forces_torques.header.stamp.nanosec * 1e-9);
   if (dt_ == 0.0) { return; } // Don't integrate if the timestep is zero
-  
-// Forces should aleady be in the body frame
+
+  if (inertia_matrix_changed_) {
+    compute_inertia_matrix();
+    inertia_matrix_changed_ = false;
+  }
+
+  // Forces should aleady be in the body frame
   Eigen::VectorXd fm(6);
   fm << forces_torques.wrench.force.x,
         forces_torques.wrench.force.y,
@@ -175,39 +213,24 @@ Eigen::VectorXd StandaloneDynamics::add_gravity_forces(Eigen::VectorXd forces)
 Eigen::VectorXd StandaloneDynamics::add_ground_collision_forces(Eigen::VectorXd forces)
 {
   // Low fidelity approximation of what actually might happen
-  if (current_truth_state_.pose.position.z > -0.01) { // inertial NED frame
-    // If close to the ground
-    current_truth_state_.pose.position.z = std::min(0.0, current_truth_state_.pose.position.z);
-
-    Eigen::Quaterniond q_body_to_inertial{current_truth_state_.pose.orientation.w, 
-                                          current_truth_state_.pose.orientation.x,
-                                          current_truth_state_.pose.orientation.y,
-                                          current_truth_state_.pose.orientation.z};
-    Eigen::Vector3d forces_in_inertial_frame = q_body_to_inertial * forces.segment(0,3);
-    Eigen::Vector3d moments_in_inertial_frame = q_body_to_inertial * forces.segment(3,3);
-
-    if (forces_in_inertial_frame(2) > 0.0) {
-      // If down force is positive, set it to zero.
-      forces_in_inertial_frame(2) = 0.0;
-      forces.segment(0,3) = q_body_to_inertial.inverse() * forces_in_inertial_frame;
-    }
-
-    // Also set roll moments to zero if close to the ground
-    moments_in_inertial_frame(0) = 0.0;
-    forces.segment(3,3) = q_body_to_inertial.inverse() * moments_in_inertial_frame;
-
-    tf2::Quaternion q(current_truth_state_.pose.orientation.x,
-                      current_truth_state_.pose.orientation.y,
-                      current_truth_state_.pose.orientation.z,
-                      current_truth_state_.pose.orientation.w);
-    tf2::Matrix3x3 m(q);
-    double roll, pitch, yaw;
-    m.getRPY(roll, pitch, yaw);
-
-    q.setRPY(0.0,pitch,yaw);
-    current_truth_state_.pose.orientation = tf2::toMsg(q);
+  if (current_truth_state_.pose.position.z < -0.001) { // inertial NED frame
+    // If far from ground, do nothing
+    return forces;
   }
 
+  current_truth_state_.pose.position.z = std::min(0.0, current_truth_state_.pose.position.z);
+
+  Eigen::Quaterniond q_body_to_inertial{current_truth_state_.pose.orientation.w, 
+                                        current_truth_state_.pose.orientation.x,
+                                        current_truth_state_.pose.orientation.y,
+                                        current_truth_state_.pose.orientation.z};
+  Eigen::Vector3d forces_in_inertial_frame = q_body_to_inertial * forces.segment(0,3);
+
+  if (forces_in_inertial_frame(2) > 0.0) {
+    forces_in_inertial_frame(2) = 0.0; // If down force is positive, set it to zero.
+  }
+
+  forces.segment(0,3) = q_body_to_inertial.inverse() * forces_in_inertial_frame;
   return forces;
 }
 
@@ -331,13 +354,18 @@ rosflight_msgs::msg::SimState StandaloneDynamics::compute_truth()
 
 geometry_msgs::msg::Vector3Stamped StandaloneDynamics::compute_wind_truth()
 {
+  if (wind_params_changed_) {
+    set_steady_state_wind();
+    wind_params_changed_ = false;
+  }
+
   // Wind in the inertial frame
   current_wind_truth_.header.stamp = this->now();
   current_wind_truth_.vector.x = steady_state_wind_[0];
   current_wind_truth_.vector.y = steady_state_wind_[1];
   current_wind_truth_.vector.z = steady_state_wind_[2];
-  
-  if (this->get_parameter("no_gusts").as_bool() || dt_ == 0.0) {
+
+  if (!this->get_parameter("wind_has_gusts").as_bool() || dt_ == 0.0) {
     return current_wind_truth_;
   }
 

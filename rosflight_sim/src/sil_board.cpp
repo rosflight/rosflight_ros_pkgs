@@ -47,6 +47,8 @@ namespace rosflight_sim
 SILBoard::SILBoard(rclcpp::Node::SharedPtr node)
   : UDPBoard()
   , node_(node)
+  , battery_voltage_multiplier_{1.0}
+  , battery_current_multiplier_{1.0}
 {
   declare_parameters();
 }

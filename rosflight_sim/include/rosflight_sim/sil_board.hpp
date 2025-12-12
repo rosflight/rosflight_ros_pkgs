@@ -122,8 +122,8 @@ private:
   void sonar_data_callback(const sensor_msgs::msg::Range & msg);
   void battery_data_callback(const rosflight_msgs::msg::BatteryStatus & msg);
 
-  float battery_voltage_multiplier_{1.0};
-  float battery_current_multiplier_{1.0};
+  float battery_voltage_multiplier_;
+  float battery_current_multiplier_;
   static constexpr size_t BACKUP_SRAM_SIZE{1024};
   uint8_t backup_memory_[BACKUP_SRAM_SIZE] = {0};
 
