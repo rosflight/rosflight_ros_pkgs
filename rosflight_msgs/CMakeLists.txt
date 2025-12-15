@@ -30,7 +30,9 @@ set(msg_files
   "msg/GNSS.msg"
   "msg/OutputRaw.msg"
   "msg/PwmOutput.msg"
+  "msg/RangeFinderSensor.msg"
   "msg/RCRaw.msg"
+  "msg/RGBCamera.msg"
   "msg/Status.msg"
   "msg/SimState.msg"
   )
