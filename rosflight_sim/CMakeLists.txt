@@ -150,6 +150,9 @@ add_subdirectory(simulators/gazebo_sim)
 # Standalone simulator
 add_subdirectory(simulators/standalone_sim)
 
+# HoloOcean simulator
+add_subdirectory(simulators/holoocean_sim)
+
 #############
 ## Install ##
 #############
