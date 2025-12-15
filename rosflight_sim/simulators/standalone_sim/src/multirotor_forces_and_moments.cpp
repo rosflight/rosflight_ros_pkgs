@@ -124,6 +124,7 @@ geometry_msgs::msg::WrenchStamped Multirotor::update_forces_and_torques(rosfligh
   // values are already raw motor outputs.
 
   // The maximum voltage of the battery.
+  // TODO: Switch this to the current battery voltage
   double V_max = this->get_parameter("V_max").as_double();
 
   // TODO: We should change this to the nonlinear model as a function of altitude
