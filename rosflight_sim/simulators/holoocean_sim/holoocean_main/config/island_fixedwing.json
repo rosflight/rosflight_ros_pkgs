@@ -1,0 +1,29 @@
+{
+    "name": "Hovering",
+    "world": "island",
+    "package_name": "Land",
+    "main_agent": "FixedWing",
+    "ticks_per_sec": 30,
+    "frames_per_sec": true,
+    "octree_min": 0.02,
+    "octree_max": 5.0,
+    "agents":[
+        {
+            "agent_name": "FixedWing",
+            "agent_type": "FixedWing",
+            "sensors": [
+                {
+                    "sensor_type": "RGBCamera",
+                    "UseRPY": false,
+                    "ros_publish": true
+                }
+            ],
+            "control_scheme": 2,
+            "location": [0.0, 0.0, 50.0],
+            "rotation": [0.0, 0.0, 0.0]
+        }
+    ],
+    "ros_publish": true,
+    "window_width":  2500,
+    "window_height": 1000
+}
