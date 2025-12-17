@@ -25,7 +25,7 @@ RUN rosdep install --from-paths . --ignore-src -y \
 
 # Create user
 RUN useradd -ms /usr/bin/zsh docker_user \
-    && usermod -aG sudo docker_user \
+    && usermod -aG sudo,dialout,plugdev docker_user \
     && echo "docker_user:pw" | chpasswd
 USER docker_user
 
