@@ -6,16 +6,16 @@
   value: -0.0
 - name: PRI_MIXER_2_0
   type: 9
-  value: -5098.0312
+  value: -5814.79345703125
 - name: PRI_MIXER_3_0
   type: 9
-  value: -22184.6441
+  value: -25303.71484375
 - name: PRI_MIXER_4_0
   type: 9
-  value: 22184.6441
+  value: 25303.71484375
 - name: PRI_MIXER_5_0
   type: 9
-  value: 223010.9894
+  value: 267065.875
 - name: PRI_MIXER_0_1
   type: 9
   value: 0.0
@@ -24,16 +24,16 @@
   value: 0.0
 - name: PRI_MIXER_2_1
   type: 9
-  value: -5098.0312
+  value: -5814.79345703125
 - name: PRI_MIXER_3_1
   type: 9
-  value: -22184.6441
+  value: -25303.71484375
 - name: PRI_MIXER_4_1
   type: 9
-  value: -22184.6441
+  value: -25303.71484375
 - name: PRI_MIXER_5_1
   type: 9
-  value: -223010.9894
+  value: -267065.875
 - name: PRI_MIXER_0_2
   type: 9
   value: -0.0
@@ -42,16 +42,16 @@
   value: -0.0
 - name: PRI_MIXER_2_2
   type: 9
-  value: -5098.0312
+  value: -5814.79345703125
 - name: PRI_MIXER_3_2
   type: 9
-  value: 22184.6441
+  value: 25303.71484375
 - name: PRI_MIXER_4_2
   type: 9
-  value: -22184.6441
+  value: -25303.71484375
 - name: PRI_MIXER_5_2
   type: 9
-  value: 223010.9894
+  value: 267065.875
 - name: PRI_MIXER_0_3
   type: 9
   value: 0.0
@@ -60,16 +60,16 @@
   value: 0.0
 - name: PRI_MIXER_2_3
   type: 9
-  value: -5098.0312
+  value: -5814.79345703125
 - name: PRI_MIXER_3_3
   type: 9
-  value: 22184.6441
+  value: 25303.71484375
 - name: PRI_MIXER_4_3
   type: 9
-  value: 22184.6441
+  value: 25303.71484375
 - name: PRI_MIXER_5_3
   type: 9
-  value: -223010.9894
+  value: -267065.875
 - name: PRI_MIXER_OUT_0
   type: 6
   value: 2
