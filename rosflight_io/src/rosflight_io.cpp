@@ -366,8 +366,8 @@ void ROSflightIO::handle_offboard_control_msg(const mavlink_message_t & msg)
   // int64_t msec_part = curr_time / divisor_;
   // int64_t frac_ms_part = curr_time % divisor_;
 
-  int64_t off_msec = static_cast<int64_t>(std::roundf(off.Fy)) * divisor_;
-  int64_t off_frac = static_cast<int64_t>(std::roundf(off.Fz));
+  int64_t off_msec = static_cast<int64_t>(std::roundf(off.Fx)) * divisor_;
+  int64_t off_frac = static_cast<int64_t>(std::roundf(off.Fy));
   off_msec = off_msec + off_frac;
 
   out.data = curr_time - off_msec;
@@ -933,8 +933,8 @@ void ROSflightIO::commandCallback(const rosflight_msgs::msg::Command::ConstShare
   int64_t frac_ms_part = curr_time % divisor_;
 
   // Convert to float if you really want floats
-  Fy = (static_cast<float>(msec_part));
-  Fz = static_cast<float>(frac_ms_part);
+  Fx = static_cast<float>(msec_part);
+  Fy = static_cast<float>(frac_ms_part);
 
   mavlink_message_t mavlink_msg;
   mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg, mode, ignore, Qx, Qy, Qz, Fx, Fy, Fz);
