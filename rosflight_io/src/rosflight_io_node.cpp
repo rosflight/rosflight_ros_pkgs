@@ -50,6 +50,52 @@
 #include <string>
 #include <memory>
 #include <thread>
+#include <chrono>
+
+using namespace std::chrono_literals;
+
+int64_t get_involuntary_context_switches(int who = RUSAGE_THREAD) noexcept
+{
+  struct rusage rusage {};
+  getrusage(who, &rusage);
+  return static_cast<int64_t>(rusage.ru_nivcsw);
+}
+
+class ContextSwitchesCounter
+{
+public:
+  using SharedPtr = std::shared_ptr<ContextSwitchesCounter>;
+  explicit ContextSwitchesCounter(int who = RUSAGE_THREAD)
+  : who_{who} {}
+
+  void init() noexcept
+  {
+    involuntary_context_switches_previous_ = get_involuntary_context_switches(who_);
+  }
+
+  [[nodiscard]] int64_t get() noexcept
+  {
+    std::call_once(
+      once_, [this] {init();}
+    );
+    int64_t current = get_involuntary_context_switches(who_);
+    return current - std::exchange(involuntary_context_switches_previous_, current);
+  }
+
+private:
+  int64_t involuntary_context_switches_previous_;
+  const int who_;
+  std::once_flag once_;
+};
+
+void publish_context_switches(const rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr& publisher,
+                              const ContextSwitchesCounter::SharedPtr& context_switches_counter)
+{
+  auto context_switches = context_switches_counter->get();
+  std_msgs::msg::Int32 msg;
+  msg.data = context_switches;
+  publisher->publish(msg);
+}
 
 void set_thread_scheduling(std::thread::native_handle_type thread, int policy, int sched_priority)
 {
@@ -61,7 +107,7 @@ void set_thread_scheduling(std::thread::native_handle_type thread, int policy, i
   }
 }
 
-int main(int argc, char ** argv)
+void configure_for_realtime(int priority = 85, int policy = SCHED_RR)
 {
   // Force flush of the stdout buffer.
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
@@ -73,13 +119,44 @@ int main(int argc, char ** argv)
   // "The new thread inherits copies of the calling thread's capability sets
   // (see capabilities(7)) and CPU affinity mask (see sched_setaffinity(2))."
 
-  int policy = SCHED_RR;
-  int priority = 97;
-
   set_thread_scheduling(pthread_self(), policy, priority);
+}
+
+void configure_node_for_realtime(rclcpp::Node::SharedPtr& node, ContextSwitchesCounter::SharedPtr& context_switches_counter, rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr& switch_publisher, rclcpp::TimerBase::SharedPtr& context_timer)
+{
+  context_switches_counter = std::make_shared<ContextSwitchesCounter>(RUSAGE_SELF);
+  switch_publisher = 
+    node->create_publisher<std_msgs::msg::Int32>("rosflight_io/context_switches", 10);
+
+  context_timer = node->create_wall_timer(1000ms, [switch_publisher, context_switches_counter](){
+    publish_context_switches(switch_publisher, context_switches_counter);});
+}
+
+int main(int argc, char ** argv)
+{
+
+  bool is_realtime = false; // TODO: Make these arguments
+  bool is_publish_context_switches = true;
+  int priority = 87;
+  int policy = SCHED_RR;
+
+  if (is_realtime) {
+    configure_for_realtime(policy, priority);
+  }
 
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<rosflight_io::ROSflightIO>());
+
+  rosflight_io::ROSflightIO::SharedPtr node = std::make_shared<rosflight_io::ROSflightIO>();
+
+  ContextSwitchesCounter::SharedPtr context_switches_counter;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr switch_publisher;
+  rclcpp::TimerBase::SharedPtr context_timer;
+
+  if (is_publish_context_switches) {
+    configure_node_for_realtime(node, context_switches_counter, switch_publisher, context_timer);
+  }
+
+  rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;
 }
