@@ -57,41 +57,6 @@
 
 namespace rosflight_io {
 
-int64_t get_involuntary_context_switches(int who = RUSAGE_THREAD) noexcept
-{
-  struct rusage rusage {};
-  getrusage(who, &rusage);
-  return static_cast<int64_t>(rusage.ru_nivcsw);
-}
-
-class ContextSwitchesCounter
-{
-public:
-  explicit ContextSwitchesCounter(int who = RUSAGE_THREAD)
-  : who_{who} {}
-
-  void init() noexcept
-  {
-    involuntary_context_switches_previous_ = get_involuntary_context_switches(who_);
-  }
-
-  [[nodiscard]] int64_t get() noexcept
-  {
-    std::call_once(
-      once_, [this] {init();}
-    );
-    int64_t current = get_involuntary_context_switches(who_);
-    return current - std::exchange(involuntary_context_switches_previous_, current);
-  }
-
-private:
-  int64_t involuntary_context_switches_previous_;
-  const int who_;
-  std::once_flag once_;
-};
-
-static ContextSwitchesCounter context_switches_counter(RUSAGE_SELF);
-
 ROSflightIO::ROSflightIO()
     : Node("rosflight_io")
     , convenience_parameters_{}
@@ -1086,12 +1051,6 @@ void ROSflightIO::versionTimerCallback() { request_version(); }
 
 void ROSflightIO::heartbeatTimerCallback() { 
   send_heartbeat();
-  auto context_switches = context_switches_counter.get();
-  if (context_switches > 0L) {
-    RCLCPP_WARN(this->get_logger(), "Involuntary context switches: '%lu'", context_switches);
-  } else {
-    RCLCPP_INFO(this->get_logger(), "Involuntary context switches: '%lu'", context_switches);
-  }
 }
 
 void ROSflightIO::request_version()
