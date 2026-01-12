@@ -54,18 +54,10 @@
 
 using namespace std::chrono_literals;
 
-int64_t get_involuntary_context_switches(int who = RUSAGE_THREAD) noexcept
-{
-  struct rusage rusage {};
-  getrusage(who, &rusage);
-  return static_cast<int64_t>(rusage.ru_nivcsw);
-}
-
-class ContextSwitchesCounter
+class RealtimeConfigurator
 {
 public:
-  using SharedPtr = std::shared_ptr<ContextSwitchesCounter>;
-  explicit ContextSwitchesCounter(int who = RUSAGE_THREAD)
+  explicit RealtimeConfigurator(int who = RUSAGE_THREAD)
   : who_{who} {}
 
   void init() noexcept
@@ -73,7 +65,7 @@ public:
     involuntary_context_switches_previous_ = get_involuntary_context_switches(who_);
   }
 
-  [[nodiscard]] int64_t get() noexcept
+  [[nodiscard]] int64_t num_context_switches() noexcept
   {
     std::call_once(
       once_, [this] {init();}
@@ -81,79 +73,83 @@ public:
     int64_t current = get_involuntary_context_switches(who_);
     return current - std::exchange(involuntary_context_switches_previous_, current);
   }
+  
+  int64_t get_involuntary_context_switches(int who = RUSAGE_THREAD) noexcept
+  {
+    struct rusage rusage {};
+    getrusage(who, &rusage);
+    return static_cast<int64_t>(rusage.ru_nivcsw);
+  }
+  
+  void configure_thread_for_realtime(int priority = 85, int policy = SCHED_RR)
+  {
+    // Force flush of the stdout buffer.
+    setvbuf(stdout, NULL, _IONBF, BUFSIZ);
+
+    // The middleware threads are created on the node construction.
+    // Since the main thread settings are configured before the middleware threads
+    // are created, the middleware threads will inherit the scheduling settings.
+    // From: https://linux.die.net/man/3/pthread_create
+    // "The new thread inherits copies of the calling thread's capability sets
+    // (see capabilities(7)) and CPU affinity mask (see sched_setaffinity(2))."
+
+    set_thread_scheduling(pthread_self(), policy, priority);
+  }
+
+  void configure_node_to_report_context_switches(rclcpp::Node::SharedPtr& node)
+  {
+    publisher_ = 
+      node->create_publisher<std_msgs::msg::Int32>("rosflight_io/context_switches", 10);
+
+    context_timer_ = node->create_wall_timer(1000ms, std::bind(&RealtimeConfigurator::publish_context_switches, this));
+  }
 
 private:
   int64_t involuntary_context_switches_previous_;
   const int who_;
   std::once_flag once_;
+  rclcpp::TimerBase::SharedPtr context_timer_;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr publisher_;
+
+  void publish_context_switches()
+  {
+    auto context_switches = num_context_switches();
+    std_msgs::msg::Int32 msg;
+    msg.data = context_switches;
+    publisher_->publish(msg);
+  }
+
+  void set_thread_scheduling(std::thread::native_handle_type thread, int policy, int sched_priority)
+  {
+    struct sched_param param;
+    param.sched_priority = sched_priority;
+    auto ret = pthread_setschedparam(thread, policy, &param);
+    if (ret > 0) {
+      throw std::runtime_error("Couldn't set scheduling priority and policy. Error code: " + std::string(strerror(errno)));
+    }
+  }
 };
 
-void publish_context_switches(const rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr& publisher,
-                              const ContextSwitchesCounter::SharedPtr& context_switches_counter)
-{
-  auto context_switches = context_switches_counter->get();
-  std_msgs::msg::Int32 msg;
-  msg.data = context_switches;
-  publisher->publish(msg);
-}
-
-void set_thread_scheduling(std::thread::native_handle_type thread, int policy, int sched_priority)
-{
-  struct sched_param param;
-  param.sched_priority = sched_priority;
-  auto ret = pthread_setschedparam(thread, policy, &param);
-  if (ret > 0) {
-    throw std::runtime_error("Couldn't set scheduling priority and policy. Error code: " + std::string(strerror(errno)));
-  }
-}
-
-void configure_for_realtime(int priority = 85, int policy = SCHED_RR)
-{
-  // Force flush of the stdout buffer.
-  setvbuf(stdout, NULL, _IONBF, BUFSIZ);
-
-  // The middleware threads are created on the node construction.
-  // Since the main thread settings are configured before the middleware threads
-  // are created, the middleware threads will inherit the scheduling settings.
-  // From: https://linux.die.net/man/3/pthread_create
-  // "The new thread inherits copies of the calling thread's capability sets
-  // (see capabilities(7)) and CPU affinity mask (see sched_setaffinity(2))."
-
-  set_thread_scheduling(pthread_self(), policy, priority);
-}
-
-void configure_node_for_realtime(rclcpp::Node::SharedPtr& node, ContextSwitchesCounter::SharedPtr& context_switches_counter, rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr& switch_publisher, rclcpp::TimerBase::SharedPtr& context_timer)
-{
-  context_switches_counter = std::make_shared<ContextSwitchesCounter>(RUSAGE_SELF);
-  switch_publisher = 
-    node->create_publisher<std_msgs::msg::Int32>("rosflight_io/context_switches", 10);
-
-  context_timer = node->create_wall_timer(1000ms, [switch_publisher, context_switches_counter](){
-    publish_context_switches(switch_publisher, context_switches_counter);});
-}
 
 int main(int argc, char ** argv)
 {
-
   bool is_realtime = false; // TODO: Make these arguments
   bool is_publish_context_switches = true;
   int priority = 87;
   int policy = SCHED_RR;
 
+  RealtimeConfigurator configure;
+
   if (is_realtime) {
-    configure_for_realtime(policy, priority);
+    configure.configure_thread_for_realtime(policy, priority);
   }
 
   rclcpp::init(argc, argv);
 
   rosflight_io::ROSflightIO::SharedPtr node = std::make_shared<rosflight_io::ROSflightIO>();
 
-  ContextSwitchesCounter::SharedPtr context_switches_counter;
-  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr switch_publisher;
-  rclcpp::TimerBase::SharedPtr context_timer;
-
   if (is_publish_context_switches) {
-    configure_node_for_realtime(node, context_switches_counter, switch_publisher, context_timer);
+    configure.configure_node_to_report_context_switches(node);
   }
 
   rclcpp::spin(node);
