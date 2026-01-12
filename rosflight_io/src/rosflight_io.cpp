@@ -354,13 +354,14 @@ void ROSflightIO::handle_offboard_control_msg(const mavlink_message_t & msg)
 {
   // This function is for a timing experiment. Usually we don't get offboard command messages back.
   if (serial_delay_pub_ == nullptr) {
-    serial_delay_pub_ = this->create_publisher<std_msgs::msg::Int64>("serial_time_delay", 10);
+    serial_delay_pub_ = this->create_publisher<rosflight_msgs::msg::TimeDelay>("serial_time_delay_ns", 10);
   }
 
   mavlink_offboard_control_t off;
   mavlink_msg_offboard_control_decode(&msg, &off);
 
-  std_msgs::msg::Int64 out;
+  rosflight_msgs::msg::TimeDelay out;
+  out.header.stamp = this->get_clock()->now();
   int64_t curr_time = this->get_clock()->now().nanoseconds() % sec_divisor_;
 
   // int64_t msec_part = curr_time / divisor_;
@@ -370,9 +371,9 @@ void ROSflightIO::handle_offboard_control_msg(const mavlink_message_t & msg)
   int64_t off_frac = static_cast<int64_t>(std::roundf(off.Fy));
   off_msec = off_msec + off_frac;
 
-  out.data = curr_time - off_msec;
-  if (out.data < 0) {
-    out.data += sec_divisor_;
+  out.time_delay_ns = curr_time - off_msec;
+  if (out.time_delay_ns < 0) {
+    out.time_delay_ns += sec_divisor_;
   }
 
   // float y = static_cast<float>(msec_part);

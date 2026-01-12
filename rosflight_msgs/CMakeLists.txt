@@ -33,6 +33,7 @@ set(msg_files
   "msg/RCRaw.msg"
   "msg/Status.msg"
   "msg/SimState.msg"
+  "msg/TimeDelay.msg"
   )
 
 # declare the service files to generate code for

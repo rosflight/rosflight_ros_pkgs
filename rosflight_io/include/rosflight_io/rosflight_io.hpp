@@ -84,6 +84,7 @@
 #include <rosflight_msgs/msg/output_raw.hpp>
 #include <rosflight_msgs/msg/rc_raw.hpp>
 #include <rosflight_msgs/msg/status.hpp>
+#include <rosflight_msgs/msg/time_delay.hpp>
 
 #include <rosflight_msgs/srv/param_file.hpp>
 #include <rosflight_msgs/srv/param_get.hpp>
@@ -327,7 +328,7 @@ private:
   void handle_battery_status_msg(const mavlink_message_t & msg);
 
   void handle_offboard_control_msg(const mavlink_message_t & msg);
-  rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr serial_delay_pub_;
+  rclcpp::Publisher<rosflight_msgs::msg::TimeDelay>::SharedPtr serial_delay_pub_;
   int64_t start_time_ = 0;
   int64_t sec_divisor_ = 100'000'000;
   int64_t divisor_ = 10'000;
