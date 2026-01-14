@@ -99,15 +99,15 @@ ament_target_dependencies(mavrosflight rclcpp)
 add_library(realtime_configurator SHARED
   src/realtime_configurator.cpp
   )
-target_link_libraries(realtime_configurator
-  ${ament_LIBRARIES}
-  ${rclcpp_LIBRARIES}
-  )
+target_include_directories(realtime_configurator
+  PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<INSTALL_INTERFACE:include>")
 ament_target_dependencies(realtime_configurator
   rclcpp
   std_msgs
   )
-ament_export_targets(realtime_configurator HAS_LIBRARY_TARGET)
+ament_export_targets(export_realtime_configurator HAS_LIBRARY_TARGET)
 
 # rosflight_io_node
 add_executable(rosflight_io
@@ -153,7 +153,7 @@ install(DIRECTORY include/rosflight_io/mavrosflight/
   )
 
 install(TARGETS realtime_configurator
-  EXPORT realtime_configurator
+  EXPORT export_realtime_configurator
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
