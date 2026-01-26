@@ -519,6 +519,18 @@ private:
    */
   bool checkIfAllParamsReceivedCallback(const std_srvs::srv::Trigger::Request::SharedPtr & req,
                                         const std_srvs::srv::Trigger::Response::SharedPtr & res);
+  /**
+   * @brief "print_mixing_matrix" service callback.
+   *
+   * This function is called anytime the "print_mixing_matrix" ROS service is called. It returns
+   * true.
+   *
+   * @param req ROS Trigger service request.
+   * @param res ROS Trigger service response.
+   * @return True
+   */
+  bool printMixingMatrixCallback(const std_srvs::srv::Trigger::Request::SharedPtr & req,
+                                 const std_srvs::srv::Trigger::Response::SharedPtr & res);
 
   // timer callbacks
   /**
@@ -587,6 +599,13 @@ private:
    * as a convenience for easy read/write access from ROS2
    */
   void load_convenience_parameters();
+  /**
+   * @brief logs the mixing matrix parameters to the ROS2 logger. This usually prints
+   * to the screen and is a helpful debugging tool.
+   *
+   * @return true if all mixer params are received from the firmware.
+   */
+  bool log_mixer_params();
   /**
   * @brief Handles any parameter changes to the node.
   *
@@ -664,6 +683,8 @@ private:
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr reboot_bootloader_srv_;
   /// "all_params_received" ROS service.
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr check_if_all_params_received_srv_;
+  /// "print_mixing_matrix" ROS service.
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr print_mixing_matrix_srv_;
 
   /// Handle for the ROS2 parameter callback
   OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
