@@ -64,8 +64,8 @@ protected:
   static constexpr uint8_t NUM_MIXER_OUTPUTS = 10;
 
   // Matrix to store the current mixing matrix
-  Eigen::Matrix<double, 6, NUM_MIXER_OUTPUTS> primary_mixing_matrix_;
-  Eigen::Matrix<double, 6, NUM_MIXER_OUTPUTS> secondary_mixing_matrix_;
+  Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS> primary_mixing_matrix_;
+  Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS> secondary_mixing_matrix_;
   Eigen::Matrix<int, 1, NUM_MIXER_OUTPUTS> mixer_header_vals_;
   int primary_mixer_ = 255;
   int secondary_mixer_ = 255;
@@ -131,7 +131,7 @@ private:
   void get_mixer_firmware_parameters();
   double send_get_param_service_to_firmware(std::string param_name);
   bool send_check_params_service_to_firmware();
-  void invert_matrix(Eigen::Matrix<double, 6, NUM_MIXER_OUTPUTS> &mixer_to_invert);
+  void invert_matrix(Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS> &mixer_to_invert);
 
 public:
 

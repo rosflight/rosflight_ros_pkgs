@@ -125,6 +125,10 @@ ROSflightIO::ROSflightIO()
     "all_params_received",
     std::bind(&ROSflightIO::checkIfAllParamsReceivedCallback, this, std::placeholders::_1,
               std::placeholders::_2));
+  print_mixing_matrix_srv_ = this->create_service<std_srvs::srv::Trigger>(
+    "print_mixing_matrix",
+    std::bind(&ROSflightIO::printMixingMatrixCallback, this, std::placeholders::_1,
+              std::placeholders::_2));
 
   declare_parameters();
   parameter_callback_handle_ = this->add_on_set_parameters_callback(std::bind(&ROSflightIO::parameters_callback, this, std::placeholders::_1));
@@ -274,6 +278,58 @@ void ROSflightIO::load_convenience_parameters()
       RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!", param.c_str());
     }
   }
+}
+
+bool ROSflightIO::log_mixer_params()
+{
+  // Get the primary and secondary mixer type
+  std::string param_name = "PRIMARY_MIXER";
+  double primary_mixer{0};
+  if (!mavrosflight_->param.get_param_value(param_name, &primary_mixer)) {
+    RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!", param_name.c_str());
+    return false;
+  }
+
+  param_name = "SECONDARY_MIXER";
+  double secondary_mixer{0};
+  if (!mavrosflight_->param.get_param_value(param_name, &secondary_mixer)) {
+    RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!", param_name.c_str());
+    return false;
+  }
+
+  // Get the relevant mixer header parameters
+  Eigen::Matrix<double, 1, 10> mixer_header_vals{Eigen::Matrix<double,1,10>::Zero()};
+  for (int i=0; i<10; ++i) {
+    param_name = "PRI_MIXER_OUT_" + std::to_string(i);
+    if (!mavrosflight_->param.get_param_value(param_name, &mixer_header_vals[i])) {
+      RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!", param_name.c_str());
+      return false;
+    }
+  }
+
+  // Get the mixer matrix parameters
+  Eigen::Matrix<double, 10, 10> primary_mixing_matrix{Eigen::Matrix<double,10,10>::Zero()};
+  Eigen::Matrix<double, 10, 10> secondary_mixing_matrix{Eigen::Matrix<double,10,10>::Zero()};
+  for (int i=0; i<10; ++i) {
+    for (int j=0; j<10; ++j) {
+      param_name = "PRI_MIXER_" + std::to_string(i) + "_" + std::to_string(j);
+      if (!mavrosflight_->param.get_param_value(param_name, &primary_mixing_matrix(i,j))) {
+        RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!", param_name.c_str());
+        return false;
+      }
+
+      param_name = "SEC_MIXER_" + std::to_string(i) + "_" + std::to_string(j);
+      if (!mavrosflight_->param.get_param_value(param_name, &secondary_mixing_matrix(i,j))) {
+        RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!", param_name.c_str());
+        return false;
+      }
+    }
+  }
+
+  RCLCPP_INFO_STREAM(this->get_logger(), "Mixer output channel types: " << mixer_header_vals);
+  RCLCPP_INFO_STREAM(this->get_logger(), "Primary mixer:\n" << primary_mixing_matrix);
+  RCLCPP_INFO_STREAM(this->get_logger(), "Secondary mixer:\n" << secondary_mixing_matrix);
+  return true;
 }
 
 ROSflightIO::~ROSflightIO()
@@ -872,15 +928,13 @@ void ROSflightIO::commandCallback(const rosflight_msgs::msg::Command::ConstShare
   auto mode = (OFFBOARD_CONTROL_MODE) msg->mode;
   auto ignore = (OFFBOARD_CONTROL_IGNORE) msg->ignore;
 
-  float Qx = msg->qx;
-  float Qy = msg->qy;
-  float Qz = msg->qz;
-  float Fx = msg->fx;
-  float Fy = msg->fy;
-  float Fz = msg->fz;
+  float command_vect[10] = {0,0,0,0,0,0,0,0,0,0};
+  for (int i=0; i<10; ++i) {
+    command_vect[i] = msg->u[i];
+  }
 
   mavlink_message_t mavlink_msg;
-  mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg, mode, ignore, Qx, Qy, Qz, Fx, Fy, Fz);
+  mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg, mode, ignore, command_vect);
   mavrosflight_->comm.send_message(mavlink_msg);
 }
 
@@ -984,6 +1038,7 @@ void ROSflightIO::paramTimerCallback()
     RCLCPP_INFO(this->get_logger(), "Received all parameters");
 
     load_convenience_parameters();
+    log_mixer_params();
   } else {
     mavrosflight_->param.request_params();
     RCLCPP_ERROR(this->get_logger(),
@@ -1139,6 +1194,14 @@ bool ROSflightIO::checkIfAllParamsReceivedCallback(
   if (res->success) {
     res->message = "All params received from firmware.";
   }
+  return true;
+}
+
+bool ROSflightIO::printMixingMatrixCallback(
+  const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  const std_srvs::srv::Trigger::Response::SharedPtr & res)
+{
+  res->success = log_mixer_params();
   return true;
 }
 

@@ -40,8 +40,8 @@ namespace rosflight_sim
 
 ForcesAndMomentsInterface::ForcesAndMomentsInterface()
   : rclcpp::Node("mav_forces_and_moments")
-  , primary_mixing_matrix_(Eigen::Matrix<double, 6, NUM_MIXER_OUTPUTS>::Zero())
-  , secondary_mixing_matrix_(Eigen::Matrix<double, 6, NUM_MIXER_OUTPUTS>::Zero())
+  , primary_mixing_matrix_(Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS>::Zero())
+  , secondary_mixing_matrix_(Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS>::Zero())
   , mixer_header_vals_(Eigen::Matrix<int, 1, NUM_MIXER_OUTPUTS>::Zero())
 {
   // Note that we don't define the parameter callback routine here.
@@ -149,7 +149,7 @@ void ForcesAndMomentsInterface::get_mixer_firmware_parameters()
   }
 
   // Get the mixer matrix parameters and relevant header parameters
-  for (int i=0; i<6; ++i) {
+  for (int i=0; i<NUM_MIXER_OUTPUTS; ++i) {
     for (int j=0; j<NUM_MIXER_OUTPUTS; ++j) {
       param_name = "PRI_MIXER_" + std::to_string(i) + "_" + std::to_string(j);
       param_val = send_get_param_service_to_firmware(param_name);
@@ -160,10 +160,6 @@ void ForcesAndMomentsInterface::get_mixer_firmware_parameters()
       secondary_mixing_matrix_(i,j) = param_val;
     }
   }
-
-  RCLCPP_INFO_STREAM(this->get_logger(), "Primary mixer used in sim:\n" << primary_mixing_matrix_);
-  RCLCPP_INFO_STREAM(this->get_logger(), "Secondary mixer used in sim:\n" << secondary_mixing_matrix_);
-  RCLCPP_INFO_STREAM(this->get_logger(), "Mixer headers used in sim:\n" << mixer_header_vals_);
 }
 
 double ForcesAndMomentsInterface::send_get_param_service_to_firmware(std::string param_name)
@@ -225,25 +221,22 @@ bool ForcesAndMomentsInterface::send_check_params_service_to_firmware()
   return response->success;
 }
 
-void ForcesAndMomentsInterface::invert_matrix(Eigen::Matrix<double, 6, NUM_MIXER_OUTPUTS> &mixer_to_invert)
+void ForcesAndMomentsInterface::invert_matrix(Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS> &mixer_to_invert)
 {
   // Calculate the pseudoinverse of the mixing matrix using the SVD
-  Eigen::JacobiSVD<Eigen::Matrix<double, 6, NUM_MIXER_OUTPUTS>> svd(
+  Eigen::JacobiSVD<Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS>> svd(
     mixer_to_invert,
     Eigen::FullPivHouseholderQRPreconditioner | Eigen::ComputeFullU | Eigen::ComputeFullV);
-  Eigen::Matrix<double, NUM_MIXER_OUTPUTS, 6> Sig;
+  Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS> Sig;
   Sig.setZero();
 
   // Avoid dividing by zero in the Sigma matrix
-  if (svd.singularValues()[0] != 0.0) { Sig(0, 0) = 1.0 / svd.singularValues()[0]; }
-  if (svd.singularValues()[1] != 0.0) { Sig(1, 1) = 1.0 / svd.singularValues()[1]; }
-  if (svd.singularValues()[2] != 0.0) { Sig(2, 2) = 1.0 / svd.singularValues()[2]; }
-  if (svd.singularValues()[3] != 0.0) { Sig(3, 3) = 1.0 / svd.singularValues()[3]; }
-  if (svd.singularValues()[4] != 0.0) { Sig(4, 4) = 1.0 / svd.singularValues()[4]; }
-  if (svd.singularValues()[5] != 0.0) { Sig(5, 5) = 1.0 / svd.singularValues()[5]; }
+  for (int i=0; i<NUM_MIXER_OUTPUTS; ++i) {
+    if (svd.singularValues()[i] != 0.0) { Sig(i, i) = 1.0 / svd.singularValues()[i]; }
+  }
 
   // Pseudoinverse of the mixing matrix
-  Eigen::Matrix<double, NUM_MIXER_OUTPUTS, 6> mixer_pinv = svd.matrixV() * Sig * svd.matrixU().transpose();
+  Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS> mixer_pinv = svd.matrixV() * Sig * svd.matrixU().transpose();
 
   // Save the inverted matrix
   mixer_to_invert = mixer_pinv.transpose();
