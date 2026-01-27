@@ -928,13 +928,10 @@ void ROSflightIO::commandCallback(const rosflight_msgs::msg::Command::ConstShare
   auto mode = (OFFBOARD_CONTROL_MODE) msg->mode;
   auto ignore = (OFFBOARD_CONTROL_IGNORE) msg->ignore;
 
-  float command_vect[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  command_vect[0] = msg->u[0];
-  command_vect[1] = msg->u[1];
-  command_vect[2] = msg->u[2];
-  command_vect[3] = msg->u[3];
-  command_vect[4] = msg->u[4];
-  command_vect[5] = msg->u[5];
+  float command_vect[10] = {0,0,0,0,0,0,0,0,0,0};
+  for (int i=0; i<10; ++i) {
+    command_vect[i] = msg->u[i];
+  }
 
   mavlink_message_t mavlink_msg;
   mavlink_msg_offboard_control_pack(1, 50, &mavlink_msg, mode, ignore, command_vect);

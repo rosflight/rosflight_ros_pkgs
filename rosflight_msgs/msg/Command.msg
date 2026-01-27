@@ -20,5 +20,5 @@ uint16 IGNORE_VALUE9 = 0x200
 
 std_msgs/Header header
 uint8 mode      # offboard control mode for interpreting value fields
-uint8 ignore    # bitmask for ignore specific setpoint values
+uint16 ignore    # bitmask for ignore specific setpoint values
 float32[10] u   # Vector of control commands
