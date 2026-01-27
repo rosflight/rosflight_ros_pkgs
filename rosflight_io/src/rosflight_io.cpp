@@ -51,11 +51,11 @@
 #include <tf2/LinearMath/Matrix3x3.h> // Swap to Eigen!
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <sys/resource.h>
 
 #include <rosflight_io/rosflight_io.hpp>
 
-namespace rosflight_io
-{
+namespace rosflight_io {
 
 ROSflightIO::ROSflightIO()
     : Node("rosflight_io")
@@ -1049,7 +1049,9 @@ void ROSflightIO::paramTimerCallback()
 
 void ROSflightIO::versionTimerCallback() { request_version(); }
 
-void ROSflightIO::heartbeatTimerCallback() { send_heartbeat(); }
+void ROSflightIO::heartbeatTimerCallback() { 
+  send_heartbeat();
+}
 
 void ROSflightIO::request_version()
 {
