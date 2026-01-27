@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.0.0-beta.1](https://github.com/rosflight/rosflight_ros_pkgs/compare/v2.0.0-beta...v2.0.0-beta.1) (2026-01-27)
+
+
+### Features
+
+* update offboard command message to reflect new vector notation ([9cfc773](https://github.com/rosflight/rosflight_ros_pkgs/commit/9cfc773b7ae92087f42d17236ad14fe77f60fa9d))
+
+
+### Bug Fixes
+
+* add docker_user to plugdev and dialout groups for USB access ([#240](https://github.com/rosflight/rosflight_ros_pkgs/issues/240)) ([1ca7715](https://github.com/rosflight/rosflight_ros_pkgs/commit/1ca7715d08b89c70f1d5989805344ab399a245b2))
+
 ## [2.0.0-beta](https://github.com/rosflight/rosflight_ros_pkgs/compare/v1.3.1...v2.0.0-beta) (2025-12-13)
 
 
