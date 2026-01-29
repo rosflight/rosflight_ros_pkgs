@@ -134,21 +134,21 @@ void RealtimeConfigurator::configure(int argc, char ** argv) {
     }
     std::string key = arg.substr(0, pos);
     std::string value = arg.substr(pos + 2);
-    if (key == "realtime") {
+    if (key == "--realtime") {
       if (value == "true") {
         is_realtime_ = true;
       }
-    } else if (key == "publish_context_switches") {
+    } else if (key == "--publish_context_switches") {
       if (value == "true") {
         is_publish_context_switches_ = true;
       }
-    } else if (key == "priority") {
+    } else if (key == "--priority") {
       try {
         priority_ = std::stoi(value);
       } catch (const std::exception&) {
         std::cout << "Priority must be an integer.\n";
       }
-    } else if (key == "policy") {
+    } else if (key == "--policy") {
       if (value == "RR") {
         policy_ = SCHED_RR;
       } else if (value == "FIFO") {
