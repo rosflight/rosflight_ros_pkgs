@@ -1,13 +1,10 @@
 """
 File: fixedwing_standalone_io_joy.launch.py
-Author: Brandon Sutherland, Jacob Moore
-Created: February 3, 2025
-Last Modified: March 25, 2025
-Description: ROS2 launch file used to launch all the nodes for a fixedwing standalone simulator
+Author: Brandon Sutherland, Jacob Moore, Andema Mongane
+Description: ROS2 launch file used to launch all the nodes for a fixedwing HoloOcean simulator
 """
 
 import os
-import sys
 
 from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
@@ -19,7 +16,12 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     """This is a launch file that runs the bare minimum requirements fly a fixedwing in a standalone simulator"""
-    dynamics_param_file = os.path.join(get_package_share_directory('rosflight_sim'), 'params', 'anaconda_dynamics.yaml')
+    dynamics_param_file_arg = DeclareLaunchArgument(
+        "dynamics_param_file",
+        default_value=os.path.join(get_package_share_directory('rosflight_sim'), 'params', 'anaconda_dynamics.yaml'),
+        description="Parameter file that contains the dynamics of the vehicle, containing the vehicle mass parameter."
+    )
+    dynamics_param_file = LaunchConfiguration("dynamics_param_file")
 
     # Declare launch arguments
     use_sim_time_arg = DeclareLaunchArgument(
@@ -36,7 +38,8 @@ def generate_launch_description():
     env_arg = DeclareLaunchArgument(
         'env',
         default_value='default',
-        description='Name of the environment to load in HoloOcean'
+        description='Name of the environment to load in HoloOcean',
+        choices=['default', 'desert', 'forest', 'island', 'mountains']
     )
 
     # Start simulator
@@ -89,7 +92,8 @@ def generate_launch_description():
     )
 
     return LaunchDescription(
-        [   
+        [
+            dynamics_param_file_arg,
             env_arg,
             use_sim_time_arg,
             simulator_launch_include,

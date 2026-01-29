@@ -19,7 +19,12 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     """This is a launch file that runs the bare minimum requirements fly a fixedwing in a standalone simulator"""
-    dynamics_param_file = os.path.join(get_package_share_directory('rosflight_sim'), 'params', 'anaconda_dynamics.yaml')
+    dynamics_param_file_arg = DeclareLaunchArgument(
+        "dynamics_param_file",
+        default_value=os.path.join(get_package_share_directory('rosflight_sim'), 'params', 'anaconda_dynamics.yaml'),
+        description="Parameter file that contains the dynamics of the vehicle, containing the vehicle mass parameter."
+    )
+    dynamics_param_file = LaunchConfiguration("dynamics_param_file")
 
     # Declare launch arguments
     use_sim_time_arg = DeclareLaunchArgument(
@@ -82,6 +87,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            dynamics_param_file_arg,
             use_sim_time_arg,
             simulator_launch_include,
             common_nodes_include,

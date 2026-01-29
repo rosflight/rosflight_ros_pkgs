@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-# from holoocean_msgs.msg import RangeFinderSensor, RGBCameraSensor
 import numpy as np
 from pathlib import Path
 import holoocean

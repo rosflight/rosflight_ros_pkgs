@@ -34,12 +34,6 @@ install(
   DESTINATION lib/${PROJECT_NAME}
 )
 
-# install(
-#   PROGRAMS holoocean_main/holoocean_interface.py
-#   DESTINATION lib/${PROJECT_NAME}
-# )
-
-
 # Other install
 install(
   DIRECTORY launch
@@ -47,6 +41,6 @@ install(
 )
 
 install(
-  DIRECTORY holoocean_main
+  DIRECTORY holoocean_main/config
   DESTINATION share/${PROJECT_NAME}
 )

@@ -45,7 +45,6 @@ class HoloOceanNode(Node):
         scenario_file = f'{self.env}_{self.agent}.json'
         scenario_path = os.path.join(
             get_package_share_directory('rosflight_sim'),
-            'holoocean_main',
             'config',
             scenario_file
         )
