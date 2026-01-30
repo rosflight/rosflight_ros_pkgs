@@ -13,6 +13,8 @@ jobs:
   build:
     name: Build on ros2 ${{ matrix.ros_distro }} and ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    container:
+      image: ${{ matrix.container }}
     strategy:
       fail-fast: false
       matrix:
@@ -20,34 +22,33 @@ jobs:
         include:
           - ros_distro: 'humble'
             os: ubuntu-22.04
+            container: osrf/ros:humble-desktop
           - ros_distro: 'jazzy'
             os: ubuntu-24.04
+            container: osrf/ros:jazzy-desktop
+    defaults:
+      run:
+        shell: bash
 
     steps:
-      - uses: ros-tooling/setup-ros@v0.7
-        with:
-          required-ros-distributions: ${{ matrix.ros_distro }}
-
-      - name: Setup ros2 workspace
-        run: |
-          source /opt/ros/${{ matrix.ros_distro }}/setup.bash
-          mkdir -p ${{github.workspace}}/ros2_ws/src
-          cd ${{github.workspace}}/ros2_ws
-          colcon build
-
       - uses: actions/checkout@v2
         with:
           submodules: recursive
           path: 'ros2_ws/src/rosflight'
 
+      - name: Update system
+        run: |
+          sudo apt update
+          sudo apt upgrade -y
+
       - name: Install dependencies
         run: |
-          cd ${{github.workspace}}/ros2_ws
+          cd ros2_ws
           rosdep update
           rosdep install --from-paths ./ -i -y -r --rosdistro ${{ matrix.ros_distro }}
 
       - name: colcon build
         run: |
           source /opt/ros/${{ matrix.ros_distro }}/setup.bash
-          cd ${{github.workspace}}/ros2_ws
+          cd ros2_ws
           colcon build --event-handlers console_direct+
