@@ -1,7 +1,7 @@
 """
-File: fixedwing_standalone_io_joy.launch.py
-Author: Brandon Sutherland, Jacob Moore, Andema Mongane
-Description: ROS2 launch file used to launch all the nodes for a fixedwing HoloOcean simulator
+File: fixedwing_holoocean.launch.py
+Author: Brandon Sutherland, Andema Mongane, Jacob Moore
+Description: ROS2 launch file used to launch all the nodes to simulate a fixedwing in HoloOcean
 """
 
 import os
@@ -15,7 +15,6 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    """This is a launch file that runs the bare minimum requirements fly a fixedwing in a standalone simulator"""
     dynamics_param_file_arg = DeclareLaunchArgument(
         "dynamics_param_file",
         default_value=os.path.join(get_package_share_directory('rosflight_sim'), 'params', 'anaconda_dynamics.yaml'),

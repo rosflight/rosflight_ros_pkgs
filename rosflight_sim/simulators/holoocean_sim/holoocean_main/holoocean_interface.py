@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 import numpy as np
 from pathlib import Path
 import holoocean
@@ -30,7 +29,7 @@ class HolooceanInterface():
         with open(str(scenario_path), 'r') as f:
             scenario = json.load(f)
 
-        # Define necesarry sensors for detecting collisions.
+        # Define necessary sensors for detecting collisions.
         collision_sensors = [
             {
             "sensor_name": "GroundRange",

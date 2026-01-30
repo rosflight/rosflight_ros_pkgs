@@ -1,5 +1,7 @@
-## Holocean launch file 
-# Author: Braden Meyers, Andema Mongane
+"""
+Holocean launch file 
+Authors: Braden Meyers, Andema Mongane
+"""
 
 from launch import LaunchDescription
 from launch.substitutions import LaunchConfiguration

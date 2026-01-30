@@ -109,8 +109,6 @@ class HoloOceanNode(Node):
                     if ground_range is not None and horizontal_range is not None:
                         if self.detect_collision(velocity, ground_range, horizontal_range):
                             self.get_logger().info('Collision detected and environment reset.')
-                    else:
-                        print(100*"\n")
 
 
         except Exception as e:
@@ -166,8 +164,7 @@ class HoloOceanNode(Node):
             f'Collision detected (speed={speed:.3f} m/s). Resetting environment.'
             )
             self._last_reset_time = now
-            rclpy.shutdown()
-            self.destroy_node()
+            self.reset(Trigger.Request(), Trigger.Response())
             return True
 
         return False
@@ -266,7 +263,7 @@ class HoloOceanNode(Node):
             msg.image = sensor_data.ravel().tolist()
             self.RGBCamera_pub.publish(msg)
 
-        if sensor_name == 'GroundRange':
+        elif sensor_name == 'GroundRange':
             msg = RangeFinderSensor()
             msg.distances = sensor_data.ravel().tolist()
             msg.angles = []
@@ -283,7 +280,6 @@ def main(args=None):
     try:
         rclpy.init(args=args)
         node = HoloOceanNode()
-        
         rclpy.spin(node)
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -291,7 +287,6 @@ def main(args=None):
         if node is not None:
             node.destroy_node()
         rclpy.shutdown()
-
 
 if __name__ == '__main__':
     main()

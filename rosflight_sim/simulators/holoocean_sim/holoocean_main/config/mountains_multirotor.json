@@ -25,7 +25,7 @@
                         "LaserMaxDistance": 100.0,
                         "LaserCount": 5,
                         "LaserAngle": 0,
-                        "LaerDebug": false
+                        "LaserDebug": false
                     }
                 }
             ],
