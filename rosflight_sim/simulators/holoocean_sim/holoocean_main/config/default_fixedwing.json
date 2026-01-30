@@ -14,7 +14,9 @@
             "sensors": [
                 {
                     "sensor_name": "RGBCamera",
-                    "sensor_type": "RGBCamera"
+                    "sensor_type": "RGBCamera",
+                    "ros_publish": true,
+                    "UseRPY": false
                 }
             ],
             "control_scheme": 2,

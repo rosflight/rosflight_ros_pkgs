@@ -15,13 +15,15 @@ def generate_launch_description():
     agent_arg = DeclareLaunchArgument(
         'agent',
         default_value='fixedwing',
-        description='Name of the agent to load in HoloOcean'
+        description='Name of the agent to load in HoloOcean',
+        choices=['multirotor', 'fixedwing']
     )
 
     env_arg = DeclareLaunchArgument(
         'env',
         default_value='default',
-        description='Name of the environment to load in HoloOcean'
+        description='Name of the environment to load in HoloOcean',
+        choices=['default', 'desert', 'forest', 'island', 'mountains']
     )
 
     holoocean_namespace = 'holoocean'

@@ -34,13 +34,6 @@ def generate_launch_description():
     # Launch #
     ##########
 
-    env_arg = DeclareLaunchArgument(
-        'env',
-        default_value='default',
-        description='Name of the environment to load in HoloOcean',
-        choices=['default', 'desert', 'forest', 'island', 'mountains']
-    )
-
     # Start simulator
     simulator_launch_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
@@ -51,7 +44,6 @@ def generate_launch_description():
         ]),
         launch_arguments={
             'agent': 'fixedwing',
-            'env': LaunchConfiguration('env'),
         }.items()
     )
 
@@ -93,7 +85,6 @@ def generate_launch_description():
     return LaunchDescription(
         [
             dynamics_param_file_arg,
-            env_arg,
             use_sim_time_arg,
             simulator_launch_include,
             common_nodes_include,

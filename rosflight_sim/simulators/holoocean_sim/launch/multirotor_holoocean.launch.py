@@ -29,12 +29,6 @@ def generate_launch_description():
     # Launch #
     ##########
 
-    env_arg = DeclareLaunchArgument(
-        'env',
-        default_value='default',
-        description='Name of the environment to load in HoloOcean'
-    )
-
     # Start simulator
     simulator_launch_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
@@ -44,8 +38,7 @@ def generate_launch_description():
             )
         ]),
         launch_arguments={
-            'agent': 'multirotor',
-            'env': LaunchConfiguration('env'),
+            'agent': 'multirotor'
         }.items()
     )
 
@@ -86,7 +79,6 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-            env_arg,
             use_sim_time_arg,
             simulator_launch_include,
             common_nodes_include,
