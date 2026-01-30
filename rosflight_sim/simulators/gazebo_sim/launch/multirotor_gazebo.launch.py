@@ -20,6 +20,13 @@ from launch_ros.actions import Node
 def generate_launch_description():
     """This is a launch file that runs the bare minimum requirements fly a multirotor in gazebo"""
 
+    aircraft_arg_found = False
+    for i, arg in enumerate(sys.argv):
+        if arg.startswith('aircraft:='):
+            aircraft_arg_found = True
+    if not aircraft_arg_found:
+        sys.argv.append('aircraft:=multirotor')
+
     # Declare launch arguments
     use_sim_time_arg = DeclareLaunchArgument(
         "use_sim_time",
