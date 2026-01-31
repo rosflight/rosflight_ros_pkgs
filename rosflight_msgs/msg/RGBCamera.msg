@@ -15,5 +15,5 @@ int32 channels
 
 # Flattened image data as a 1D array
 # Should be a 3D array but ROS does not support
-int16[] image
+uint8[] image
 

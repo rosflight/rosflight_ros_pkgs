@@ -164,7 +164,7 @@ class HoloOceanNode(Node):
             f'Collision detected (speed={speed:.3f} m/s). Resetting environment.'
             )
             self._last_reset_time = now
-            self.reset(Trigger.Request(), Trigger.Response())
+            self.interface.reset_environment()
             return True
 
         return False

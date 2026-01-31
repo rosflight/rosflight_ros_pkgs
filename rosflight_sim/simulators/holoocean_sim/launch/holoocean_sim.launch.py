@@ -1,5 +1,5 @@
 """
-Holocean launch file 
+HoloOcean launch file 
 Authors: Braden Meyers, Andema Mongane
 """
 
