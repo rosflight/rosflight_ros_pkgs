@@ -128,21 +128,23 @@ bool RealtimeConfigurator::is_realtime() {return is_realtime_;}
 void RealtimeConfigurator::configure(int argc, char ** argv) {
   for (int i = 1; i < argc; ++i) {
     std::string arg(argv[i]);
+    if (arg == "--realtime") {
+      is_realtime_ = true;
+      continue;
+    }
+    if (arg == "--publish-context-switches") {
+      is_publish_context_switches_ = true;
+      continue;
+    }
+
     auto pos = arg.find(":=");
     if (pos == std::string::npos) {
       continue;
     }
+
     std::string key = arg.substr(0, pos);
     std::string value = arg.substr(pos + 2);
-    if (key == "--realtime") {
-      if (value == "true") {
-        is_realtime_ = true;
-      }
-    } else if (key == "--publish_context_switches") {
-      if (value == "true") {
-        is_publish_context_switches_ = true;
-      }
-    } else if (key == "--priority") {
+    if (key == "--priority") {
       try {
         priority_ = std::stoi(value);
       } catch (const std::exception&) {
@@ -160,4 +162,3 @@ void RealtimeConfigurator::configure(int argc, char ** argv) {
     }
   }
 }
-
