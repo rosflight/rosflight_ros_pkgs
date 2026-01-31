@@ -1,8 +1,7 @@
 /*
  * Software License Agreement (BSD-3 License)
  *
- * Copyright (c) 2017 Daniel Koch and James Jackson, BYU MAGICC Lab.
- * Copyright (c) 2023 Brandon Sutherland, AeroVironment Inc.
+ * Copyright (c) 2026 Ian Reid, BYU MAGICC Lab.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,37 +32,63 @@
  */
 
 /**
- * \file rosflight_io_node.cpp
+ * \file realtime_configurator.hpp
  * \author Daniel Koch <daniel.koch@byu.edu>
  * \author Brandon Sutherland <brandonsutherland2@gmail.com>
- * \author Ian Reid <ian.young.reid@gmail.com>
  */
+#ifndef ROSFLIGHT_IO_REALTIME_CONFIGURATOR_HPP
+#define ROSFLIGHT_IO_REALTIME_CONFIGURATOR_HPP
 
+#include <cstdint>
+#include <mutex>
+#include <thread>
+#include <utility>
+
+#include <pthread.h>
 #include <rclcpp/rclcpp.hpp>
-#include <rosflight_io/rosflight_io.hpp>
-#include <rosflight_io/realtime_configurator.hpp>
-
 #include <sched.h>
+#include <std_msgs/msg/int32.hpp>
+#include <sys/resource.h>
+#include <algorithm>
+#include <cctype>
+#include <string>
 
-int main(int argc, char ** argv)
+class RealtimeConfigurator
 {
-  RealtimeConfigurator realtime_configure;
+public:
+  explicit RealtimeConfigurator(int who = RUSAGE_THREAD);
 
-  realtime_configure.configure(argc, argv);
+  void configure(int argc, char ** argv);
 
-  if (realtime_configure.is_realtime()) {
-    realtime_configure.configure_thread_for_realtime();
-  }
+  void init() noexcept;
 
-  rclcpp::init(argc, argv);
+  [[nodiscard]] int64_t num_context_switches() noexcept;
 
-  rosflight_io::ROSflightIO::SharedPtr node = std::make_shared<rosflight_io::ROSflightIO>();
+  int64_t get_involuntary_context_switches(int who = RUSAGE_THREAD) noexcept;
 
-  if (realtime_configure.is_publish_context_switches()) {
-    realtime_configure.configure_node_to_report_context_switches(node);
-  }
+  void configure_thread_for_realtime();
 
-  rclcpp::spin(node);
-  rclcpp::shutdown();
-  return 0;
-}
+  void configure_node_to_report_context_switches(rclcpp::Node::SharedPtr& node);
+
+  bool is_realtime();
+  
+  bool is_publish_context_switches();
+
+private:
+  int64_t involuntary_context_switches_previous_;
+  const int who_;
+  std::once_flag once_;
+  rclcpp::TimerBase::SharedPtr context_timer_;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr publisher_;
+
+  int priority_;
+  int policy_;
+  bool is_realtime_;
+  bool is_publish_context_switches_;
+
+  void publish_context_switches();
+
+  void set_thread_scheduling(std::thread::native_handle_type thread, int policy, int sched_priority);
+};
+
+#endif  // ROSFLIGHT_IO_REALTIME_CONFIGURATOR_HPP

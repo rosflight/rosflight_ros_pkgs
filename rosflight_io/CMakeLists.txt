@@ -95,6 +95,20 @@ target_link_libraries(mavrosflight
   )
 ament_target_dependencies(mavrosflight rclcpp)
 
+# realtime_configurator library
+add_library(realtime_configurator SHARED
+  src/realtime_configurator.cpp
+  )
+target_include_directories(realtime_configurator
+  PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<INSTALL_INTERFACE:include>")
+ament_target_dependencies(realtime_configurator
+  rclcpp
+  std_msgs
+  )
+ament_export_targets(export_realtime_configurator HAS_LIBRARY_TARGET)
+
 # rosflight_io_node
 add_executable(rosflight_io
   src/rosflight_io_node.cpp
@@ -104,6 +118,7 @@ add_executable(rosflight_io
 target_compile_options(rosflight_io PRIVATE -Wno-address-of-packed-member)
 target_link_libraries(rosflight_io
   mavrosflight
+  realtime_configurator
   ${rclcpp_LIBRARIES}
   ${ament_LIBRARIES}
   ${Boost_LIBRARES}
@@ -135,6 +150,18 @@ install(DIRECTORY include/rosflight_io/mavrosflight/
   DESTINATION include/${PROJECT_NAME}
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
+  )
+
+install(TARGETS realtime_configurator
+  EXPORT export_realtime_configurator
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+  )
+
+install(FILES include/rosflight_io/realtime_configurator.hpp
+  DESTINATION include
   )
 
 
