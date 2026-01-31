@@ -10,8 +10,11 @@ def generate_launch_description():
     # Create the package directory
     rosflight_sim_share_dir = get_package_share_directory("rosflight_sim")
 
-    rviz2_config_file = os.path.join(
-        rosflight_sim_share_dir, "config", "standalone_sim.rviz"
+    rviz2_config_file = LaunchConfiguration('rviz2_config_file')
+    rviz2_config_file_arg = DeclareLaunchArgument(
+        'rviz2_config_file',
+        default_value=TextSubstitution(text=os.path.join(rosflight_sim_share_dir, "config", "standalone_sim.rviz")),
+        description="Path to the .rviz file that defines the RViz configuration."
     )
     rviz2_splash_file = os.path.join(rosflight_sim_share_dir, "standalone_resource", "logo.png")
     param_file = os.path.join(rosflight_sim_share_dir, 'params', 'standalone_sim_params.yaml')
@@ -21,10 +24,11 @@ def generate_launch_description():
         'sim_aircraft_file',
         default_value=TextSubstitution(text=os.path.join("common_resource", "multirotor.dae")),
         description="Path to the .dae file that defines the simulation mesh to visualize."
-)
+    )
 
     return LaunchDescription(
         [
+            rviz2_config_file_arg,
             sim_aircraft_file_launch_arg,
             Node(
                 package="tf2_ros",

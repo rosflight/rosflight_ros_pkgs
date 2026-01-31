@@ -1,0 +1,29 @@
+{
+    "name": "Hovering",
+    "world": "default",
+    "package_name": "Land",
+    "main_agent": "MultiRotor",
+    "ticks_per_sec": 30,
+    "frames_per_sec": true,
+    "octree_min": 0.02,
+    "octree_max": 5.0,
+    "agents":[
+        {
+            "agent_name": "MultiRotor",
+            "agent_type": "UavAgent",
+            "sensors": [
+                {
+                    "sensor_type": "RGBCamera",
+                    "ros_publish": true,
+                    "UseRPY": false
+                }
+            ],
+            "control_scheme": 2,
+            "location": [0.0, 0.0, 50.0],
+            "rotation": [0.0, 0.0, 0.0]
+        }
+    ],
+    "ros_publish": true,
+    "window_width":  2500,
+    "window_height": 1000
+}
