@@ -141,8 +141,8 @@ void SILBoard::sensors_init()
   diff_pressure_data_sub_ = node_->create_subscription<rosflight_msgs::msg::Airspeed>("sim/sensors/diff_pressure", 1,
       std::bind(&SILBoard::diff_pressure_data_callback, this, std::placeholders::_1));
 
-  sonar_data_sub_ = node_->create_subscription<sensor_msgs::msg::Range>("sim/sensors/sonar", 1,
-      std::bind(&SILBoard::sonar_data_callback, this, std::placeholders::_1));
+  range_data_sub_ = node_->create_subscription<sensor_msgs::msg::Range>("sim/sensors/range", 1,
+      std::bind(&SILBoard::range_data_callback, this, std::placeholders::_1));
 
   battery_data_sub_ = node_->create_subscription<rosflight_msgs::msg::BatteryStatus>("sim/sensors/battery", 1,
       std::bind(&SILBoard::battery_data_callback, this, std::placeholders::_1));
@@ -191,10 +191,10 @@ void SILBoard::diff_pressure_data_callback(const rosflight_msgs::msg::Airspeed &
   diff_pressure_has_new_data_available_ = true;
 }
 
-void SILBoard::sonar_data_callback(const sensor_msgs::msg::Range & msg)
+void SILBoard::range_data_callback(const sensor_msgs::msg::Range & msg)
 {
-  sonar_data_ = msg;
-  sonar_has_new_data_available_ = true;
+  range_data_ = msg;
+  range_has_new_data_available_ = true;
 }
 
 void SILBoard::battery_data_callback(const rosflight_msgs::msg::BatteryStatus & msg)
@@ -266,12 +266,12 @@ bool SILBoard::diff_pressure_read(rosflight_firmware::PressureStruct * diff_pres
   return true;
 }
 
-bool SILBoard::sonar_read(rosflight_firmware::RangeStruct * sonar)
+bool SILBoard::range_read(rosflight_firmware::RangeStruct * range)
 {
-  if (!sonar_has_new_data_available_) { return false; }
-  sonar_has_new_data_available_ = false;
+  if (!range_has_new_data_available_) { return false; }
+  range_has_new_data_available_ = false;
 
-  sonar->range = sonar_data_.range;
+  range->range = range_data_.range;
   return true;
 }
 

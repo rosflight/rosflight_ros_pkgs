@@ -292,7 +292,7 @@ private:
   /**
    * @brief Handles rangefinder MAVLink messages.
    *
-   * Receives rangefinder data from MAVLink and publishes it on "sonar" or "lidar" topic, depending
+   * Receives rangefinder data from MAVLink and publishes it on "range" topic, with info
    * on the sensor type.
    *
    * @param msg Range message.
@@ -638,8 +638,8 @@ private:
   rclcpp::Publisher<rosflight_msgs::msg::Airspeed>::SharedPtr diff_pressure_pub_;
   /// "baro" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::Barometer>::SharedPtr baro_pub_;
-  /// "sonar" ROS topic publisher.
-  rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr sonar_pub_;
+  /// "range" ROS topic publisher.
+  rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr range_pub_;
   /// "gnss" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::GNSS>::SharedPtr gnss_pub_;
   /// "magnetometer" ROS topic publisher.
@@ -652,8 +652,6 @@ private:
   rclcpp::Publisher<rosflight_msgs::msg::Status>::SharedPtr status_pub_;
   /// "version" ROS topic publisher.
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr version_pub_;
-  /// "lidar" ROS topic publisher.
-  rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr lidar_pub_;
   /// "battery" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::BatteryStatus>::SharedPtr battery_status_pub_;
 

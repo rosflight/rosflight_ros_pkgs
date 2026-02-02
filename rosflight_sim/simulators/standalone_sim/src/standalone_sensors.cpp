@@ -84,9 +84,9 @@ void StandaloneSensors::declare_parameters()
   this->declare_parameter("airspeed_bias_range", 0.15);
   this->declare_parameter("airspeed_bias_walk_stdev", 0.001);
 
-  this->declare_parameter("sonar_stdev", 0.03);
-  this->declare_parameter("sonar_min_range", 0.25);
-  this->declare_parameter("sonar_max_range", 8.0);
+  this->declare_parameter("range_stdev", 0.03);
+  this->declare_parameter("range_min_range", 0.25);
+  this->declare_parameter("range_max_range", 8.0);
 
   this->declare_parameter("battery_stdev", 0.3);
   //TODO: Need to sync this parameter with the other in the firmware, or add documentation.
@@ -400,20 +400,20 @@ rosflight_msgs::msg::GNSS StandaloneSensors::gnss_update(const rosflight_msgs::m
   return out_msg;
 }
 
-sensor_msgs::msg::Range StandaloneSensors::sonar_update(const rosflight_msgs::msg::SimState & state)
+sensor_msgs::msg::Range StandaloneSensors::range_update(const rosflight_msgs::msg::SimState & state)
 {
   double alt = -state.pose.position.z;
-  double sonar_min_range = this->get_parameter("sonar_min_range").as_double();
-  double sonar_max_range = this->get_parameter("sonar_max_range").as_double();
-  double sonar_stdev = this->get_parameter("sonar_stdev").as_double();
+  double range_min_range = this->get_parameter("range_min_range").as_double();
+  double range_max_range = this->get_parameter("range_max_range").as_double();
+  double range_stdev = this->get_parameter("range_stdev").as_double();
 
   sensor_msgs::msg::Range out_msg; 
-  if (alt < sonar_min_range) {
-    out_msg.range = (float) sonar_min_range;
-  } else if (alt > sonar_max_range) {
-    out_msg.range = (float) sonar_max_range;
+  if (alt < range_min_range) {
+    out_msg.range = (float) range_min_range;
+  } else if (alt > range_max_range) {
+    out_msg.range = (float) range_max_range;
   } else {
-    out_msg.range = (float) (alt + sonar_stdev * normal_distribution_(noise_generator_));
+    out_msg.range = (float) (alt + range_stdev * normal_distribution_(noise_generator_));
   }
 
   out_msg.header.stamp = this->get_clock()->now();
