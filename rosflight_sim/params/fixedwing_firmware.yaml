@@ -1,19 +1,18 @@
 # Parameters for using a Fixedwing with ROSflight firmware.
 
-- {name: MOTOR_PWM_UPDATE, type: 6, value: 50} # Set pwm update rate for motor.
 - {name: ARM_SPIN_MOTORS, type: 6, value: 0} # Do not set motors to spin when armed.
 - {name: MOTOR_IDLE_THR, type: 9, value: .1} # Set motor to not idle at zero throttle.
-- {name: ARM_CHANNEL, type: 6, value: 4} # Set to desired arm channel.
+- {name: RC_ARM_CHN, type: 6, value: 4} # Set to desired arm channel.
 - {name: FIXED_WING, type: 6, value: 1} # Configure firmware for fixedwing.
 - {name: PRIMARY_MIXER, type: 6, value: 10} # Set mixer to inverted vtail mixer
-- {name: ELEVATOR_REV, type: 6, value: 1} # Option to reverse elevator.
-- {name: AIL_REV, type: 6, value: 0} # Option to reverse Aileron.
-- {name: RUDDER_REV, type: 6, value: 0} # Option to reverse rudder.
-- {name: CAL_GYRO_ARM, type: 6, value: 0} # Option to calibrate gyro when arming (generally only for multi-rotors).
+- {name: REV_ELEVATOR, type: 6, value: 1} # Option to reverse elevator.
+- {name: REV_AILERON, type: 6, value: 0} # Option to reverse Aileron.
+- {name: REV_RUDDER, type: 6, value: 0} # Option to reverse rudder.
+- {name: ARM_CAL_GYRO, type: 6, value: 0} # Option to calibrate gyro when arming (generally only for multi-rotors).
 - {name: RC_THR_OVRD_CHN, type: 6, value: 5} # Set pilot override channel for throttle control.
 - {name: RC_ATT_OVRD_CHN, type: 6, value: 5} # Set pilot override channel for attitude control.
 - {name: RC_ATT_CTRL_CHN, type: 6, value: 8} # TODO this should not be 8.
-- {name: MIN_THROTTLE, type: 6, value: 0} # Set to not take the minimum of the commanded throttles.
+- {name: TAKE_MIN_THR, type: 6, value: 0} # Set to not take the minimum of the commanded throttles.
 - {name: RC_OVRD_DEV, type: 9, value: 1.0} # Ignore any stick inputs when override is enabled.
 - {name: RC_NUM_CHN, type: 6, value: 8} # Set the number of RC channels to max.
 - {name: RC_F_AXIS, type: 6, value: 0}  # Set the RC F axis (for the RC pilot) to be the x axis

@@ -1,11 +1,11 @@
 - {name: FIXED_WING, type: 6, value: 0}       # Aircraft is not a fixedwing
 - {name: RC_NUM_CHN, type: 6, value: 8}       # Aircraft has 8 RC channels
-- {name: ARM_CHANNEL, type: 6, value: 4}
+- {name: RC_ARM_CHN, type: 6, value: 4}
 - {name: RC_THR_OVRD_CHN, type: 6, value: 5} # Set pilot override channel for throttle control.
 - {name: RC_ATT_OVRD_CHN, type: 6, value: 5} # Set pilot override channel for attitude control.
 - {name: RC_ATT_CTRL_CHN, type: 6, value: 6}
 - {name: FAILSAFE_THR, type: 9, value: 0.0}
-- {name: MIN_THROTTLE, type: 6, value: 0}    # Don't take minimum of RC and offboard at all times
+- {name: TAKE_MIN_THR, type: 6, value: 0}    # Don't take minimum of RC and offboard at all times
 - {name: RC_F_AXIS, type: 6, value: 2}      # RC_F_AXIS is the Z axis for multirotors by default
 - {name: PRIMARY_MIXER, type: 6, value: 11}  # Custom mixer -- make sure USE_MOTOR_PARAM is set to 1 and
                                              # both motor_parameters and motor_mixer_parameters are set properly
