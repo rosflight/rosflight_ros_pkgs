@@ -1106,15 +1106,15 @@ bool ROSflightIO::calibrateMagSrvCallback(
   mavrosflight_->param.set_param_value("MAG_Y_BIAS", 0.0f);
   mavrosflight_->param.set_param_value("MAG_Z_BIAS", 0.0f);
   
-  mavrosflight_->param.set_param_value("MAG_A11_COMP", 1.0f);
-  mavrosflight_->param.set_param_value("MAG_A12_COMP", 0.0f);
-  mavrosflight_->param.set_param_value("MAG_A13_COMP", 0.0f);
-  mavrosflight_->param.set_param_value("MAG_A21_COMP", 0.0f);
-  mavrosflight_->param.set_param_value("MAG_A22_COMP", 1.0f);
-  mavrosflight_->param.set_param_value("MAG_A23_COMP", 0.0f);
-  mavrosflight_->param.set_param_value("MAG_A31_COMP", 0.0f);
-  mavrosflight_->param.set_param_value("MAG_A32_COMP", 0.0f);
-  mavrosflight_->param.set_param_value("MAG_A33_COMP", 1.0f);
+  mavrosflight_->param.set_param_value("MAG_CAL_A00", 1.0f);
+  mavrosflight_->param.set_param_value("MAG_CAL_A01", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_CAL_A02", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_CAL_A10", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_CAL_A11", 1.0f);
+  mavrosflight_->param.set_param_value("MAG_CAL_A12", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_CAL_A20", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_CAL_A21", 0.0f);
+  mavrosflight_->param.set_param_value("MAG_CAL_A22", 1.0f);
 
   float frequency = 10.0;
 
@@ -1147,15 +1147,15 @@ void ROSflightIO::calibrateMag() {
     mavrosflight_->param.set_param_value("MAG_Y_BIAS", float(hard_iron_offset(1)));
     mavrosflight_->param.set_param_value("MAG_Z_BIAS", float(hard_iron_offset(2)));
 
-    mavrosflight_->param.set_param_value("MAG_A11_COMP", float(soft_iron_correction(0,0)));
-    mavrosflight_->param.set_param_value("MAG_A12_COMP", float(soft_iron_correction(0,1)));
-    mavrosflight_->param.set_param_value("MAG_A13_COMP", float(soft_iron_correction(0,2)));
-    mavrosflight_->param.set_param_value("MAG_A21_COMP", float(soft_iron_correction(1,0)));
-    mavrosflight_->param.set_param_value("MAG_A22_COMP", float(soft_iron_correction(1,1)));
-    mavrosflight_->param.set_param_value("MAG_A23_COMP", float(soft_iron_correction(1,2)));
-    mavrosflight_->param.set_param_value("MAG_A31_COMP", float(soft_iron_correction(2,0)));
-    mavrosflight_->param.set_param_value("MAG_A32_COMP", float(soft_iron_correction(2,1)));
-    mavrosflight_->param.set_param_value("MAG_A33_COMP", float(soft_iron_correction(2,2)));
+    mavrosflight_->param.set_param_value("MAG_CAL_A00", float(soft_iron_correction(0,0)));
+    mavrosflight_->param.set_param_value("MAG_CAL_A01", float(soft_iron_correction(0,1)));
+    mavrosflight_->param.set_param_value("MAG_CAL_A02", float(soft_iron_correction(0,2)));
+    mavrosflight_->param.set_param_value("MAG_CAL_A10", float(soft_iron_correction(1,0)));
+    mavrosflight_->param.set_param_value("MAG_CAL_A11", float(soft_iron_correction(1,1)));
+    mavrosflight_->param.set_param_value("MAG_CAL_A12", float(soft_iron_correction(1,2)));
+    mavrosflight_->param.set_param_value("MAG_CAL_A20", float(soft_iron_correction(2,0)));
+    mavrosflight_->param.set_param_value("MAG_CAL_A21", float(soft_iron_correction(2,1)));
+    mavrosflight_->param.set_param_value("MAG_CAL_A22", float(soft_iron_correction(2,2)));
 
     RCLCPP_INFO(this->get_logger(), "Calibration complete.");
 
