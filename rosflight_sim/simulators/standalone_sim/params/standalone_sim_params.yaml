@@ -21,9 +21,9 @@
     airspeed_stdev: 1.15
     airspeed_bias_range: 0.15
     airspeed_bias_walk_stdev: 0.001
-    sonar_stdev: 0.03
-    sonar_min_range: 0.25
-    sonar_max_range: 8.0
+    range_stdev: 0.03
+    range_min_range: 0.25
+    range_max_range: 8.0
     origin_altitude: 1387.0
     origin_latitude: 40.2463724
     origin_longitude: -111.6474138

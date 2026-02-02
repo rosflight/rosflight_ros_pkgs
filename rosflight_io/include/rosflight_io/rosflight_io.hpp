@@ -638,8 +638,8 @@ private:
   rclcpp::Publisher<rosflight_msgs::msg::Airspeed>::SharedPtr diff_pressure_pub_;
   /// "baro" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::Barometer>::SharedPtr baro_pub_;
-  /// "sonar" ROS topic publisher.
-  rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr sonar_pub_;
+  /// "range" ROS topic publisher.
+  rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr range_pub_;
   /// "gnss" ROS topic publisher.
   rclcpp::Publisher<rosflight_msgs::msg::GNSS>::SharedPtr gnss_pub_;
   /// "magnetometer" ROS topic publisher.

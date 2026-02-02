@@ -36,9 +36,9 @@ need to be set in the .yaml files.
 - `airspeed_bias_range`: default: `0.15`
 - `airspeed_bias_walk_stdev`: default: `0.001`
 
-- `sonar_stdev`: default: `0.03`
-- `sonar_min_range`: (m) default: `0.25`
-- `sonar_max_range`: (m) default: `8.0`
+- `range_stdev`: default: `0.03`
+- `range_min_range`: (m) default: `0.25`
+- `range_max_range`: (m) default: `8.0`
 
 - `imu_update_rate`: (Hz) default: `1000.0`
 

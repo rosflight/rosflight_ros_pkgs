@@ -67,7 +67,7 @@ SensorInterface::SensorInterface()
   gnss_pub_ = this->create_publisher<rosflight_msgs::msg::GNSS>("sim/sensors/gnss", 1);
   diff_pressure_pub_ =
     this->create_publisher<rosflight_msgs::msg::Airspeed>("sim/sensors/diff_pressure", 1);
-  sonar_pub_ = this->create_publisher<sensor_msgs::msg::Range>("sim/sensors/sonar", 1);
+  range_pub_ = this->create_publisher<sensor_msgs::msg::Range>("sim/sensors/range", 1);
   battery_pub_ =
     this->create_publisher<rosflight_msgs::msg::BatteryStatus>("sim/sensors/battery", 1);
 
@@ -76,7 +76,7 @@ SensorInterface::SensorInterface()
   mag_update_frequency_ = this->get_parameter("mag_update_frequency").as_double();
   baro_update_frequency_ = this->get_parameter("baro_update_frequency").as_double();
   gnss_update_frequency_ = this->get_parameter("gnss_update_frequency").as_double();
-  sonar_update_frequency_ = this->get_parameter("sonar_update_frequency").as_double();
+  range_update_frequency_ = this->get_parameter("range_update_frequency").as_double();
   diff_pressure_update_frequency_ =
     this->get_parameter("diff_pressure_update_frequency").as_double();
   battery_update_frequency_ = this->get_parameter("battery_update_frequency").as_double();
@@ -102,10 +102,10 @@ SensorInterface::SensorInterface()
                          std::chrono::microseconds(static_cast<long long>(
                            1.0 / diff_pressure_update_frequency_ * 1'000'000)),
                          std::bind(&SensorInterface::diff_pressure_publish, this));
-  sonar_timer_ = rclcpp::create_timer(
+  range_timer_ = rclcpp::create_timer(
     this, this->get_clock(),
-    std::chrono::microseconds(static_cast<long long>(1.0 / sonar_update_frequency_ * 1'000'000)),
-    std::bind(&SensorInterface::sonar_publish, this));
+    std::chrono::microseconds(static_cast<long long>(1.0 / range_update_frequency_ * 1'000'000)),
+    std::bind(&SensorInterface::range_publish, this));
   battery_timer_ = rclcpp::create_timer(
     this, this->get_clock(),
     std::chrono::microseconds(static_cast<long long>(1.0 / battery_update_frequency_ * 1'000'000)),
@@ -119,7 +119,7 @@ void SensorInterface::declare_parameters()
   this->declare_parameter("mag_update_frequency", 50.0);
   this->declare_parameter("baro_update_frequency", 100.0);
   this->declare_parameter("gnss_update_frequency", 10.0);
-  this->declare_parameter("sonar_update_frequency", 20.0);
+  this->declare_parameter("range_update_frequency", 20.0);
   this->declare_parameter("diff_pressure_update_frequency", 100.0);
   this->declare_parameter("battery_update_frequency", 200.0);
 }
@@ -147,9 +147,9 @@ SensorInterface::parameters_callback(const std::vector<rclcpp::Parameter> & para
     } else if (param.get_name() == "diff_pressure_update_frequency") {
       reset_diff_pressure_timer(param.as_double());
       result.reason = "Success. diff_pressure timer reset.";
-    } else if (param.get_name() == "sonar_update_frequency") {
-      reset_sonar_timer(param.as_double());
-      result.reason = "Success. sonar timer reset.";
+    } else if (param.get_name() == "range_update_frequency") {
+      reset_range_timer(param.as_double());
+      result.reason = "Success. range timer reset.";
     } else if (param.get_name() == "battery_update_frequency") {
       reset_battery_timer(param.as_double());
       result.reason = "Success. battery_update timer reset.";
@@ -229,17 +229,17 @@ void SensorInterface::reset_diff_pressure_timer(double frequency)
   }
 }
 
-void SensorInterface::reset_sonar_timer(double frequency)
+void SensorInterface::reset_range_timer(double frequency)
 {
-  if (frequency != sonar_update_frequency_) {
+  if (frequency != range_update_frequency_) {
     // Reset the timer
-    sonar_timer_->cancel();
-    sonar_timer_ = rclcpp::create_timer(
+    range_timer_->cancel();
+    range_timer_ = rclcpp::create_timer(
       this, this->get_clock(),
       std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000)),
-      std::bind(&SensorInterface::sonar_publish, this));
+      std::bind(&SensorInterface::range_publish, this));
 
-    sonar_update_frequency_ = frequency;
+    range_update_frequency_ = frequency;
   }
 }
 
@@ -313,10 +313,10 @@ void SensorInterface::diff_pressure_publish()
   diff_pressure_pub_->publish(msg);
 }
 
-void SensorInterface::sonar_publish()
+void SensorInterface::range_publish()
 {
-  sensor_msgs::msg::Range msg = sonar_update(current_state_);
-  sonar_pub_->publish(msg);
+  sensor_msgs::msg::Range msg = range_update(current_state_);
+  range_pub_->publish(msg);
 }
 
 void SensorInterface::battery_publish()

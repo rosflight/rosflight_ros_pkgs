@@ -71,7 +71,7 @@ private:
   rclcpp::Subscription<rosflight_msgs::msg::Barometer>::SharedPtr baro_data_sub_;
   rclcpp::Subscription<rosflight_msgs::msg::GNSS>::SharedPtr gnss_data_sub_;
   rclcpp::Subscription<rosflight_msgs::msg::Airspeed>::SharedPtr diff_pressure_data_sub_;
-  rclcpp::Subscription<sensor_msgs::msg::Range>::SharedPtr sonar_data_sub_;
+  rclcpp::Subscription<sensor_msgs::msg::Range>::SharedPtr range_data_sub_;
   rclcpp::Subscription<rosflight_msgs::msg::BatteryStatus>::SharedPtr battery_data_sub_;
 
   rclcpp::Subscription<rosflight_msgs::msg::RCRaw>::SharedPtr rc_sub_;
@@ -93,7 +93,7 @@ private:
   bool mag_has_new_data_available_ = false;
   bool diff_pressure_has_new_data_available_ = false;
   bool gnss_has_new_data_available_ = false;
-  bool sonar_has_new_data_available_ = false;
+  bool range_has_new_data_available_ = false;
   bool battery_has_new_data_available_ = false;
 
   // Persistent data
@@ -103,7 +103,7 @@ private:
   rosflight_msgs::msg::Barometer baro_data_;
   rosflight_msgs::msg::GNSS gnss_data_;
   rosflight_msgs::msg::Airspeed diff_pressure_data_;
-  sensor_msgs::msg::Range sonar_data_;
+  sensor_msgs::msg::Range range_data_;
   rosflight_msgs::msg::BatteryStatus battery_data_;
 
   /**
@@ -119,7 +119,7 @@ private:
   void baro_data_callback(const rosflight_msgs::msg::Barometer & msg);
   void gnss_data_callback(const rosflight_msgs::msg::GNSS & msg);
   void diff_pressure_data_callback(const rosflight_msgs::msg::Airspeed & msg);
-  void sonar_data_callback(const sensor_msgs::msg::Range & msg);
+  void range_data_callback(const sensor_msgs::msg::Range & msg);
   void battery_data_callback(const rosflight_msgs::msg::BatteryStatus & msg);
 
   float battery_voltage_multiplier_;
@@ -209,12 +209,12 @@ public:
   bool diff_pressure_read(rosflight_firmware::PressureStruct * diff_pressure) override;
 
   /**
-   * @brief Returns sonar data generated from sensors node
+   * @brief Returns range data generated from sensors node
    *
-   * @param sonar rosflight_firmware sonar data structure to fill
+   * @param range rosflight_firmware range data structure to fill
    * @return true if successful.
    */
-  bool sonar_read(rosflight_firmware::RangeStruct * sonar) override;
+  bool range_read(rosflight_firmware::RangeStruct * range) override;
 
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)
@@ -246,7 +246,7 @@ public:
    * @brief Gets latest RC values published on /RC. If nothing in publishing on /RC, values are set
    * to idle.
    *
-   * @param sonar rosflight_firmware sonar data structure to fill
+   * @param range rosflight_firmware range data structure to fill
    * @return true if successful.
    */
   bool rc_read(rosflight_firmware::RcStruct * rc_struct) override;

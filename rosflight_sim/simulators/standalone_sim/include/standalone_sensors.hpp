@@ -62,7 +62,7 @@ public:
   sensor_msgs::msg::MagneticField mag_update(const rosflight_msgs::msg::SimState & state) override;
   rosflight_msgs::msg::Barometer baro_update(const rosflight_msgs::msg::SimState & state) override;
   rosflight_msgs::msg::GNSS gnss_update(const rosflight_msgs::msg::SimState & state) override;
-  sensor_msgs::msg::Range sonar_update(const rosflight_msgs::msg::SimState & state) override;
+  sensor_msgs::msg::Range range_update(const rosflight_msgs::msg::SimState & state) override;
   rosflight_msgs::msg::Airspeed diff_pressure_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::Vector3Stamped & wind) override;
   rosflight_msgs::msg::BatteryStatus battery_update(const rosflight_msgs::msg::SimState & state) override;
 

@@ -63,7 +63,7 @@ protected:
   float get_mag_update_frequency() { return mag_update_frequency_; }
   float get_baro_update_frequency() { return baro_update_frequency_; }
   float get_gnss_update_frequency() { return gnss_update_frequency_; }
-  float get_sonar_update_frequency() { return sonar_update_frequency_; }
+  float get_range_update_frequency() { return range_update_frequency_; }
   float get_diff_pressure_update_frequency() { return diff_pressure_update_frequency_; }
   float get_battery_update_frequency() { return battery_update_frequency_; }
 
@@ -79,7 +79,7 @@ private:
   virtual sensor_msgs::msg::MagneticField mag_update(const rosflight_msgs::msg::SimState & state) = 0;
   virtual rosflight_msgs::msg::Barometer baro_update(const rosflight_msgs::msg::SimState & state) = 0;
   virtual rosflight_msgs::msg::GNSS gnss_update(const rosflight_msgs::msg::SimState & state) = 0;
-  virtual sensor_msgs::msg::Range sonar_update(const rosflight_msgs::msg::SimState & state) = 0;
+  virtual sensor_msgs::msg::Range range_update(const rosflight_msgs::msg::SimState & state) = 0;
   virtual rosflight_msgs::msg::Airspeed diff_pressure_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::Vector3Stamped & wind) = 0;
   virtual rosflight_msgs::msg::BatteryStatus battery_update(const rosflight_msgs::msg::SimState & state) = 0;
 
@@ -91,7 +91,7 @@ private:
   rclcpp::Publisher<rosflight_msgs::msg::Barometer>::SharedPtr baro_pub_;
   rclcpp::Publisher<rosflight_msgs::msg::GNSS>::SharedPtr gnss_pub_;
   rclcpp::Publisher<rosflight_msgs::msg::Airspeed>::SharedPtr diff_pressure_pub_;
-  rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr sonar_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr range_pub_;
   rclcpp::Publisher<rosflight_msgs::msg::BatteryStatus>::SharedPtr battery_pub_;
 
   rclcpp::TimerBase::SharedPtr imu_timer_;
@@ -99,7 +99,7 @@ private:
   rclcpp::TimerBase::SharedPtr baro_timer_;
   rclcpp::TimerBase::SharedPtr gnss_timer_;
   rclcpp::TimerBase::SharedPtr diff_pressure_timer_;
-  rclcpp::TimerBase::SharedPtr sonar_timer_;
+  rclcpp::TimerBase::SharedPtr range_timer_;
   rclcpp::TimerBase::SharedPtr battery_timer_;
 
   // Sensor characteristics
@@ -107,7 +107,7 @@ private:
   float mag_update_frequency_;
   float baro_update_frequency_;
   float gnss_update_frequency_;
-  float sonar_update_frequency_;
+  float range_update_frequency_;
   float diff_pressure_update_frequency_;
   float battery_update_frequency_;
 
@@ -148,7 +148,7 @@ private:
   void reset_baro_timer(double frequency);
   void reset_gnss_timer(double frequency);
   void reset_diff_pressure_timer(double frequency);
-  void reset_sonar_timer(double frequency);
+  void reset_range_timer(double frequency);
   void reset_battery_timer(double frequency);
 
   /**
@@ -160,7 +160,7 @@ private:
   void baro_publish();
   void gnss_publish();
   void diff_pressure_publish();
-  void sonar_publish();
+  void range_publish();
   void battery_publish();
 
   /**

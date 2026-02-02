@@ -782,10 +782,10 @@ void ROSflightIO::handle_small_range_msg(const mavlink_message_t & msg)
       alt_msg.radiation_type = sensor_msgs::msg::Range::ULTRASOUND;
       alt_msg.field_of_view = 1.0472; // approx 60 deg
 
-      if (sonar_pub_ == nullptr) {
-        sonar_pub_ = this->create_publisher<sensor_msgs::msg::Range>("sonar", 1);
+      if (range_pub_ == nullptr) {
+        range_pub_ = this->create_publisher<sensor_msgs::msg::Range>("range", 1);
       }
-      sonar_pub_->publish(alt_msg);
+      range_pub_->publish(alt_msg);
       break;
     case ROSFLIGHT_RANGE_LIDAR:
       alt_msg.radiation_type = sensor_msgs::msg::Range::INFRARED;
