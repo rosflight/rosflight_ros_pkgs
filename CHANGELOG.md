@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/rosflight/rosflight_ros_pkgs/compare/v2.0.0-beta...v2.0.0) (2026-02-03)
+
+
+### Features
+
+* add holoocean simulation files ([8018ecc](https://github.com/rosflight/rosflight_ros_pkgs/commit/8018ecc03d86b0b954fbfed7885f83e23aa58af1))
+* Added realtime scheduling to rosflight_io and ability to import realtime configuration for other packages. ([e91bfeb](https://github.com/rosflight/rosflight_ros_pkgs/commit/e91bfebe74300d96f8f54816c280a3c5c80569d9))
+* changed /sonar topic to /range ([57ffd47](https://github.com/rosflight/rosflight_ros_pkgs/commit/57ffd475550ad7b91ff4f064009b634f8c0378e7))
+* update offboard command message to reflect new vector notation ([9cfc773](https://github.com/rosflight/rosflight_ros_pkgs/commit/9cfc773b7ae92087f42d17236ad14fe77f60fa9d))
+* update rosflight_io mag param names to reflect new naming conventions ([#247](https://github.com/rosflight/rosflight_ros_pkgs/issues/247)) ([c5650f5](https://github.com/rosflight/rosflight_ros_pkgs/commit/c5650f5099a253970120ac922250c42a32f95965))
+
+
+### Bug Fixes
+
+* add docker_user to plugdev and dialout groups for USB access ([#240](https://github.com/rosflight/rosflight_ros_pkgs/issues/240)) ([1ca7715](https://github.com/rosflight/rosflight_ros_pkgs/commit/1ca7715d08b89c70f1d5989805344ab399a245b2))
+
 ## [2.0.0-beta](https://github.com/rosflight/rosflight_ros_pkgs/compare/v1.3.1...v2.0.0-beta) (2025-12-13)
 
 
