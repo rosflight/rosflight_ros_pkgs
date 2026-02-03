@@ -1,6 +1,5 @@
 {
   "prerelease": false,
-  "release-as": "2.0.0",
   "release-type": "simple",
   "include-component-in-tag": false,
   "always-update": true,
