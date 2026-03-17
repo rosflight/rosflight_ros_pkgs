@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/rosflight/rosflight_ros_pkgs/compare/v2.0.0...v2.0.1) (2026-03-17)
+
+
+### Bug Fixes
+
+* update rosflight_firmware from recent bug fixes ([ef211f1](https://github.com/rosflight/rosflight_ros_pkgs/commit/ef211f18654c20661fa22504479741373f3af4a7))
+
 ## [2.0.0](https://github.com/rosflight/rosflight_ros_pkgs/compare/v2.0.0-beta...v2.0.0) (2026-02-03)
 
 
