@@ -1,0 +1,7 @@
+<!-- Example SDF / model plugin stanza for Gazebo Harmonic -->
+<plugin filename="libgazebo_dynamics_system.so"
+        name="rosflight_sim::GazeboDynamicsSystem">
+  <!-- Either spelling is accepted by the converted plugin -->
+  <link_name>base_link</link_name>
+  <mav_type>fixedwing</mav_type>
+</plugin>

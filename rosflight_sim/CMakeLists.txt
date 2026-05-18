@@ -147,6 +147,9 @@ install(
 # Gazebo dynamics and simulator
 add_subdirectory(simulators/gazebo_sim)
 
+# gz_sim dynamics and simulator
+add_subdirectory(simulators/gz_sim)
+
 # Standalone simulator
 add_subdirectory(simulators/standalone_sim)
 

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- Forces And Moments Plugin -->
+  <xacro:macro name="generic_multirotor" params="namespace parent_link">
+    <xacro:gz_sim_dynamics_plugin
+      namespace="${namespace}"
+      parent_link="${namespace}/base_link"
+      mav_type="multirotor"
+      parent_frame_id="${parent_link}"/>
+  </xacro:macro>
+
+  <xacro:macro name="generic_fixedwing" params="namespace parent_link">
+    <xacro:gz_sim_dynamics_plugin
+      namespace="${namespace}"
+      parent_link="${namespace}/base_link"
+      mav_type="fixedwing"
+      parent_frame_id="${namespace}/base_link"/>
+  </xacro:macro>
+
+  <!-- Macro to add a gazebo_dynamics plugin. -->
+  <xacro:macro name="gz_sim_dynamics_plugin" params="namespace parent_link mav_type parent_frame_id">
+    <gazebo>
+    <plugin filename="libgz_sim_dynamics_system.so" name="rosflight_sim::GazeboDynamicsSystem">
+      <!-- Either spelling is accepted by the converted plugin -->
+      <link_name>${parent_link}</link_name>
+      <mav_type>${mav_type}</mav_type>
+      <parentFrameId>${parent_frame_id}</parentFrameId>
+    </plugin>
+    </gazebo>
+  </xacro:macro>
+
+</robot>
