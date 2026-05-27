@@ -47,6 +47,11 @@ class VimFly:
         self.RC_override_debouncing = [False]
         self.RC_override_start_time = self.node.get_clock().now()
 
+        self.angle_mode = 1000 # Start in rate mode
+        self.ANGLE_MODE_DEBOUNCE_THRESHOLD = 0.500
+        self.angle_mode_debouncing = [False]
+        self.angle_mode_start_time = self.node.get_clock().now()
+
         while(True):
             self.keys = pygame.key.get_pressed()
             self.run()
@@ -117,8 +122,15 @@ class VimFly:
         
         msg.values[5] = self.RC_override
 
+        # Send angle mode commands
+        if self.keys[pygame.K_m]:
+            self.debounce(self.angle_mode_debouncing, self.angle_mode_start_time, self.ANGLE_MODE_DEBOUNCE_THRESHOLD, self.toggle_angle_mode)
+        else:
+            self.angle_mode_debouncing[0] = False
+
+        msg.values[6] = self.angle_mode
+
         # Pad the message with remaining channels.
-        msg.values[6] = 1500
         msg.values[7] = 1500
 
         # Publish commands
@@ -136,9 +148,9 @@ class VimFly:
 
         msgText = "roll: {}, pitch: {}, yaw: {}, thrust: {}".format(msg.values[0], msg.values[1], msg.values[3], msg.values[2])
 
-        status_info = "armed: {}, RC_override: {}".format(msg.values[4], msg.values[5])
+        status_info = "armed: {}, RC_override: {}, angle_mode: {}".format(msg.values[4], msg.values[5], msg.values[6])
         self.render(msgText, (0,140))
-        self.render(status_info, (100,160))
+        self.render(status_info, (0,160))
         
         pygame.display.flip()
 
@@ -154,6 +166,7 @@ class VimFly:
         self.render("- d: yaw CCW", (0,3*LINE)); self.render("- k: Pitch Forward", (250,3*LINE))
         self.render("- f: yaw CW", (0,4*LINE)); self.render("- l: Roll Right", (250,4*LINE))
         self.render("- t: arm/disarm", (0,5*LINE)); self.render("- r: RC override", (250,5*LINE))
+        self.render("- m: angle mode", (0,6*LINE))
 
 
     def render(self, text, loc):
@@ -192,6 +205,12 @@ class VimFly:
                 self.RC_override = 2000
             else:
                 self.RC_override = 1000
+
+    def toggle_angle_mode(self):
+            if self.angle_mode == 1000:
+                self.angle_mode = 2000
+            else:
+                self.angle_mode = 1000
 
 if __name__ == '__main__':
     rclpy.init()
