@@ -10,8 +10,8 @@ from pathlib import Path
 import xacro
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable, ExecuteProcess, \
-    TimerAction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable, \
+    ExecuteProcess, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, TextSubstitution, FindExecutable
 from launch_ros.actions import Node
@@ -38,12 +38,13 @@ def generate_launch_description():
 
     pkg_share = get_package_share_directory('rosflight_sim')
     world_file = os.path.join(pkg_share, 'gz_resource', 'runway.sdf')
+    gui_config_file = os.path.join(pkg_share, 'gz_resource', 'rosflight_gz.config')
 
     # Start simulator
     gz_args = LaunchConfiguration('gz_args')
     gz_args_launch_arg = DeclareLaunchArgument(
         'gz_args',
-        default_value=TextSubstitution(text=world_file))
+        default_value=TextSubstitution(text=f'{world_file} --gui-config {gui_config_file}'))
 
     resource_paths = [
         os.path.join(pkg_share, 'gz_resource'),
@@ -63,27 +64,32 @@ def generate_launch_description():
         launch_arguments={'gz_args': gz_args}.items(),
     )
 
-    spawn_robot_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            os.path.join(
-                get_package_share_directory("rosflight_sim"),
-                "launch/gz_sim_spawn.launch.py",
-            )
-        ]),
-        launch_arguments={
-            # 'robot_namespace': 'fixedwing',
-            # 'paused' : False,
-            'x': '0.0',
-            'y': '0.0',
-            'z': '0.2',
-            'yaw': '4.71',
-        }.items()
+    xacro_filepath_string = os.path.join(pkg_share, f'xacro/{aircraft}.urdf.xacro')
+    urdf_filepath_string = os.path.join(pkg_share, f'gz_resource/{aircraft}.urdf')
+    robot_description = xacro.process_file(
+        xacro_filepath_string,
+        mappings={
+            'mesh_file_location': os.path.join(pkg_share, 'common_resource/skyhunter.dae')
+        }
+    ).toxml()
+    Path(urdf_filepath_string).write_text(robot_description)
+
+    spawn_vehicle_node = Node(
+        package='ros_gz_sim',
+        executable='create',
+        output='screen',
+        arguments=[
+            '-world', 'default',
+            '-name', 'robot',
+            '-file', urdf_filepath_string,
+            '-x', '0.0',
+            '-y', '0.0',
+            '-z', '0.2',
+            '-Y', '4.71',
+        ]
     )
 
-    # aircraft_model = LaunchConfiguration("aircraft_model")
-    """This is a launch file that runs the bare minimum requirements fly a fixedwing in a standalone simulator"""
     dynamics_file = os.path.join(pkg_share, 'params', f'{aircraft}_dynamics.yaml')
-    # dynamics_file = os.path.join(get_package_share_directory('rosflight_sim'), 'params', 'anaconda_dynamics.yaml')
     dynamics_param_file_arg = DeclareLaunchArgument(
         "dynamics_param_file",
         default_value=dynamics_file,
@@ -118,104 +124,6 @@ def generate_launch_description():
         ],
     )
 
-    control_type = "default"
-    rosplane_pkg_share = get_package_share_directory('rosplane')
-    autopilot_params = os.path.join(
-        rosplane_pkg_share,
-        'params',
-        aircraft + '_autopilot_params.yaml'
-    )
-
-    estimator_params = os.path.join(
-        rosplane_pkg_share,
-        'params',
-        'estimator.yaml'
-    )
-
-    # Start rosplane
-    rosplane_nodes_include = LaunchDescription([
-        DeclareLaunchArgument(
-            "use_sim_time",
-            default_value="false",
-            description="Whether or not to use the /clock topic in simulation to run timers."
-        ),
-        DeclareLaunchArgument(
-            "state_topic_remap",
-            default_value='estimated_state',
-            description="Topic that controller and path planners will listen to for state information. Defaults to the topic that the estimator publishes to"
-        ),
-        DeclareLaunchArgument(
-            'command_publisher_remap',
-            default_value='/command',
-        ),
-        DeclareLaunchArgument(
-            'controller_command_publisher_remap',
-            default_value='/controller_command',
-        ),
-        Node(
-            package='rosplane',
-            executable='controller',
-            name='controller',
-            parameters=[
-                autopilot_params,
-                {'use_sim_time': LaunchConfiguration('use_sim_time')},
-            ],
-            output='screen',
-            arguments=[control_type],
-            remappings=[
-                ('/command', LaunchConfiguration('command_publisher_remap')),
-                ('/estimated_state', LaunchConfiguration('state_topic_remap')),
-            ]
-        ),
-        Node(
-            package='rosplane',
-            executable='path_follower',
-            name='path_follower',
-            parameters=[
-                autopilot_params,
-                {'use_sim_time': LaunchConfiguration('use_sim_time')},
-            ],
-            remappings=[
-                ('/controller_command', LaunchConfiguration('controller_command_publisher_remap')),
-                ('/estimated_state', LaunchConfiguration('state_topic_remap')),
-            ]
-        ),
-        Node(
-            package='rosplane',
-            executable='path_manager',
-            name='path_manager',
-            parameters=[
-                autopilot_params,
-                {'use_sim_time': LaunchConfiguration('use_sim_time')},
-            ],
-            remappings=[
-                ('/estimated_state', LaunchConfiguration('state_topic_remap')),
-            ]
-        ),
-        Node(
-            package='rosplane',
-            executable='path_planner',
-            name='path_planner',
-            parameters=[
-                {'use_sim_time': LaunchConfiguration('use_sim_time'),
-                 'num_waypoints_to_publish_at_start': 10},
-            ],
-            remappings=[
-                ('/estimated_state', LaunchConfiguration('state_topic_remap')),
-            ]
-        ),
-        Node(
-            package='rosplane',
-            executable='estimator',
-            name='estimator',
-            output='screen',
-            parameters=[
-                estimator_params,
-                {'use_sim_time': LaunchConfiguration('use_sim_time')},
-            ],
-        )
-    ])
-
     unpause_sim_exec = TimerAction(
         period=2.0,
         actions=[
@@ -232,19 +140,6 @@ def generate_launch_description():
             )
         ]
     )
-
-    # Initialize firmware nodes
-    # init_firmware_nodes = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource([
-    #         os.path.join(
-    #             get_package_share_directory("rosflight_sim"),
-    #             "launch", "fixedwing_init_firmware.launch.py",
-    #         )
-    #     ]),
-    #     launch_arguments={
-    #         'use_sim_time': use_sim_time
-    #     }.items()
-    # )
 
     # Call load parameter file service
     param_load_service_exec = ExecuteProcess(
@@ -320,19 +215,6 @@ def generate_launch_description():
         shell=True
     )
 
-    # Call calibrate IMU service
-    mission_file = os.path.join(pkg_share, 'missions', 'gz_sim_fixedwing_mission.yaml')
-    waypoint_definition_service_exec = ExecuteProcess(
-        cmd=[[
-            'sleep 20; ',
-            FindExecutable(name='ros2'),
-            ' service call ',
-            '/load_mission_from_file ',
-            'rosflight_msgs/srv/ParamFile \"{filename: ' + mission_file + '}\" '
-        ]],
-        shell=True
-    )
-
     return LaunchDescription([
         use_sim_time_arg,
         dynamics_param_file_arg,
@@ -340,8 +222,7 @@ def generate_launch_description():
         SetEnvironmentVariable('GZ_SIM_RESOURCE_PATH', resource_env),
         SetEnvironmentVariable('GZ_SIM_SYSTEM_PLUGIN_PATH', plugin_env),
         gz_sim_launch,
-        spawn_robot_launch,
-        rosplane_nodes_include,
+        spawn_vehicle_node,
         independent_nodes_include,
         fw_forces_moments_node,
         unpause_sim_exec,
@@ -352,5 +233,4 @@ def generate_launch_description():
         # write_params_service_exec,
         arm_vehicle_service_exec,
         rc_override_service_exec,
-        waypoint_definition_service_exec
     ])

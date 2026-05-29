@@ -10,8 +10,8 @@ from pathlib import Path
 import xacro
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable, ExecuteProcess, \
-    TimerAction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable, \
+    ExecuteProcess, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, TextSubstitution, FindExecutable
 from launch_ros.actions import Node
@@ -38,6 +38,8 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
 
     pkg_share = get_package_share_directory('rosflight_sim')
+    world_file = os.path.join(pkg_share, 'gz_resource', 'runway.sdf')
+    gui_config_file = os.path.join(pkg_share, 'gz_resource', 'rosflight_gz.config')
 
     dynamics_file = os.path.join(pkg_share, 'params', f'{aircraft}_dynamics.yaml')
     dynamics_param_file_arg = DeclareLaunchArgument(
@@ -58,7 +60,7 @@ def generate_launch_description():
     yaw_launch_arg = DeclareLaunchArgument('yaw', default_value=TextSubstitution(text='4.71'))
     gz_args_launch_arg = DeclareLaunchArgument(
         'gz_args',
-        default_value=TextSubstitution(text=os.path.join(pkg_share, 'gz_resource', 'runway.sdf')))
+        default_value=TextSubstitution(text=f'{world_file} --gui-config {gui_config_file}'))
 
     resource_paths = [
         os.path.join(pkg_share, 'gz_resource'),
@@ -128,76 +130,6 @@ def generate_launch_description():
             {"use_sim_time": use_sim_time},
         ],
     )
-
-    # Start roscopter
-    roscopter_dir = get_package_share_directory('roscopter')
-    controller_param_file = os.path.join(roscopter_dir, 'params', 'multirotor.yaml')
-    estimator_param_file = os.path.join(roscopter_dir, 'params', 'estimator.yaml')
-
-    hotstart_estimator_arg = DeclareLaunchArgument(
-        "hotstart_estimator",
-        default_value="false",
-        description="Whether the estimator will hotstart based on the contents of 'params/hotstart'"
-    )
-    hotstart_estimator = LaunchConfiguration('hotstart_estimator')
-
-    state_remap_arg = DeclareLaunchArgument(
-        "state_topic",
-        default_value="estimated_state",
-        description="Topic name the every node but the estimator will listen to for state information."
-    )
-    state_remap = LaunchConfiguration('state_topic')
-
-    roscopter_nodes_include = LaunchDescription([
-        state_remap_arg,
-        hotstart_estimator_arg,
-        Node(
-            package='roscopter',
-            executable='controller',
-            name='controller',
-            output='screen',
-            parameters=[controller_param_file],
-            remappings=[('estimated_state', state_remap)]
-        ),
-        Node(
-            package='roscopter',
-            executable='estimator',
-            name='estimator',
-            output='screen',
-            parameters=[estimator_param_file, {"hotstart_estimator": hotstart_estimator}],
-        ),
-        Node(
-            package='roscopter',
-            executable='trajectory_follower',
-            name='trajectory_follower',
-            output='screen',
-            parameters=[controller_param_file],
-            remappings=[('estimated_state', state_remap)]
-        ),
-        Node(
-            package='roscopter',
-            executable='path_manager',
-            name='path_manager',
-            output='screen',
-            parameters=[controller_param_file],
-            remappings=[('estimated_state', state_remap)]
-        ),
-        Node(
-            package='roscopter',
-            executable='path_planner',
-            name='path_planner',
-            output='screen',
-            parameters=[controller_param_file],
-            remappings=[('estimated_state', state_remap)]
-        ),
-        # Node(
-        #     package='roscopter',
-        #     executable='ext_att_transcriber',
-        #     name='external_attitude_transcriber',
-        #     output='screen',
-        #     remappings=[('estimated_state', state_remap)]
-        # ),
-    ])
 
     unpause_sim_exec = TimerAction(
         period=0.0,
@@ -303,20 +235,6 @@ def generate_launch_description():
         shell=True
     )
 
-    # Call calibrate IMU service
-    mission_file = os.path.join(pkg_share, 'missions', 'gz_sim_multirotor_mission.yaml')
-    waypoint_definition_service_exec = ExecuteProcess(
-        cmd=[[
-            'sleep 20; ',
-            FindExecutable(name='ros2'),
-            ' service call ',
-            '/path_planner/load_mission_from_file ',
-            'rosflight_msgs/srv/ParamFile \"{filename: ' + mission_file + '}\" '
-        ]],
-        shell=True
-    )
-
-
     return LaunchDescription([
         use_sim_time_arg,
         dynamics_param_file_arg,
@@ -329,7 +247,6 @@ def generate_launch_description():
         SetEnvironmentVariable('GZ_SIM_SYSTEM_PLUGIN_PATH', plugin_env),
         gz_sim_launch,
         spawn_vehicle_node,
-        roscopter_nodes_include,
         independent_nodes_include,
         mr_forces_moments_node,
         unpause_sim_exec,
@@ -340,5 +257,4 @@ def generate_launch_description():
         # write_params_service_exec,
         arm_vehicle_service_exec,
         rc_override_service_exec,
-        waypoint_definition_service_exec
     ])
