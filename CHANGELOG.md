@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/rosflight/rosflight_ros_pkgs/compare/v2.0.1...v2.1.0) (2026-06-12)
+
+
+### Features
+
+* added attitude control switch to vimfly ([#256](https://github.com/rosflight/rosflight_ros_pkgs/issues/256)) ([516ff1b](https://github.com/rosflight/rosflight_ros_pkgs/commit/516ff1b87583756297d45c04532be80d11f5a956))
+
 ## [2.0.1](https://github.com/rosflight/rosflight_ros_pkgs/compare/v2.0.0...v2.0.1) (2026-03-17)
 
 
