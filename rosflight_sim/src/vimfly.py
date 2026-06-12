@@ -9,13 +9,19 @@ Keys are mapped to each channel of the RCRaw message.
 import pygame
 import rclpy
 import time
+from rclpy.node import Node
 from rosflight_msgs.msg import RCRaw
 
 
 class VimFly:
     def __init__(self, node=None):
 
-        self.node = node if node is not None else rclpy.create_node('vimfly')
+        if node is None:
+            self.node = rclpy.create_node('vimfly')
+        elif isinstance(node, Node):
+            self.node = node
+        else:
+            raise TypeError('node must be an rclpy.node.Node')
 
         # initialize pygame display
         pygame.init()
