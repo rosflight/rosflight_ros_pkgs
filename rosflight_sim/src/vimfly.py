@@ -13,9 +13,9 @@ from rosflight_msgs.msg import RCRaw
 
 
 class VimFly:
-    def __init__(self):
+    def __init__(self, node=None):
 
-        self.node = rclpy.create_node('vimfly')
+        self.node = node if node is not None else rclpy.create_node('vimfly')
 
         # initialize pygame display
         pygame.init()

@@ -161,7 +161,7 @@ class RC(Node):
         # Intercept if using VimFly.
         if self.use_vimfly and not self.transmitter_detected:
             self.get_logger().info('Using VimFly...')
-            self.vim_fly = VimFly()
+            self.vim_fly = VimFly(self)
             return
         
         self.rc_publisher = self.create_publisher(RCRaw, 'sim/RC', 10)
