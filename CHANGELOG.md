@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.1.0](https://github.com/rosflight/rosflight_ros_pkgs/compare/v2.0.1...v2.1.0) (2026-06-22)
+
+
+### Features
+
+* added attitude control switch to vimfly ([#256](https://github.com/rosflight/rosflight_ros_pkgs/issues/256)) ([516ff1b](https://github.com/rosflight/rosflight_ros_pkgs/commit/516ff1b87583756297d45c04532be80d11f5a956))
+* default camera for standalone on fixed wing is a 3rd person ([#255](https://github.com/rosflight/rosflight_ros_pkgs/issues/255)) ([739e310](https://github.com/rosflight/rosflight_ros_pkgs/commit/739e310a47d19f1718eb5be5e827411ac2c5bfbe))
+* VimFly uses single rc node ([#260](https://github.com/rosflight/rosflight_ros_pkgs/issues/260)) ([3ae7de0](https://github.com/rosflight/rosflight_ros_pkgs/commit/3ae7de01ef565d2e9681ec58ad725d989e81c9c2))
+
 ## [2.0.1](https://github.com/rosflight/rosflight_ros_pkgs/compare/v2.0.0...v2.0.1) (2026-03-17)
 
 
