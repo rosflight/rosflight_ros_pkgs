@@ -76,9 +76,12 @@ private:
   // TODO: Should we initialize this as non zero?
   Eigen::Vector3d gnss_gauss_markov_eta_ = Eigen::Vector3d::Zero();
   Eigen::Vector3d gyro_bias_gauss_markov_eta_ = Eigen::Vector3d::Zero();
+  Eigen::Vector3d acc_bias_gauss_markov_eta_ = Eigen::Vector3d::Zero();
   Eigen::Vector3d mag_gauss_markov_eta_ = Eigen::Vector3d::Zero();
   Eigen::Vector3d inertial_magnetic_field_ = Eigen::Vector3d::Zero();
   Eigen::Vector3d gyro_bias_instability_ = Eigen::Vector3d::Zero();
+  double baro_gauss_markov_eta_ = 0.0;
+  double airspeed_gauss_markov_eta_ = 0.0;
 
   double rho_ = 1.225;
 
@@ -86,6 +89,7 @@ private:
   Eigen::Vector3d gyro_bias_ = Eigen::Vector3d::Zero();
   Eigen::Vector3d acc_bias_ = Eigen::Vector3d::Zero();
   Eigen::Vector3d gyro_constant_bias_ = Eigen::Vector3d::Zero();
+  Eigen::Vector3d acc_constant_bias_ = Eigen::Vector3d::Zero();
   Eigen::Vector3d mag_bias_ = Eigen::Vector3d::Zero();
   double baro_bias_ = 0;
   double airspeed_bias_ = 0;
