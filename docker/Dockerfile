@@ -4,6 +4,8 @@ ARG ROS_DISTRO=humble
 FROM osrf/ros:${ROS_DISTRO}-desktop
 ENV ROS_DISTRO=${ROS_DISTRO}
 SHELL [ "/bin/bash", "-c" ]
+# set default user ID
+ARG HOST_UID=1000
 
 # Update system
 RUN apt-get update \
@@ -24,7 +26,7 @@ RUN rosdep install --from-paths . --ignore-src -y \
     && rm -rf tmp
 
 # Create user
-RUN useradd -ms /usr/bin/zsh docker_user \
+RUN useradd -u ${HOST_UID} -ms /usr/bin/zsh docker_user \
     && usermod -aG sudo,dialout,plugdev docker_user \
     && echo "docker_user:pw" | chpasswd
 USER docker_user
