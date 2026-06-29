@@ -21,7 +21,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource([
             os.path.join(
             get_package_share_directory("rosflight_sim"),
-            "launch/fixedwing_standalone.launch.py",
+            "launch/multirotor_standalone.launch.py",
             )
         ]),
         # One UAV you launch must set the launch_sim argument to true (this is it's default value)
