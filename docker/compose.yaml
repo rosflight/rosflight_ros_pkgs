@@ -6,6 +6,8 @@ services:
       dockerfile: src/rosflight_ros_pkgs/docker/Dockerfile
       args:
         - ROS_DISTRO=humble
+        # Uncomment this line to flash to a RaspberryPi (or another ARM-based device)
+        # - ROS_IMAGE=arm64v8/ros:jazzy-ros-base
 
     # Enable interactive shell
     stdin_open: true

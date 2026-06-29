@@ -1,7 +1,8 @@
 ARG ROS_DISTRO=humble
+ARG ROS_IMAGE=osrf/ros:${ROS_DISTRO}-desktop
 
 # Base image
-FROM osrf/ros:${ROS_DISTRO}-desktop
+FROM ${ROS_IMAGE}
 ENV ROS_DISTRO=${ROS_DISTRO}
 SHELL [ "/bin/bash", "-c" ]
 
