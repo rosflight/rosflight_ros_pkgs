@@ -28,7 +28,8 @@ Make sure you have installed the Docker engine, as well as the Docker Compose ut
 1. Navigate to `/path/to/your/rosflight_ws` for the next commands. You could run these commands from the `src/rosflight_ros_pkgs/docker` directory if you want (changing the file paths as necessary).
 2. Build with:
     ```bash
-    docker compose -f src/rosflight_ros_pkgs/docker/compose.yaml build
+    # The HOST_UID=$(id -u) part sets the container's user to match your host user ID.
+    HOST_UID=$(id -u) docker compose -f src/rosflight_ros_pkgs/docker/compose.yaml build
     ```
 
 ## Running
