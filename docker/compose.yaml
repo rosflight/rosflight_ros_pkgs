@@ -7,8 +7,8 @@ services:
       args:
         - ROS_DISTRO=humble
         - HOST_UID=${HOST_UID:-1000}
-        # Uncomment this line to flash to a RaspberryPi (or another ARM-based device)
-        # - ROS_IMAGE=arm64v8/ros:jazzy-ros-base
+        # Uncomment the next line when building on an ARM64 device (e.g., Raspberry Pi). Keep ROS_IMAGE's tag consistent with ROS_DISTRO above.
+        # - ROS_IMAGE=arm64v8/ros:humble-ros-base
 
     # Enable interactive shell
     stdin_open: true
