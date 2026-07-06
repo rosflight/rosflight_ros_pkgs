@@ -21,7 +21,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource([
             os.path.join(
             get_package_share_directory("rosflight_sim"),
-            "launch/multirotor_standalone.launch.py",
+            "launch/fixedwing_standalone.launch.py",
             )
         ]),
         # One UAV you launch must set the launch_sim argument to true (this is it's default value)
@@ -32,7 +32,10 @@ def generate_launch_description():
             'launch_sim': 'true',
             'bind_port_1': '14520',
             'bind_port_2': '14521',
-            }.items()
+            'dynamics_param_file': os.path.join(
+                get_package_share_directory('rosflight_sim'), 'params', 'anaconda_dynamics.yaml'
+            ),
+        }.items()
     )
 
     standalone_launch_include_2 = IncludeLaunchDescription(
@@ -47,7 +50,10 @@ def generate_launch_description():
             'launch_sim': 'false',
             'bind_port_1': '14522',
             'bind_port_2': '14523',
-            }.items()
+            'dynamics_param_file': os.path.join(
+                get_package_share_directory('rosflight_sim'), 'params', 'multirotor_dynamics.yaml'
+            ),
+        }.items()
     )
 
     zenoh_node = Node(

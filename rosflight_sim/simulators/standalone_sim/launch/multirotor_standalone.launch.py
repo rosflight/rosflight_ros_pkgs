@@ -122,6 +122,7 @@ def generate_launch_description():
         launch_arguments={
             'use_sim_time': use_sim_time,
             'dynamics_param_file': dynamics_param_file,
+            'sim_aircraft_file': os.path.join("common_resource", "multirotor.dae"),
             'namespace': namespace,
         }.items()
     )
