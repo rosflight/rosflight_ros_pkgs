@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.20...3.28)
 # Don't define own project -- use parent instead
 
 if(NOT CMAKE_C_STANDARD)
