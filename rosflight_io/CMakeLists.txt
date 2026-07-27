@@ -12,7 +12,7 @@ add_compile_options(-Wall)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
-endif(NOT CMAKE_BUILD_TYPE)
+endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -35,8 +35,8 @@ set(FIRMWARE_SUBMODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../rosflight_firmware")
 if(NOT EXISTS "${FIRMWARE_SUBMODULE_DIR}/.git")
   message(STATUS "Firmware submodule not found at ${FIRMWARE_SUBMODULE_DIR}")
   execute_process(
-          COMMAND git submodule update --init --recursive
-          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND git submodule update --init --recursive
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   )
 endif()
 
@@ -45,14 +45,14 @@ set(FIRMWARE_INCLUDE_DIRS
   ../rosflight_firmware/include/interface/
   ../rosflight_firmware/lib/
   ../rosflight_firmware/comms/
-  # ../rosflight_firmware/test/
 )
 
 # Determine ROSflight version
 execute_process(
   COMMAND git describe --tags --abbrev=8 --always --dirty --long
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  OUTPUT_VARIABLE GIT_VERSION_STRING RESULT_VARIABLE GIT_RESULT)
+  OUTPUT_VARIABLE GIT_VERSION_STRING RESULT_VARIABLE GIT_RESULT
+)
 if(GIT_RESULT EQUAL 0)
   string(REGEX REPLACE "\n$" "" GIT_VERSION_STRING "${GIT_VERSION_STRING}") # remove trailing newline
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DROSFLIGHT_VERSION=${GIT_VERSION_STRING}")
@@ -67,7 +67,7 @@ endif()
 
 include_directories(include
   ${FIRMWARE_INCLUDE_DIRS}
-  )
+)
 
 # mavrosflight library
 add_library(mavrosflight
@@ -78,23 +78,23 @@ add_library(mavrosflight
   src/mavrosflight/param_manager.cpp
   src/mavrosflight/param.cpp
   src/mavrosflight/time_manager.cpp
-  )
+)
 target_compile_options(mavrosflight PRIVATE -Wno-address-of-packed-member)
 target_link_libraries(mavrosflight PRIVATE
   rclcpp::rclcpp
   yaml-cpp::yaml-cpp
   Boost::headers
   Boost::thread
-  )
+)
 
 # realtime_configurator library
 add_library(realtime_configurator SHARED
   src/realtime_configurator.cpp
-  )
-target_include_directories(realtime_configurator
-  PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    "$<INSTALL_INTERFACE:include>")
+)
+target_include_directories(realtime_configurator PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include>"
+)
 target_link_libraries(realtime_configurator PRIVATE
   rclcpp::rclcpp
   std_msgs::std_msgs
@@ -106,7 +106,7 @@ add_executable(rosflight_io
   src/rosflight_io_node.cpp
   src/rosflight_io.cpp
   src/magnetometer_calibration.cpp
-  )
+)
 target_compile_options(rosflight_io PRIVATE -Wno-address-of-packed-member)
 target_link_libraries(rosflight_io PRIVATE
   mavrosflight
@@ -132,14 +132,14 @@ install(TARGETS mavrosflight rosflight_io
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
-  )
+)
 
 # Mark cpp header files for installation
 install(DIRECTORY include/rosflight_io/mavrosflight/
   DESTINATION include/${PROJECT_NAME}
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
-  )
+)
 
 install(TARGETS realtime_configurator
   EXPORT export_realtime_configurator
@@ -147,11 +147,10 @@ install(TARGETS realtime_configurator
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
-  )
+)
 
 install(FILES include/rosflight_io/realtime_configurator.hpp
   DESTINATION include
-  )
-
+)
 
 ament_package()

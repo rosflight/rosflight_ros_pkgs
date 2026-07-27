@@ -12,7 +12,7 @@ add_compile_options(-Wall -fPIC)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
-endif(NOT CMAKE_BUILD_TYPE)
+endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
@@ -34,8 +34,8 @@ set(FIRMWARE_SUBMODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../rosflight_firmware")
 if(NOT EXISTS "${FIRMWARE_SUBMODULE_DIR}/.git")
   message(STATUS "Firmware submodule not found at ${FIRMWARE_SUBMODULE_DIR}")
   execute_process(
-          COMMAND git submodule update --init --recursive
-          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND git submodule update --init --recursive
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   )
 endif()
 
@@ -52,15 +52,19 @@ include_directories(
 )
 
 # Git information
-execute_process(COMMAND git rev-parse --short=8 HEAD
-        OUTPUT_VARIABLE GIT_VERSION_HASH
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rosflight_firmware)
+execute_process(
+  COMMAND git rev-parse --short=8 HEAD
+  OUTPUT_VARIABLE GIT_VERSION_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rosflight_firmware
+)
 
-execute_process(COMMAND git describe --tags --abbrev=8 --always --dirty --long
-        OUTPUT_VARIABLE GIT_VERSION_STRING
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rosflight_firmware)
+execute_process(
+  COMMAND git describe --tags --abbrev=8 --always --dirty --long
+  OUTPUT_VARIABLE GIT_VERSION_STRING
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rosflight_firmware
+)
 
 if("${GIT_VERSION_STRING}" STREQUAL "")
   set(GIT_VERSION_STRING "undefined")
@@ -119,10 +123,8 @@ include_directories(include
 ##################
 
 # ROSflightSIL
-add_executable(rosflight_sil_manager
-  src/rosflight_sil.cpp)
-target_include_directories(rosflight_sil_manager
-  PRIVATE include)
+add_executable(rosflight_sil_manager src/rosflight_sil.cpp)
+target_include_directories(rosflight_sil_manager PRIVATE include)
 target_link_libraries(rosflight_sil_manager PRIVATE
   rclcpp::rclcpp
   std_srvs::std_srvs
@@ -136,10 +138,9 @@ install(
 add_executable(sil_board
   src/sil_board_ros.cpp
   src/sil_board.cpp
-  src/udp_board.cpp)
-target_include_directories(sil_board
-  PRIVATE
-    include)
+  src/udp_board.cpp
+)
+target_include_directories(sil_board PRIVATE include)
 target_link_libraries(sil_board PRIVATE
   rosflight_firmware
   rclcpp::rclcpp
@@ -150,7 +151,8 @@ target_link_libraries(sil_board PRIVATE
 )
 install(
   TARGETS sil_board
-  DESTINATION lib/${PROJECT_NAME})
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # Standalone simulator
 add_subdirectory(simulators/standalone_sim)
