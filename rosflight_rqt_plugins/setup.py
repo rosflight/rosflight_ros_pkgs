@@ -28,7 +28,6 @@ setup(
     keywords=['ROSflight', 'rqt'],
     classifiers=[
         'Intended Audience :: Developers',
-        'License :: BSD',
         'Programming Language :: Python',
         'Topic :: Ground Control Stations',
     ],
