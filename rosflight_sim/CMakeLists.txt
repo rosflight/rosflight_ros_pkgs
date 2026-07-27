@@ -87,6 +87,10 @@ add_library(rosflight_firmware
 )
 target_include_directories(rosflight_firmware PRIVATE ${FIRMWARE_INCLUDE_DIRS})
 target_link_libraries(rosflight_firmware PRIVATE Eigen3::Eigen)
+# FIXME: Eigen currently prints a maybe-uninitialized warning for the invert_mixer()
+# function in mixer.cpp and this disables the warning. This warning may be fixed
+# in a future version of Eigen and the flag could be removed.
+target_compile_options(rosflight_firmware PRIVATE -Wno-maybe-uninitialized)
 target_compile_definitions(rosflight_firmware PUBLIC
   GIT_VERSION_HASH=0x${GIT_VERSION_HASH}
   GIT_VERSION_STRING=\"${GIT_VERSION_STRING}\"
