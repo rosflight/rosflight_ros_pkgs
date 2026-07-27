@@ -25,6 +25,7 @@
   <depend>rclpy</depend>
 
   <depend>geometry_msgs</depend>
+  <depend>tf2_geometry_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>rosflight_msgs</depend>
   <depend>python3-pygame</depend>

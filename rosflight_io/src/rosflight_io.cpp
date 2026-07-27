@@ -48,8 +48,6 @@
 #include <rosflight_io/mavrosflight/mavlink_udp.hpp>
 #include <rosflight_io/mavrosflight/serial_exception.hpp>
 #include <string>
-#include <tf2/LinearMath/Matrix3x3.h> // Swap to Eigen!
-#include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <sys/resource.h>
 
