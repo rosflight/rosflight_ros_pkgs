@@ -43,8 +43,8 @@ set(FIRMWARE_INCLUDE_DIRS
   ../rosflight_firmware/include/
   ../rosflight_firmware/include/interface/
   ../rosflight_firmware/lib/
-  ../rosflight_firmware/comms/
-  ../rosflight_firmware/test/
+  ../rosflight_firmware/comms/mavlink
+  ../rosflight_firmware/comms/mavlink/v1.0
 )
 
 include_directories(
@@ -86,7 +86,7 @@ add_library(rosflight_firmware
   ${FIRMWARE_SUBMODULE_DIR}/lib/turbomath/turbomath.cpp
 )
 target_include_directories(rosflight_firmware PRIVATE ${FIRMWARE_INCLUDE_DIRS})
-target_link_libraries(rosflight_firmware Eigen3::Eigen)
+target_link_libraries(rosflight_firmware PRIVATE Eigen3::Eigen)
 target_compile_definitions(rosflight_firmware PUBLIC
   GIT_VERSION_HASH=0x${GIT_VERSION_HASH}
   GIT_VERSION_STRING=\"${GIT_VERSION_STRING}\"
@@ -107,9 +107,6 @@ install(
 ###################
 
 include_directories(include
-  ${ament_INCLUDE_DIRS}
-  ${rclcpp_INLCUDE_DIRS}
-  ${Eigen_INCLUDE_DIRS}
   ${SDFormat_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
 )
@@ -123,7 +120,11 @@ add_executable(rosflight_sil_manager
   src/rosflight_sil.cpp)
 target_include_directories(rosflight_sil_manager
   PRIVATE include)
-ament_target_dependencies(rosflight_sil_manager rclcpp std_srvs rosflight_msgs)
+target_link_libraries(rosflight_sil_manager PRIVATE
+  rclcpp::rclcpp
+  std_srvs::std_srvs
+  rosflight_msgs::rosflight_msgs
+)
 install(
   TARGETS rosflight_sil_manager
   DESTINATION lib/${PROJECT_NAME})
@@ -133,13 +134,17 @@ add_executable(sil_board
   src/sil_board_ros.cpp
   src/sil_board.cpp
   src/udp_board.cpp)
-target_link_libraries(sil_board
-  rosflight_firmware
-  ${Boost_LIBRARIES})
 target_include_directories(sil_board
   PRIVATE
     include)
-ament_target_dependencies(sil_board rclcpp std_srvs sensor_msgs rosflight_msgs)
+target_link_libraries(sil_board PRIVATE
+  rosflight_firmware
+  rclcpp::rclcpp
+  std_srvs::std_srvs
+  sensor_msgs::sensor_msgs
+  rosflight_msgs::rosflight_msgs
+  ${Boost_LIBRARIES}
+)
 install(
   TARGETS sil_board
   DESTINATION lib/${PROJECT_NAME})

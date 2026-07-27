@@ -68,10 +68,7 @@ endif()
 ###########
 
 include_directories(include
-  ${ament_INCLUDE_DIRS}
-  ${rclcpp_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
-  ${EIGEN3_INCLUDE_DIRS}
   ${YAML_CPP_INCLUDEDIR}
   ${FIRMWARE_INCLUDE_DIRS}
   )
@@ -87,13 +84,12 @@ add_library(mavrosflight
   src/mavrosflight/time_manager.cpp
   )
 target_compile_options(mavrosflight PRIVATE -Wno-address-of-packed-member)
-target_link_libraries(mavrosflight
-  ${ament_LIBRARIES}
-  ${rclcpp_LIBRARIES}
-  ${Boost_LIBRARIES}
+target_link_libraries(mavrosflight PRIVATE
+  rclcpp::rclcpp
   ${YAML_CPP_LIBRARIES}
+  Boost::headers
+  Boost::thread
   )
-ament_target_dependencies(mavrosflight rclcpp)
 
 # realtime_configurator library
 add_library(realtime_configurator SHARED
@@ -103,10 +99,10 @@ target_include_directories(realtime_configurator
   PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<INSTALL_INTERFACE:include>")
-ament_target_dependencies(realtime_configurator
-  rclcpp
-  std_msgs
-  )
+target_link_libraries(realtime_configurator PRIVATE
+  rclcpp::rclcpp
+  std_msgs::std_msgs
+)
 ament_export_targets(export_realtime_configurator HAS_LIBRARY_TARGET)
 
 # rosflight_io_node
@@ -116,23 +112,20 @@ add_executable(rosflight_io
   src/magnetometer_calibration.cpp
   )
 target_compile_options(rosflight_io PRIVATE -Wno-address-of-packed-member)
-target_link_libraries(rosflight_io
+target_link_libraries(rosflight_io PRIVATE
   mavrosflight
   realtime_configurator
-  ${rclcpp_LIBRARIES}
-  ${ament_LIBRARIES}
-  ${Boost_LIBRARES}
-  )
-ament_target_dependencies(rosflight_io
-  geometry_msgs
-  rosflight_msgs
-  sensor_msgs
-  std_msgs
-  std_srvs
-  tf2
-  tf2_geometry_msgs
-  Eigen3
-  )
+  rclcpp::rclcpp
+  geometry_msgs::geometry_msgs
+  rosflight_msgs::rosflight_msgs
+  sensor_msgs::sensor_msgs
+  std_msgs::std_msgs
+  std_srvs::std_srvs
+  tf2::tf2
+  tf2_geometry_msgs::tf2_geometry_msgs
+  Boost::headers
+  Eigen3::Eigen
+)
 
 #############
 ## Install ##

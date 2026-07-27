@@ -23,24 +23,18 @@ find_package(visualization_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
-include_directories(include
-  ${ament_INCLUDE_DIRS}
-  ${rclcpp_INCLUDE_DIRS}
-)
+include_directories(include)
 
 # viz executable
 add_executable(viz src/viz.cpp)
-target_link_libraries(viz
-  ${rclcpp_LIBRARIES}
-  ${ament_LIBRARIES}
-)
-ament_target_dependencies(viz
-  geometry_msgs
-  rosflight_msgs
-  sensor_msgs
-  tf2
-  tf2_geometry_msgs
-  visualization_msgs
+target_link_libraries(viz PRIVATE
+  rclcpp::rclcpp
+  geometry_msgs::geometry_msgs
+  rosflight_msgs::rosflight_msgs
+  sensor_msgs::sensor_msgs
+  tf2::tf2
+  tf2_geometry_msgs::tf2_geometry_msgs
+  visualization_msgs::visualization_msgs
 )
 
 # Install header files

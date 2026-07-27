@@ -33,14 +33,16 @@ add_executable(standalone_viz_transcriber
 target_include_directories(standalone_viz_transcriber
   PRIVATE
     include)
-ament_target_dependencies(standalone_viz_transcriber
-  ament_index_cpp
-  geometry_msgs
-  rclcpp
-  rosflight_msgs
-  tf2
-  tf2_ros
-  visualization_msgs)
+target_link_libraries(standalone_viz_transcriber PRIVATE
+  ament_index_cpp::ament_index_cpp
+  rclcpp::rclcpp
+  geometry_msgs::geometry_msgs
+  rosflight_msgs::rosflight_msgs
+  tf2::tf2
+  tf2_ros::tf2_ros
+  tf2_geometry_msgs::tf2_geometry_msgs
+  visualization_msgs::visualization_msgs
+)
 ament_export_dependencies(rclcpp
   tf2
   tf2_ros
@@ -59,7 +61,10 @@ target_include_directories(standalone_time_manager
   PRIVATE
     ../../include
     include)
-ament_target_dependencies(standalone_time_manager rclcpp std_srvs)
+target_link_libraries(standalone_time_manager PRIVATE
+  rclcpp::rclcpp
+  std_srvs::std_srvs
+)
 install(
   TARGETS standalone_time_manager
   DESTINATION lib/${PROJECT_NAME})
@@ -72,12 +77,13 @@ target_include_directories(multirotor_forces_and_moments
   PRIVATE
     ../../include
     include)
-target_link_libraries(multirotor_forces_and_moments Eigen3::Eigen)
-ament_target_dependencies(multirotor_forces_and_moments
-  rclcpp
-  std_srvs
-  geometry_msgs
-  rosflight_msgs)
+target_link_libraries(multirotor_forces_and_moments PRIVATE
+  rclcpp::rclcpp
+  std_srvs::std_srvs
+  geometry_msgs::geometry_msgs
+  rosflight_msgs::rosflight_msgs
+  Eigen3::Eigen
+)
 install(
   TARGETS multirotor_forces_and_moments
   DESTINATION lib/${PROJECT_NAME})
@@ -90,12 +96,13 @@ target_include_directories(fixedwing_forces_and_moments
   PRIVATE
     ../../include
     include)
-target_link_libraries(fixedwing_forces_and_moments Eigen3::Eigen)
-ament_target_dependencies(fixedwing_forces_and_moments
-  rclcpp
-  std_srvs
-  geometry_msgs
-  rosflight_msgs)
+target_link_libraries(fixedwing_forces_and_moments PRIVATE
+  rclcpp::rclcpp
+  std_srvs::std_srvs
+  geometry_msgs::geometry_msgs
+  rosflight_msgs::rosflight_msgs
+  Eigen3::Eigen
+)
 install(
   TARGETS fixedwing_forces_and_moments
   DESTINATION lib/${PROJECT_NAME})
@@ -108,8 +115,13 @@ target_include_directories(standalone_sensors
   PRIVATE
     include
     simulators/standalone_sim/include)
-target_link_libraries(standalone_sensors Eigen3::Eigen)
-ament_target_dependencies(standalone_sensors rclcpp sensor_msgs rosflight_msgs geometry_msgs)
+target_link_libraries(standalone_sensors PRIVATE
+  rclcpp::rclcpp
+  sensor_msgs::sensor_msgs
+  rosflight_msgs::rosflight_msgs
+  geometry_msgs::geometry_msgs
+  Eigen3::Eigen
+)
 install(
   TARGETS standalone_sensors
   DESTINATION lib/${PROJECT_NAME})
@@ -122,14 +134,14 @@ target_include_directories(standalone_dynamics
   PRIVATE
     ../../include
     include)
-target_link_libraries(standalone_dynamics
-  Eigen3::Eigen)
-ament_target_dependencies(standalone_dynamics
-  geometry_msgs
-  tf2_geometry_msgs
-  std_srvs
-  rclcpp
-  rosflight_msgs)
+target_link_libraries(standalone_dynamics PRIVATE
+  rclcpp::rclcpp
+  rosflight_msgs::rosflight_msgs
+  geometry_msgs::geometry_msgs
+  tf2_geometry_msgs::tf2_geometry_msgs
+  std_srvs::std_srvs
+  Eigen3::Eigen
+)
 ament_export_dependencies(standalone_dynamics
   geometry_msgs
   tf2_geometry_msgs
