@@ -977,8 +977,9 @@ bool ROSflightIO::paramSetSrvCallback(
   return true;
 }
 
-bool ROSflightIO::paramWriteSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr & req,
-                                        const std_srvs::srv::Trigger::Response::SharedPtr & res)
+bool ROSflightIO::paramWriteSrvCallback(
+  [[maybe_unused]] const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  const std_srvs::srv::Trigger::Response::SharedPtr & res)
 {
   res->success = mavrosflight_->param.write_params();
   if (!res->success) {
@@ -1005,7 +1006,7 @@ bool ROSflightIO::paramLoadFromFileCallback(
 }
 
 bool ROSflightIO::calibrateImuBiasSrvCallback(
-  const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  [[maybe_unused]] const std_srvs::srv::Trigger::Request::SharedPtr & req,
   const std_srvs::srv::Trigger::Response::SharedPtr & res)
 {
   mavlink_message_t msg;
@@ -1017,7 +1018,7 @@ bool ROSflightIO::calibrateImuBiasSrvCallback(
 }
 
 bool ROSflightIO::calibrateRCTrimSrvCallback(
-  const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  [[maybe_unused]] const std_srvs::srv::Trigger::Request::SharedPtr & req,
   const std_srvs::srv::Trigger::Response::SharedPtr & res)
 {
   mavlink_message_t msg;
@@ -1075,7 +1076,7 @@ void ROSflightIO::check_error_code(uint8_t current, uint8_t previous, ROSFLIGHT_
 }
 
 bool ROSflightIO::calibrateAirspeedSrvCallback(
-  const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  [[maybe_unused]] const std_srvs::srv::Trigger::Request::SharedPtr & req,
   const std_srvs::srv::Trigger::Response::SharedPtr & res)
 {
   mavlink_message_t msg;
@@ -1085,8 +1086,9 @@ bool ROSflightIO::calibrateAirspeedSrvCallback(
   return true;
 }
 
-bool ROSflightIO::calibrateBaroSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr & req,
-                                           const std_srvs::srv::Trigger::Response::SharedPtr & res)
+bool ROSflightIO::calibrateBaroSrvCallback(
+  [[maybe_unused]] const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  const std_srvs::srv::Trigger::Response::SharedPtr & res)
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_BARO_CALIBRATION);
@@ -1096,7 +1098,7 @@ bool ROSflightIO::calibrateBaroSrvCallback(const std_srvs::srv::Trigger::Request
 }
 
 bool ROSflightIO::calibrateMagSrvCallback(
-  const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  [[maybe_unused]] const std_srvs::srv::Trigger::Request::SharedPtr & req,
   const std_srvs::srv::Trigger::Response::SharedPtr & res) {
  
   // Reset the mag compensation to get a clean calibration.
@@ -1162,8 +1164,9 @@ void ROSflightIO::calibrateMag() {
   }
 }
 
-bool ROSflightIO::rebootSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr & req,
-                                    const std_srvs::srv::Trigger::Response::SharedPtr & res)
+bool ROSflightIO::rebootSrvCallback(
+  [[maybe_unused]] const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  const std_srvs::srv::Trigger::Response::SharedPtr & res)
 {
   mavlink_message_t msg;
   mavlink_msg_rosflight_cmd_pack(1, 50, &msg, ROSFLIGHT_CMD_REBOOT);
@@ -1173,7 +1176,7 @@ bool ROSflightIO::rebootSrvCallback(const std_srvs::srv::Trigger::Request::Share
 }
 
 bool ROSflightIO::rebootToBootloaderSrvCallback(
-  const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  [[maybe_unused]] const std_srvs::srv::Trigger::Request::SharedPtr & req,
   const std_srvs::srv::Trigger::Response::SharedPtr & res)
 {
   mavlink_message_t msg;
@@ -1184,7 +1187,7 @@ bool ROSflightIO::rebootToBootloaderSrvCallback(
 }
 
 bool ROSflightIO::checkIfAllParamsReceivedCallback(
-  const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  [[maybe_unused]] const std_srvs::srv::Trigger::Request::SharedPtr & req,
   const std_srvs::srv::Trigger::Response::SharedPtr & res)
 {
   res->success = mavrosflight_->param.got_all_params();
@@ -1196,7 +1199,7 @@ bool ROSflightIO::checkIfAllParamsReceivedCallback(
 }
 
 bool ROSflightIO::printMixingMatrixCallback(
-  const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  [[maybe_unused]] const std_srvs::srv::Trigger::Request::SharedPtr & req,
   const std_srvs::srv::Trigger::Response::SharedPtr & res)
 {
   res->success = log_mixer_params();

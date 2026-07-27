@@ -101,8 +101,9 @@ void ROSflightSIL::reset_timers()
   }
 }
 
-bool ROSflightSIL::iterate_simulation(const std_srvs::srv::Trigger::Request::SharedPtr & req,
-                                      const std_srvs::srv::Trigger::Response::SharedPtr & res)
+bool ROSflightSIL::iterate_simulation(
+  [[maybe_unused]] const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  const std_srvs::srv::Trigger::Response::SharedPtr & res)
 {
   res->success = call_firmware();
 
