@@ -7,23 +7,19 @@ Description: ROS2 launch file used to launch all nodes that are both standalone 
     and frame-type independent.
 """
 
-import os
-import sys
-
-from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 
 
 def generate_launch_description():
     """This is a launch file that launches all nodes needed for a standalone simulation that do not depend on the standalone simulator"""
 
-    rosflight_sim_dir = get_package_share_directory('rosflight_sim')
-    param_file = os.path.join(rosflight_sim_dir, 'params', 'standalone_sim_params.yaml')
+    rosflight_sim_share = FindPackageShare('rosflight_sim')
+    param_file = PathJoinSubstitution([rosflight_sim_share, 'params', 'standalone_sim_params.yaml'])
 
     # Declare launch arguments
     use_sim_time_arg = DeclareLaunchArgument(
