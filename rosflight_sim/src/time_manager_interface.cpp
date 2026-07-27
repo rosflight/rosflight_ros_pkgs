@@ -139,6 +139,7 @@ bool TimeManagerInterface::toggle_pause_callback(
     RCLCPP_INFO_STREAM(this->get_logger(), "Timer is paused!");
   }
 
+  res->success = true;
   return true;
 }
 
