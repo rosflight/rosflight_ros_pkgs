@@ -28,9 +28,7 @@ find_package(message_filters REQUIRED)
 
 find_package(Boost CONFIG REQUIRED COMPONENTS thread)
 find_package(Eigen3 REQUIRED)
-
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
+find_package(yaml-cpp REQUIRED)
 
 # clone firmware submodule if it is missing
 set(FIRMWARE_SUBMODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../rosflight_firmware")
@@ -68,7 +66,6 @@ endif()
 ###########
 
 include_directories(include
-  ${YAML_CPP_INCLUDEDIR}
   ${FIRMWARE_INCLUDE_DIRS}
   )
 
@@ -85,7 +82,7 @@ add_library(mavrosflight
 target_compile_options(mavrosflight PRIVATE -Wno-address-of-packed-member)
 target_link_libraries(mavrosflight PRIVATE
   rclcpp::rclcpp
-  ${YAML_CPP_LIBRARIES}
+  yaml-cpp::yaml-cpp
   Boost::headers
   Boost::thread
   )
