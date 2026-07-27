@@ -34,7 +34,6 @@
 #include <cstdint>
 #include <vector>
 
-#include <ament_index_cpp/get_package_share_directory.hpp>
 #include <geometry_msgs/msg/point.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
