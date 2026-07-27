@@ -66,8 +66,8 @@ ForcesAndMomentsInterface::ForcesAndMomentsInterface()
 
   // Service clients
   client_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  firmware_param_get_client_ = this->create_client<rosflight_msgs::srv::ParamGet>("param_get", rmw_qos_profile_services_default, client_cb_group_);
-  firmware_check_param_client_ = this->create_client<std_srvs::srv::Trigger>("all_params_received", rmw_qos_profile_services_default, client_cb_group_);
+  firmware_param_get_client_ = this->create_client<rosflight_msgs::srv::ParamGet>("param_get", rclcpp::ServicesQoS(), client_cb_group_);
+  firmware_check_param_client_ = this->create_client<std_srvs::srv::Trigger>("all_params_received", rclcpp::ServicesQoS(), client_cb_group_);
 
   // Request mixer values on boot
   do_initialize_parameters_ = true;

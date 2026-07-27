@@ -55,7 +55,7 @@ ROSflightSIL::ROSflightSIL()
 
   // Initialize the service clients that will be used
   client_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  firmware_run_client_ = this->create_client<std_srvs::srv::Trigger>("sil_board/run", rmw_qos_profile_services_default, client_cb_group_);
+  firmware_run_client_ = this->create_client<std_srvs::srv::Trigger>("sil_board/run", rclcpp::ServicesQoS(), client_cb_group_);
 
   // Initialize the timer if the parameter is set to be so
   if (this->get_parameter("use_timer").as_bool()) {
