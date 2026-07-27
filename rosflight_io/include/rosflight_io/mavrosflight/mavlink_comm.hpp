@@ -102,13 +102,13 @@ protected:
   virtual void do_open() = 0;
   virtual void do_close() = 0;
   virtual void
-  do_async_read(const boost::asio::mutable_buffers_1 & buffer,
+  do_async_read(const boost::asio::mutable_buffer & buffer,
                 boost::function<void(const boost::system::error_code &, size_t)> handler) = 0;
   virtual void
-  do_async_write(const boost::asio::const_buffers_1 & buffer,
+  do_async_write(const boost::asio::const_buffer & buffer,
                  boost::function<void(const boost::system::error_code &, size_t)> handler) = 0;
 
-  boost::asio::io_service io_service_; //!< boost io service provider
+  boost::asio::io_context io_context_; //!< boost io context provider
 
 private:
   //===========================================================================

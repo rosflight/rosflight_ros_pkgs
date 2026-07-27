@@ -26,7 +26,7 @@ find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(message_filters REQUIRED)
 
-find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(Boost CONFIG REQUIRED COMPONENTS thread)
 find_package(Eigen3 REQUIRED)
 
 find_package(PkgConfig REQUIRED)
@@ -68,7 +68,6 @@ endif()
 ###########
 
 include_directories(include
-  ${Boost_INCLUDE_DIRS}
   ${YAML_CPP_INCLUDEDIR}
   ${FIRMWARE_INCLUDE_DIRS}
   )

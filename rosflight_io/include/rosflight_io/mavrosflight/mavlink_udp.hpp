@@ -73,10 +73,10 @@ private:
   void do_open() override;
   void do_close() override;
   void
-  do_async_read(const boost::asio::mutable_buffers_1 & buffer,
+  do_async_read(const boost::asio::mutable_buffer & buffer,
                 boost::function<void(const boost::system::error_code &, size_t)> handler) override;
   void
-  do_async_write(const boost::asio::const_buffers_1 & buffer,
+  do_async_write(const boost::asio::const_buffer & buffer,
                  boost::function<void(const boost::system::error_code &, size_t)> handler) override;
 
   //===========================================================================

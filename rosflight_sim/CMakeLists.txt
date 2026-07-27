@@ -22,7 +22,7 @@ find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(rosflight_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(Boost CONFIG REQUIRED COMPONENTS thread)
 
 
 ##############
@@ -108,7 +108,6 @@ install(
 
 include_directories(include
   ${SDFormat_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIRS}
 )
 
 ##################
@@ -143,7 +142,7 @@ target_link_libraries(sil_board PRIVATE
   std_srvs::std_srvs
   sensor_msgs::sensor_msgs
   rosflight_msgs::rosflight_msgs
-  ${Boost_LIBRARIES}
+  Boost::thread
 )
 install(
   TARGETS sil_board
