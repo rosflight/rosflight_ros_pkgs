@@ -19,7 +19,10 @@ Eigen::VectorXd MagnetometerCalibrator::ellipsoid_least_squares(Eigen::MatrixXd 
   A.col(8) = z;
   A.col(9) = Eigen::VectorXd::Ones(x.rows());
   
-  Eigen::JacobiSVD<Eigen::MatrixXd> svd(A, Eigen::FullPivHouseholderQRPreconditioner | Eigen::ComputeFullU | Eigen::ComputeFullV);
+  auto flags = static_cast<unsigned int>(Eigen::FullPivHouseholderQRPreconditioner)
+    | static_cast<unsigned int>(Eigen::ComputeFullU)
+    | static_cast<unsigned int>(Eigen::ComputeFullV);
+  Eigen::JacobiSVD<Eigen::MatrixXd> svd(A, flags);
   
   Eigen::MatrixXd V = svd.matrixV();
 

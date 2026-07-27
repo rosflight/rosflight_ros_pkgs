@@ -224,9 +224,11 @@ bool ForcesAndMomentsInterface::send_check_params_service_to_firmware()
 void ForcesAndMomentsInterface::invert_matrix(Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS> &mixer_to_invert)
 {
   // Calculate the pseudoinverse of the mixing matrix using the SVD
+  auto flags = static_cast<unsigned int>(Eigen::FullPivHouseholderQRPreconditioner)
+    | static_cast<unsigned int>(Eigen::ComputeFullU)
+    | static_cast<unsigned int>(Eigen::ComputeFullV);
   Eigen::JacobiSVD<Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS>> svd(
-    mixer_to_invert,
-    Eigen::FullPivHouseholderQRPreconditioner | Eigen::ComputeFullU | Eigen::ComputeFullV);
+    mixer_to_invert, flags);
   Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS> Sig;
   Sig.setZero();
 
