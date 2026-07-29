@@ -9,3 +9,9 @@ cd $SCRIPTPATH
 find . \( -path "./.git" -o -path "./rosflight_firmware/" \) -prune \
   -o \( -iname "*.h" -o -iname "*.hpp" -o -iname "*.cpp" -o -iname "*.c" \) -print \
   | xargs clang-format -i --verbose -style=file
+
+# organize python imports
+ruff check . --select I --fix
+
+# format python code
+ruff format

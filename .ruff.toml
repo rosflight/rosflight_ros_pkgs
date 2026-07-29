@@ -1,0 +1,8 @@
+line-length = 100
+
+exclude = [
+  "rosflight_firmware",
+]
+
+[format]
+quote-style = "single"
