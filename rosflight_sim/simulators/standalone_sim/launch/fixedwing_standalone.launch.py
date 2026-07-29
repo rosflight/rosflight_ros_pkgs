@@ -34,6 +34,13 @@ def generate_launch_description():
     )
     use_sim_time = LaunchConfiguration('use_sim_time')
 
+    use_vimfly_arg = DeclareLaunchArgument(
+        "use_vimfly",
+        default_value="false",
+        description="Whether the rc node will use vimfly or not"
+    )
+    use_vimfly = LaunchConfiguration('use_vimfly')
+
     ##########
     # Launch #
     ##########
@@ -61,6 +68,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             'use_sim_time': use_sim_time,
+            'use_vimfly': use_vimfly,
             'dynamics_param_file': dynamics_param_file,
         }.items()
     )
@@ -89,6 +97,7 @@ def generate_launch_description():
         [
             dynamics_param_file_arg,
             use_sim_time_arg,
+            use_vimfly_arg,
             simulator_launch_include,
             common_nodes_include,
             fw_forces_moments_node,
