@@ -55,7 +55,6 @@ Authors: James Jackson, Daniel Koch, Brandon Sutherland, Ian Reid
 
 from enum import Enum
 
-from numpy import true_divide
 import pygame
 import rclpy
 from rclpy.node import Node
@@ -251,7 +250,8 @@ def main(args=None):
     rclpy.init(args=args)
     rc = RC()
     rclpy.spin(rc)
-    rclpy.shutdown()
+    if rclpy.ok():
+        rclpy.shutdown()
 
 
 if __name__ == '__main__':
