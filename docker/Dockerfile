@@ -1,22 +1,21 @@
 ARG ROS_DISTRO=humble
+ARG ROS_IMAGE=osrf/ros:${ROS_DISTRO}-desktop
 
 # Base image
-FROM osrf/ros:${ROS_DISTRO}-desktop
-ENV ROS_DISTRO=${ROS_DISTRO}
+FROM ${ROS_IMAGE}
 SHELL [ "/bin/bash", "-c" ]
 # set default user ID
 ARG HOST_UID=1000
 
-# Update system
+# Update system and install utilities/packages
+# $ROS_DISTRO is inherited from the base ROS_IMAGE
 RUN apt-get update \
-    && apt-get upgrade -y
-
-# Install utilities/packages
-RUN apt-get install\
-    ros-dev-tools\
-    ros-${ROS_DISTRO}-plotjuggler-ros\
-    zsh\
-    vim\
+    && apt-get upgrade -y \
+    && apt-get install \
+    ros-dev-tools \
+    ros-${ROS_DISTRO}-plotjuggler-ros \
+    zsh \
+    vim \
     -y
 
 # Install dependencies and build
