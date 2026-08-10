@@ -24,12 +24,6 @@
   <depend>rclcpp</depend>
   <depend>rclpy</depend>
 
-  <depend condition="$ROS_DISTRO == 'humble'">gazebo_dev</depend>
-  <depend condition="$ROS_DISTRO == 'humble'">gazebo_plugins</depend>
-  <depend condition="$ROS_DISTRO == 'humble'">gazebo_ros</depend>
-  <depend condition="$ROS_DISTRO == 'humble'">gazebo</depend>
-  <depend condition="$ROS_DISTRO == 'humble'">xacro</depend>
-
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>rosflight_msgs</depend>

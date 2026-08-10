@@ -144,14 +144,34 @@ install(
   TARGETS sil_board
   DESTINATION lib/${PROJECT_NAME})
 
-# Gazebo dynamics and simulator
-add_subdirectory(simulators/gazebo_sim)
-
 # Standalone simulator
 add_subdirectory(simulators/standalone_sim)
 
-# HoloOcean simulator
-add_subdirectory(simulators/holoocean_sim)
+# Optional simulator visualizers. These repositories may be cloned into the
+# rosflight_sim/simulators directory independently of rosflight_sim.
+set(ROSFIGHT_SIMULATORS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/simulators")
+
+set(ROSFIGHT_GAZEBO_CLASSIC_DIR "${ROSFIGHT_SIMULATORS_DIR}/rosflight_viz_gazebo_classic")
+if(EXISTS "${ROSFIGHT_GAZEBO_CLASSIC_DIR}/CMakeLists.txt")
+  if("$ENV{ROS_DISTRO}" STREQUAL "humble")
+    add_subdirectory(simulators/rosflight_viz_gazebo_classic)
+  else()
+    message(WARNING
+      "rosflight_viz_gazebo_classic found, but Gazebo Classic visualizer is only built on ROS 2 Humble; skipping")
+  endif()
+endif()
+
+set(ROSFIGHT_GAZEBO_DIR "${ROSFIGHT_SIMULATORS_DIR}/rosflight_viz_gazebo")
+if(EXISTS "${ROSFIGHT_GAZEBO_DIR}/CMakeLists.txt")
+  add_subdirectory(simulators/rosflight_viz_gazebo)
+else()
+  message(WARNING "rosflight_viz_gazebo not found; skipping modern Gazebo visualizer")
+endif()
+
+set(ROSFIGHT_HOLOOCEAN_DIR "${ROSFIGHT_SIMULATORS_DIR}/rosflight_viz_holoocean")
+if(EXISTS "${ROSFIGHT_HOLOOCEAN_DIR}/CMakeLists.txt")
+  add_subdirectory(simulators/rosflight_viz_holoocean)
+endif()
 
 #############
 ## Install ##
