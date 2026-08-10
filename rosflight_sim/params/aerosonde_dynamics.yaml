@@ -12,7 +12,7 @@
     rho: 1.2682
     mass: 11.0
 
-/fixedwing_forces_and_moments:
+/**/fixedwing_forces_and_moments:
   ros__parameters:
     rho: 1.2682
     mass: 11.0
@@ -100,7 +100,7 @@
     C_Y_delta_e: 0.0
     C_Y_delta_r: 0.19
 
-/standalone_dynamics:
+/**/standalone_dynamics:
   ros__parameters:
     Jxx: 0.8224
     Jxy: 0.0

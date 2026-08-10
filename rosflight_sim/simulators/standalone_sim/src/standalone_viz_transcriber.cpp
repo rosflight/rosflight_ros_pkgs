@@ -100,7 +100,13 @@ StandaloneVizTranscriber::parameters_callback(const std::vector<rclcpp::Paramete
 
 void StandaloneVizTranscriber::initialize_aircraft_marker()
 {
-  aircraft_.header.frame_id = "stl_frame";
+  std::string ns = this->get_namespace();
+  if (ns.empty() || ns == "/") {
+    aircraft_.header.frame_id = "stl_frame";
+  } else {
+    if (ns.back() != '/') ns += '/';
+    aircraft_.header.frame_id = ns + "stl_frame";
+  }
   aircraft_.ns = "vehicle";
   aircraft_.id = 0;
   aircraft_.type = visualization_msgs::msg::Marker::MESH_RESOURCE;
@@ -156,7 +162,14 @@ void StandaloneVizTranscriber::update_mesh()
   geometry_msgs::msg::TransformStamped t;
   t.header.stamp = now;
   t.header.frame_id = "NED";
-  t.child_frame_id = "aircraft_body";
+  std::string ns = this->get_namespace();
+  if (ns.empty() || ns == "/") {
+    t.child_frame_id = "aircraft_body";
+  } else {
+    if (ns.back() != '/') ns += '/';
+    t.child_frame_id = ns + "aircraft_body";
+  }
+  
   t.transform.translation.x = vehicle_state_.pose.position.x;
   t.transform.translation.y = vehicle_state_.pose.position.y;
   t.transform.translation.z = vehicle_state_.pose.position.z;
