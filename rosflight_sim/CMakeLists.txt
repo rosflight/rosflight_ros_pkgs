@@ -30,86 +30,29 @@ find_package(Boost CONFIG REQUIRED COMPONENTS thread)
 ## Firmware ##
 ##############
 
+set(firmware_submodule_dir "${CMAKE_CURRENT_SOURCE_DIR}/../rosflight_firmware")
+
 # clone firmware submodule if it is missing
-set(FIRMWARE_SUBMODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../rosflight_firmware")
-if(NOT EXISTS "${FIRMWARE_SUBMODULE_DIR}/.git")
-  message(STATUS "Firmware submodule not found at ${FIRMWARE_SUBMODULE_DIR}")
+if(NOT EXISTS "${firmware_submodule_dir}/.git")
+  message(STATUS "Firmware submodule not found at ${firmware_submodule_dir}")
   execute_process(
     COMMAND git submodule update --init --recursive
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   )
 endif()
 
-set(FIRMWARE_INCLUDE_DIRS
-  ../rosflight_firmware/include/
-  ../rosflight_firmware/include/interface/
-  ../rosflight_firmware/lib/
-  ../rosflight_firmware/comms/mavlink
-  ../rosflight_firmware/comms/mavlink/v1.0
+add_subdirectory(
+  "${firmware_submodule_dir}"
+  "${CMAKE_CURRENT_BINARY_DIR}/rosflight_firmware"
 )
 
-include_directories(
-  ${FIRMWARE_INCLUDE_DIRS}
-)
+###############
+## Libraries ##
+###############
 
-# Git information
-execute_process(
-  COMMAND git rev-parse --short=8 HEAD
-  OUTPUT_VARIABLE GIT_VERSION_HASH
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rosflight_firmware
 )
-
-execute_process(
-  COMMAND git describe --tags --abbrev=8 --always --dirty --long
-  OUTPUT_VARIABLE GIT_VERSION_STRING
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rosflight_firmware
 )
-
-if("${GIT_VERSION_STRING}" STREQUAL "")
-  set(GIT_VERSION_STRING "undefined")
-endif()
-
-if("${GIT_VERSION_HASH}" STREQUAL "")
-  set(GIT_VERSION_HASH "0")
-endif()
-
-# rosflight_firmware
-add_library(rosflight_firmware
-  ${FIRMWARE_SUBMODULE_DIR}/src/rosflight.cpp
-  ${FIRMWARE_SUBMODULE_DIR}/src/estimator.cpp
-  ${FIRMWARE_SUBMODULE_DIR}/src/mixer.cpp
-  ${FIRMWARE_SUBMODULE_DIR}/src/controller.cpp
-  ${FIRMWARE_SUBMODULE_DIR}/src/param.cpp
-  ${FIRMWARE_SUBMODULE_DIR}/src/state_manager.cpp
-  ${FIRMWARE_SUBMODULE_DIR}/src/rc.cpp
-  ${FIRMWARE_SUBMODULE_DIR}/src/command_manager.cpp
-  ${FIRMWARE_SUBMODULE_DIR}/src/sensors.cpp
-  ${FIRMWARE_SUBMODULE_DIR}/src/comm_manager.cpp
-  ${FIRMWARE_SUBMODULE_DIR}/comms/mavlink/mavlink.cpp
-  ${FIRMWARE_SUBMODULE_DIR}/lib/turbomath/turbomath.cpp
 )
-target_include_directories(rosflight_firmware PRIVATE ${FIRMWARE_INCLUDE_DIRS})
-target_link_libraries(rosflight_firmware PRIVATE Eigen3::Eigen)
-# FIXME: Eigen currently prints a maybe-uninitialized warning for the invert_mixer()
-# function in mixer.cpp and this disables the warning. This warning may be fixed
-# in a future version of Eigen and the flag could be removed.
-target_compile_options(rosflight_firmware PRIVATE -Wno-maybe-uninitialized)
-target_compile_definitions(rosflight_firmware PUBLIC
-  GIT_VERSION_HASH=0x${GIT_VERSION_HASH}
-  GIT_VERSION_STRING=\"${GIT_VERSION_STRING}\"
-)
-ament_export_targets(rosflight_firmwareTargets HAS_LIBRARY_TARGET)
-install(
-  TARGETS rosflight_firmware
-  EXPORT rosflight_firmwareTargets
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
 
 ###################
 ## ROSflight SIL ##
@@ -144,7 +87,7 @@ add_executable(sil_board
 )
 target_include_directories(sil_board PRIVATE include)
 target_link_libraries(sil_board PRIVATE
-  rosflight_firmware
+  rosflight_firmware::rosflight_firmware
   rclcpp::rclcpp
   std_srvs::std_srvs
   sensor_msgs::sensor_msgs

@@ -39,43 +39,24 @@ if(NOT TARGET yaml-cpp::yaml-cpp)
 endif()
 
 # clone firmware submodule if it is missing
-set(FIRMWARE_SUBMODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../rosflight_firmware")
-if(NOT EXISTS "${FIRMWARE_SUBMODULE_DIR}/.git")
-  message(STATUS "Firmware submodule not found at ${FIRMWARE_SUBMODULE_DIR}")
+set(firmware_submodule_dir "${CMAKE_CURRENT_SOURCE_DIR}/../rosflight_firmware")
+if(NOT EXISTS "${firmware_submodule_dir}/.git")
+  message(STATUS "Firmware submodule not found at ${firmware_submodule_dir}")
   execute_process(
     COMMAND git submodule update --init --recursive
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   )
 endif()
 
-set(FIRMWARE_INCLUDE_DIRS
-  ../rosflight_firmware/include/
-  ../rosflight_firmware/include/interface/
-  ../rosflight_firmware/lib/
-  ../rosflight_firmware/comms/
+add_subdirectory(
+  "${firmware_submodule_dir}"
+  "${CMAKE_CURRENT_BINARY_DIR}/rosflight_firmware"
+  EXCLUDE_FROM_ALL  # prevent compilation of unused targets
 )
 
-# Determine ROSflight version
-execute_process(
-  COMMAND git describe --tags --abbrev=8 --always --dirty --long
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  OUTPUT_VARIABLE GIT_VERSION_STRING RESULT_VARIABLE GIT_RESULT
-)
-if(GIT_RESULT EQUAL 0)
-  string(REGEX REPLACE "\n$" "" GIT_VERSION_STRING "${GIT_VERSION_STRING}") # remove trailing newline
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DROSFLIGHT_VERSION=${GIT_VERSION_STRING}")
-else()
-  message("Could not determine rosflight version through git")
-endif()
-
-
-###########
-## Build ##
-###########
-
-include_directories(include
-  ${FIRMWARE_INCLUDE_DIRS}
-)
+###############
+## Libraries ##
+###############
 
 # mavrosflight library
 add_library(mavrosflight
@@ -119,6 +100,7 @@ target_compile_options(rosflight_io PRIVATE -Wno-address-of-packed-member)
 target_link_libraries(rosflight_io PRIVATE
   mavrosflight
   realtime_configurator
+  rosflight_firmware::version
   rclcpp::rclcpp
   geometry_msgs::geometry_msgs
   rosflight_msgs::rosflight_msgs

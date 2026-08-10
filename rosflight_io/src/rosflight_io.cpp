@@ -38,12 +38,6 @@
  * @author Brandon Sutherland <brandonsutherland2\@gmail.com>
  */
 
-#ifdef ROSFLIGHT_VERSION
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x) // Somehow, C++ requires two macros to convert a macro to a string
-#define GIT_VERSION_STRING TOSTRING(ROSFLIGHT_VERSION)
-#endif
-
 #include <rosflight_io/mavrosflight/mavlink_serial.hpp>
 #include <rosflight_io/mavrosflight/mavlink_udp.hpp>
 #include <rosflight_io/mavrosflight/serial_exception.hpp>
