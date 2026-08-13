@@ -1,15 +1,6 @@
 cmake_minimum_required(VERSION 3.20...3.28)
 project(rosflight_io)
 
-if(NOT CMAKE_C_STANDARD)
-  set(CMAKE_C_STANDARD 99)
-endif()
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-endif()
-
-add_compile_options(-Wall)
-
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
 endif()
@@ -21,7 +12,6 @@ find_package(rosflight_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
-find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(message_filters REQUIRED)
 
@@ -38,19 +28,22 @@ if(NOT TARGET yaml-cpp::yaml-cpp)
   )
 endif()
 
-# clone firmware submodule if it is missing
-set(firmware_submodule_dir "${CMAKE_CURRENT_SOURCE_DIR}/../rosflight_firmware")
-if(NOT EXISTS "${firmware_submodule_dir}/.git")
-  message(STATUS "Firmware submodule not found at ${firmware_submodule_dir}")
-  execute_process(
-    COMMAND git submodule update --init --recursive
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+##############
+## Firmware ##
+##############
+
+set(firmware_submodule_dir ${CMAKE_CURRENT_SOURCE_DIR}/../rosflight_firmware)
+if(NOT EXISTS ${firmware_submodule_dir}/.git)
+  message(FATAL_ERROR
+    "Firmware submodule not found at ${firmware_submodule_dir}.\n"
+    "You may need to run `git submodule update --init --recursive` "
+    "inside of rosflight_ros_pkgs."
   )
 endif()
 
 add_subdirectory(
-  "${firmware_submodule_dir}"
-  "${CMAKE_CURRENT_BINARY_DIR}/rosflight_firmware"
+  ${firmware_submodule_dir}
+  ${CMAKE_CURRENT_BINARY_DIR}/rosflight_firmware
   EXCLUDE_FROM_ALL  # prevent compilation of unused targets
 )
 
@@ -58,7 +51,7 @@ add_subdirectory(
 ## Libraries ##
 ###############
 
-# mavrosflight library
+# mavrosflight library (internal to this file - not exported)
 add_library(mavrosflight
   src/mavrosflight/mavrosflight.cpp
   src/mavrosflight/mavlink_comm.cpp
@@ -68,38 +61,53 @@ add_library(mavrosflight
   src/mavrosflight/param.cpp
   src/mavrosflight/time_manager.cpp
 )
-target_compile_options(mavrosflight PRIVATE -Wno-address-of-packed-member)
-target_link_libraries(mavrosflight PRIVATE
-  rclcpp::rclcpp
-  yaml-cpp::yaml-cpp
-  Boost::headers
-  Boost::thread
+add_library(rosflight_io::mavrosflight ALIAS mavrosflight)
+target_compile_features(mavrosflight PUBLIC cxx_std_17)
+target_compile_options(mavrosflight PRIVATE -Wno-address-of-packed-member -Wall)
+target_include_directories(mavrosflight PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:> # intentionally left blank since not exported
+)
+target_link_libraries(mavrosflight
+  PUBLIC
+    rosflight_firmware::mavlink_headers
+    rclcpp::rclcpp
+    Boost::headers
+    Boost::thread
+  PRIVATE
+    yaml-cpp::yaml-cpp
 )
 
-# realtime_configurator library
-add_library(realtime_configurator SHARED
-  src/realtime_configurator.cpp
-)
+# realtime_configurator library (exported)
+add_library(realtime_configurator src/realtime_configurator.cpp)
+add_library(rosflight_io::realtime_configurator ALIAS realtime_configurator)
+target_compile_features(realtime_configurator PUBLIC cxx_std_17)
+target_compile_options(realtime_configurator PRIVATE -Wall)
 target_include_directories(realtime_configurator PUBLIC
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include>"
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
 )
-target_link_libraries(realtime_configurator PRIVATE
+target_link_libraries(realtime_configurator PUBLIC
   rclcpp::rclcpp
   std_msgs::std_msgs
 )
-ament_export_targets(export_realtime_configurator HAS_LIBRARY_TARGET)
 
-# rosflight_io_node
+#################
+## Executables ##
+#################
+
+# rosflight_io node
 add_executable(rosflight_io
   src/rosflight_io_node.cpp
   src/rosflight_io.cpp
   src/magnetometer_calibration.cpp
 )
-target_compile_options(rosflight_io PRIVATE -Wno-address-of-packed-member)
+target_compile_features(rosflight_io PRIVATE cxx_std_17)
+target_compile_options(rosflight_io PRIVATE -Wno-address-of-packed-member -Wall)
+target_include_directories(rosflight_io PRIVATE include)
 target_link_libraries(rosflight_io PRIVATE
-  mavrosflight
-  realtime_configurator
+  rosflight_io::mavrosflight
+  rosflight_io::realtime_configurator
   rosflight_firmware::version
   rclcpp::rclcpp
   geometry_msgs::geometry_msgs
@@ -107,7 +115,6 @@ target_link_libraries(rosflight_io PRIVATE
   sensor_msgs::sensor_msgs
   std_msgs::std_msgs
   std_srvs::std_srvs
-  tf2::tf2
   tf2_geometry_msgs::tf2_geometry_msgs
   Boost::headers
   Eigen3::Eigen
@@ -117,30 +124,60 @@ target_link_libraries(rosflight_io PRIVATE
 ## Install ##
 #############
 
-# Mark executables and libraries for installation
-install(TARGETS mavrosflight rosflight_io
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
+# Headers for exported/public libraries
+install(
+  FILES include/rosflight_io/realtime_configurator.hpp
+  DESTINATION include/${PROJECT_NAME}/rosflight_io
 )
 
-# Mark cpp header files for installation
-install(DIRECTORY include/rosflight_io/mavrosflight/
-  DESTINATION include/${PROJECT_NAME}
-  FILES_MATCHING PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
-)
-
-install(TARGETS realtime_configurator
-  EXPORT export_realtime_configurator
+# Exported/public libraries
+install(
+  TARGETS realtime_configurator
+  EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
 )
 
-install(FILES include/rosflight_io/realtime_configurator.hpp
-  DESTINATION include
+# Private runtime libraries, installed but not exported
+install(
+  TARGETS mavrosflight
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+# C++ nodes/executables
+install(
+  TARGETS rosflight_io
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+##################
+# ROS Finalization
+##################
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # comment the line when a copyright and license is added to all source files
+  set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # comment the line when this package is in a git repo and when
+  # a copyright and license is added to all source files
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
+# Export public libraries
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+
+# Export public cmake package dependencies (not targets)
+ament_export_dependencies(
+  rclcpp
+  std_msgs
+  Boost
+  # asio
 )
 
 ament_package()
