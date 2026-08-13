@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>rosflight_compat</name>
+  <version>2.0.0</version>
+  <description>ROSflight compatibility headers</description>
+
+  <maintainer email="brandonsutherland2@gmail.com">Brandon Sutherland</maintainer>
+
+  <author email="mhaskell9@gmail.com">Mathew Haskell</author>
+
+  <license>BSD</license>
+
+  <url type="website">https://rosflight.org</url>
+  <url type="repository">https://github.com/rosflight/rosflight_ros_pkgs</url>
+  <url type="bugtracker">https://github.com/rosflight/rosflight_ros_pkgs/issues</url>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

@@ -21,6 +21,7 @@ find_package(rclpy REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(rosflight_msgs REQUIRED)
+find_package(rosflight_compat REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Boost CONFIG REQUIRED COMPONENTS thread)
 
@@ -129,6 +130,7 @@ target_link_libraries(rosflight_sil_manager PRIVATE
   rclcpp::rclcpp
   std_srvs::std_srvs
   rosflight_msgs::rosflight_msgs
+  rosflight_compat::compat_headers
 )
 install(
   TARGETS rosflight_sil_manager

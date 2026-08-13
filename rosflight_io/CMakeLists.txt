@@ -29,6 +29,15 @@ find_package(Boost CONFIG REQUIRED COMPONENTS thread)
 find_package(Eigen3 REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
+# Legacy yaml-cpp support for Ubuntu 22.04
+if(NOT TARGET yaml-cpp::yaml-cpp)
+  add_library(yaml-cpp::yaml-cpp INTERFACE IMPORTED)
+  set_target_properties(yaml-cpp::yaml-cpp PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${YAML_CPP_INCLUDE_DIR}"
+    INTERFACE_LINK_LIBRARIES "${YAML_CPP_LIBRARIES}"
+  )
+endif()
+
 # clone firmware submodule if it is missing
 set(FIRMWARE_SUBMODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../rosflight_firmware")
 if(NOT EXISTS "${FIRMWARE_SUBMODULE_DIR}/.git")

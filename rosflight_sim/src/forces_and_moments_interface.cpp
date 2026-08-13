@@ -35,6 +35,8 @@
 
 #include "rosflight_sim/forces_and_moments_interface.hpp"
 
+#include "rosflight_compat/service_client.hpp"
+
 namespace rosflight_sim
 {
 
@@ -66,8 +68,11 @@ ForcesAndMomentsInterface::ForcesAndMomentsInterface()
 
   // Service clients
   client_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  firmware_param_get_client_ = this->create_client<rosflight_msgs::srv::ParamGet>("param_get", rclcpp::ServicesQoS(), client_cb_group_);
-  firmware_check_param_client_ = this->create_client<std_srvs::srv::Trigger>("all_params_received", rclcpp::ServicesQoS(), client_cb_group_);
+  firmware_param_get_client_ =
+    rosflight_compat::create_service_client<rosflight_msgs::srv::ParamGet>(*this, "sil_board/run",
+                                                                           client_cb_group_);
+  firmware_check_param_client_ = rosflight_compat::create_service_client<std_srvs::srv::Trigger>(
+    *this, "all_params_received", client_cb_group_);
 
   // Request mixer values on boot
   do_initialize_parameters_ = true;

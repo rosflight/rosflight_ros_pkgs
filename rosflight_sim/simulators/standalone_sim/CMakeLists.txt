@@ -80,6 +80,7 @@ target_include_directories(multirotor_forces_and_moments PRIVATE
   include
 )
 target_link_libraries(multirotor_forces_and_moments PRIVATE
+rosflight_compat::compat_headers
   rclcpp::rclcpp
   std_srvs::std_srvs
   geometry_msgs::geometry_msgs
@@ -101,6 +102,7 @@ target_include_directories(fixedwing_forces_and_moments PRIVATE
   include
 )
 target_link_libraries(fixedwing_forces_and_moments PRIVATE
+  rosflight_compat::compat_headers
   rclcpp::rclcpp
   std_srvs::std_srvs
   geometry_msgs::geometry_msgs
