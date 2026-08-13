@@ -28,7 +28,7 @@
   <depend>tf2_geometry_msgs</depend>
 
   <!-- system libraries -->
-  <depend>boost</depend>
+  <depend>asio</depend>
   <depend>eigen</depend>
   <depend>yaml-cpp</depend>
 

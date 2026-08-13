@@ -40,14 +40,13 @@
 #include <rosflight_io/mavrosflight/mavlink_bridge.hpp>
 #include <rosflight_io/mavrosflight/mavlink_listener_interface.hpp>
 
-#include <boost/asio.hpp>
-#include <boost/function.hpp>
-#include <boost/thread.hpp>
+#include <asio.hpp>
 
 #include <cstdint>
-#include <iostream>
+#include <functional>
 #include <list>
-#include <string>
+#include <mutex>
+#include <thread>
 #include <vector>
 
 #define MAVLINK_SERIAL_READ_BUF_SIZE 256
@@ -101,14 +100,12 @@ protected:
   virtual bool is_open() = 0;
   virtual void do_open() = 0;
   virtual void do_close() = 0;
-  virtual void
-  do_async_read(const boost::asio::mutable_buffer & buffer,
-                boost::function<void(const boost::system::error_code &, size_t)> handler) = 0;
-  virtual void
-  do_async_write(const boost::asio::const_buffer & buffer,
-                 boost::function<void(const boost::system::error_code &, size_t)> handler) = 0;
+  virtual void do_async_read(const asio::mutable_buffer & buffer,
+                             std::function<void(const asio::error_code &, size_t)> handler) = 0;
+  virtual void do_async_write(const asio::const_buffer & buffer,
+                              std::function<void(const asio::error_code &, size_t)> handler) = 0;
 
-  boost::asio::io_context io_context_; //!< boost io context provider
+  asio::io_context io_context_; //!< asio io context provider
 
 private:
   //===========================================================================
@@ -145,7 +142,7 @@ private:
   /**
    * \brief Convenience typedef for mutex lock
    */
-  typedef boost::lock_guard<boost::recursive_mutex> mutex_lock;
+  typedef std::lock_guard<std::recursive_mutex> mutex_lock;
 
   //===========================================================================
   // methods
@@ -161,7 +158,7 @@ private:
    * \param error Error code
    * \param bytes_transferred Number of bytes received
    */
-  void async_read_end(const boost::system::error_code & error, size_t bytes_transferred);
+  void async_read_end(const asio::error_code & error, size_t bytes_transferred);
 
   /**
    * \brief Initialize an asynchronous write operation
@@ -174,7 +171,7 @@ private:
    * \param error Error code
    * \param bytes_transferred Number of bytes sent
    */
-  void async_write_end(const boost::system::error_code & error, size_t bytes_transferred);
+  void async_write_end(const asio::error_code & error, size_t bytes_transferred);
 
   //===========================================================================
   // member variables
@@ -182,8 +179,8 @@ private:
 
   std::vector<MavlinkListenerInterface *> listeners_; //!< listeners for mavlink messages
 
-  boost::thread io_thread_;      //!< thread on which the io service runs
-  boost::recursive_mutex mutex_; //!< mutex for threadsafe operation
+  std::thread io_thread_;      //!< thread on which the io service runs
+  std::recursive_mutex mutex_; //!< mutex for threadsafe operation
 
   uint8_t read_buf_raw_[MAVLINK_SERIAL_READ_BUF_SIZE];
 

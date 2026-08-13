@@ -15,8 +15,10 @@ find_package(sensor_msgs REQUIRED)
 find_package(rosflight_msgs REQUIRED)
 find_package(rosflight_compat REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(Boost CONFIG REQUIRED COMPONENTS thread)
+find_package(Threads REQUIRED)
 
+# throw error at cmake time rather than build time if libasio-dev not installed
+find_path(asio_INCLUDE_DIR asio.hpp REQUIRED)
 
 ##############
 ## Firmware ##
@@ -104,7 +106,7 @@ target_link_libraries(sil_board PRIVATE
   std_srvs::std_srvs
   sensor_msgs::sensor_msgs
   rosflight_msgs::rosflight_msgs
-  Boost::thread
+  Threads::Threads
 )
 
 # Standalone simulator

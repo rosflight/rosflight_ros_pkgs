@@ -37,9 +37,11 @@
 #include <rosflight_io/mavrosflight/mavlink_serial.hpp>
 #include <rosflight_io/mavrosflight/serial_exception.hpp>
 
+#include <asio.hpp>
+
 namespace mavrosflight
 {
-using boost::asio::serial_port_base;
+using asio::serial_port_base;
 
 MavlinkSerial::MavlinkSerial(std::string port, int baud_rate)
     : MavlinkComm()
@@ -61,23 +63,21 @@ void MavlinkSerial::do_open()
     serial_port_.set_option(serial_port_base::parity(serial_port_base::parity::none));
     serial_port_.set_option(serial_port_base::stop_bits(serial_port_base::stop_bits::one));
     serial_port_.set_option(serial_port_base::flow_control(serial_port_base::flow_control::none));
-  } catch (const boost::system::system_error & e) {
+  } catch (const asio::system_error & e) {
     throw SerialException(e);
   }
 }
 
 void MavlinkSerial::do_close() { serial_port_.close(); }
 
-void MavlinkSerial::do_async_read(
-  const boost::asio::mutable_buffer & buffer,
-  boost::function<void(const boost::system::error_code &, size_t)> handler)
+void MavlinkSerial::do_async_read(const asio::mutable_buffer & buffer,
+                                  std::function<void(const asio::error_code &, size_t)> handler)
 {
   serial_port_.async_read_some(buffer, handler);
 }
 
-void MavlinkSerial::do_async_write(
-  const boost::asio::const_buffer & buffer,
-  boost::function<void(const boost::system::error_code &, size_t)> handler)
+void MavlinkSerial::do_async_write(const asio::const_buffer & buffer,
+                                   std::function<void(const asio::error_code &, size_t)> handler)
 {
   serial_port_.async_write_some(buffer, handler);
 }

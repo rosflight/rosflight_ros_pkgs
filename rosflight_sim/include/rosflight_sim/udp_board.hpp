@@ -38,10 +38,11 @@
 #define ROSFLIGHT_SIM_UDP_BOARD_HPP
 
 #include <list>
+#include <mutex>
 #include <string>
+#include <thread>
 
-#include <boost/asio.hpp>
-#include <boost/thread.hpp>
+#include <asio.hpp>
 
 #include "board.h"
 #include "mavlink_adapter.hpp"
@@ -92,13 +93,13 @@ private:
     bool full() const { return len >= MAVLINK_MAX_PACKET_LEN; }
   };
 
-  typedef boost::lock_guard<boost::recursive_mutex> MutexLock;
+  typedef std::lock_guard<std::recursive_mutex> MutexLock;
 
   void async_read();
-  void async_read_end(const boost::system::error_code & error, size_t bytes_transferred);
+  void async_read_end(const asio::error_code & error, size_t bytes_transferred);
 
   void async_write(bool check_write_state);
-  void async_write_end(const boost::system::error_code & error, size_t bytes_transferred);
+  void async_write_end(const asio::error_code & error, size_t bytes_transferred);
 
   std::string bind_host_;
   uint16_t bind_port_;
@@ -106,15 +107,15 @@ private:
   std::string remote_host_;
   uint16_t remote_port_;
 
-  boost::thread io_thread_;
-  boost::recursive_mutex write_mutex_;
-  boost::recursive_mutex read_mutex_;
+  std::thread io_thread_;
+  std::recursive_mutex write_mutex_;
+  std::recursive_mutex read_mutex_;
 
-  boost::asio::io_context io_context_;
+  asio::io_context io_context_;
 
-  boost::asio::ip::udp::socket socket_;
-  boost::asio::ip::udp::endpoint bind_endpoint_;
-  boost::asio::ip::udp::endpoint remote_endpoint_;
+  asio::ip::udp::socket socket_;
+  asio::ip::udp::endpoint bind_endpoint_;
+  asio::ip::udp::endpoint remote_endpoint_;
 
   uint8_t read_buffer_[MAVLINK_MAX_PACKET_LEN] = {0};
   std::list<Buffer *> read_queue_;

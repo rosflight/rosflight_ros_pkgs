@@ -14,8 +14,7 @@ find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(message_filters REQUIRED)
-
-find_package(Boost CONFIG REQUIRED COMPONENTS thread)
+find_package(Threads REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
@@ -64,6 +63,7 @@ add_library(mavrosflight
 add_library(rosflight_io::mavrosflight ALIAS mavrosflight)
 target_compile_features(mavrosflight PUBLIC cxx_std_17)
 target_compile_options(mavrosflight PRIVATE -Wno-address-of-packed-member -Wall)
+target_compile_definitions(mavrosflight PUBLIC ASIO_STANDALONE)
 target_include_directories(mavrosflight PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:> # intentionally left blank since not exported
@@ -72,10 +72,9 @@ target_link_libraries(mavrosflight
   PUBLIC
     rosflight_firmware::mavlink_headers
     rclcpp::rclcpp
-    Boost::headers
-    Boost::thread
   PRIVATE
     yaml-cpp::yaml-cpp
+    Threads::Threads
 )
 
 # realtime_configurator library (exported)
@@ -87,9 +86,12 @@ target_include_directories(realtime_configurator PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
 )
-target_link_libraries(realtime_configurator PUBLIC
-  rclcpp::rclcpp
-  std_msgs::std_msgs
+target_link_libraries(realtime_configurator
+  PUBLIC
+    rclcpp::rclcpp
+    std_msgs::std_msgs
+  PRIVATE
+    Threads::Threads
 )
 
 #################
@@ -116,7 +118,6 @@ target_link_libraries(rosflight_io PRIVATE
   std_msgs::std_msgs
   std_srvs::std_srvs
   tf2_geometry_msgs::tf2_geometry_msgs
-  Boost::headers
   Eigen3::Eigen
 )
 
@@ -176,8 +177,6 @@ ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(
   rclcpp
   std_msgs
-  Boost
-  # asio
 )
 
 ament_package()

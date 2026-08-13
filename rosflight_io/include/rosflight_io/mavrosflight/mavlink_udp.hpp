@@ -39,9 +39,9 @@
 
 #include <rosflight_io/mavrosflight/mavlink_comm.hpp>
 
-#include <boost/asio.hpp>
-#include <boost/function.hpp>
+#include <asio.hpp>
 
+#include <functional>
 #include <string>
 
 namespace mavrosflight
@@ -72,12 +72,10 @@ private:
   bool is_open() override;
   void do_open() override;
   void do_close() override;
-  void
-  do_async_read(const boost::asio::mutable_buffer & buffer,
-                boost::function<void(const boost::system::error_code &, size_t)> handler) override;
-  void
-  do_async_write(const boost::asio::const_buffer & buffer,
-                 boost::function<void(const boost::system::error_code &, size_t)> handler) override;
+  void do_async_read(const asio::mutable_buffer & buffer,
+                     std::function<void(const asio::error_code &, size_t)> handler) override;
+  void do_async_write(const asio::const_buffer & buffer,
+                      std::function<void(const asio::error_code &, size_t)> handler) override;
 
   //===========================================================================
   // member variables
@@ -89,9 +87,9 @@ private:
   std::string remote_host_;
   uint16_t remote_port_;
 
-  boost::asio::ip::udp::socket socket_;
-  boost::asio::ip::udp::endpoint bind_endpoint_;
-  boost::asio::ip::udp::endpoint remote_endpoint_;
+  asio::ip::udp::socket socket_;
+  asio::ip::udp::endpoint bind_endpoint_;
+  asio::ip::udp::endpoint remote_endpoint_;
 };
 
 } // namespace mavrosflight

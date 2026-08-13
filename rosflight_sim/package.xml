@@ -21,6 +21,8 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
 
+  <build_depend>asio</build_depend>
+
   <depend>rclcpp</depend>
   <depend>rclpy</depend> <!-- for holoocean sim -->
   <depend>ament_index_cpp</depend> <!-- for standalone sim -->

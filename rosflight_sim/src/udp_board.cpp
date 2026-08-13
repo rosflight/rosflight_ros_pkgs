@@ -35,9 +35,10 @@
  */
 
 #include "rosflight_sim/udp_board.hpp"
-#include <boost/asio/io_context.hpp>
 
-using boost::asio::ip::udp;
+#include <asio.hpp>
+
+using asio::ip::udp;
 
 namespace rosflight_sim
 {
@@ -74,10 +75,9 @@ void UDPBoard::set_ports(std::string bind_host, uint16_t bind_port, std::string 
   remote_port_ = remote_port;
 }
 
-void UDPBoard::serial_init(uint32_t baud_rate, uint32_t dev)
+void UDPBoard::serial_init(uint32_t baud_rate, [[maybe_unused]] uint32_t dev)
 {
-  // can throw an uncaught boost::system::system_error exception
-  (void) dev;
+  // can throw an uncaught asio::system_error exception
 
   udp::resolver resolver(io_context_);
 
@@ -95,7 +95,7 @@ void UDPBoard::serial_init(uint32_t baud_rate, uint32_t dev)
   socket_.set_option(udp::socket::receive_buffer_size(1000 * MAVLINK_MAX_PACKET_LEN));
 
   async_read();
-  io_thread_ = boost::thread(boost::bind(&boost::asio::io_context::run, &io_context_));
+  io_thread_ = std::thread([this]() { io_context_.run(); });
 }
 
 void UDPBoard::serial_flush() {}
@@ -144,12 +144,13 @@ void UDPBoard::async_read()
 
   MutexLock lock(read_mutex_);
   socket_.async_receive_from(
-    boost::asio::buffer(read_buffer_, MAVLINK_MAX_PACKET_LEN), remote_endpoint_,
-    boost::bind(&UDPBoard::async_read_end, this, boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred));
+    asio::buffer(read_buffer_, MAVLINK_MAX_PACKET_LEN), remote_endpoint_,
+    [this](const asio::error_code & error, size_t bytes_transferred) {
+      async_read_end(error, bytes_transferred);
+    });
 }
 
-void UDPBoard::async_read_end(const boost::system::error_code & error, size_t bytes_transferred)
+void UDPBoard::async_read_end(const asio::error_code & error, size_t bytes_transferred)
 {
   if (!error) {
     MutexLock lock(read_mutex_);
@@ -171,13 +172,13 @@ void UDPBoard::async_write(bool check_write_state)
 
   write_in_progress_ = true;
   Buffer * buffer = write_queue_.front();
-  socket_.async_send_to(boost::asio::buffer(buffer->dpos(), buffer->nbytes()), remote_endpoint_,
-                        boost::bind(&UDPBoard::async_write_end, this,
-                                    boost::asio::placeholders::error,
-                                    boost::asio::placeholders::bytes_transferred));
+  socket_.async_send_to(asio::buffer(buffer->dpos(), buffer->nbytes()), remote_endpoint_,
+                        [this](const asio::error_code & error, size_t bytes_transferred) {
+                          async_write_end(error, bytes_transferred);
+                        });
 }
 
-void UDPBoard::async_write_end(const boost::system::error_code & error, size_t bytes_transferred)
+void UDPBoard::async_write_end(const asio::error_code & error, size_t bytes_transferred)
 {
   if (!error) {
     MutexLock lock(write_mutex_);
