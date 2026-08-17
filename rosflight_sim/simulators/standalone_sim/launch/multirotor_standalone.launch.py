@@ -93,6 +93,7 @@ def generate_launch_description():
     return LaunchDescription(
         [
             use_sim_time_arg,
+            simulator_launch,
             use_vimfly_arg,
             common_nodes_launch,
             mr_forces_moments_node,
