@@ -41,7 +41,7 @@ namespace mavrosflight
 using boost::asio::serial_port_base;
 
 MavlinkComm::MavlinkComm()
-    : io_service_()
+    : io_context_()
     , read_buf_raw_()
     , msg_in_()
     , status_in_()
@@ -57,14 +57,14 @@ void MavlinkComm::open()
 
   // start reading from the port
   async_read();
-  io_thread_ = boost::thread(boost::bind(&boost::asio::io_service::run, &this->io_service_));
+  io_thread_ = boost::thread(boost::bind(&boost::asio::io_context::run, &this->io_context_));
 }
 
 void MavlinkComm::close()
 {
   mutex_lock lock(mutex_);
 
-  io_service_.stop();
+  io_context_.stop();
   do_close();
 
   if (io_thread_.joinable()) {

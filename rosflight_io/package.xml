@@ -20,7 +20,6 @@
 
   <!-- ROS packages -->
   <depend>rclcpp</depend>
-  <depend>eigen_stl_containers</depend>
   <depend>geometry_msgs</depend>
   <depend>rosflight_msgs</depend>
   <depend>sensor_msgs</depend>
@@ -36,7 +35,6 @@
   <depend>yaml-cpp</depend>
 
   <build_depend>git</build_depend>
-  <build_depend>pkg-config</build_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -44,7 +44,7 @@
 #include <boost/thread.hpp>
 
 #include "board.h"
-#include "mavlink/mavlink.h"
+#include "mavlink.h"
 
 namespace rosflight_sim
 {
@@ -110,7 +110,7 @@ private:
   boost::recursive_mutex write_mutex_;
   boost::recursive_mutex read_mutex_;
 
-  boost::asio::io_service io_service_;
+  boost::asio::io_context io_context_;
 
   boost::asio::ip::udp::socket socket_;
   boost::asio::ip::udp::endpoint bind_endpoint_;

@@ -35,6 +35,7 @@
  */
 
 #include "rosflight_sim/udp_board.hpp"
+#include <boost/asio/io_context.hpp>
 
 using boost::asio::ip::udp;
 
@@ -46,8 +47,8 @@ UDPBoard::UDPBoard(std::string bind_host, uint16_t bind_port, std::string remote
     , bind_port_(bind_port)
     , remote_host_(std::move(remote_host))
     , remote_port_(remote_port)
-    , io_service_()
-    , socket_(io_service_)
+    , io_context_()
+    , socket_(io_context_)
     , write_in_progress_(false)
 {}
 
@@ -56,7 +57,7 @@ UDPBoard::~UDPBoard()
   MutexLock read_lock(read_mutex_);
   MutexLock write_lock(write_mutex_);
 
-  io_service_.stop();
+  io_context_.stop();
   socket_.close();
 
   if (io_thread_.joinable()) {
@@ -78,12 +79,12 @@ void UDPBoard::serial_init(uint32_t baud_rate, uint32_t dev)
   // can throw an uncaught boost::system::system_error exception
   (void) dev;
 
-  udp::resolver resolver(io_service_);
+  udp::resolver resolver(io_context_);
 
-  bind_endpoint_ = *resolver.resolve({udp::v4(), bind_host_, ""});
+  bind_endpoint_ = resolver.resolve(udp::v4(), bind_host_, "").begin()->endpoint();
   bind_endpoint_.port(bind_port_);
 
-  remote_endpoint_ = *resolver.resolve({udp::v4(), remote_host_, ""});
+  remote_endpoint_ = resolver.resolve(udp::v4(), remote_host_, "").begin()->endpoint();
   remote_endpoint_.port(remote_port_);
 
   socket_.open(udp::v4());
@@ -94,7 +95,7 @@ void UDPBoard::serial_init(uint32_t baud_rate, uint32_t dev)
   socket_.set_option(udp::socket::receive_buffer_size(1000 * MAVLINK_MAX_PACKET_LEN));
 
   async_read();
-  io_thread_ = boost::thread(boost::bind(&boost::asio::io_service::run, &io_service_));
+  io_thread_ = boost::thread(boost::bind(&boost::asio::io_context::run, &io_context_));
 }
 
 void UDPBoard::serial_flush() {}

@@ -74,7 +74,7 @@ private:
    * \brief Initiate an asynchronous read operation
    */
   void
-  do_async_read(const boost::asio::mutable_buffers_1 & buffer,
+  do_async_read(const boost::asio::mutable_buffer & buffer,
                 boost::function<void(const boost::system::error_code &, size_t)> handler) override;
 
   /**
@@ -82,7 +82,7 @@ private:
    * \param check_write_state If true, only start another write operation if a write sequence is not already running
    */
   void
-  do_async_write(const boost::asio::const_buffers_1 & buffer,
+  do_async_write(const boost::asio::const_buffer & buffer,
                  boost::function<void(const boost::system::error_code &, size_t)> handler) override;
 
   //===========================================================================

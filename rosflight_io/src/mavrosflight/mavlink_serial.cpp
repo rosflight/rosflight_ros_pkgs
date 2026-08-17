@@ -43,7 +43,7 @@ using boost::asio::serial_port_base;
 
 MavlinkSerial::MavlinkSerial(std::string port, int baud_rate)
     : MavlinkComm()
-    , serial_port_(io_service_)
+    , serial_port_(io_context_)
     , port_(std::move(port))
     , baud_rate_(baud_rate)
 {}
@@ -69,14 +69,14 @@ void MavlinkSerial::do_open()
 void MavlinkSerial::do_close() { serial_port_.close(); }
 
 void MavlinkSerial::do_async_read(
-  const boost::asio::mutable_buffers_1 & buffer,
+  const boost::asio::mutable_buffer & buffer,
   boost::function<void(const boost::system::error_code &, size_t)> handler)
 {
   serial_port_.async_read_some(buffer, handler);
 }
 
 void MavlinkSerial::do_async_write(
-  const boost::asio::const_buffers_1 & buffer,
+  const boost::asio::const_buffer & buffer,
   boost::function<void(const boost::system::error_code &, size_t)> handler)
 {
   serial_port_.async_write_some(buffer, handler);

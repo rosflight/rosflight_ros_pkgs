@@ -1,7 +1,5 @@
 /*
- * Software License Agreement (BSD-3 License)
- *
- * Copyright (c) 2024 Jacob Moore
+ * Copyright (c) 2026 BYU MAGICC Lab.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,50 +29,47 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef STANDALONE_VIZ_TRANSCRIBER_HPP
-#define STANDALONE_VIZ_TRANSCRIBER_HPP
+/*
+ * This file was created to provide backwards compatiblitiy for ROS 2 Humble.
+ * Humble uses deprecated C types (rmw_qos_profile_services_default) while
+ * later versions of ROS 2 migrated to C++ types: ServicesQoS().
+ *
+ * TODO: Once Humble is not longer supported, this compatiblitiy layer can be
+ * deleted and all files using it should change to create the clients directly
+ * using the modern ServicesQoS() type.
+ */
 
-#include <vector>
+#ifndef ROSFLIGHT_COMPAT_SERVICE_CLIENT_HPP
+#define ROSFLIGHT_COMPAT_SERVICE_CLIENT_HPP
 
 #include <rclcpp/rclcpp.hpp>
-#include <tf2_ros/transform_broadcaster.hpp>
-#include <visualization_msgs/msg/marker.hpp>
+#include <rclcpp/version.h>
+#include <rmw/qos_profiles.h>
 
-#include "rosflight_msgs/msg/sim_state.hpp"
-
-namespace rosflight_sim
+namespace rosflight_compat
 {
 
-class StandaloneVizTranscriber : public rclcpp::Node
+template<typename ServiceT>
+typename rclcpp::Client<ServiceT>::SharedPtr create_service_client(
+  rclcpp::Node & node,
+  const std::string & service_name,
+  rclcpp::CallbackGroup::SharedPtr callback_group)
 {
-public:
-  StandaloneVizTranscriber();
-
-private:
-  rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr rviz_mesh_pub_;
-  rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr rviz_aircraft_path_pub_;
-  rclcpp::Subscription<rosflight_msgs::msg::SimState>::SharedPtr vehicle_state_sub_;
-
-  std::unique_ptr<tf2_ros::TransformBroadcaster> aircraft_tf2_broadcaster_;
-
-  OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
-  rcl_interfaces::msg::SetParametersResult parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
-  void declare_parameters();
-
-  void initialize_aircraft_marker();
-  void state_update_callback(const rosflight_msgs::msg::SimState & state);
-  void update_mesh();
-  void update_aircraft_history();
-
-  rosflight_msgs::msg::SimState vehicle_state_;
-
-  // Persistent rviz markers
-  visualization_msgs::msg::Marker aircraft_;
-  visualization_msgs::msg::Marker aircraft_history_;
-
-  int i_;
-};
-
-} // namespace rosflight_sim
-
+#if RCLCPP_VERSION_MAJOR < 21
+  // legacy version for ROS 2 Humble on Ubuntu 22.04
+  return node.create_client<ServiceT>(
+    service_name,
+    rmw_qos_profile_services_default,
+    callback_group);
+#else
+  // modern version
+  return node.create_client<ServiceT>(
+    service_name,
+    rclcpp::ServicesQoS(),
+    callback_group);
 #endif
+}
+
+}  // namespace rosflight_compat
+
+#endif // ROSFLIGHT_COMPAT_SERVICE_CLIENT_HPP

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.20...3.28)
 project(rosflight_gcs)
 
 if(NOT CMAKE_C_STANDARD)
@@ -12,7 +12,7 @@ add_compile_options(-Wall)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
-endif(NOT CMAKE_BUILD_TYPE)
+endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -23,24 +23,18 @@ find_package(visualization_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
-include_directories(include
-  ${ament_INCLUDE_DIRS}
-  ${rclcpp_INCLUDE_DIRS}
-)
+include_directories(include)
 
 # viz executable
 add_executable(viz src/viz.cpp)
-target_link_libraries(viz
-  ${rclcpp_LIBRARIES}
-  ${ament_LIBRARIES}
-)
-ament_target_dependencies(viz
-  geometry_msgs
-  rosflight_msgs
-  sensor_msgs
-  tf2
-  tf2_geometry_msgs
-  visualization_msgs
+target_link_libraries(viz PRIVATE
+  rclcpp::rclcpp
+  geometry_msgs::geometry_msgs
+  rosflight_msgs::rosflight_msgs
+  sensor_msgs::sensor_msgs
+  tf2::tf2
+  tf2_geometry_msgs::tf2_geometry_msgs
+  visualization_msgs::visualization_msgs
 )
 
 # Install header files

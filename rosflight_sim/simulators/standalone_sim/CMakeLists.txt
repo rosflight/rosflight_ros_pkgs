@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.20...3.28)
 # Don't define own project -- use parent instead
 
 if(NOT CMAKE_C_STANDARD)
@@ -28,117 +28,141 @@ find_package(tf2_ros REQUIRED)
 find_package(visualization_msgs REQUIRED)
 
 # Rosflight Standalone sim
-add_executable(standalone_viz_transcriber
-  src/standalone_viz_transcriber.cpp)
-target_include_directories(standalone_viz_transcriber
-  PRIVATE
-    include)
-ament_target_dependencies(standalone_viz_transcriber
-  ament_index_cpp
-  geometry_msgs
-  rclcpp
-  rosflight_msgs
-  tf2
-  tf2_ros
-  visualization_msgs)
+add_executable(standalone_viz_transcriber src/standalone_viz_transcriber.cpp)
+target_include_directories(standalone_viz_transcriber PRIVATE include)
+target_link_libraries(standalone_viz_transcriber PRIVATE
+  ament_index_cpp::ament_index_cpp
+  rclcpp::rclcpp
+  geometry_msgs::geometry_msgs
+  rosflight_msgs::rosflight_msgs
+  tf2::tf2
+  tf2_ros::tf2_ros
+  tf2_geometry_msgs::tf2_geometry_msgs
+  visualization_msgs::visualization_msgs
+)
 ament_export_dependencies(rclcpp
   tf2
   tf2_ros
   geometry_msgs
   rosflight_msgs
-  visualization_msgs)
+  visualization_msgs
+)
 install(
   TARGETS standalone_viz_transcriber
-  DESTINATION lib/${PROJECT_NAME})
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # Time Manager
 add_executable(standalone_time_manager
   ../../src/time_manager_interface.cpp
-  src/standalone_time_manager.cpp)
-target_include_directories(standalone_time_manager
-  PRIVATE
-    ../../include
-    include)
-ament_target_dependencies(standalone_time_manager rclcpp std_srvs)
+  src/standalone_time_manager.cpp
+)
+target_include_directories(standalone_time_manager PRIVATE
+  ../../include
+  include
+)
+target_link_libraries(standalone_time_manager PRIVATE
+  rclcpp::rclcpp
+  std_srvs::std_srvs
+)
 install(
   TARGETS standalone_time_manager
-  DESTINATION lib/${PROJECT_NAME})
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # Multirotor Forces And Moments
 add_executable(multirotor_forces_and_moments
   ../../src/forces_and_moments_interface.cpp
-  src/multirotor_forces_and_moments.cpp)
-target_include_directories(multirotor_forces_and_moments
-  PRIVATE
-    ../../include
-    include)
-target_link_libraries(multirotor_forces_and_moments Eigen3::Eigen)
-ament_target_dependencies(multirotor_forces_and_moments
-  rclcpp
-  std_srvs
-  geometry_msgs
-  rosflight_msgs)
+  src/multirotor_forces_and_moments.cpp
+)
+target_include_directories(multirotor_forces_and_moments PRIVATE
+  ../../include
+  include
+)
+target_link_libraries(multirotor_forces_and_moments PRIVATE
+rosflight_compat::compat_headers
+  rclcpp::rclcpp
+  std_srvs::std_srvs
+  geometry_msgs::geometry_msgs
+  rosflight_msgs::rosflight_msgs
+  Eigen3::Eigen
+)
 install(
   TARGETS multirotor_forces_and_moments
-  DESTINATION lib/${PROJECT_NAME})
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # FixedWing Forces And Moments
 add_executable(fixedwing_forces_and_moments
   ../../src/forces_and_moments_interface.cpp
-  src/fixedwing_forces_and_moments.cpp)
-target_include_directories(fixedwing_forces_and_moments
-  PRIVATE
-    ../../include
-    include)
-target_link_libraries(fixedwing_forces_and_moments Eigen3::Eigen)
-ament_target_dependencies(fixedwing_forces_and_moments
-  rclcpp
-  std_srvs
-  geometry_msgs
-  rosflight_msgs)
+  src/fixedwing_forces_and_moments.cpp
+)
+target_include_directories(fixedwing_forces_and_moments PRIVATE
+  ../../include
+  include
+)
+target_link_libraries(fixedwing_forces_and_moments PRIVATE
+  rosflight_compat::compat_headers
+  rclcpp::rclcpp
+  std_srvs::std_srvs
+  geometry_msgs::geometry_msgs
+  rosflight_msgs::rosflight_msgs
+  Eigen3::Eigen
+)
 install(
   TARGETS fixedwing_forces_and_moments
-  DESTINATION lib/${PROJECT_NAME})
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # Standalone Sensors
 add_executable(standalone_sensors
   ../../src/sensor_interface.cpp
-  src/standalone_sensors.cpp)
-target_include_directories(standalone_sensors
-  PRIVATE
-    include
-    simulators/standalone_sim/include)
-target_link_libraries(standalone_sensors Eigen3::Eigen)
-ament_target_dependencies(standalone_sensors rclcpp sensor_msgs rosflight_msgs geometry_msgs)
+  src/standalone_sensors.cpp
+)
+target_include_directories(standalone_sensors PRIVATE
+  include
+  simulators/standalone_sim/include
+)
+target_link_libraries(standalone_sensors PRIVATE
+  rclcpp::rclcpp
+  sensor_msgs::sensor_msgs
+  rosflight_msgs::rosflight_msgs
+  geometry_msgs::geometry_msgs
+  Eigen3::Eigen
+)
 install(
   TARGETS standalone_sensors
-  DESTINATION lib/${PROJECT_NAME})
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # Dynamics
 add_executable(standalone_dynamics
   ../../src/dynamics_interface.cpp
-  src/standalone_dynamics.cpp)
-target_include_directories(standalone_dynamics
-  PRIVATE
-    ../../include
-    include)
-target_link_libraries(standalone_dynamics
-  Eigen3::Eigen)
-ament_target_dependencies(standalone_dynamics
-  geometry_msgs
-  tf2_geometry_msgs
-  std_srvs
-  rclcpp
-  rosflight_msgs)
+  src/standalone_dynamics.cpp
+)
+target_include_directories(standalone_dynamics PRIVATE
+  ../../include
+  include
+)
+target_link_libraries(standalone_dynamics PRIVATE
+  rclcpp::rclcpp
+  rosflight_msgs::rosflight_msgs
+  geometry_msgs::geometry_msgs
+  tf2_geometry_msgs::tf2_geometry_msgs
+  std_srvs::std_srvs
+  Eigen3::Eigen
+)
 ament_export_dependencies(standalone_dynamics
   geometry_msgs
   tf2_geometry_msgs
   std_srvs
   rclcpp
-  rosflight_msgs)
+  rosflight_msgs
+)
 install(
   TARGETS standalone_dynamics
-  DESTINATION lib/${PROJECT_NAME})
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 
 # Other install
