@@ -5,8 +5,11 @@ services:
       context: ../../..
       dockerfile: src/rosflight_ros_pkgs/docker/Dockerfile
       args:
-        - ROS_DISTRO=humble
+        - ROS_DISTRO=${ROS_DISTRO:-lyrical}
         - HOST_UID=${HOST_UID:-1000}
+        - USER_SHELL=${USER_SHELL:-/usr/bin/bash}
+        # Uncomment the next line when building on an ARM64 device (e.g., Raspberry Pi). Keep ROS_IMAGE's tag consistent with ROS_DISTRO above.
+        # - ROS_IMAGE=arm64v8/ros:humble-ros-base
 
     # Enable interactive shell
     stdin_open: true

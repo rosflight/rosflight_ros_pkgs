@@ -6,11 +6,10 @@ Last Modified: June 28, 2023
 Description: ROS2 launch file used to launch attitude Rviz visualization.
 """
 
-from ament_index_python import get_package_share_directory
-
 from launch import LaunchDescription
 from launch.actions import GroupAction
 from launch.substitutions import PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node, PushRosNamespace
 
 
@@ -19,7 +18,7 @@ def generate_launch_description():
 
     # Get rviz config filepath
     rviz2_config_file = PathJoinSubstitution(
-        [get_package_share_directory('rosflight_gcs'), 'rviz', 'viz_att.rviz']
+        [FindPackageShare('rosflight_gcs'), 'rviz', 'viz_att.rviz']
     )
 
     # Launch rviz

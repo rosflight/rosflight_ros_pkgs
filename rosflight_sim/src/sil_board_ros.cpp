@@ -77,8 +77,9 @@ void SILBoardROS::initialize_members()
   firmware_->init();
 }
 
-bool SILBoardROS::run_firmware(const std_srvs::srv::Trigger::Request::SharedPtr & req,  
-                               const std_srvs::srv::Trigger::Response::SharedPtr & res)
+bool SILBoardROS::run_firmware(
+  [[maybe_unused]] const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  const std_srvs::srv::Trigger::Response::SharedPtr & res)
 {
   if (!is_initialized_) {
     initialize_members();

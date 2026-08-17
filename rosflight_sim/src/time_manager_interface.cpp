@@ -120,8 +120,9 @@ void TimeManagerInterface::publish_sim_time()
   sim_time_pubber_->publish(now);
 }
 
-bool TimeManagerInterface::toggle_pause_callback(const std_srvs::srv::Trigger::Request::SharedPtr & req,
-                                                 const std_srvs::srv::Trigger::Response::SharedPtr & res)
+bool TimeManagerInterface::toggle_pause_callback(
+  [[maybe_unused]] const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  const std_srvs::srv::Trigger::Response::SharedPtr & res)
 {
   if (is_paused_) {
     // Unpause and restart the timer to continue publishing time information
@@ -138,6 +139,7 @@ bool TimeManagerInterface::toggle_pause_callback(const std_srvs::srv::Trigger::R
     RCLCPP_INFO_STREAM(this->get_logger(), "Timer is paused!");
   }
 
+  res->success = true;
   return true;
 }
 

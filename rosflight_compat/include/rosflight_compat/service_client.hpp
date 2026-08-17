@@ -1,8 +1,5 @@
 /*
- * Software License Agreement (BSD-3 License)
- *
- * Copyright (c) 2017 Daniel Koch, James Jackson and Gary Ellingson, BYU MAGICC Lab.
- * Copyright (c) 2023 Brandon Sutherland, AeroVironment Inc.
+ * Copyright (c) 2026 BYU MAGICC Lab.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,38 +29,47 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ROSFLIGHT_SIM_GAZEBO_DYNAMICS_H
-#define ROSFLIGHT_SIM_GAZEBO_DYNAMICS_H
+/*
+ * This file was created to provide backwards compatiblitiy for ROS 2 Humble.
+ * Humble uses deprecated C types (rmw_qos_profile_services_default) while
+ * later versions of ROS 2 migrated to C++ types: ServicesQoS().
+ *
+ * TODO: Once Humble is not longer supported, this compatiblitiy layer can be
+ * deleted and all files using it should change to create the clients directly
+ * using the modern ServicesQoS() type.
+ */
 
-#include <gazebo/common/Plugin.hh>
-#include <gazebo/common/common.hh>
-#include <gazebo/gazebo.hh>
-#include <gazebo/physics/physics.hh>
-#include <gazebo_ros/node.hpp>
+#ifndef ROSFLIGHT_COMPAT_SERVICE_CLIENT_HPP
+#define ROSFLIGHT_COMPAT_SERVICE_CLIENT_HPP
 
-#include "gz_compat.hpp"
-#include "rosflight_msgs/msg/sim_state.hpp"
-#include "rosflight_sim/dynamics_interface.hpp"
-// #include "gazebo_dynamics_plugin.hpp"
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp/version.h>
+#include <rmw/qos_profiles.h>
 
-namespace rosflight_sim
+namespace rosflight_compat
 {
 
-class GazeboDynamics : public DynamicsInterface
+template<typename ServiceT>
+typename rclcpp::Client<ServiceT>::SharedPtr create_service_client(
+  rclcpp::Node & node,
+  const std::string & service_name,
+  rclcpp::CallbackGroup::SharedPtr callback_group)
 {
-public:
-  GazeboDynamics(gazebo::physics::LinkPtr link_, std::string link_name);
+#if RCLCPP_VERSION_MAJOR < 21
+  // legacy version for ROS 2 Humble on Ubuntu 22.04
+  return node.create_client<ServiceT>(
+    service_name,
+    rmw_qos_profile_services_default,
+    callback_group);
+#else
+  // modern version
+  return node.create_client<ServiceT>(
+    service_name,
+    rclcpp::ServicesQoS(),
+    callback_group);
+#endif
+}
 
-private:
-  void apply_forces_and_torques(const geometry_msgs::msg::WrenchStamped & forces_torques) override;
-  rosflight_msgs::msg::SimState compute_truth() override;
-  geometry_msgs::msg::Vector3Stamped compute_wind_truth() override;
-  bool set_sim_state(const rosflight_msgs::msg::SimState state) override;
+}  // namespace rosflight_compat
 
-  gazebo::physics::LinkPtr link_;
-  std::string link_name_;
-};
-
-} // namespace rosflight_sim
-
-#endif // ROSFLIGHT_SIM_GAZEBO_DYNAMICS_H
+#endif // ROSFLIGHT_COMPAT_SERVICE_CLIENT_HPP

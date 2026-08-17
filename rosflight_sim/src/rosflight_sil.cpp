@@ -34,6 +34,8 @@
 
 #include <chrono>
 
+#include "rosflight_compat/service_client.hpp"
+
 #include "rosflight_sim/rosflight_sil.hpp"
 
 using namespace std::chrono_literals;
@@ -55,7 +57,8 @@ ROSflightSIL::ROSflightSIL()
 
   // Initialize the service clients that will be used
   client_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  firmware_run_client_ = this->create_client<std_srvs::srv::Trigger>("sil_board/run", rmw_qos_profile_services_default, client_cb_group_);
+  firmware_run_client_ = rosflight_compat::create_service_client<std_srvs::srv::Trigger>(
+    *this, "sil_board/run", client_cb_group_);
 
   // Initialize the timer if the parameter is set to be so
   if (this->get_parameter("use_timer").as_bool()) {
@@ -101,8 +104,9 @@ void ROSflightSIL::reset_timers()
   }
 }
 
-bool ROSflightSIL::iterate_simulation(const std_srvs::srv::Trigger::Request::SharedPtr & req,
-                                      const std_srvs::srv::Trigger::Response::SharedPtr & res)
+bool ROSflightSIL::iterate_simulation(
+  [[maybe_unused]] const std_srvs::srv::Trigger::Request::SharedPtr & req,
+  const std_srvs::srv::Trigger::Response::SharedPtr & res)
 {
   res->success = call_firmware();
 

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.20...3.28)
 project(rosflight_msgs)
 
 if(NOT CMAKE_C_STANDARD)
@@ -10,7 +10,7 @@ endif()
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
-endif(NOT CMAKE_BUILD_TYPE)
+endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
@@ -35,7 +35,7 @@ set(msg_files
   "msg/RGBCamera.msg"
   "msg/Status.msg"
   "msg/SimState.msg"
-  )
+)
 
 # declare the service files to generate code for
 set(srv_files
@@ -43,7 +43,7 @@ set(srv_files
   "srv/ParamGet.srv"
   "srv/ParamSet.srv"
   "srv/SetSimState.srv"
-  )
+)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}
@@ -52,7 +52,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   builtin_interfaces
   geometry_msgs
   std_msgs
-  )
+)
 
 ament_export_dependencies(rosidl_default_runtime)
 

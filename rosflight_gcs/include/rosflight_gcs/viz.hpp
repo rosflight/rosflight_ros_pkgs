@@ -42,7 +42,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rosflight_msgs/msg/attitude.hpp>
 #include <sensor_msgs/msg/magnetic_field.hpp>
-#include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 

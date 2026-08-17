@@ -36,8 +36,9 @@ This package contains plugins that can be used within rqt for tuning or ground s
 
 ### rosflight_sim
 
-This package contains files for running ROSflight in the Gazebo simulator. It has a SIL board implementation, forces and 
+This package contains files for running the ROSflight simulator. It has a SIL board implementation, forces and 
 moments calculations for both fixedwing and multirotors, launch files for launching the sim, and model and world files 
-for the Gazebo visualization. Dynamics for both multirotors and fixedwings can be modified in the .yaml files found in 
+for the RViz visualization. Dynamics for both multirotors and fixedwings can be modified in the .yaml files found in 
 the `rosflight_sim/params` folder.
 
+To use another vizualizer or simulator you can follow the insturctions in [here](rosflight_sim/simulators/README.md)
