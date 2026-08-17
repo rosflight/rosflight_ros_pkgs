@@ -6,12 +6,12 @@ SCRIPTPATH=`dirname $SCRIPT`
 cd $SCRIPTPATH
 
 # format c/c++ code
-find . \( -path "./.git" -o -path "./rosflight_firmware/" \) -prune \
+find . \( -path "./.git" -o -path "./rosflight_firmware" \) -prune \
   -o \( -iname "*.h" -o -iname "*.hpp" -o -iname "*.cpp" -o -iname "*.c" \) -print \
   | xargs clang-format -i --verbose -style=file
 
 # organize python imports
-ruff check . --select I --fix
+ruff check . --select I --fix --exclude rosflight_firmware
 
 # format python code
-ruff format
+ruff format --exclude rosflight_firmware
