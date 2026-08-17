@@ -7,9 +7,11 @@
     gyro_stdev: 0.0226
     gyro_bias_range: 0.25
     gyro_bias_walk_stdev: 0.00001
+    k_gyro: 20.0
     acc_stdev: 0.2
     acc_bias_range: 0.6
     acc_bias_walk_stdev: 0.00001
+    k_acc: 20.0
     mag_stdev: 0.000003 # from nano tesla to tesla
     k_mag: 7.0
     inclination: 1.139436457
@@ -18,9 +20,11 @@
     baro_stdev: 4.0
     baro_bias_range: 500.0
     baro_bias_walk_stdev: 0.1
+    k_baro: 0.01
     airspeed_stdev: 1.15
     airspeed_bias_range: 0.15
     airspeed_bias_walk_stdev: 0.001
+    k_airspeed: 0.01
     range_stdev: 0.03
     range_min_range: 0.25
     range_max_range: 8.0
