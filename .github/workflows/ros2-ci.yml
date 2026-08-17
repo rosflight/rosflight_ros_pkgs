@@ -26,6 +26,9 @@ jobs:
           - ros_distro: 'jazzy'
             os: ubuntu-24.04
             container: osrf/ros:jazzy-desktop
+          - ros_distro: 'lyrical'
+            os: ubuntu-26.04
+            container: osrf/ros:lyrical-desktop
     defaults:
       run:
         shell: bash
