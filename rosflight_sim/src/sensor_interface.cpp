@@ -50,7 +50,8 @@ SensorInterface::SensorInterface()
   status_sub_ = this->create_subscription<rosflight_msgs::msg::Status>(
     "status", 1, std::bind(&SensorInterface::status_callback, this, std::placeholders::_1));
   state_sub_ = this->create_subscription<rosflight_msgs::msg::SimState>(
-    "sim/truth_state", 1, std::bind(&SensorInterface::sim_state_callback, this, std::placeholders::_1));
+    "sim/truth_state", 1,
+    std::bind(&SensorInterface::sim_state_callback, this, std::placeholders::_1));
   wind_sub_ = this->create_subscription<geometry_msgs::msg::Vector3Stamped>(
     "sim/truth_wind", 1, std::bind(&SensorInterface::wind_callback, this, std::placeholders::_1));
   forces_sub_ = this->create_subscription<geometry_msgs::msg::WrenchStamped>(
@@ -284,7 +285,7 @@ void SensorInterface::imu_publish()
 
   sensor_msgs::msg::Temperature temp_msg = imu_temperature_update(current_state_);
   imu_temperature_pub_->publish(temp_msg);
-  
+
   sensor_msgs::msg::Imu bias_msg = get_imu_biases();
   imu_bias_pub_->publish(bias_msg);
 }

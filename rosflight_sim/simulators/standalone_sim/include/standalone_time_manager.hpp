@@ -45,7 +45,7 @@ public:
   StandaloneTimeManager();
 
 private:
-  // Persistent variables 
+  // Persistent variables
   unsigned long int seconds_;
   unsigned int nanoseconds_;
 
@@ -54,7 +54,6 @@ private:
   unsigned int get_nanoseconds() override { return nanoseconds_; }
 };
 
-}   // rosflight_sim
+} // namespace rosflight_sim
 
-#endif    // ROSFLIGHT_SIM_STANDALONE_TIME_MANAGER_H
-
+#endif // ROSFLIGHT_SIM_STANDALONE_TIME_MANAGER_H

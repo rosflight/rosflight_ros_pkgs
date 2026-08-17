@@ -61,11 +61,11 @@ void Viz::magCallback(const sensor_msgs::msg::MagneticField::ConstSharedPtr & ms
 {
   if (mag_throttle_ > mag_skip_) {
     // unpack message
-    
+
     float SCALING_FACTOR = 100'000.; // To make the changes appear.
-    double x = msg->magnetic_field.x*SCALING_FACTOR;
-    double y = msg->magnetic_field.y*SCALING_FACTOR;
-    double z = msg->magnetic_field.z*SCALING_FACTOR;
+    double x = msg->magnetic_field.x * SCALING_FACTOR;
+    double y = msg->magnetic_field.y * SCALING_FACTOR;
+    double z = msg->magnetic_field.z * SCALING_FACTOR;
 
     // get euler angles from vector (assume no roll)
     double yaw = atan2(y, x);

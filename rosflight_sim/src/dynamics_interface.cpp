@@ -54,7 +54,8 @@ DynamicsInterface::DynamicsInterface()
   // Initialize service server
   set_sim_state_srvs_ = this->create_service<rosflight_msgs::srv::SetSimState>(
     "dynamics/set_sim_state",
-    std::bind(&DynamicsInterface::set_sim_state_callback, this, std::placeholders::_1, std::placeholders::_2));
+    std::bind(&DynamicsInterface::set_sim_state_callback, this, std::placeholders::_1,
+              std::placeholders::_2));
 }
 
 void DynamicsInterface::declare_parameters()
@@ -77,8 +78,8 @@ void DynamicsInterface::forces_callback(const geometry_msgs::msg::WrenchStamped 
   apply_forces_and_torques(msg);
 
   // Compute truth state
-  // TODO: This should probably be on a different timer than the output from the board. 
-  // A zero-order-hold would be more realistic. Perhaps we put a timer in the forces and moments that 
+  // TODO: This should probably be on a different timer than the output from the board.
+  // A zero-order-hold would be more realistic. Perhaps we put a timer in the forces and moments that
   // controls how fast propagation happens.
   rosflight_msgs::msg::SimState truth = compute_truth();
   truth.header.stamp = this->get_clock()->now();
@@ -91,8 +92,9 @@ void DynamicsInterface::forces_callback(const geometry_msgs::msg::WrenchStamped 
   wind_truth_pub_->publish(wind_truth);
 }
 
-bool DynamicsInterface::set_sim_state_callback(const rosflight_msgs::srv::SetSimState::Request::SharedPtr req,
-                                               const rosflight_msgs::srv::SetSimState::Response::SharedPtr res)
+bool DynamicsInterface::set_sim_state_callback(
+  const rosflight_msgs::srv::SetSimState::Request::SharedPtr req,
+  const rosflight_msgs::srv::SetSimState::Response::SharedPtr res)
 {
   res->success = set_sim_state(req->state);
   res->message = res->success ? "Sim state set." : "Sim state not set!";

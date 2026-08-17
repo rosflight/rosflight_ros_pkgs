@@ -42,15 +42,15 @@
 #ifndef ROSFLIGHT_IO_MAVROSFLIGHT_ROS_H
 #define ROSFLIGHT_IO_MAVROSFLIGHT_ROS_H
 
+#include <Eigen/Dense>
+#include <algorithm>
+#include <cstdlib>
+#include <random>
 #include <set>
 #include <string>
 #include <unordered_set>
-#include <Eigen/Dense>
 #include <unsupported/Eigen/MatrixFunctions>
 #include <vector>
-#include <random>
-#include <algorithm>
-#include <cstdlib>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -470,7 +470,7 @@ private:
    * @return True
    */
   bool calibrateMagSrvCallback(const std_srvs::srv::Trigger::Request::SharedPtr & req,
-                                const std_srvs::srv::Trigger::Response::SharedPtr & res);
+                               const std_srvs::srv::Trigger::Response::SharedPtr & res);
   /**
    * @brief "calibrate_airspeed" service callback.
    *
@@ -611,7 +611,8 @@ private:
   *
   * @param parameters Vector of rclcpp::Parameters passed by ROS2 when params are changed.
   */
-  rcl_interfaces::msg::SetParametersResult parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
+  rcl_interfaces::msg::SetParametersResult
+  parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
 
   /// "command" ROS topic subscription.
   rclcpp::Subscription<rosflight_msgs::msg::Command>::SharedPtr command_sub_;
@@ -706,25 +707,25 @@ private:
   std::string frame_id_;
 
   MagnetometerCalibrator magnetometer_calibrator_;
-  
+
   /// Matrix of the magnetometer calibration data.
   Eigen::MatrixXd mag_calibration_data_;
 
   /// The current accels measured by the IMU, used for mag calibration.
   Eigen::Vector3f current_accels_;
-  
+
   /// Indicates if the FCU is reorienting before next calibration step.
   bool reorienting_ = false;
   /// The count of how many consecutive measurements have happened in a particular orientation.
   //                               xd,xu,yd,yu,zd,zu
   std::vector<int> orientations_ = {0, 0, 0, 0, 0, 0};
-  
+
   /// The number of times that an orientation has been checked to see if full coverage has been attained.
   int num_times_checked_;
-  
+
   /// Whether all of the mag data from every orientation has been gathered
   bool all_orientation_data_gathered_ = false;
-  
+
   /// The index in mag_calibration_data_ where this current orientation data starts.
   unsigned long current_orientation_index_;
 
@@ -732,7 +733,7 @@ private:
   unsigned long current_candidate_index_;
 
   std::set<int> completed_mag_orientations_;
-  
+
   /// Flag of wether to collect calibration data.
   bool calibrate_mag_;
 

@@ -58,7 +58,8 @@ private:
   std::unique_ptr<tf2_ros::TransformBroadcaster> aircraft_tf2_broadcaster_;
 
   OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
-  rcl_interfaces::msg::SetParametersResult parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
+  rcl_interfaces::msg::SetParametersResult
+  parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
   void declare_parameters();
 
   void initialize_aircraft_marker();

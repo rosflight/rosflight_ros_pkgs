@@ -37,8 +37,8 @@
 
 #include <chrono>
 
-#include <rclcpp/rclcpp.hpp>
 #include <rclcpp/executors.hpp>
+#include <rclcpp/rclcpp.hpp>
 #include <std_srvs/srv/trigger.hpp>
 
 namespace rosflight_sim
@@ -57,7 +57,7 @@ private:
   rclcpp::CallbackGroup::SharedPtr timer_cb_group_;
   rclcpp::TimerBase::SharedPtr simulation_loop_timer_;
 
-  // Service call can be used to tick the firmware externally 
+  // Service call can be used to tick the firmware externally
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr run_SIL_iteration_srvs_;
 
   // Service clients

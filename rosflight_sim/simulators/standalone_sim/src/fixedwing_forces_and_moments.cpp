@@ -401,7 +401,8 @@ void Fixedwing::update_params_from_ROS()
   }
 }
 
-rcl_interfaces::msg::SetParametersResult Fixedwing::parameters_callback(const std::vector<rclcpp::Parameter> & parameters)
+rcl_interfaces::msg::SetParametersResult
+Fixedwing::parameters_callback(const std::vector<rclcpp::Parameter> & parameters)
 {
   rcl_interfaces::msg::SetParametersResult result;
   result.successful = true;
@@ -410,254 +411,192 @@ rcl_interfaces::msg::SetParametersResult Fixedwing::parameters_callback(const st
   for (auto param : parameters) {
 
     if (param.get_name() == "rho") {
-			rho_ = param.as_double();
+      rho_ = param.as_double();
     }
 
     // Wing Geometry
     else if (param.get_name() == "wing_s") {
-			wing_.S = param.as_double();
-    }
-    else if (param.get_name() == "wing_b") {
-			wing_.b = param.as_double();
-    }
-    else if (param.get_name() == "wing_c") {
-			wing_.c = param.as_double();
-    }
-    else if (param.get_name() == "wing_M") {
-			wing_.M = param.as_double();
-    }
-    else if (param.get_name() == "wing_epsilon") {
-			wing_.epsilon = param.as_double();
-    }
-    else if (param.get_name() == "wing_alpha0") {
-			wing_.alpha0 = param.as_double();
+      wing_.S = param.as_double();
+    } else if (param.get_name() == "wing_b") {
+      wing_.b = param.as_double();
+    } else if (param.get_name() == "wing_c") {
+      wing_.c = param.as_double();
+    } else if (param.get_name() == "wing_M") {
+      wing_.M = param.as_double();
+    } else if (param.get_name() == "wing_epsilon") {
+      wing_.epsilon = param.as_double();
+    } else if (param.get_name() == "wing_alpha0") {
+      wing_.alpha0 = param.as_double();
     }
 
     // Propeller Coefficients
     else if (param.get_name() == "D_prop") {
-			prop_.D_prop = param.as_double();
-    }
-    else if (param.get_name() == "CT_0") {
-			prop_.CT_0 = param.as_double();
-    }
-    else if (param.get_name() == "CT_1") {
-			prop_.CT_1 = param.as_double();
-    }
-    else if (param.get_name() == "CT_2") {
-			prop_.CT_2 = param.as_double();
-    }
-    else if (param.get_name() == "CQ_0") {
-			prop_.CQ_0 = param.as_double();
-    }
-    else if (param.get_name() == "CQ_1") {
-			prop_.CQ_1 = param.as_double();
-    }
-    else if (param.get_name() == "CQ_2") {
-			prop_.CQ_2 = param.as_double();
+      prop_.D_prop = param.as_double();
+    } else if (param.get_name() == "CT_0") {
+      prop_.CT_0 = param.as_double();
+    } else if (param.get_name() == "CT_1") {
+      prop_.CT_1 = param.as_double();
+    } else if (param.get_name() == "CT_2") {
+      prop_.CT_2 = param.as_double();
+    } else if (param.get_name() == "CQ_0") {
+      prop_.CQ_0 = param.as_double();
+    } else if (param.get_name() == "CQ_1") {
+      prop_.CQ_1 = param.as_double();
+    } else if (param.get_name() == "CQ_2") {
+      prop_.CQ_2 = param.as_double();
     }
 
     // Motor Coefficients
     else if (param.get_name() == "KV") {
-			motor_.KV = param.as_double();
-    }
-    else if (param.get_name() == "KQ") {
-			motor_.KQ = param.as_double();
-    }
-    else if (param.get_name() == "V_max") {
-			motor_.V_max = param.as_double();
-    }
-    else if (param.get_name() == "R_motor") {
-			motor_.R_motor = param.as_double();
-    }
-    else if (param.get_name() == "I_0") {
-			motor_.I_0 = param.as_double();
+      motor_.KV = param.as_double();
+    } else if (param.get_name() == "KQ") {
+      motor_.KQ = param.as_double();
+    } else if (param.get_name() == "V_max") {
+      motor_.V_max = param.as_double();
+    } else if (param.get_name() == "R_motor") {
+      motor_.R_motor = param.as_double();
+    } else if (param.get_name() == "I_0") {
+      motor_.I_0 = param.as_double();
     }
 
     else if (param.get_name() == "servo_tau") {
-			servo_tau_ = param.as_double();
+      servo_tau_ = param.as_double();
     }
 
     // Lift Params
     else if (param.get_name() == "C_L_O") {
-			CL_.O = param.as_double();
-    }
-    else if (param.get_name() == "C_L_alpha") {
-			CL_.alpha = param.as_double();
-    }
-    else if (param.get_name() == "C_L_beta") {
-			CL_.beta = param.as_double();
-    }
-    else if (param.get_name() == "C_L_p") {
-			CL_.p = param.as_double();
-    }
-    else if (param.get_name() == "C_L_q") {
-			CL_.q = param.as_double();
-    }
-    else if (param.get_name() == "C_L_r") {
-			CL_.r = param.as_double();
-    }
-    else if (param.get_name() == "C_L_delta_a") {
-			CL_.delta_a = param.as_double();
-    }
-    else if (param.get_name() == "C_L_delta_e") {
-			CL_.delta_e = param.as_double();
-    }
-    else if (param.get_name() == "C_L_delta_r") {
-			CL_.delta_r = param.as_double();
+      CL_.O = param.as_double();
+    } else if (param.get_name() == "C_L_alpha") {
+      CL_.alpha = param.as_double();
+    } else if (param.get_name() == "C_L_beta") {
+      CL_.beta = param.as_double();
+    } else if (param.get_name() == "C_L_p") {
+      CL_.p = param.as_double();
+    } else if (param.get_name() == "C_L_q") {
+      CL_.q = param.as_double();
+    } else if (param.get_name() == "C_L_r") {
+      CL_.r = param.as_double();
+    } else if (param.get_name() == "C_L_delta_a") {
+      CL_.delta_a = param.as_double();
+    } else if (param.get_name() == "C_L_delta_e") {
+      CL_.delta_e = param.as_double();
+    } else if (param.get_name() == "C_L_delta_r") {
+      CL_.delta_r = param.as_double();
     }
 
     // Drag Params
     else if (param.get_name() == "C_D_O") {
-			CD_.O = param.as_double();
-    }
-    else if (param.get_name() == "C_D_alpha") {
-			CD_.alpha = param.as_double();
-    }
-    else if (param.get_name() == "C_D_beta") {
-			CD_.beta = param.as_double();
-    }
-    else if (param.get_name() == "C_D_p") {
-			CD_.p = param.as_double();
-    }
-    else if (param.get_name() == "C_D_q") {
-			CD_.q = param.as_double();
-    }
-    else if (param.get_name() == "C_D_r") {
-			CD_.r = param.as_double();
-    }
-    else if (param.get_name() == "C_D_delta_a") {
-			CD_.delta_a = param.as_double();
-    }
-    else if (param.get_name() == "C_D_delta_e") {
-			CD_.delta_e = param.as_double();
-    }
-    else if (param.get_name() == "C_D_delta_r") {
-			CD_.delta_r = param.as_double();
+      CD_.O = param.as_double();
+    } else if (param.get_name() == "C_D_alpha") {
+      CD_.alpha = param.as_double();
+    } else if (param.get_name() == "C_D_beta") {
+      CD_.beta = param.as_double();
+    } else if (param.get_name() == "C_D_p") {
+      CD_.p = param.as_double();
+    } else if (param.get_name() == "C_D_q") {
+      CD_.q = param.as_double();
+    } else if (param.get_name() == "C_D_r") {
+      CD_.r = param.as_double();
+    } else if (param.get_name() == "C_D_delta_a") {
+      CD_.delta_a = param.as_double();
+    } else if (param.get_name() == "C_D_delta_e") {
+      CD_.delta_e = param.as_double();
+    } else if (param.get_name() == "C_D_delta_r") {
+      CD_.delta_r = param.as_double();
     }
 
     // ell Params (x axis moment)
     else if (param.get_name() == "C_ell_O") {
-			Cell_.O = param.as_double();
-    }
-    else if (param.get_name() == "C_ell_alpha") {
-			Cell_.alpha = param.as_double();
-    }
-    else if (param.get_name() == "C_ell_beta") {
-			Cell_.beta = param.as_double();
-    }
-    else if (param.get_name() == "C_ell_p") {
-			Cell_.p = param.as_double();
-    }
-    else if (param.get_name() == "C_ell_q") {
-			Cell_.q = param.as_double();
-    }
-    else if (param.get_name() == "C_ell_r") {
-			Cell_.r = param.as_double();
-    }
-    else if (param.get_name() == "C_ell_delta_a") {
-			Cell_.delta_a = param.as_double();
-    }
-    else if (param.get_name() == "C_ell_delta_e") {
-			Cell_.delta_e = param.as_double();
-    }
-    else if (param.get_name() == "C_ell_delta_r") {
-			Cell_.delta_r = param.as_double();
+      Cell_.O = param.as_double();
+    } else if (param.get_name() == "C_ell_alpha") {
+      Cell_.alpha = param.as_double();
+    } else if (param.get_name() == "C_ell_beta") {
+      Cell_.beta = param.as_double();
+    } else if (param.get_name() == "C_ell_p") {
+      Cell_.p = param.as_double();
+    } else if (param.get_name() == "C_ell_q") {
+      Cell_.q = param.as_double();
+    } else if (param.get_name() == "C_ell_r") {
+      Cell_.r = param.as_double();
+    } else if (param.get_name() == "C_ell_delta_a") {
+      Cell_.delta_a = param.as_double();
+    } else if (param.get_name() == "C_ell_delta_e") {
+      Cell_.delta_e = param.as_double();
+    } else if (param.get_name() == "C_ell_delta_r") {
+      Cell_.delta_r = param.as_double();
     }
 
     // m Params (y axis moment)
     else if (param.get_name() == "C_m_O") {
-			Cm_.O = param.as_double();
-    }
-    else if (param.get_name() == "C_m_alpha") {
-			Cm_.alpha = param.as_double();
-    }
-    else if (param.get_name() == "C_m_beta") {
-			Cm_.beta = param.as_double();
-    }
-    else if (param.get_name() == "C_m_p") {
-			Cm_.p = param.as_double();
-    }
-    else if (param.get_name() == "C_m_q") {
-			Cm_.q = param.as_double();
-    }
-    else if (param.get_name() == "C_m_r") {
-			Cm_.r = param.as_double();
-    }
-    else if (param.get_name() == "C_m_delta_a") {
-			Cm_.delta_a = param.as_double();
-    }
-    else if (param.get_name() == "C_m_delta_e") {
-			Cm_.delta_e = param.as_double();
-    }
-    else if (param.get_name() == "C_m_delta_r") {
-			Cm_.delta_r = param.as_double();
+      Cm_.O = param.as_double();
+    } else if (param.get_name() == "C_m_alpha") {
+      Cm_.alpha = param.as_double();
+    } else if (param.get_name() == "C_m_beta") {
+      Cm_.beta = param.as_double();
+    } else if (param.get_name() == "C_m_p") {
+      Cm_.p = param.as_double();
+    } else if (param.get_name() == "C_m_q") {
+      Cm_.q = param.as_double();
+    } else if (param.get_name() == "C_m_r") {
+      Cm_.r = param.as_double();
+    } else if (param.get_name() == "C_m_delta_a") {
+      Cm_.delta_a = param.as_double();
+    } else if (param.get_name() == "C_m_delta_e") {
+      Cm_.delta_e = param.as_double();
+    } else if (param.get_name() == "C_m_delta_r") {
+      Cm_.delta_r = param.as_double();
     }
 
     // n Params (z axis moment)
     else if (param.get_name() == "C_n_O") {
-			Cn_.O = param.as_double();
-    }
-    else if (param.get_name() == "C_n_alpha") {
-			Cn_.alpha = param.as_double();
-    }
-    else if (param.get_name() == "C_n_beta") {
-			Cn_.beta = param.as_double();
-    }
-    else if (param.get_name() == "C_n_p") {
-			Cn_.p = param.as_double();
-    }
-    else if (param.get_name() == "C_n_q") {
-			Cn_.q = param.as_double();
-    }
-    else if (param.get_name() == "C_n_r") {
-			Cn_.r = param.as_double();
-    }
-    else if (param.get_name() == "C_n_delta_a") {
-			Cn_.delta_a = param.as_double();
-    }
-    else if (param.get_name() == "C_n_delta_e") {
-			Cn_.delta_e = param.as_double();
-    }
-    else if (param.get_name() == "C_n_delta_r") {
-			Cn_.delta_r = param.as_double();
+      Cn_.O = param.as_double();
+    } else if (param.get_name() == "C_n_alpha") {
+      Cn_.alpha = param.as_double();
+    } else if (param.get_name() == "C_n_beta") {
+      Cn_.beta = param.as_double();
+    } else if (param.get_name() == "C_n_p") {
+      Cn_.p = param.as_double();
+    } else if (param.get_name() == "C_n_q") {
+      Cn_.q = param.as_double();
+    } else if (param.get_name() == "C_n_r") {
+      Cn_.r = param.as_double();
+    } else if (param.get_name() == "C_n_delta_a") {
+      Cn_.delta_a = param.as_double();
+    } else if (param.get_name() == "C_n_delta_e") {
+      Cn_.delta_e = param.as_double();
+    } else if (param.get_name() == "C_n_delta_r") {
+      Cn_.delta_r = param.as_double();
     }
 
     // Y Params (Sideslip Forces)
     else if (param.get_name() == "C_Y_O") {
-			CY_.O = param.as_double();
-    }
-    else if (param.get_name() == "C_Y_alpha") {
-			CY_.alpha = param.as_double();
-    }
-    else if (param.get_name() == "C_Y_beta") {
-			CY_.beta = param.as_double();
-    }
-    else if (param.get_name() == "C_Y_p") {
-			CY_.p = param.as_double();
-    }
-    else if (param.get_name() == "C_Y_q") {
-			CY_.q = param.as_double();
-    }
-    else if (param.get_name() == "C_Y_r") {
-			CY_.r = param.as_double();
-    }
-    else if (param.get_name() == "C_Y_delta_a") {
-			CY_.delta_a = param.as_double();
-    }
-    else if (param.get_name() == "C_Y_delta_e") {
-			CY_.delta_e = param.as_double();
-    }
-    else if (param.get_name() == "C_Y_delta_r") {
-			CY_.delta_r = param.as_double();
+      CY_.O = param.as_double();
+    } else if (param.get_name() == "C_Y_alpha") {
+      CY_.alpha = param.as_double();
+    } else if (param.get_name() == "C_Y_beta") {
+      CY_.beta = param.as_double();
+    } else if (param.get_name() == "C_Y_p") {
+      CY_.p = param.as_double();
+    } else if (param.get_name() == "C_Y_q") {
+      CY_.q = param.as_double();
+    } else if (param.get_name() == "C_Y_r") {
+      CY_.r = param.as_double();
+    } else if (param.get_name() == "C_Y_delta_a") {
+      CY_.delta_a = param.as_double();
+    } else if (param.get_name() == "C_Y_delta_e") {
+      CY_.delta_e = param.as_double();
+    } else if (param.get_name() == "C_Y_delta_r") {
+      CY_.delta_r = param.as_double();
     }
   }
 
   return result;
 }
 
-geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight_msgs::msg::SimState x,
-                                                                       geometry_msgs::msg::Vector3Stamped wind,
-                                                                       std::array<uint16_t, NUM_TOTAL_OUTPUTS> act_cmds)
+geometry_msgs::msg::WrenchStamped
+Fixedwing::update_forces_and_torques(rosflight_msgs::msg::SimState x,
+                                     geometry_msgs::msg::Vector3Stamped wind,
+                                     std::array<uint16_t, NUM_TOTAL_OUTPUTS> act_cmds)
 {
   // TODO: The mixer used is not either of the vanilla PRIMARY or SECONDARY mixers... It is a combination,
   // based on the current value of the RC_OVERRIDE switch... I need to add that logic here.
@@ -667,7 +606,7 @@ geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight
   // Convert PWM into 0 to 1 output - note that the mixer does not touch the last (NUM_TOTAL_OUTPUTS - NUM_MIXER_OUTPUTS)
   // number of outputs
   Eigen::Matrix<double, NUM_MIXER_OUTPUTS, 1> act_cmds_vect;
-  for (int i=0; i<NUM_MIXER_OUTPUTS; ++i) {
+  for (int i = 0; i < NUM_MIXER_OUTPUTS; ++i) {
     // {0, 1, 2, 3} = {aux, servo, motor, gpio}
     switch (mixer_header_vals_(i)) {
       case 0:
@@ -694,15 +633,21 @@ geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight
   // Act cmds unmixed are {Fx, Fy, Fz, Qx, Qy, Qz}
   // Scale the unmixed commands by the maximum control surface deflection angle
   // TODO: Does doing it this way make sense for a vtail configuration?
-  delta_.a = act_cmds_unmixed(3) * this->get_parameter("max_aileron_deflection_angle").as_double() * M_PI / 180.0;
-  delta_.e = act_cmds_unmixed(4) * this->get_parameter("max_elevator_deflection_angle").as_double() * M_PI / 180.0;;
+  delta_.a = act_cmds_unmixed(3) * this->get_parameter("max_aileron_deflection_angle").as_double()
+    * M_PI / 180.0;
+  delta_.e = act_cmds_unmixed(4) * this->get_parameter("max_elevator_deflection_angle").as_double()
+    * M_PI / 180.0;
+  ;
   delta_.t = act_cmds_unmixed(0);
-  delta_.r = act_cmds_unmixed(5) * this->get_parameter("max_rudder_deflection_angle").as_double() * M_PI / 180.0;;
+  delta_.r = act_cmds_unmixed(5) * this->get_parameter("max_rudder_deflection_angle").as_double()
+    * M_PI / 180.0;
+  ;
 
   // Apply servo time delay
   Actuators delta_curr;
 
-  float Ts = this->get_parameter("servo_refresh_rate").as_double(); // refresh rate TODO: find a way to programmatically set this.
+  float Ts = this->get_parameter("servo_refresh_rate")
+               .as_double(); // refresh rate TODO: find a way to programmatically set this.
   delta_curr.a = 1 / (2 * servo_tau_ / Ts + 1)
     * (delta_prev_command_.a + delta_.a + (2 * servo_tau_ / Ts - 1) * delta_prev_.a);
   delta_curr.e = 1 / (2 * servo_tau_ / Ts + 1)
@@ -718,19 +663,18 @@ geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight
   double r = x.twist.angular.z;
 
   // Calculate airspeed
-  Eigen::Quaterniond q_body_to_inertial(x.pose.orientation.w,
-                                        x.pose.orientation.x,
-                                        x.pose.orientation.y,
-                                        x.pose.orientation.z);
+  Eigen::Quaterniond q_body_to_inertial(x.pose.orientation.w, x.pose.orientation.x,
+                                        x.pose.orientation.y, x.pose.orientation.z);
   Eigen::Vector3d v_wind_inertial(wind.vector.x, wind.vector.y, wind.vector.z); // In inertial frame
-  Eigen::Vector3d v_wind_body = q_body_to_inertial.inverse() * v_wind_inertial; // Rotate to body frame
+  Eigen::Vector3d v_wind_body =
+    q_body_to_inertial.inverse() * v_wind_inertial; // Rotate to body frame
 
   // Va = [ur, vr, wr] = V_ground - V_wind
   double ur = x.twist.linear.x - v_wind_body(0);
   double vr = x.twist.linear.y - v_wind_body(1);
   double wr = x.twist.linear.z - v_wind_body(2);
 
-  double Va = sqrt(pow(ur,2.0) + pow(vr,2.0) + pow(wr,2.0));
+  double Va = sqrt(pow(ur, 2.0) + pow(vr, 2.0) + pow(wr, 2.0));
 
   geometry_msgs::msg::WrenchStamped forces;
 
@@ -787,7 +731,7 @@ geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight
     double CZ_q_a = -CD_.q * sa - CL_.q * ca;
     double CZ_deltaE_a = -CD_.delta_e * sa - CL_.delta_e * ca;
 
-    forces.wrench.force.x = 0.5 * (rho_) * Va * Va * wing_.S
+    forces.wrench.force.x = 0.5 * (rho_) *Va * Va * wing_.S
         * (CX_a + (CX_q_a * wing_.c * q) / (2.0 * Va) + CX_deltaE_a * delta_curr.e)
       + Prop_Force;
 
@@ -844,8 +788,7 @@ void Fixedwing::get_firmware_parameters()
 
 } // namespace rosflight_sim
 
-
-int main(int argc, char** argv)
+int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
 

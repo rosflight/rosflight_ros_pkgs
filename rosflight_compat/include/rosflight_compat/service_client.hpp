@@ -50,26 +50,20 @@ namespace rosflight_compat
 {
 
 template<typename ServiceT>
-typename rclcpp::Client<ServiceT>::SharedPtr create_service_client(
-  rclcpp::Node & node,
-  const std::string & service_name,
-  rclcpp::CallbackGroup::SharedPtr callback_group)
+typename rclcpp::Client<ServiceT>::SharedPtr
+create_service_client(rclcpp::Node & node, const std::string & service_name,
+                      rclcpp::CallbackGroup::SharedPtr callback_group)
 {
 #if RCLCPP_VERSION_MAJOR < 21
   // legacy version for ROS 2 Humble on Ubuntu 22.04
-  return node.create_client<ServiceT>(
-    service_name,
-    rmw_qos_profile_services_default,
-    callback_group);
+  return node.create_client<ServiceT>(service_name, rmw_qos_profile_services_default,
+                                      callback_group);
 #else
   // modern version
-  return node.create_client<ServiceT>(
-    service_name,
-    rclcpp::ServicesQoS(),
-    callback_group);
+  return node.create_client<ServiceT>(service_name, rclcpp::ServicesQoS(), callback_group);
 #endif
 }
 
-}  // namespace rosflight_compat
+} // namespace rosflight_compat
 
 #endif // ROSFLIGHT_COMPAT_SERVICE_CLIENT_HPP

@@ -36,25 +36,27 @@
 #ifndef MAG_CALIBRATION_ROS_H
 #define MAG_CALIBRATION_ROS_H
 
-#include <unordered_set>
 #include <Eigen/Dense>
 #include <Eigen/SVD>
-#include <string>
 #include <random>
+#include <string>
+#include <unordered_set>
 
 namespace rosflight_io
 {
-  enum class Orientation {
-    X_DOWN,
-    X_UP,
-    Y_DOWN,
-    Y_UP,
-    Z_DOWN,
-    Z_UP,
-    NUM_ORIENTATIONS
-  };
+enum class Orientation
+{
+  X_DOWN,
+  X_UP,
+  Y_DOWN,
+  Y_UP,
+  Z_DOWN,
+  Z_UP,
+  NUM_ORIENTATIONS
+};
 
-  enum class CalibrationState {
+enum class CalibrationState
+{
   REORIENTING,
   CHECKING,
   ALL_ORIENTATIONS_GATHERED,
@@ -71,7 +73,8 @@ namespace rosflight_io
 class MagnetometerCalibrator
 {
 public:
-  MagnetometerCalibrator(float accel_orientation_threshold, int consecutive_orientation_threshold, float lpf_alpha);
+  MagnetometerCalibrator(float accel_orientation_threshold, int consecutive_orientation_threshold,
+                         float lpf_alpha);
 
   void update_accel(Eigen::Vector3f accel);
 
@@ -82,7 +85,7 @@ public:
   std::string feedback();
 
   Eigen::Vector3d get_hard_iron_offset();
-  
+
   Eigen::Matrix3d get_soft_iron_correction();
 
 private:
@@ -127,7 +130,6 @@ private:
   int start_of_current_orientation_data_;
 
   int num_times_data_checked_;
-
 };
 
 } // namespace rosflight_io

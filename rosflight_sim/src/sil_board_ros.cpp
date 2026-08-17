@@ -39,9 +39,10 @@ namespace rosflight_sim
 {
 
 SILBoardROS::SILBoardROS()
-  : rclcpp::Node("sil_board")
+    : rclcpp::Node("sil_board")
 {
-  firmware_run_srvs_ = this->create_service<std_srvs::srv::Trigger>("sil_board/run", 
+  firmware_run_srvs_ = this->create_service<std_srvs::srv::Trigger>(
+    "sil_board/run",
     std::bind(&SILBoardROS::run_firmware, this, std::placeholders::_1, std::placeholders::_2));
 
   // Initialize publisher.
@@ -50,7 +51,7 @@ SILBoardROS::SILBoardROS()
   // Start timer to initialize the board. Used here in case the run_firmware service
   // is not called quickly enough
   initialize_timer_ = this->create_wall_timer(std::chrono::microseconds(100),
-    std::bind(&SILBoardROS::init_timer_callback, this));
+                                              std::bind(&SILBoardROS::init_timer_callback, this));
 }
 
 void SILBoardROS::init_timer_callback()
@@ -103,7 +104,7 @@ bool SILBoardROS::run_firmware(
 
 } // namespace rosflight_sim
 
-int main(int argc, char** argv)
+int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
   auto node = std::make_shared<rosflight_sim::SILBoardROS>();
@@ -112,4 +113,3 @@ int main(int argc, char** argv)
 
   return 0;
 }
-

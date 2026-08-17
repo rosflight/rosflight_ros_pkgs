@@ -44,14 +44,14 @@
 #include <thread>
 #include <utility>
 
+#include <algorithm>
+#include <cctype>
 #include <pthread.h>
 #include <rclcpp/rclcpp.hpp>
 #include <sched.h>
 #include <std_msgs/msg/int32.hpp>
-#include <sys/resource.h>
-#include <algorithm>
-#include <cctype>
 #include <string>
+#include <sys/resource.h>
 
 class RealtimeConfigurator
 {
@@ -68,10 +68,10 @@ public:
 
   void configure_thread_for_realtime();
 
-  void configure_node_to_report_context_switches(rclcpp::Node::SharedPtr& node);
+  void configure_node_to_report_context_switches(rclcpp::Node::SharedPtr & node);
 
   bool is_realtime();
-  
+
   bool is_publish_context_switches();
 
 private:
@@ -88,7 +88,8 @@ private:
 
   void publish_context_switches();
 
-  void set_thread_scheduling(std::thread::native_handle_type thread, int policy, int sched_priority);
+  void set_thread_scheduling(std::thread::native_handle_type thread, int policy,
+                             int sched_priority);
 };
 
-#endif  // ROSFLIGHT_IO_REALTIME_CONFIGURATOR_HPP
+#endif // ROSFLIGHT_IO_REALTIME_CONFIGURATOR_HPP

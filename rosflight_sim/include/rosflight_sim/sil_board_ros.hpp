@@ -86,4 +86,3 @@ private:
 } // namespace rosflight_sim
 
 #endif // ROSFLIGHT_SIM_SIL_BOARD_ROS_H
-

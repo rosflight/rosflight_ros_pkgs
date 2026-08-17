@@ -39,11 +39,11 @@
 #include <cmath>
 #include <cstdint>
 
-#include <geometry_msgs/msg/vector3_stamped.hpp>
 #include <Eigen/Geometry>
+#include <geometry_msgs/msg/vector3_stamped.hpp>
 
-#include "rosflight_sim/forces_and_moments_interface.hpp"
 #include "rosflight_msgs/msg/sim_state.hpp"
+#include "rosflight_sim/forces_and_moments_interface.hpp"
 
 namespace rosflight_sim
 {
@@ -63,7 +63,7 @@ private:
     double CT_0;
     double CT_1;
     double CT_2;
-    
+
     // Prop torque constant coeffs.
     double CQ_0;
     double CQ_1;
@@ -76,7 +76,7 @@ private:
   {
     double dist;
     // The motor's radial angle from the body north unit vector in radians,
-    // for example: quad copter x frame this is 45,135,225,315, except in radians. 
+    // for example: quad copter x frame this is 45,135,225,315, except in radians.
     double radial_angle;
     // The direction that the motor spins, (-1 is clockwise and 1 is counter clocwise, looking from above vehicle).
     int64_t direction;
@@ -112,9 +112,10 @@ public:
    * @param act_cmds Array of actuator commands
    * @return geometry_msgs::msg::WrenchStamped object with calculated forces and moments
    */
-  geometry_msgs::msg::WrenchStamped update_forces_and_torques(rosflight_msgs::msg::SimState x,
-                                                              geometry_msgs::msg::Vector3Stamped wind,
-                                                              std::array<uint16_t, NUM_TOTAL_OUTPUTS> act_cmds) override;
+  geometry_msgs::msg::WrenchStamped
+  update_forces_and_torques(rosflight_msgs::msg::SimState x,
+                            geometry_msgs::msg::Vector3Stamped wind,
+                            std::array<uint16_t, NUM_TOTAL_OUTPUTS> act_cmds) override;
 
   /**
   * @brief Queries rosflight_io for any changed parameters

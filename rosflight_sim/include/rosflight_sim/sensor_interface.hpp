@@ -31,17 +31,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef ROSFLIGHT_SIM_SENSOR_INTERFACE_H
 #define ROSFLIGHT_SIM_SENSOR_INTERFACE_H
 
-#include <rclcpp/rclcpp.hpp>
-#include <geometry_msgs/msg/wrench_stamped.hpp>
 #include <geometry_msgs/msg/vector3_stamped.hpp>
+#include <geometry_msgs/msg/wrench_stamped.hpp>
+#include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
-#include <sensor_msgs/msg/temperature.hpp>
 #include <sensor_msgs/msg/magnetic_field.hpp>
 #include <sensor_msgs/msg/range.hpp>
+#include <sensor_msgs/msg/temperature.hpp>
 
 #include "rosflight_msgs/msg/airspeed.hpp"
 #include "rosflight_msgs/msg/barometer.hpp"
@@ -73,15 +72,22 @@ private:
   /*
    * @brief Computes a new sensor measurement from the current state
   */
-  virtual sensor_msgs::msg::Imu imu_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::WrenchStamped & forces) = 0;
-  virtual sensor_msgs::msg::Temperature imu_temperature_update(const rosflight_msgs::msg::SimState & state) = 0;
+  virtual sensor_msgs::msg::Imu imu_update(const rosflight_msgs::msg::SimState & state,
+                                           const geometry_msgs::msg::WrenchStamped & forces) = 0;
+  virtual sensor_msgs::msg::Temperature
+  imu_temperature_update(const rosflight_msgs::msg::SimState & state) = 0;
   virtual sensor_msgs::msg::Imu get_imu_biases() = 0;
-  virtual sensor_msgs::msg::MagneticField mag_update(const rosflight_msgs::msg::SimState & state) = 0;
-  virtual rosflight_msgs::msg::Barometer baro_update(const rosflight_msgs::msg::SimState & state) = 0;
+  virtual sensor_msgs::msg::MagneticField
+  mag_update(const rosflight_msgs::msg::SimState & state) = 0;
+  virtual rosflight_msgs::msg::Barometer
+  baro_update(const rosflight_msgs::msg::SimState & state) = 0;
   virtual rosflight_msgs::msg::GNSS gnss_update(const rosflight_msgs::msg::SimState & state) = 0;
   virtual sensor_msgs::msg::Range range_update(const rosflight_msgs::msg::SimState & state) = 0;
-  virtual rosflight_msgs::msg::Airspeed diff_pressure_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::Vector3Stamped & wind) = 0;
-  virtual rosflight_msgs::msg::BatteryStatus battery_update(const rosflight_msgs::msg::SimState & state) = 0;
+  virtual rosflight_msgs::msg::Airspeed
+  diff_pressure_update(const rosflight_msgs::msg::SimState & state,
+                       const geometry_msgs::msg::Vector3Stamped & wind) = 0;
+  virtual rosflight_msgs::msg::BatteryStatus
+  battery_update(const rosflight_msgs::msg::SimState & state) = 0;
 
   // ROS2 interfaces
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_data_pub_;
@@ -181,6 +187,6 @@ private:
   void status_callback(const rosflight_msgs::msg::Status & msg);
 };
 
-} // rosflight_sim
+} // namespace rosflight_sim
 
 #endif // ROSFLIGHT_SIM_SENSOR_INTERFACE_H

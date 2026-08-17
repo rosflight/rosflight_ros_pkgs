@@ -38,8 +38,8 @@
 
 #include <Eigen/Dense>
 #include <Eigen/SVD>
-#include <geometry_msgs/msg/wrench_stamped.hpp>
 #include <geometry_msgs/msg/vector3_stamped.hpp>
+#include <geometry_msgs/msg/wrench_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/bool.hpp>
 #include <std_srvs/srv/trigger.hpp>
@@ -47,7 +47,6 @@
 #include <rosflight_msgs/msg/pwm_output.hpp>
 #include <rosflight_msgs/msg/sim_state.hpp>
 #include <rosflight_msgs/srv/param_get.hpp>
-
 
 namespace rosflight_sim
 {
@@ -128,10 +127,9 @@ private:
   void get_mixer_firmware_parameters();
   double send_get_param_service_to_firmware(std::string param_name);
   bool send_check_params_service_to_firmware();
-  void invert_matrix(Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS> &mixer_to_invert);
+  void invert_matrix(Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS> & mixer_to_invert);
 
 public:
-
   ForcesAndMomentsInterface();
 
   /**
@@ -142,15 +140,16 @@ public:
    * @param act_cmds Array of actuator commands
    * @return geometry_msgs::msg::WrenchStamped object with calculated forces and moments
    */
-  virtual geometry_msgs::msg::WrenchStamped update_forces_and_torques(rosflight_msgs::msg::SimState x,
-                                                                      geometry_msgs::msg::Vector3Stamped wind,
-                                                                      std::array<uint16_t, NUM_TOTAL_OUTPUTS> act_cmds) = 0;
+  virtual geometry_msgs::msg::WrenchStamped
+  update_forces_and_torques(rosflight_msgs::msg::SimState x,
+                            geometry_msgs::msg::Vector3Stamped wind,
+                            std::array<uint16_t, NUM_TOTAL_OUTPUTS> act_cmds) = 0;
 
   /**
   * @brief Interface function for pulling the current firmware parameters from rosflight_io.
   * Mixer is pulled by default before this function gets called.
   */
-  virtual void get_firmware_parameters() {};
+  virtual void get_firmware_parameters(){};
 };
 
 } // namespace rosflight_sim

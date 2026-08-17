@@ -41,30 +41,36 @@ namespace rosflight_sim
 {
 
 ForcesAndMomentsInterface::ForcesAndMomentsInterface()
-  : rclcpp::Node("mav_forces_and_moments")
-  , primary_mixing_matrix_(Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS>::Zero())
-  , secondary_mixing_matrix_(Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS>::Zero())
-  , mixer_header_vals_(Eigen::Matrix<int, 1, NUM_MIXER_OUTPUTS>::Zero())
+    : rclcpp::Node("mav_forces_and_moments")
+    , primary_mixing_matrix_(Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS>::Zero())
+    , secondary_mixing_matrix_(Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS>::Zero())
+    , mixer_header_vals_(Eigen::Matrix<int, 1, NUM_MIXER_OUTPUTS>::Zero())
 {
   // Note that we don't define the parameter callback routine here.
   // This is so that implementation-specific details can be included there.
   this->declare_parameter("invert_mixing_matrix", true);
 
   // Define ROS interfaces
-  forces_moments_pub_ = this->create_publisher<geometry_msgs::msg::WrenchStamped>("sim/forces_and_moments", 1);
+  forces_moments_pub_ =
+    this->create_publisher<geometry_msgs::msg::WrenchStamped>("sim/forces_and_moments", 1);
   truth_sub_ = this->create_subscription<rosflight_msgs::msg::SimState>(
-    "sim/truth_state", 1, std::bind(&ForcesAndMomentsInterface::state_callback, this, std::placeholders::_1));
+    "sim/truth_state", 1,
+    std::bind(&ForcesAndMomentsInterface::state_callback, this, std::placeholders::_1));
   wind_sub_ = this->create_subscription<geometry_msgs::msg::Vector3Stamped>(
-    "sim/truth_wind", 1, std::bind(&ForcesAndMomentsInterface::wind_callback, this, std::placeholders::_1));
+    "sim/truth_wind", 1,
+    std::bind(&ForcesAndMomentsInterface::wind_callback, this, std::placeholders::_1));
   firware_out_sub_ = this->create_subscription<rosflight_msgs::msg::PwmOutput>(
-    "sim/pwm_output", 1, std::bind(&ForcesAndMomentsInterface::firmware_output_callback, this, std::placeholders::_1));
+    "sim/pwm_output", 1,
+    std::bind(&ForcesAndMomentsInterface::firmware_output_callback, this, std::placeholders::_1));
 
   sub_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   // TODO:_Does this need to be a member variable?
   rclcpp::SubscriptionOptions options;
   options.callback_group = sub_cb_group_;
   params_changed_sub_ = this->create_subscription<std_msgs::msg::Bool>(
-    "status/params_changed", 1, std::bind(&ForcesAndMomentsInterface::params_changed_callback, this, std::placeholders::_1), options);
+    "status/params_changed", 1,
+    std::bind(&ForcesAndMomentsInterface::params_changed_callback, this, std::placeholders::_1),
+    options);
 
   // Service clients
   client_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -98,7 +104,8 @@ void ForcesAndMomentsInterface::firmware_output_callback(const rosflight_msgs::m
   }
 
   // Update the forces and moments
-  geometry_msgs::msg::WrenchStamped forces_moments = update_forces_and_torques(current_state_, current_wind_, msg.values);
+  geometry_msgs::msg::WrenchStamped forces_moments =
+    update_forces_and_torques(current_state_, current_wind_, msg.values);
 
   // Publish forces and moments
   forces_moments_pub_->publish(forces_moments);
@@ -118,12 +125,8 @@ void ForcesAndMomentsInterface::params_changed_callback(const std_msgs::msg::Boo
 
     // Don't invert fixedwing mixers, since the fixedwing mixers were never inverted by firmware.
     // Don't invert if primary mixer is out of range
-    if (primary_mixer_ != 9 &&
-        primary_mixer_ != 10 &&
-        primary_mixer_ < 12 &&
-        (primary_mixer_ == 11 &&
-         this->get_parameter("invert_mixing_matrix").as_bool())
-       ) {
+    if (primary_mixer_ != 9 && primary_mixer_ != 10 && primary_mixer_ < 12
+        && (primary_mixer_ == 11 && this->get_parameter("invert_mixing_matrix").as_bool())) {
       // Invert the mixer, since the mixer stored in the firmware parameters
       // is M^{-1} as defined in Small Unmanned Aircraft chapter 14, inverting it here gives M.
       invert_matrix(primary_mixing_matrix_);
@@ -147,22 +150,22 @@ void ForcesAndMomentsInterface::get_mixer_firmware_parameters()
   secondary_mixer_ = (int) param_val;
 
   // Get the relevant mixer header parameters
-  for (int i=0; i<NUM_MIXER_OUTPUTS; ++i) {
+  for (int i = 0; i < NUM_MIXER_OUTPUTS; ++i) {
     param_name = "PRI_MIXER_OUT_" + std::to_string(i);
     param_val = send_get_param_service_to_firmware(param_name);
     mixer_header_vals_(i) = (int) param_val;
   }
 
   // Get the mixer matrix parameters and relevant header parameters
-  for (int i=0; i<NUM_MIXER_OUTPUTS; ++i) {
-    for (int j=0; j<NUM_MIXER_OUTPUTS; ++j) {
+  for (int i = 0; i < NUM_MIXER_OUTPUTS; ++i) {
+    for (int j = 0; j < NUM_MIXER_OUTPUTS; ++j) {
       param_name = "PRI_MIXER_" + std::to_string(i) + "_" + std::to_string(j);
       param_val = send_get_param_service_to_firmware(param_name);
-      primary_mixing_matrix_(i,j) = param_val;
+      primary_mixing_matrix_(i, j) = param_val;
 
       param_name = "SEC_MIXER_" + std::to_string(i) + "_" + std::to_string(j);
       param_val = send_get_param_service_to_firmware(param_name);
-      secondary_mixing_matrix_(i,j) = param_val;
+      secondary_mixing_matrix_(i, j) = param_val;
     }
   }
 }
@@ -172,7 +175,9 @@ double ForcesAndMomentsInterface::send_get_param_service_to_firmware(std::string
   // Call rosflight_io service
   // check to see if service exists
   if (!firmware_param_get_client_->wait_for_service(std::chrono::milliseconds(500))) {
-    RCLCPP_WARN_STREAM(this->get_logger(), "Firmware \"param_get\" service not available! Unable to get " + param_name + " parameter! Value will be zero");
+    RCLCPP_WARN_STREAM(this->get_logger(),
+                       "Firmware \"param_get\" service not available! Unable to get " + param_name
+                         + " parameter! Value will be zero");
     return 0.0;
   }
 
@@ -186,14 +191,18 @@ double ForcesAndMomentsInterface::send_get_param_service_to_firmware(std::string
 
   // Check if everything finished properly
   if (status != std::future_status::ready) {
-    RCLCPP_WARN_STREAM(this->get_logger(), "Firmware param_get service timed out! " + param_name + " value will be zero");
+    RCLCPP_WARN_STREAM(this->get_logger(),
+                       "Firmware param_get service timed out! " + param_name
+                         + " value will be zero");
     return 0.0;
   }
 
-  rosflight_msgs::srv::ParamGet::Response::SharedPtr response = result_future.get(); // Can only get it once
+  rosflight_msgs::srv::ParamGet::Response::SharedPtr response =
+    result_future.get(); // Can only get it once
 
   if (!response->exists) {
-    RCLCPP_WARN_STREAM(this->get_logger(), "Firmware parameter " + param_name + " does not exist! Value will be zero");
+    RCLCPP_WARN_STREAM(this->get_logger(),
+                       "Firmware parameter " + param_name + " does not exist! Value will be zero");
     return 0.0;
   }
 
@@ -205,7 +214,8 @@ bool ForcesAndMomentsInterface::send_check_params_service_to_firmware()
   // Call rosflight_io service
   // check to see if service exists
   if (!firmware_check_param_client_->wait_for_service(std::chrono::milliseconds(500))) {
-    RCLCPP_WARN_STREAM(this->get_logger(), "Firmware \"all_params_received\" service not available!");
+    RCLCPP_WARN_STREAM(this->get_logger(),
+                       "Firmware \"all_params_received\" service not available!");
     return false;
   }
 
@@ -222,28 +232,33 @@ bool ForcesAndMomentsInterface::send_check_params_service_to_firmware()
     return false;
   }
 
-  std_srvs::srv::Trigger::Response::SharedPtr response = result_future.get(); // Can only get it once
+  std_srvs::srv::Trigger::Response::SharedPtr response =
+    result_future.get(); // Can only get it once
   return response->success;
 }
 
-void ForcesAndMomentsInterface::invert_matrix(Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS> &mixer_to_invert)
+void ForcesAndMomentsInterface::invert_matrix(
+  Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS> & mixer_to_invert)
 {
   // Calculate the pseudoinverse of the mixing matrix using the SVD
   auto flags = static_cast<unsigned int>(Eigen::FullPivHouseholderQRPreconditioner)
     | static_cast<unsigned int>(Eigen::ComputeFullU)
     | static_cast<unsigned int>(Eigen::ComputeFullV);
-  Eigen::JacobiSVD<Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS>> svd(
-    mixer_to_invert, flags);
+  Eigen::JacobiSVD<Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS>> svd(mixer_to_invert,
+                                                                                    flags);
   Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS> Sig;
   Sig.setZero();
 
   // Avoid dividing by zero in the Sigma matrix
-  for (int i=0; i<NUM_MIXER_OUTPUTS; ++i) {
-    if (svd.singularValues()[i] != 0.0) { Sig(i, i) = 1.0 / svd.singularValues()[i]; }
+  for (int i = 0; i < NUM_MIXER_OUTPUTS; ++i) {
+    if (svd.singularValues()[i] != 0.0) {
+      Sig(i, i) = 1.0 / svd.singularValues()[i];
+    }
   }
 
   // Pseudoinverse of the mixing matrix
-  Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS> mixer_pinv = svd.matrixV() * Sig * svd.matrixU().transpose();
+  Eigen::Matrix<double, NUM_MIXER_OUTPUTS, NUM_MIXER_OUTPUTS> mixer_pinv =
+    svd.matrixV() * Sig * svd.matrixU().transpose();
 
   // Save the inverted matrix
   mixer_to_invert = mixer_pinv.transpose();

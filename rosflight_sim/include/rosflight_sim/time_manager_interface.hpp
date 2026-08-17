@@ -91,6 +91,6 @@ private:
                              const std_srvs::srv::Trigger::Response::SharedPtr & res);
 };
 
-}   // rosflight_sim
+} // namespace rosflight_sim
 
-#endif    // ROSFLIGHT_SIM_TIME_MANAGER_H
+#endif // ROSFLIGHT_SIM_TIME_MANAGER_H

@@ -31,7 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef ROSFLIGHT_SIM_STANDALONE_SENSORS_H
 #define ROSFLIGHT_SIM_STANDALONE_SENSORS_H
 
@@ -40,8 +39,8 @@
 #include <Eigen/Geometry>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 
-#include "rosflight_sim/sensor_interface.hpp"
 #include "rosflight_msgs/msg/sim_state.hpp"
+#include "rosflight_sim/sensor_interface.hpp"
 
 #define EARTH_RADIUS 6378145.0f
 
@@ -56,15 +55,20 @@ public:
   /*
    * @brief Computes a new sensor measurement from the current state
   */
-  sensor_msgs::msg::Imu imu_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::WrenchStamped & forces) override;
-  sensor_msgs::msg::Temperature imu_temperature_update(const rosflight_msgs::msg::SimState & state) override;
+  sensor_msgs::msg::Imu imu_update(const rosflight_msgs::msg::SimState & state,
+                                   const geometry_msgs::msg::WrenchStamped & forces) override;
+  sensor_msgs::msg::Temperature
+  imu_temperature_update(const rosflight_msgs::msg::SimState & state) override;
   sensor_msgs::msg::Imu get_imu_biases() override;
   sensor_msgs::msg::MagneticField mag_update(const rosflight_msgs::msg::SimState & state) override;
   rosflight_msgs::msg::Barometer baro_update(const rosflight_msgs::msg::SimState & state) override;
   rosflight_msgs::msg::GNSS gnss_update(const rosflight_msgs::msg::SimState & state) override;
   sensor_msgs::msg::Range range_update(const rosflight_msgs::msg::SimState & state) override;
-  rosflight_msgs::msg::Airspeed diff_pressure_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::Vector3Stamped & wind) override;
-  rosflight_msgs::msg::BatteryStatus battery_update(const rosflight_msgs::msg::SimState & state) override;
+  rosflight_msgs::msg::Airspeed
+  diff_pressure_update(const rosflight_msgs::msg::SimState & state,
+                       const geometry_msgs::msg::Vector3Stamped & wind) override;
+  rosflight_msgs::msg::BatteryStatus
+  battery_update(const rosflight_msgs::msg::SimState & state) override;
 
 private:
   // Sensor noise
@@ -106,9 +110,8 @@ private:
    * @brief Initializes the noise generators and the biases for the sensors
    */
   void initialize_sensors();
-
 };
 
-} // rosflight_sim
+} // namespace rosflight_sim
 
 #endif // ROSFLIGHT_SIM_STANDALONE_SENSORS_H

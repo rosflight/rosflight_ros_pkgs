@@ -48,12 +48,13 @@
 #include <rosflight_io/mavrosflight/mavlink_udp.hpp>
 #include <rosflight_io/mavrosflight/serial_exception.hpp>
 #include <string>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <sys/resource.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include <rosflight_io/rosflight_io.hpp>
 
-namespace rosflight_io {
+namespace rosflight_io
+{
 
 ROSflightIO::ROSflightIO()
     : Node("rosflight_io")
@@ -75,10 +76,9 @@ ROSflightIO::ROSflightIO()
     this->create_publisher<std_msgs::msg::Bool>("status/unsaved_params", qos_transient_local_1_);
   rclcpp::QoS qos_transient_local_5_(5); // A relatively large queue so all messages get through
   qos_transient_local_5_.transient_local();
-  error_pub_ =
-    this->create_publisher<rosflight_msgs::msg::Error>("status/rosflight_errors", qos_transient_local_5_);
-  params_changed_pub_ =
-    this->create_publisher<std_msgs::msg::Bool>("status/params_changed", 1);
+  error_pub_ = this->create_publisher<rosflight_msgs::msg::Error>("status/rosflight_errors",
+                                                                  qos_transient_local_5_);
+  params_changed_pub_ = this->create_publisher<std_msgs::msg::Bool>("status/params_changed", 1);
 
   param_get_srv_ = this->create_service<rosflight_msgs::srv::ParamGet>(
     "param_get",
@@ -129,7 +129,8 @@ ROSflightIO::ROSflightIO()
               std::placeholders::_2));
 
   declare_parameters();
-  parameter_callback_handle_ = this->add_on_set_parameters_callback(std::bind(&ROSflightIO::parameters_callback, this, std::placeholders::_1));
+  parameter_callback_handle_ = this->add_on_set_parameters_callback(
+    std::bind(&ROSflightIO::parameters_callback, this, std::placeholders::_1));
 
   if (this->get_parameter_or("udp", false)) {
     auto bind_host = this->get_parameter_or<std::string>("bind_host", "localhost");
@@ -207,24 +208,12 @@ void ROSflightIO::declare_parameters()
   this->declare_parameter("frame_id", rclcpp::PARAMETER_STRING);
 
   // Convenience parameters for access to the firmware control gains
-  convenience_parameters_ = {
-    "PID_ROLL_RATE_I",
-    "PID_ROLL_RATE_P",
-    "PID_ROLL_RATE_D",
-    "PID_PITCH_RATE_P",
-    "PID_PITCH_RATE_I",
-    "PID_PITCH_RATE_D",
-    "PID_YAW_RATE_P",
-    "PID_YAW_RATE_I",
-    "PID_YAW_RATE_D",
-    "PID_ROLL_ANG_P",
-    "PID_ROLL_ANG_I",
-    "PID_ROLL_ANG_D",
-    "PID_PITCH_ANG_P",
-    "PID_PITCH_ANG_I",
-    "PID_PITCH_ANG_D"
-  };
-  for (const auto& param : convenience_parameters_) {
+  convenience_parameters_ = {"PID_ROLL_RATE_I",  "PID_ROLL_RATE_P",  "PID_ROLL_RATE_D",
+                             "PID_PITCH_RATE_P", "PID_PITCH_RATE_I", "PID_PITCH_RATE_D",
+                             "PID_YAW_RATE_P",   "PID_YAW_RATE_I",   "PID_YAW_RATE_D",
+                             "PID_ROLL_ANG_P",   "PID_ROLL_ANG_I",   "PID_ROLL_ANG_D",
+                             "PID_PITCH_ANG_P",  "PID_PITCH_ANG_I",  "PID_PITCH_ANG_D"};
+  for (const auto & param : convenience_parameters_) {
     this->declare_parameter(param, rclcpp::PARAMETER_DOUBLE);
   }
 }
@@ -269,11 +258,12 @@ void ROSflightIO::load_convenience_parameters()
 {
   // Load any parameters from the firmware into the ROS2 parameters for easy read and write access.
   double value;
-  for (const auto& param : convenience_parameters_) {
+  for (const auto & param : convenience_parameters_) {
     if (mavrosflight_->param.get_param_value(param, &value)) {
       this->set_parameter(rclcpp::Parameter(param, value));
     } else {
-      RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!", param.c_str());
+      RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!",
+                  param.c_str());
     }
   }
 }
@@ -284,41 +274,46 @@ bool ROSflightIO::log_mixer_params()
   std::string param_name = "PRIMARY_MIXER";
   double primary_mixer{0};
   if (!mavrosflight_->param.get_param_value(param_name, &primary_mixer)) {
-    RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!", param_name.c_str());
+    RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!",
+                param_name.c_str());
     return false;
   }
 
   param_name = "SECONDARY_MIXER";
   double secondary_mixer{0};
   if (!mavrosflight_->param.get_param_value(param_name, &secondary_mixer)) {
-    RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!", param_name.c_str());
+    RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!",
+                param_name.c_str());
     return false;
   }
 
   // Get the relevant mixer header parameters
-  Eigen::Matrix<double, 1, 10> mixer_header_vals{Eigen::Matrix<double,1,10>::Zero()};
-  for (int i=0; i<10; ++i) {
+  Eigen::Matrix<double, 1, 10> mixer_header_vals{Eigen::Matrix<double, 1, 10>::Zero()};
+  for (int i = 0; i < 10; ++i) {
     param_name = "PRI_MIXER_OUT_" + std::to_string(i);
     if (!mavrosflight_->param.get_param_value(param_name, &mixer_header_vals[i])) {
-      RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!", param_name.c_str());
+      RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!",
+                  param_name.c_str());
       return false;
     }
   }
 
   // Get the mixer matrix parameters
-  Eigen::Matrix<double, 10, 10> primary_mixing_matrix{Eigen::Matrix<double,10,10>::Zero()};
-  Eigen::Matrix<double, 10, 10> secondary_mixing_matrix{Eigen::Matrix<double,10,10>::Zero()};
-  for (int i=0; i<10; ++i) {
-    for (int j=0; j<10; ++j) {
+  Eigen::Matrix<double, 10, 10> primary_mixing_matrix{Eigen::Matrix<double, 10, 10>::Zero()};
+  Eigen::Matrix<double, 10, 10> secondary_mixing_matrix{Eigen::Matrix<double, 10, 10>::Zero()};
+  for (int i = 0; i < 10; ++i) {
+    for (int j = 0; j < 10; ++j) {
       param_name = "PRI_MIXER_" + std::to_string(i) + "_" + std::to_string(j);
-      if (!mavrosflight_->param.get_param_value(param_name, &primary_mixing_matrix(i,j))) {
-        RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!", param_name.c_str());
+      if (!mavrosflight_->param.get_param_value(param_name, &primary_mixing_matrix(i, j))) {
+        RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!",
+                    param_name.c_str());
         return false;
       }
 
       param_name = "SEC_MIXER_" + std::to_string(i) + "_" + std::to_string(j);
-      if (!mavrosflight_->param.get_param_value(param_name, &secondary_mixing_matrix(i,j))) {
-        RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!", param_name.c_str());
+      if (!mavrosflight_->param.get_param_value(param_name, &secondary_mixing_matrix(i, j))) {
+        RCLCPP_WARN(this->get_logger(), "Failed to get parameter '%s' from the firmware!",
+                    param_name.c_str());
         return false;
       }
     }
@@ -774,7 +769,7 @@ void ROSflightIO::handle_small_range_msg(const mavlink_message_t & msg)
   alt_msg.max_range = range.max_range;
   alt_msg.min_range = range.min_range;
   alt_msg.range = range.range;
-      
+
   if (range_pub_ == nullptr) {
     range_pub_ = this->create_publisher<sensor_msgs::msg::Range>("range", 1);
   }
@@ -924,8 +919,8 @@ void ROSflightIO::commandCallback(const rosflight_msgs::msg::Command::ConstShare
   auto mode = (OFFBOARD_CONTROL_MODE) msg->mode;
   auto ignore = (OFFBOARD_CONTROL_IGNORE) msg->ignore;
 
-  float command_vect[10] = {0,0,0,0,0,0,0,0,0,0};
-  for (int i=0; i<10; ++i) {
+  float command_vect[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  for (int i = 0; i < 10; ++i) {
     command_vect[i] = msg->u[i];
   }
 
@@ -1046,9 +1041,7 @@ void ROSflightIO::paramTimerCallback()
 
 void ROSflightIO::versionTimerCallback() { request_version(); }
 
-void ROSflightIO::heartbeatTimerCallback() { 
-  send_heartbeat();
-}
+void ROSflightIO::heartbeatTimerCallback() { send_heartbeat(); }
 
 void ROSflightIO::request_version()
 {
@@ -1099,13 +1092,14 @@ bool ROSflightIO::calibrateBaroSrvCallback(
 
 bool ROSflightIO::calibrateMagSrvCallback(
   [[maybe_unused]] const std_srvs::srv::Trigger::Request::SharedPtr & req,
-  const std_srvs::srv::Trigger::Response::SharedPtr & res) {
- 
+  const std_srvs::srv::Trigger::Response::SharedPtr & res)
+{
+
   // Reset the mag compensation to get a clean calibration.
   mavrosflight_->param.set_param_value("MAG_X_BIAS", 0.0f);
   mavrosflight_->param.set_param_value("MAG_Y_BIAS", 0.0f);
   mavrosflight_->param.set_param_value("MAG_Z_BIAS", 0.0f);
-  
+
   mavrosflight_->param.set_param_value("MAG_CAL_A00", 1.0f);
   mavrosflight_->param.set_param_value("MAG_CAL_A01", 0.0f);
   mavrosflight_->param.set_param_value("MAG_CAL_A02", 0.0f);
@@ -1118,27 +1112,28 @@ bool ROSflightIO::calibrateMagSrvCallback(
 
   float frequency = 10.0;
 
-  auto timer_period = std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000));
+  auto timer_period =
+    std::chrono::microseconds(static_cast<long long>(1.0 / frequency * 1'000'000));
 
   // Set timer to trigger bound callback while calibrating.
   mag_calibration_timer_ = rclcpp::create_timer(this, this->get_clock(), timer_period,
-                                   std::bind(&ROSflightIO::calibrateMag, this));
-  
+                                                std::bind(&ROSflightIO::calibrateMag, this));
+
   calibrate_mag_ = true;
   res->success = true;
   res->message = "Beginning Calibration";
 
-  // Create magnetometer calibrator 
-  
+  // Create magnetometer calibrator
+
   return true;
 }
 
-void ROSflightIO::calibrateMag() {
+void ROSflightIO::calibrateMag()
+{
 
   if (magnetometer_calibrator_.calibrating()) {
     RCLCPP_INFO(this->get_logger(), magnetometer_calibrator_.feedback().c_str());
-  }
-  else {
+  } else {
 
     Eigen::Vector3d hard_iron_offset = magnetometer_calibrator_.get_hard_iron_offset();
     Eigen::Matrix3d soft_iron_correction = magnetometer_calibrator_.get_soft_iron_correction();
@@ -1147,15 +1142,15 @@ void ROSflightIO::calibrateMag() {
     mavrosflight_->param.set_param_value("MAG_Y_BIAS", float(hard_iron_offset(1)));
     mavrosflight_->param.set_param_value("MAG_Z_BIAS", float(hard_iron_offset(2)));
 
-    mavrosflight_->param.set_param_value("MAG_CAL_A00", float(soft_iron_correction(0,0)));
-    mavrosflight_->param.set_param_value("MAG_CAL_A01", float(soft_iron_correction(0,1)));
-    mavrosflight_->param.set_param_value("MAG_CAL_A02", float(soft_iron_correction(0,2)));
-    mavrosflight_->param.set_param_value("MAG_CAL_A10", float(soft_iron_correction(1,0)));
-    mavrosflight_->param.set_param_value("MAG_CAL_A11", float(soft_iron_correction(1,1)));
-    mavrosflight_->param.set_param_value("MAG_CAL_A12", float(soft_iron_correction(1,2)));
-    mavrosflight_->param.set_param_value("MAG_CAL_A20", float(soft_iron_correction(2,0)));
-    mavrosflight_->param.set_param_value("MAG_CAL_A21", float(soft_iron_correction(2,1)));
-    mavrosflight_->param.set_param_value("MAG_CAL_A22", float(soft_iron_correction(2,2)));
+    mavrosflight_->param.set_param_value("MAG_CAL_A00", float(soft_iron_correction(0, 0)));
+    mavrosflight_->param.set_param_value("MAG_CAL_A01", float(soft_iron_correction(0, 1)));
+    mavrosflight_->param.set_param_value("MAG_CAL_A02", float(soft_iron_correction(0, 2)));
+    mavrosflight_->param.set_param_value("MAG_CAL_A10", float(soft_iron_correction(1, 0)));
+    mavrosflight_->param.set_param_value("MAG_CAL_A11", float(soft_iron_correction(1, 1)));
+    mavrosflight_->param.set_param_value("MAG_CAL_A12", float(soft_iron_correction(1, 2)));
+    mavrosflight_->param.set_param_value("MAG_CAL_A20", float(soft_iron_correction(2, 0)));
+    mavrosflight_->param.set_param_value("MAG_CAL_A21", float(soft_iron_correction(2, 1)));
+    mavrosflight_->param.set_param_value("MAG_CAL_A22", float(soft_iron_correction(2, 2)));
 
     RCLCPP_INFO(this->get_logger(), "Calibration complete.");
 

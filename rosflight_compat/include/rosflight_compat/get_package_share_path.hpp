@@ -67,6 +67,6 @@ std::filesystem::path get_package_share_path(const std::string & package_name)
 #endif
 }
 
-}  // namespace rosflight_compat
+} // namespace rosflight_compat
 
 #endif // ROSFLIGHT_COMPAT_GET_PACKAGE_SHARE_PATH_HPP

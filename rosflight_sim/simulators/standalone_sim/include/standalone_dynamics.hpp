@@ -41,8 +41,8 @@
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
-#include "rosflight_sim/dynamics_interface.hpp"
 #include "rosflight_msgs/msg/sim_state.hpp"
+#include "rosflight_sim/dynamics_interface.hpp"
 
 namespace rosflight_sim
 {
@@ -97,14 +97,15 @@ private:
   Eigen::VectorXd f(Eigen::VectorXd state, Eigen::VectorXd forces);
   void rk4(Eigen::VectorXd state, Eigen::VectorXd forces_moments);
   void compute_dt(double now);
-  Eigen::VectorXd compute_accels_with_updated_state(Eigen::VectorXd state, Eigen::VectorXd forces_moments);
+  Eigen::VectorXd compute_accels_with_updated_state(Eigen::VectorXd state,
+                                                    Eigen::VectorXd forces_moments);
 
   void compute_inertia_matrix();
   Eigen::VectorXd add_gravity_forces(Eigen::VectorXd forces);
   Eigen::VectorXd add_ground_collision_forces(Eigen::VectorXd forces);
 
   void set_steady_state_wind();
-  Eigen::Vector3d compute_gust(Gust& gust_params);
+  Eigen::Vector3d compute_gust(Gust & gust_params);
 };
 
 } // namespace rosflight_sim

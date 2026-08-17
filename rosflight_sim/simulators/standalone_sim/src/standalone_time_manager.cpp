@@ -37,9 +37,9 @@ namespace rosflight_sim
 {
 
 StandaloneTimeManager::StandaloneTimeManager()
-  : TimeManagerInterface()
-  , seconds_(0)
-  , nanoseconds_(0)
+    : TimeManagerInterface()
+    , seconds_(0)
+    , nanoseconds_(0)
 {}
 
 void StandaloneTimeManager::update_time()
@@ -51,10 +51,10 @@ void StandaloneTimeManager::update_time()
   }
 }
 
-}   // rosflight_sim
+} // namespace rosflight_sim
 
 // TODO: If we want to do zero copy transfer, remove this main function. For now it will remain
-int main(int argc, char** argv)
+int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
   auto node = std::make_shared<rosflight_sim::StandaloneTimeManager>();

@@ -48,7 +48,8 @@ TimeManagerInterface::TimeManagerInterface()
   // Create pause and reset service
   play_pause_srvs_ = this->create_service<std_srvs::srv::Trigger>(
     "time_manager/toggle_pause",
-    std::bind(&TimeManagerInterface::toggle_pause_callback, this, std::placeholders::_1, std::placeholders::_2));
+    std::bind(&TimeManagerInterface::toggle_pause_callback, this, std::placeholders::_1,
+              std::placeholders::_2));
 
   // Create publisher
   auto qos = rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data);

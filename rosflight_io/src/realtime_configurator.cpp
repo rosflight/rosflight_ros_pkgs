@@ -39,16 +39,16 @@
 
 #include <rosflight_io/realtime_configurator.hpp>
 
+#include <cerrno>
 #include <chrono>
 #include <cstdio>
 #include <cstring>
-#include <cerrno>
 #include <stdexcept>
 
 using namespace std::chrono_literals;
 
 RealtimeConfigurator::RealtimeConfigurator(int who)
-: who_{who} 
+    : who_{who}
 {
   // Default settings.
   priority_ = 87;
@@ -64,16 +64,16 @@ void RealtimeConfigurator::init() noexcept
 
 [[nodiscard]] int64_t RealtimeConfigurator::num_context_switches() noexcept
 {
-  std::call_once(
-    once_, [this] {init();}
-  );
+  std::call_once(once_, [this] { init(); });
   int64_t current = get_involuntary_context_switches(who_);
   return current - std::exchange(involuntary_context_switches_previous_, current);
 }
 
 int64_t RealtimeConfigurator::get_involuntary_context_switches(int who) noexcept
 {
-  struct rusage rusage {};
+  struct rusage rusage
+  {
+  };
   getrusage(who, &rusage);
   return static_cast<int64_t>(rusage.ru_nivcsw);
 }
@@ -93,13 +93,13 @@ void RealtimeConfigurator::configure_thread_for_realtime()
   set_thread_scheduling(pthread_self(), policy_, priority_);
 }
 
-void RealtimeConfigurator::configure_node_to_report_context_switches(rclcpp::Node::SharedPtr& node)
+void RealtimeConfigurator::configure_node_to_report_context_switches(rclcpp::Node::SharedPtr & node)
 {
   std::string node_name = std::string(node->get_name());
-  publisher_ =
-    node->create_publisher<std_msgs::msg::Int32>(node_name + "/context_switches", 10);
+  publisher_ = node->create_publisher<std_msgs::msg::Int32>(node_name + "/context_switches", 10);
 
-  context_timer_ = node->create_wall_timer(1000ms, std::bind(&RealtimeConfigurator::publish_context_switches, this));
+  context_timer_ = node->create_wall_timer(
+    1000ms, std::bind(&RealtimeConfigurator::publish_context_switches, this));
 }
 
 void RealtimeConfigurator::publish_context_switches()
@@ -110,22 +110,24 @@ void RealtimeConfigurator::publish_context_switches()
   publisher_->publish(msg);
 }
 
-void RealtimeConfigurator::set_thread_scheduling(std::thread::native_handle_type thread, int policy, int sched_priority)
+void RealtimeConfigurator::set_thread_scheduling(std::thread::native_handle_type thread, int policy,
+                                                 int sched_priority)
 {
   struct sched_param param;
   param.sched_priority = sched_priority;
   auto ret = pthread_setschedparam(thread, policy, &param);
   if (ret > 0) {
-    throw std::runtime_error(
-      "Couldn't set scheduling priority and policy. Error code: " + std::string(strerror(errno)));
+    throw std::runtime_error("Couldn't set scheduling priority and policy. Error code: "
+                             + std::string(strerror(errno)));
   }
 }
 
-bool RealtimeConfigurator::is_publish_context_switches() {return is_publish_context_switches_;}
+bool RealtimeConfigurator::is_publish_context_switches() { return is_publish_context_switches_; }
 
-bool RealtimeConfigurator::is_realtime() {return is_realtime_;}
+bool RealtimeConfigurator::is_realtime() { return is_realtime_; }
 
-void RealtimeConfigurator::configure(int argc, char ** argv) {
+void RealtimeConfigurator::configure(int argc, char ** argv)
+{
   for (int i = 1; i < argc; ++i) {
     std::string arg(argv[i]);
     if (arg == "--realtime") {
@@ -147,7 +149,7 @@ void RealtimeConfigurator::configure(int argc, char ** argv) {
     if (key == "--priority") {
       try {
         priority_ = std::stoi(value);
-      } catch (const std::exception&) {
+      } catch (const std::exception &) {
         std::cout << "Priority must be an integer.\n";
       }
     } else if (key == "--policy") {
@@ -155,8 +157,7 @@ void RealtimeConfigurator::configure(int argc, char ** argv) {
         policy_ = SCHED_RR;
       } else if (value == "FIFO") {
         policy_ = SCHED_FIFO;
-      }
-      else {
+      } else {
         std::cout << "Policy must be RR or FIFO\n";
       }
     }

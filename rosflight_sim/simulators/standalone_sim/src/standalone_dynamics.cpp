@@ -37,14 +37,14 @@ namespace rosflight_sim
 {
 
 StandaloneDynamics::StandaloneDynamics()
-  : DynamicsInterface()
-  , J_{Eigen::Matrix3d::Identity()}
-  , J_inv_{Eigen::Matrix3d::Identity()}
-  , inertia_matrix_changed_{false}
-  , wind_params_changed_{false}
-  , dt_{0.0}
-  , prev_time_{0.0}
-  , steady_state_wind_{Eigen::Vector3d::Zero()}
+    : DynamicsInterface()
+    , J_{Eigen::Matrix3d::Identity()}
+    , J_inv_{Eigen::Matrix3d::Identity()}
+    , inertia_matrix_changed_{false}
+    , wind_params_changed_{false}
+    , dt_{0.0}
+    , prev_time_{0.0}
+    , steady_state_wind_{Eigen::Vector3d::Zero()}
 {
   current_truth_state_ = rosflight_msgs::msg::SimState();
 
@@ -89,23 +89,18 @@ void StandaloneDynamics::declare_parameters()
 rcl_interfaces::msg::SetParametersResult
 StandaloneDynamics::parameters_callback(const std::vector<rclcpp::Parameter> & parameters)
 {
-  rcl_interfaces::msg::SetParametersResult result = DynamicsInterface::parameters_callback(parameters);
+  rcl_interfaces::msg::SetParametersResult result =
+    DynamicsInterface::parameters_callback(parameters);
   if (!result.successful) {
     return result;
   }
 
-  for (const rclcpp::Parameter& param : parameters) {
-    if (param.get_name() == "Jxx"
-        || param.get_name() == "Jxy"
-        || param.get_name() == "Jxz"
-        || param.get_name() == "Jyy"
-        || param.get_name() == "Jyz"
-        || param.get_name() == "Jzz") {
+  for (const rclcpp::Parameter & param : parameters) {
+    if (param.get_name() == "Jxx" || param.get_name() == "Jxy" || param.get_name() == "Jxz"
+        || param.get_name() == "Jyy" || param.get_name() == "Jyz" || param.get_name() == "Jzz") {
       inertia_matrix_changed_ = true;
-    } else if (param.get_name() == "sim_has_wind"
-               || param.get_name() == "use_random_wind"
-               || param.get_name() == "steady_state_wind"
-               || param.get_name() == "random_wind_mean"
+    } else if (param.get_name() == "sim_has_wind" || param.get_name() == "use_random_wind"
+               || param.get_name() == "steady_state_wind" || param.get_name() == "random_wind_mean"
                || param.get_name() == "random_wind_std_dev") {
       wind_params_changed_ = true;
     }
@@ -116,14 +111,10 @@ StandaloneDynamics::parameters_callback(const std::vector<rclcpp::Parameter> & p
 
 void StandaloneDynamics::compute_inertia_matrix()
 {
-  J_ << this->get_parameter("Jxx").as_double(), 
-    this->get_parameter("Jxy").as_double(), 
-    this->get_parameter("Jxz").as_double(), 
-    this->get_parameter("Jxy").as_double(), 
-    this->get_parameter("Jyy").as_double(), 
-    this->get_parameter("Jyz").as_double(), 
-    this->get_parameter("Jxz").as_double(), 
-    this->get_parameter("Jyz").as_double(), 
+  J_ << this->get_parameter("Jxx").as_double(), this->get_parameter("Jxy").as_double(),
+    this->get_parameter("Jxz").as_double(), this->get_parameter("Jxy").as_double(),
+    this->get_parameter("Jyy").as_double(), this->get_parameter("Jyz").as_double(),
+    this->get_parameter("Jxz").as_double(), this->get_parameter("Jyz").as_double(),
     this->get_parameter("Jzz").as_double();
 
   J_inv_ = J_.inverse();
@@ -131,7 +122,7 @@ void StandaloneDynamics::compute_inertia_matrix()
 
 void StandaloneDynamics::set_steady_state_wind()
 {
-  steady_state_wind_ = Eigen::Vector3d(0.0,0.0,0.0);
+  steady_state_wind_ = Eigen::Vector3d(0.0, 0.0, 0.0);
 
   if (!this->get_parameter("sim_has_wind").as_bool()) {
     return;
@@ -141,20 +132,23 @@ void StandaloneDynamics::set_steady_state_wind()
 
   if (!this->get_parameter("use_random_wind").as_bool()) {
     steady_state_wind_ = Eigen::Vector3d(wind_params[0], wind_params[1], wind_params[2]);
-  }
-  else {
+  } else {
     std::vector<double> wind_means = this->get_parameter("random_wind_mean").as_double_array();
-    std::vector<double> wind_std_devs = this->get_parameter("random_wind_std_dev").as_double_array();
-    steady_state_wind_ = Eigen::Vector3d(wind_means[0] + normal_dist_(sample_)*wind_std_devs[0],
-                                      wind_means[1] + normal_dist_(sample_)*wind_std_devs[1],
-                                      wind_means[2] + normal_dist_(sample_)*wind_std_devs[2]);
+    std::vector<double> wind_std_devs =
+      this->get_parameter("random_wind_std_dev").as_double_array();
+    steady_state_wind_ = Eigen::Vector3d(wind_means[0] + normal_dist_(sample_) * wind_std_devs[0],
+                                         wind_means[1] + normal_dist_(sample_) * wind_std_devs[1],
+                                         wind_means[2] + normal_dist_(sample_) * wind_std_devs[2]);
   }
 }
 
-void StandaloneDynamics::apply_forces_and_torques(const geometry_msgs::msg::WrenchStamped & forces_torques)
+void StandaloneDynamics::apply_forces_and_torques(
+  const geometry_msgs::msg::WrenchStamped & forces_torques)
 {
   compute_dt(forces_torques.header.stamp.sec + forces_torques.header.stamp.nanosec * 1e-9);
-  if (dt_ == 0.0) { return; } // Don't integrate if the timestep is zero
+  if (dt_ == 0.0) {
+    return;
+  } // Don't integrate if the timestep is zero
 
   if (inertia_matrix_changed_) {
     compute_inertia_matrix();
@@ -163,12 +157,8 @@ void StandaloneDynamics::apply_forces_and_torques(const geometry_msgs::msg::Wren
 
   // Forces should aleady be in the body frame
   Eigen::VectorXd fm(6);
-  fm << forces_torques.wrench.force.x,
-        forces_torques.wrench.force.y,
-        forces_torques.wrench.force.z,
-        forces_torques.wrench.torque.x,
-        forces_torques.wrench.torque.y,
-        forces_torques.wrench.torque.z;
+  fm << forces_torques.wrench.force.x, forces_torques.wrench.force.y, forces_torques.wrench.force.z,
+    forces_torques.wrench.torque.x, forces_torques.wrench.torque.y, forces_torques.wrench.torque.z;
 
   // Add gravity to the aerodynamics and propulsion forces
   fm = add_gravity_forces(fm);
@@ -178,19 +168,13 @@ void StandaloneDynamics::apply_forces_and_torques(const geometry_msgs::msg::Wren
 
   // Fill in state Eigen vectors
   Eigen::VectorXd state(13);
-  state << current_truth_state_.pose.position.x,
-           current_truth_state_.pose.position.y,
-           current_truth_state_.pose.position.z,
-           current_truth_state_.twist.linear.x,
-           current_truth_state_.twist.linear.y,
-           current_truth_state_.twist.linear.z,
-           current_truth_state_.pose.orientation.w,
-           current_truth_state_.pose.orientation.x,
-           current_truth_state_.pose.orientation.y,
-           current_truth_state_.pose.orientation.z,
-           current_truth_state_.twist.angular.x,
-           current_truth_state_.twist.angular.y,
-           current_truth_state_.twist.angular.z;
+  state << current_truth_state_.pose.position.x, current_truth_state_.pose.position.y,
+    current_truth_state_.pose.position.z, current_truth_state_.twist.linear.x,
+    current_truth_state_.twist.linear.y, current_truth_state_.twist.linear.z,
+    current_truth_state_.pose.orientation.w, current_truth_state_.pose.orientation.x,
+    current_truth_state_.pose.orientation.y, current_truth_state_.pose.orientation.z,
+    current_truth_state_.twist.angular.x, current_truth_state_.twist.angular.y,
+    current_truth_state_.twist.angular.z;
 
   // integrate forces and torques
   rk4(state, fm);
@@ -199,14 +183,13 @@ void StandaloneDynamics::apply_forces_and_torques(const geometry_msgs::msg::Wren
 Eigen::VectorXd StandaloneDynamics::add_gravity_forces(Eigen::VectorXd forces)
 {
   // Rotate gravity into body frame
-  Eigen::Quaterniond q_body_to_inertial(current_truth_state_.pose.orientation.w, 
-                                        current_truth_state_.pose.orientation.x,
-                                        current_truth_state_.pose.orientation.y,
-                                        current_truth_state_.pose.orientation.z);
-  Eigen::Vector3d gravity(0,0,this->get_parameter("gravity").as_double());
+  Eigen::Quaterniond q_body_to_inertial(
+    current_truth_state_.pose.orientation.w, current_truth_state_.pose.orientation.x,
+    current_truth_state_.pose.orientation.y, current_truth_state_.pose.orientation.z);
+  Eigen::Vector3d gravity(0, 0, this->get_parameter("gravity").as_double());
   Eigen::Vector3d gravity_body = q_body_to_inertial.inverse() * gravity;
 
-  forces.segment(0,3) += gravity_body * this->get_parameter("mass").as_double();
+  forces.segment(0, 3) += gravity_body * this->get_parameter("mass").as_double();
   return forces;
 }
 
@@ -220,17 +203,16 @@ Eigen::VectorXd StandaloneDynamics::add_ground_collision_forces(Eigen::VectorXd 
 
   current_truth_state_.pose.position.z = std::min(0.0, current_truth_state_.pose.position.z);
 
-  Eigen::Quaterniond q_body_to_inertial{current_truth_state_.pose.orientation.w, 
-                                        current_truth_state_.pose.orientation.x,
-                                        current_truth_state_.pose.orientation.y,
-                                        current_truth_state_.pose.orientation.z};
-  Eigen::Vector3d forces_in_inertial_frame = q_body_to_inertial * forces.segment(0,3);
+  Eigen::Quaterniond q_body_to_inertial{
+    current_truth_state_.pose.orientation.w, current_truth_state_.pose.orientation.x,
+    current_truth_state_.pose.orientation.y, current_truth_state_.pose.orientation.z};
+  Eigen::Vector3d forces_in_inertial_frame = q_body_to_inertial * forces.segment(0, 3);
 
   if (forces_in_inertial_frame(2) > 0.0) {
     forces_in_inertial_frame(2) = 0.0; // If down force is positive, set it to zero.
   }
 
-  forces.segment(0,3) = q_body_to_inertial.inverse() * forces_in_inertial_frame;
+  forces.segment(0, 3) = q_body_to_inertial.inverse() * forces_in_inertial_frame;
   return forces;
 }
 
@@ -238,13 +220,13 @@ void StandaloneDynamics::rk4(Eigen::VectorXd state, Eigen::VectorXd forces_momen
 {
   // RK4
   Eigen::VectorXd k1 = f(state, forces_moments);
-  Eigen::VectorXd k2 = f(state + dt_/2 * k1, forces_moments);
-  Eigen::VectorXd k3 = f(state + dt_/2 * k2, forces_moments);
+  Eigen::VectorXd k2 = f(state + dt_ / 2 * k1, forces_moments);
+  Eigen::VectorXd k3 = f(state + dt_ / 2 * k2, forces_moments);
   Eigen::VectorXd k4 = f(state + dt_ * k3, forces_moments);
-  state += dt_ / 6 * (k1 + 2*k2 + 2*k3 + k4); // Integrate states
+  state += dt_ / 6 * (k1 + 2 * k2 + 2 * k3 + k4); // Integrate states
 
   // Normalize the quaternion
-  state.segment(6,4).normalize();
+  state.segment(6, 4).normalize();
 
   // Unpackage eigen vector into current state
   current_truth_state_.pose.position.x = state(0);
@@ -270,7 +252,9 @@ void StandaloneDynamics::rk4(Eigen::VectorXd state, Eigen::VectorXd forces_momen
   current_truth_state_.acceleration.angular.z = accels(5);
 }
 
-Eigen::VectorXd StandaloneDynamics::compute_accels_with_updated_state(Eigen::VectorXd state, Eigen::VectorXd forces_moments)
+Eigen::VectorXd
+StandaloneDynamics::compute_accels_with_updated_state(Eigen::VectorXd state,
+                                                      Eigen::VectorXd forces_moments)
 {
   Eigen::Vector3d force = forces_moments.head(3);
   Eigen::Vector3d torques = forces_moments.tail(3);
@@ -286,7 +270,7 @@ Eigen::VectorXd StandaloneDynamics::compute_accels_with_updated_state(Eigen::Vec
 
 void StandaloneDynamics::compute_dt(double now)
 {
-  if(prev_time_ == 0) {
+  if (prev_time_ == 0) {
     prev_time_ = now;
     return;
   }
@@ -305,9 +289,9 @@ Eigen::VectorXd StandaloneDynamics::f(Eigen::VectorXd state, Eigen::VectorXd for
   // p q r      - Angular velocity about center of mass in body frame
 
   // Extract needed terms
-  Eigen::Vector3d uvw = state.segment(3,3);
-  Eigen::VectorXd quat = state.segment(6,4);
-  Eigen::Vector3d pqr = state.segment(10,3);
+  Eigen::Vector3d uvw = state.segment(3, 3);
+  Eigen::VectorXd quat = state.segment(6, 4);
+  Eigen::Vector3d pqr = state.segment(10, 3);
   Eigen::Vector3d force = forces_moments.head(3);
   Eigen::Vector3d torques = forces_moments.tail(3);
   double mass = this->get_parameter("mass").as_double();
@@ -319,24 +303,22 @@ Eigen::VectorXd StandaloneDynamics::f(Eigen::VectorXd state, Eigen::VectorXd for
   // pn pe pd
   Eigen::Quaterniond q_body_to_inertial(quat(0), quat(1), quat(2), quat(3));
   Eigen::Vector3d pos_dot = q_body_to_inertial * uvw;
-  out.segment(0,3) = pos_dot;
+  out.segment(0, 3) = pos_dot;
 
   // uvw -- force is in body frame
   Eigen::Vector3d uvw_dot = force / mass - pqr.cross(uvw);
-  out.segment(3,3) = uvw_dot;
+  out.segment(3, 3) = uvw_dot;
 
   // quat
   Eigen::Matrix4d omega_skew;
-  omega_skew << 0, -pqr[0], -pqr[1], -pqr[2],
-    pqr[0], 0, pqr[2], -pqr[1],
-    pqr[1], -pqr[2], 0, pqr[0],
-    pqr[2], pqr[1], -pqr[0], 0;
+  omega_skew << 0, -pqr[0], -pqr[1], -pqr[2], pqr[0], 0, pqr[2], -pqr[1], pqr[1], -pqr[2], 0,
+    pqr[0], pqr[2], pqr[1], -pqr[0], 0;
   Eigen::VectorXd quat_dot = 0.5 * omega_skew * quat;
-  out.segment(6,4) = quat_dot;
+  out.segment(6, 4) = quat_dot;
 
   // pqr
   Eigen::Vector3d pqr_dot = J_inv_ * (-pqr.cross(J_ * pqr) + torques);
-  out.segment(10,3) = pqr_dot;
+  out.segment(10, 3) = pqr_dot;
 
   return out;
 }
@@ -347,10 +329,7 @@ bool StandaloneDynamics::set_sim_state(const rosflight_msgs::msg::SimState state
   return true;
 }
 
-rosflight_msgs::msg::SimState StandaloneDynamics::compute_truth()
-{
-  return current_truth_state_;
-}
+rosflight_msgs::msg::SimState StandaloneDynamics::compute_truth() { return current_truth_state_; }
 
 geometry_msgs::msg::Vector3Stamped StandaloneDynamics::compute_wind_truth()
 {
@@ -373,62 +352,63 @@ geometry_msgs::msg::Vector3Stamped StandaloneDynamics::compute_wind_truth()
 
   // Conduct Bernoulli trial.
   // lambda * dt
-  float bernoulli_probability = dt_/this->get_parameter("interoccurance_time_gust_s").as_double();
+  float bernoulli_probability = dt_ / this->get_parameter("interoccurance_time_gust_s").as_double();
   std::bernoulli_distribution is_gust(bernoulli_probability);
 
   // If the Bernoulli trial is successful add a gust.
   if (is_gust(sample_)) {
     // Normally distributed but stricly positive gust magnitudes
     float gust_mag = this->get_parameter("gust_magnitude_mean").as_double()
-                                         + this->get_parameter("gust_magnitude_std_dev").as_double()*normal_dist_(sample_);
-    
+      + this->get_parameter("gust_magnitude_std_dev").as_double() * normal_dist_(sample_);
+
     // Using small angle, this is roughly the deviation in radians
     float std_dev_gust_dir = this->get_parameter("gust_dir_std_dev").as_double();
 
     // Normally distributed direction of the gust centered on steady state wind direction.
     Eigen::Vector3d gust_dir;
-    gust_dir[0] = steady_state_wind_dir[0] + std_dev_gust_dir*normal_dist_(sample_);
-    gust_dir[1] = steady_state_wind_dir[1] + std_dev_gust_dir*normal_dist_(sample_);
-    gust_dir[2] = steady_state_wind_dir[2] + std_dev_gust_dir*normal_dist_(sample_);
+    gust_dir[0] = steady_state_wind_dir[0] + std_dev_gust_dir * normal_dist_(sample_);
+    gust_dir[1] = steady_state_wind_dir[1] + std_dev_gust_dir * normal_dist_(sample_);
+    gust_dir[2] = steady_state_wind_dir[2] + std_dev_gust_dir * normal_dist_(sample_);
     gust_dir = gust_dir.normalized();
-    
+
     // Uniformily distributed duration of the gust.
-    std::vector<double> gust_duration_limits = this->get_parameter("gust_duration_limits").as_double_array();
-    std::uniform_real_distribution gust_duration_dist(gust_duration_limits[0], gust_duration_limits[1]);
+    std::vector<double> gust_duration_limits =
+      this->get_parameter("gust_duration_limits").as_double_array();
+    std::uniform_real_distribution gust_duration_dist(gust_duration_limits[0],
+                                                      gust_duration_limits[1]);
 
     double gust_duration = gust_duration_dist(sample_);
-    
+
     // Add gust to queue of gusts.
     Gust gust_to_add{gust_dir, gust_mag, gust_duration, 0.};
     gusts_.push_back(gust_to_add);
   }
 
-  Eigen::Vector3d cumulative_gust(0.0,0.0,0.0);
-  
+  Eigen::Vector3d cumulative_gust(0.0, 0.0, 0.0);
+
   // Compute the effect of each gust.
-  for (Gust& gust : gusts_) {
+  for (Gust & gust : gusts_) {
     cumulative_gust += compute_gust(gust);
   }
 
   current_wind_truth_.vector.x += cumulative_gust[0];
   current_wind_truth_.vector.y += cumulative_gust[1];
   current_wind_truth_.vector.z += cumulative_gust[2];
-  
+
   // Remove gust from queue if it has completed its duration.
-  gusts_.erase(
-    std::remove_if( gusts_.begin(), gusts_.end(),
-                   [](Gust gust) -> bool
-                   {return gust.t > gust.duration; }),
-                   gusts_.end());
+  gusts_.erase(std::remove_if(gusts_.begin(), gusts_.end(),
+                              [](Gust gust) -> bool { return gust.t > gust.duration; }),
+               gusts_.end());
 
   return current_wind_truth_;
 }
 
-Eigen::Vector3d StandaloneDynamics::compute_gust(Gust& gust) {
+Eigen::Vector3d StandaloneDynamics::compute_gust(Gust & gust)
+{
   // This equation comes from Discrete Gust Model for Launch Vehicle Assessments by Frank B. Leahy (NASA, 2008).
   // It models a wind gust as a 1-cosine wave with a variable magnitude and duration.
-  
-  float cur_mag = gust.magintude/2.0 * (1-cosf(2*M_PI/gust.duration * gust.t));
+
+  float cur_mag = gust.magintude / 2.0 * (1 - cosf(2 * M_PI / gust.duration * gust.t));
   gust.t += dt_;
 
   return gust.gust_dir * cur_mag;
@@ -436,8 +416,7 @@ Eigen::Vector3d StandaloneDynamics::compute_gust(Gust& gust) {
 
 } // namespace rosflight_sim
 
-
-int main(int argc, char** argv)
+int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
 

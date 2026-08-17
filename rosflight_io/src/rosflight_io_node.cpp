@@ -40,8 +40,8 @@
  */
 
 #include <rclcpp/rclcpp.hpp>
-#include <rosflight_io/rosflight_io.hpp>
 #include <rosflight_io/realtime_configurator.hpp>
+#include <rosflight_io/rosflight_io.hpp>
 
 #include <sched.h>
 

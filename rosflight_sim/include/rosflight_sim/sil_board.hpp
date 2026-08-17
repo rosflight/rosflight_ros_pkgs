@@ -138,7 +138,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void board_reset(bool bootloader) override {};
+  void board_reset(bool bootloader) override{};
 
   // clock
   /**
@@ -156,7 +156,7 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void clock_delay(uint32_t milliseconds) override {};
+  void clock_delay(uint32_t milliseconds) override{};
 
   // serial
   /**
@@ -253,13 +253,13 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void rc_init(rc_type_t rc_type) override {};
+  void rc_init(rc_type_t rc_type) override{};
 
   // non-volatile memory
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void memory_init() override {};
+  void memory_init() override{};
   /**
    * @brief Reads data from memory file.
    *
@@ -281,34 +281,34 @@ public:
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led0_on() override {};
+  void led0_on() override{};
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led0_off() override {};
+  void led0_off() override{};
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led0_toggle() override {};
+  void led0_toggle() override{};
 
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led1_on() override {};
+  void led1_on() override{};
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led1_off() override {};
+  void led1_off() override{};
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void led1_toggle() override {};
+  void led1_toggle() override{};
 
   // Backup Memory
   /**
    * @brief Function required to be overridden, but not used by sim.
    */
-  void backup_memory_init() override {};
+  void backup_memory_init() override{};
   /**
    * @brief Reads data from backup memory object.
    *

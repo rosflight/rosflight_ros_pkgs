@@ -39,12 +39,12 @@ namespace rosflight_sim
 {
 
 StandaloneSensors::StandaloneSensors()
-  : SensorInterface()
-  // , bias_generator_(std::chrono::system_clock::now().time_since_epoch().count()) // Uncomment if you would like to
-                                                                                    // have bias biases for the sensors
-                                                                                    // on each flight. Delete next line.
-  , bias_generator_(0)
-  , noise_generator_(std::chrono::system_clock::now().time_since_epoch().count())
+    : SensorInterface()
+    // , bias_generator_(std::chrono::system_clock::now().time_since_epoch().count()) // Uncomment if you would like to
+    // have bias biases for the sensors
+    // on each flight. Delete next line.
+    , bias_generator_(0)
+    , noise_generator_(std::chrono::system_clock::now().time_since_epoch().count())
 {
   declare_parameters();
 
@@ -70,11 +70,11 @@ void StandaloneSensors::declare_parameters()
   this->declare_parameter("acc_bias_range", 0.6);
   this->declare_parameter("acc_bias_walk_stdev", 0.00001);
 
-  this->declare_parameter("mag_stdev", 3000.0/1e9); // from nano tesla to tesla
+  this->declare_parameter("mag_stdev", 3000.0 / 1e9); // from nano tesla to tesla
   this->declare_parameter("k_mag", 7.0);
   this->declare_parameter("inclination", 1.139436457);
   this->declare_parameter("declination", 0.1857972802);
-  this->declare_parameter("total_intensity", 50716.3 / 1e9);  // nanoTesla converted to tesla.
+  this->declare_parameter("total_intensity", 50716.3 / 1e9); // nanoTesla converted to tesla.
 
   this->declare_parameter("baro_stdev", 4.0);
   this->declare_parameter("baro_bias_range", 500.0);
@@ -100,7 +100,7 @@ void StandaloneSensors::declare_parameters()
   this->declare_parameter("horizontal_gnss_stdev", 0.21);
   this->declare_parameter("vertical_gnss_stdev", 0.4);
   this->declare_parameter("gnss_velocity_stdev", 0.01);
-  this->declare_parameter("k_gnss", 1.0/1100);
+  this->declare_parameter("k_gnss", 1.0 / 1100);
 
   this->declare_parameter("gravity", 9.81);
   this->declare_parameter("mass", 4.5);
@@ -115,38 +115,39 @@ void StandaloneSensors::initialize_sensors()
   // Initialize biases
   double gyro_bias_range = this->get_parameter("gyro_bias_range").as_double();
   double acc_bias_range = this->get_parameter("acc_bias_range").as_double();
-  for (int i=0; i<3; ++i) {
+  for (int i = 0; i < 3; ++i) {
     gyro_constant_bias_[i] = gyro_bias_range * uniform_distribution_(bias_generator_);
     acc_bias_[i] = acc_bias_range * uniform_distribution_(bias_generator_);
   }
 
-  gyro_bias_instability_ << this->get_parameter("gyro_bias_model_x0").as_double()
-                          , this->get_parameter("gyro_bias_model_y0").as_double()
-                          , this->get_parameter("gyro_bias_model_z0").as_double();
+  gyro_bias_instability_ << this->get_parameter("gyro_bias_model_x0").as_double(),
+    this->get_parameter("gyro_bias_model_y0").as_double(),
+    this->get_parameter("gyro_bias_model_z0").as_double();
 
-  baro_bias_ = this->get_parameter("baro_bias_range").as_double() * uniform_distribution_(bias_generator_);
-  airspeed_bias_ = this->get_parameter("airspeed_bias_range").as_double() * uniform_distribution_(bias_generator_);
+  baro_bias_ =
+    this->get_parameter("baro_bias_range").as_double() * uniform_distribution_(bias_generator_);
+  airspeed_bias_ =
+    this->get_parameter("airspeed_bias_range").as_double() * uniform_distribution_(bias_generator_);
 
   // Initialize magnetometer
   double inclination = this->get_parameter("inclination").as_double();
   double declination = this->get_parameter("declination").as_double();
   double total_intensity = this->get_parameter("total_intensity").as_double();
-  inertial_magnetic_field_ << cos(inclination) * cos(declination)
-                            , cos(inclination) * sin(declination)
-                            , sin(inclination);                     // In NED coordinates
+  inertial_magnetic_field_ << cos(inclination) * cos(declination),
+    cos(inclination) * sin(declination), sin(inclination); // In NED coordinates
   inertial_magnetic_field_.normalize();
   inertial_magnetic_field_ *= total_intensity;
 }
 
-sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::WrenchStamped & forces)
+sensor_msgs::msg::Imu
+StandaloneSensors::imu_update(const rosflight_msgs::msg::SimState & state,
+                              const geometry_msgs::msg::WrenchStamped & forces)
 {
   sensor_msgs::msg::Imu out_msg;
 
   // Get the current rotation from body to inertial
-  Eigen::Quaterniond q_body_to_inertial(state.pose.orientation.w,
-                                        state.pose.orientation.x,
-                                        state.pose.orientation.y,
-                                        state.pose.orientation.z);
+  Eigen::Quaterniond q_body_to_inertial(state.pose.orientation.w, state.pose.orientation.x,
+                                        state.pose.orientation.y, state.pose.orientation.z);
 
   Eigen::Vector3d gravity(0.0, 0.0, this->get_parameter("gravity").as_double());
   Eigen::Vector3d gravity_body = q_body_to_inertial.inverse() * gravity;
@@ -161,8 +162,7 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
   if (velocity_body.norm() < 0.05) {
     y_acc = -gravity_body;
   } else {
-    Eigen::Vector3d acceleration_body(state.acceleration.linear.x,
-                                      state.acceleration.linear.y,
+    Eigen::Vector3d acceleration_body(state.acceleration.linear.x, state.acceleration.linear.y,
                                       state.acceleration.linear.z);
     y_acc = acceleration_body - gravity_body;
   }
@@ -171,8 +171,8 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
   rosflight_msgs::msg::Status current_status = get_current_status();
   bool motors_spinning = current_status.armed;
 
-  double acc_stdev = this->get_parameter("acc_stdev").as_double(); 
-  for (int i=0; i<3; ++i) {
+  double acc_stdev = this->get_parameter("acc_stdev").as_double();
+  for (int i = 0; i < 3; ++i) {
     // Apply normal noise (only if armed, because most of the noise comes from motors
     if (motors_spinning) {
       y_acc[i] += acc_stdev * normal_distribution_(noise_generator_);
@@ -190,8 +190,8 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
   Eigen::Vector3d y_gyro;
   y_gyro << state.twist.angular.x, state.twist.angular.y, state.twist.angular.z;
 
-  double gyro_stdev = this->get_parameter("gyro_stdev").as_double(); 
-  for (int i=0; i<3; ++i) {
+  double gyro_stdev = this->get_parameter("gyro_stdev").as_double();
+  for (int i = 0; i < 3; ++i) {
     // Normal Noise from motors
     if (motors_spinning) {
       y_gyro[i] += gyro_stdev * normal_distribution_(noise_generator_);
@@ -210,18 +210,18 @@ sensor_msgs::msg::Imu StandaloneSensors::imu_update(const rosflight_msgs::msg::S
   return out_msg;
 }
 
-Eigen::Vector3d StandaloneSensors::bias_model() 
+Eigen::Vector3d StandaloneSensors::bias_model()
 {
-  double T = 1/get_imu_update_frequency();
-  double alpha = T/(T+this->get_parameter("gyro_bias_model_tau").as_double()); 
+  double T = 1 / get_imu_update_frequency();
+  double alpha = T / (T + this->get_parameter("gyro_bias_model_tau").as_double());
   gyro_bias_instability_ *= (1 - alpha);
   return gyro_bias_instability_;
 }
 
 void StandaloneSensors::update_imu_biases()
 {
-  double gyro_bias_walk_stdev = this->get_parameter("gyro_bias_walk_stdev").as_double(); 
-  double acc_bias_walk_stdev = this->get_parameter("acc_bias_walk_stdev").as_double(); 
+  double gyro_bias_walk_stdev = this->get_parameter("gyro_bias_walk_stdev").as_double();
+  double acc_bias_walk_stdev = this->get_parameter("acc_bias_walk_stdev").as_double();
 
   // TODO: Do we need to scale this by dt? Look at what people do. The faster you run the imu, the faster the bias will change.
   acc_bias_[0] += acc_bias_walk_stdev * normal_distribution_(noise_generator_);
@@ -229,12 +229,12 @@ void StandaloneSensors::update_imu_biases()
   acc_bias_[2] += acc_bias_walk_stdev * normal_distribution_(noise_generator_);
 
   Eigen::Vector3d noise;
-  noise << gyro_bias_walk_stdev * normal_distribution_(noise_generator_)
-        , gyro_bias_walk_stdev * normal_distribution_(noise_generator_)
-        , gyro_bias_walk_stdev * normal_distribution_(noise_generator_);
+  noise << gyro_bias_walk_stdev * normal_distribution_(noise_generator_),
+    gyro_bias_walk_stdev * normal_distribution_(noise_generator_),
+    gyro_bias_walk_stdev * normal_distribution_(noise_generator_);
   double T_s = 1.0 / get_imu_update_frequency();
   double k_gyro = this->get_parameter("k_gyro").as_double();
-  gyro_bias_gauss_markov_eta_ = std::exp(-k_gyro*T_s) * gyro_bias_gauss_markov_eta_ + T_s*noise;
+  gyro_bias_gauss_markov_eta_ = std::exp(-k_gyro * T_s) * gyro_bias_gauss_markov_eta_ + T_s * noise;
 
   gyro_bias_ = gyro_constant_bias_ + bias_model() + gyro_bias_gauss_markov_eta_;
 }
@@ -242,11 +242,11 @@ void StandaloneSensors::update_imu_biases()
 sensor_msgs::msg::Imu StandaloneSensors::get_imu_biases()
 {
   sensor_msgs::msg::Imu imu_biases;
-  
+
   imu_biases.angular_velocity.x = gyro_bias_(0);
   imu_biases.angular_velocity.y = gyro_bias_(1);
   imu_biases.angular_velocity.z = gyro_bias_(2);
-  
+
   imu_biases.linear_acceleration.x = acc_bias_(0);
   imu_biases.linear_acceleration.y = acc_bias_(1);
   imu_biases.linear_acceleration.z = acc_bias_(2);
@@ -254,37 +254,37 @@ sensor_msgs::msg::Imu StandaloneSensors::get_imu_biases()
   return imu_biases;
 }
 
-sensor_msgs::msg::Temperature StandaloneSensors::imu_temperature_update(const rosflight_msgs::msg::SimState & state)
+sensor_msgs::msg::Temperature
+StandaloneSensors::imu_temperature_update(const rosflight_msgs::msg::SimState & state)
 {
   sensor_msgs::msg::Temperature temp;
-  temp.temperature = 27.0;   // In deg C (as in message spec)
+  temp.temperature = 27.0; // In deg C (as in message spec)
   return temp;
 }
 
-sensor_msgs::msg::MagneticField StandaloneSensors::mag_update(const rosflight_msgs::msg::SimState & state)
+sensor_msgs::msg::MagneticField
+StandaloneSensors::mag_update(const rosflight_msgs::msg::SimState & state)
 {
   // Get the current rotation from body to inertial
-  Eigen::Quaterniond q_body_to_inertial(state.pose.orientation.w,
-                                        state.pose.orientation.x,
-                                        state.pose.orientation.y,
-                                        state.pose.orientation.z);
+  Eigen::Quaterniond q_body_to_inertial(state.pose.orientation.w, state.pose.orientation.x,
+                                        state.pose.orientation.y, state.pose.orientation.z);
 
   Eigen::Vector3d y_mag = q_body_to_inertial.inverse() * inertial_magnetic_field_;
 
   // Apply walk
   y_mag += mag_gauss_markov_eta_;
-  
+
   // Increment the Gauss-Markov noise
   double mag_stdev = this->get_parameter("mag_stdev").as_double();
   Eigen::Vector3d noise;
-  noise << mag_stdev * normal_distribution_(noise_generator_)
-         , mag_stdev * normal_distribution_(noise_generator_)
-         , mag_stdev * normal_distribution_(noise_generator_);
+  noise << mag_stdev * normal_distribution_(noise_generator_),
+    mag_stdev * normal_distribution_(noise_generator_),
+    mag_stdev * normal_distribution_(noise_generator_);
 
-  float T_s = 1.0/get_mag_update_frequency();
-  
-  double k_mag = this->get_parameter("k_mag").as_double(); 
-  mag_gauss_markov_eta_ = std::exp(-k_mag*T_s) * mag_gauss_markov_eta_ + T_s*noise;
+  float T_s = 1.0 / get_mag_update_frequency();
+
+  double k_mag = this->get_parameter("k_mag").as_double();
+  mag_gauss_markov_eta_ = std::exp(-k_mag * T_s) * mag_gauss_markov_eta_ + T_s * noise;
 
   // Package data into message
   sensor_msgs::msg::MagneticField out_msg;
@@ -296,23 +296,23 @@ sensor_msgs::msg::MagneticField StandaloneSensors::mag_update(const rosflight_ms
   return out_msg;
 }
 
-rosflight_msgs::msg::Barometer StandaloneSensors::baro_update(const rosflight_msgs::msg::SimState & state)
+rosflight_msgs::msg::Barometer
+StandaloneSensors::baro_update(const rosflight_msgs::msg::SimState & state)
 {
   // Invert measurement model for pressure and temperature
   double alt = -state.pose.position.z + this->get_parameter("origin_altitude").as_double();
 
   // Convert to the true pressure reading
-  double y_baro = 101325.0f
-    * (float) pow((1 - 2.25694e-5 * alt), 5.2553);
+  double y_baro = 101325.0f * (float) pow((1 - 2.25694e-5 * alt), 5.2553);
 
   rho_ = 1.225 * pow(y_baro / 101325.0, 0.809736894596450);
 
   // Add noise
-  double baro_stdev = this->get_parameter("baro_stdev").as_double(); 
+  double baro_stdev = this->get_parameter("baro_stdev").as_double();
   y_baro += baro_stdev * normal_distribution_(noise_generator_);
 
   // Perform bias walk
-  double baro_bias_walk_stdev = this->get_parameter("baro_bias_walk_stdev").as_double(); 
+  double baro_bias_walk_stdev = this->get_parameter("baro_bias_walk_stdev").as_double();
   // TODO: Scale this by dt -- otherwise bias will change faster with a faster baro rate
   baro_bias_ += baro_bias_walk_stdev * normal_distribution_(noise_generator_);
 
@@ -328,33 +328,35 @@ rosflight_msgs::msg::Barometer StandaloneSensors::baro_update(const rosflight_ms
   return out_msg;
 }
 
-rosflight_msgs::msg::GNSS StandaloneSensors::gnss_update(const rosflight_msgs::msg::SimState & state)
+rosflight_msgs::msg::GNSS
+StandaloneSensors::gnss_update(const rosflight_msgs::msg::SimState & state)
 {
   rosflight_msgs::msg::GNSS out_msg;
 
   // Compute GNSS location
   Eigen::Vector3d body_pose;
-  body_pose << state.pose.position.x, state.pose.position.y, state.pose.position.z; // inertial NED (m)
+  body_pose << state.pose.position.x, state.pose.position.y,
+    state.pose.position.z; // inertial NED (m)
 
   // Add random walk, then update random walk
   body_pose += gnss_gauss_markov_eta_;
 
-  double T_s = 1.0/get_gnss_update_frequency();
+  double T_s = 1.0 / get_gnss_update_frequency();
   double h_std = this->get_parameter("horizontal_gnss_stdev").as_double();
   double v_std = this->get_parameter("vertical_gnss_stdev").as_double();
   double k_gnss = this->get_parameter("k_gnss").as_double();
   Eigen::Vector3d pos_noise(h_std * normal_distribution_(noise_generator_),
                             h_std * normal_distribution_(noise_generator_),
                             v_std * normal_distribution_(noise_generator_));
-  gnss_gauss_markov_eta_ = std::exp(-k_gnss*T_s) * gnss_gauss_markov_eta_ + T_s*pos_noise;
+  gnss_gauss_markov_eta_ = std::exp(-k_gnss * T_s) * gnss_gauss_markov_eta_ + T_s * pos_noise;
 
   // Compute LLA (assuming spherical earth model)
   double init_lat = this->get_parameter("origin_latitude").as_double();
   double init_lon = this->get_parameter("origin_longitude").as_double();
   double init_alt = this->get_parameter("origin_altitude").as_double();
   double lat = 180.0 / (EARTH_RADIUS * M_PI) * body_pose(0) + init_lat;
-  double lon = 180.0 / (EARTH_RADIUS * M_PI) 
-    / cos(init_lat * M_PI / 180.0) * body_pose(1) + init_lon;
+  double lon =
+    180.0 / (EARTH_RADIUS * M_PI) / cos(init_lat * M_PI / 180.0) * body_pose(1) + init_lon;
   double alt = -body_pose(2) + init_alt;
 
   out_msg.lat = lat;
@@ -363,7 +365,7 @@ rosflight_msgs::msg::GNSS StandaloneSensors::gnss_update(const rosflight_msgs::m
 
   // Compute GNSS velocity
   Eigen::Vector3d body_vel;
-  body_vel << state.twist.linear.x, state.twist.linear.y, state.twist.linear.z;  // NED
+  body_vel << state.twist.linear.x, state.twist.linear.y, state.twist.linear.z; // NED
   double vel_std = this->get_parameter("gnss_velocity_stdev").as_double();
   Eigen::Vector3d vel_noise(vel_std * normal_distribution_(noise_generator_),
                             vel_std * normal_distribution_(noise_generator_),
@@ -371,10 +373,8 @@ rosflight_msgs::msg::GNSS StandaloneSensors::gnss_update(const rosflight_msgs::m
   body_vel += vel_noise;
 
   // Body to inertial rotation
-  Eigen::Quaterniond q_body_to_inertial(state.pose.orientation.w,
-                                        state.pose.orientation.x,
-                                        state.pose.orientation.y,
-                                        state.pose.orientation.z);
+  Eigen::Quaterniond q_body_to_inertial(state.pose.orientation.w, state.pose.orientation.x,
+                                        state.pose.orientation.y, state.pose.orientation.z);
 
   Eigen::Vector3d global_vel = q_body_to_inertial * body_vel;
   out_msg.vel_n = global_vel(0);
@@ -390,7 +390,10 @@ rosflight_msgs::msg::GNSS StandaloneSensors::gnss_update(const rosflight_msgs::m
   out_msg.speed_accuracy = vel_std;
 
   // GNSS time
-  int64_t now = static_cast<int64_t>(this->get_clock()->now().nanoseconds()); // nanoseconds() returns time since unix epoch, not just fractional time
+  int64_t now = static_cast<int64_t>(
+    this->get_clock()
+      ->now()
+      .nanoseconds()); // nanoseconds() returns time since unix epoch, not just fractional time
   out_msg.gnss_unix_seconds = now / 1'000'000'000;
   out_msg.gnss_unix_nanos = static_cast<int32_t>(now % 1'000'000'000);
 
@@ -407,7 +410,7 @@ sensor_msgs::msg::Range StandaloneSensors::range_update(const rosflight_msgs::ms
   double range_max_range = this->get_parameter("range_max_range").as_double();
   double range_stdev = this->get_parameter("range_stdev").as_double();
 
-  sensor_msgs::msg::Range out_msg; 
+  sensor_msgs::msg::Range out_msg;
   if (alt < range_min_range) {
     out_msg.range = (float) range_min_range;
   } else if (alt > range_max_range) {
@@ -420,18 +423,19 @@ sensor_msgs::msg::Range StandaloneSensors::range_update(const rosflight_msgs::ms
   return out_msg;
 }
 
-rosflight_msgs::msg::Airspeed StandaloneSensors::diff_pressure_update(const rosflight_msgs::msg::SimState & state, const geometry_msgs::msg::Vector3Stamped & wind)
+rosflight_msgs::msg::Airspeed
+StandaloneSensors::diff_pressure_update(const rosflight_msgs::msg::SimState & state,
+                                        const geometry_msgs::msg::Vector3Stamped & wind)
 {
   // Calculate Airspeed
   // Rotate wind velocities into the body frame
-  Eigen::Quaterniond q_body_to_inertial(state.pose.orientation.w,
-                                        state.pose.orientation.x,
-                                        state.pose.orientation.y,
-                                        state.pose.orientation.z);
+  Eigen::Quaterniond q_body_to_inertial(state.pose.orientation.w, state.pose.orientation.x,
+                                        state.pose.orientation.y, state.pose.orientation.z);
 
   Eigen::Vector3d body_vel(state.twist.linear.x, state.twist.linear.y, state.twist.linear.z);
   Eigen::Vector3d inertial_wind_velocity(wind.vector.x, wind.vector.y, wind.vector.z);
-  Eigen::Vector3d body_air_velocity = body_vel - q_body_to_inertial.inverse() * inertial_wind_velocity;
+  Eigen::Vector3d body_air_velocity =
+    body_vel - q_body_to_inertial.inverse() * inertial_wind_velocity;
 
   // Airspeed sensor only measures x component of the airspeed in the body frame
   double u = body_air_velocity(0);
@@ -440,8 +444,8 @@ rosflight_msgs::msg::Airspeed StandaloneSensors::diff_pressure_update(const rosf
   double y_as = rho_ * u * u / 2.0; // Page 130 in the UAV Book
 
   // Add noise
-  double airspeed_stdev = this->get_parameter("airspeed_stdev").as_double(); 
-  double airspeed_bias_walk_stdev = this->get_parameter("airspeed_bias_walk_stdev").as_double(); 
+  double airspeed_stdev = this->get_parameter("airspeed_stdev").as_double();
+  double airspeed_bias_walk_stdev = this->get_parameter("airspeed_bias_walk_stdev").as_double();
 
   y_as += airspeed_stdev * normal_distribution_(noise_generator_);
 
@@ -450,7 +454,7 @@ rosflight_msgs::msg::Airspeed StandaloneSensors::diff_pressure_update(const rosf
   airspeed_bias_ += airspeed_bias_walk_stdev * normal_distribution_(noise_generator_);
   y_as += airspeed_bias_;
 
-  // Package the return message 
+  // Package the return message
   rosflight_msgs::msg::Airspeed out_msg;
   out_msg.differential_pressure = (float) y_as;
   out_msg.temperature = 27.0 + 273.15;
@@ -459,7 +463,8 @@ rosflight_msgs::msg::Airspeed StandaloneSensors::diff_pressure_update(const rosf
   return out_msg;
 }
 
-rosflight_msgs::msg::BatteryStatus StandaloneSensors::battery_update(const rosflight_msgs::msg::SimState & state)
+rosflight_msgs::msg::BatteryStatus
+StandaloneSensors::battery_update(const rosflight_msgs::msg::SimState & state)
 {
   rosflight_msgs::msg::BatteryStatus out_msg;
 
@@ -473,9 +478,9 @@ rosflight_msgs::msg::BatteryStatus StandaloneSensors::battery_update(const rosfl
   return out_msg;
 }
 
-} // rosflight_sim
+} // namespace rosflight_sim
 
-int main(int argc, char** argv)
+int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
 

@@ -45,10 +45,10 @@
 namespace rosflight_sim
 {
 SILBoard::SILBoard(rclcpp::Node::SharedPtr node)
-  : UDPBoard()
-  , node_(node)
-  , battery_voltage_multiplier_{1.0}
-  , battery_current_multiplier_{1.0}
+    : UDPBoard()
+    , node_(node)
+    , battery_voltage_multiplier_{1.0}
+    , battery_current_multiplier_{1.0}
 {
   declare_parameters();
 }
@@ -62,7 +62,8 @@ void SILBoard::declare_parameters()
   node_->declare_parameter("serial_delay_ns", rclcpp::PARAMETER_INTEGER);
 }
 
-void SILBoard::init_board() {
+void SILBoard::init_board()
+{
   boot_time_ = node_->get_clock()->now();
 
   // Set up the udp connection
@@ -75,8 +76,9 @@ void SILBoard::init_board() {
   serial_delay_ns_ = node_->get_parameter_or<long>("serial_delay_ns", 0.006 * 1e9);
 
   set_ports(bind_host, bind_port, remote_host, remote_port);
-  RCLCPP_INFO_STREAM(node_->get_logger(), "ROSflight SIL Conneced to " << remote_host
-    << ":" << remote_port << " from " << bind_host << ":" << bind_port << "\n");
+  RCLCPP_INFO_STREAM(node_->get_logger(),
+                     "ROSflight SIL Conneced to " << remote_host << ":" << remote_port << " from "
+                                                  << bind_host << ":" << bind_port << "\n");
 }
 
 constexpr double rad2Deg(double x) { return 180.0 / M_PI * x; }
@@ -85,7 +87,8 @@ constexpr double deg2Rad(double x) { return M_PI / 180.0 * x; }
 // clock
 uint32_t SILBoard::clock_millis()
 {
-  uint32_t millis = (node_->get_clock()->now().nanoseconds() - boot_time_.nanoseconds()) / 1'000'000;
+  uint32_t millis =
+    (node_->get_clock()->now().nanoseconds() - boot_time_.nanoseconds()) / 1'000'000;
   return millis;
 }
 
@@ -123,29 +126,33 @@ uint16_t SILBoard::serial_bytes_available()
 void SILBoard::sensors_init()
 {
   // Initialize subscribers
-  imu_data_sub_ = node_->create_subscription<sensor_msgs::msg::Imu>("sim/sensors/imu/data", 1,
-      std::bind(&SILBoard::imu_data_callback, this, std::placeholders::_1));
+  imu_data_sub_ = node_->create_subscription<sensor_msgs::msg::Imu>(
+    "sim/sensors/imu/data", 1,
+    std::bind(&SILBoard::imu_data_callback, this, std::placeholders::_1));
 
-  imu_temperature_data_sub_ = node_->create_subscription<sensor_msgs::msg::Temperature>("sim/sensors/imu/temperature", 1,
-      std::bind(&SILBoard::imu_temperature_data_callback, this, std::placeholders::_1));
+  imu_temperature_data_sub_ = node_->create_subscription<sensor_msgs::msg::Temperature>(
+    "sim/sensors/imu/temperature", 1,
+    std::bind(&SILBoard::imu_temperature_data_callback, this, std::placeholders::_1));
 
-  mag_data_sub_ = node_->create_subscription<sensor_msgs::msg::MagneticField>("sim/sensors/mag", 1,
-      std::bind(&SILBoard::mag_data_callback, this, std::placeholders::_1));
+  mag_data_sub_ = node_->create_subscription<sensor_msgs::msg::MagneticField>(
+    "sim/sensors/mag", 1, std::bind(&SILBoard::mag_data_callback, this, std::placeholders::_1));
 
-  baro_data_sub_ = node_->create_subscription<rosflight_msgs::msg::Barometer>("sim/sensors/baro", 1,
-      std::bind(&SILBoard::baro_data_callback, this, std::placeholders::_1));
+  baro_data_sub_ = node_->create_subscription<rosflight_msgs::msg::Barometer>(
+    "sim/sensors/baro", 1, std::bind(&SILBoard::baro_data_callback, this, std::placeholders::_1));
 
-  gnss_data_sub_ = node_->create_subscription<rosflight_msgs::msg::GNSS>("sim/sensors/gnss", 1,
-      std::bind(&SILBoard::gnss_data_callback, this, std::placeholders::_1));
+  gnss_data_sub_ = node_->create_subscription<rosflight_msgs::msg::GNSS>(
+    "sim/sensors/gnss", 1, std::bind(&SILBoard::gnss_data_callback, this, std::placeholders::_1));
 
-  diff_pressure_data_sub_ = node_->create_subscription<rosflight_msgs::msg::Airspeed>("sim/sensors/diff_pressure", 1,
-      std::bind(&SILBoard::diff_pressure_data_callback, this, std::placeholders::_1));
+  diff_pressure_data_sub_ = node_->create_subscription<rosflight_msgs::msg::Airspeed>(
+    "sim/sensors/diff_pressure", 1,
+    std::bind(&SILBoard::diff_pressure_data_callback, this, std::placeholders::_1));
 
-  range_data_sub_ = node_->create_subscription<sensor_msgs::msg::Range>("sim/sensors/range", 1,
-      std::bind(&SILBoard::range_data_callback, this, std::placeholders::_1));
+  range_data_sub_ = node_->create_subscription<sensor_msgs::msg::Range>(
+    "sim/sensors/range", 1, std::bind(&SILBoard::range_data_callback, this, std::placeholders::_1));
 
-  battery_data_sub_ = node_->create_subscription<rosflight_msgs::msg::BatteryStatus>("sim/sensors/battery", 1,
-      std::bind(&SILBoard::battery_data_callback, this, std::placeholders::_1));
+  battery_data_sub_ = node_->create_subscription<rosflight_msgs::msg::BatteryStatus>(
+    "sim/sensors/battery", 1,
+    std::bind(&SILBoard::battery_data_callback, this, std::placeholders::_1));
 }
 
 void SILBoard::imu_data_callback(const sensor_msgs::msg::Imu & msg)
@@ -205,7 +212,9 @@ void SILBoard::battery_data_callback(const rosflight_msgs::msg::BatteryStatus & 
 
 bool SILBoard::imu_read(rosflight_firmware::ImuStruct * imu)
 {
-  if (!imu_has_new_data_available_) { return false; }
+  if (!imu_has_new_data_available_) {
+    return false;
+  }
   imu_has_new_data_available_ = false;
 
   // Populate the data from the last imu data received by the sensor
@@ -213,22 +222,25 @@ bool SILBoard::imu_read(rosflight_firmware::ImuStruct * imu)
   imu->accel[1] = imu_data_.linear_acceleration.y;
   imu->accel[2] = imu_data_.linear_acceleration.z;
 
-  imu->temperature = imu_temperature_data_.temperature + 273.15;  // Convert to degrees Kelvin from Celcius
+  imu->temperature =
+    imu_temperature_data_.temperature + 273.15; // Convert to degrees Kelvin from Celcius
 
   imu->gyro[0] = imu_data_.angular_velocity.x;
   imu->gyro[1] = imu_data_.angular_velocity.y;
   imu->gyro[2] = imu_data_.angular_velocity.z;
 
   // Time the data was read
-  imu->header.timestamp = imu_data_.header.stamp.sec * 1'000'000
-    + imu_data_.header.stamp.nanosec / 1'000;
+  imu->header.timestamp =
+    imu_data_.header.stamp.sec * 1'000'000 + imu_data_.header.stamp.nanosec / 1'000;
 
   return true;
 }
 
 bool SILBoard::mag_read(rosflight_firmware::MagStruct * mag)
 {
-  if (!mag_has_new_data_available_) { return false; }
+  if (!mag_has_new_data_available_) {
+    return false;
+  }
   mag_has_new_data_available_ = false;
 
   // TODO: should this be in tesla or nanotesla?
@@ -236,27 +248,31 @@ bool SILBoard::mag_read(rosflight_firmware::MagStruct * mag)
   mag->flux[1] = mag_data_.magnetic_field.y;
   mag->flux[2] = mag_data_.magnetic_field.z;
 
-  mag->header.timestamp = mag_data_.header.stamp.sec * 1'000'000
-    + mag_data_.header.stamp.nanosec / 1'000;
+  mag->header.timestamp =
+    mag_data_.header.stamp.sec * 1'000'000 + mag_data_.header.stamp.nanosec / 1'000;
   return true;
 }
 
 bool SILBoard::baro_read(rosflight_firmware::PressureStruct * baro)
 {
-  if (!baro_has_new_data_available_) { return false; }
+  if (!baro_has_new_data_available_) {
+    return false;
+  }
   baro_has_new_data_available_ = false;
 
   baro->pressure = baro_data_.pressure;
   baro->temperature = baro_data_.temperature;
-  
-  baro->header.timestamp = baro_data_.header.stamp.sec * 1'000'000
-    + baro_data_.header.stamp.nanosec / 1'000;
+
+  baro->header.timestamp =
+    baro_data_.header.stamp.sec * 1'000'000 + baro_data_.header.stamp.nanosec / 1'000;
   return true;
 }
 
 bool SILBoard::diff_pressure_read(rosflight_firmware::PressureStruct * diff_pressure)
 {
-  if (!diff_pressure_has_new_data_available_) { return false; }
+  if (!diff_pressure_has_new_data_available_) {
+    return false;
+  }
   diff_pressure_has_new_data_available_ = false;
 
   diff_pressure->pressure = diff_pressure_data_.differential_pressure;
@@ -268,7 +284,9 @@ bool SILBoard::diff_pressure_read(rosflight_firmware::PressureStruct * diff_pres
 
 bool SILBoard::range_read(rosflight_firmware::RangeStruct * range)
 {
-  if (!range_has_new_data_available_) { return false; }
+  if (!range_has_new_data_available_) {
+    return false;
+  }
   range_has_new_data_available_ = false;
 
   range->range = range_data_.range;
@@ -277,27 +295,31 @@ bool SILBoard::range_read(rosflight_firmware::RangeStruct * range)
 
 bool SILBoard::battery_read(rosflight_firmware::BatteryStruct * batt)
 {
-  if (!battery_has_new_data_available_) { return false; }
+  if (!battery_has_new_data_available_) {
+    return false;
+  }
   battery_has_new_data_available_ = false;
 
   batt->voltage = battery_data_.voltage * battery_voltage_multiplier_;
   batt->current = battery_data_.current * battery_current_multiplier_;
-  batt->header.timestamp = battery_data_.header.stamp.sec * 1'000'000
-    + battery_data_.header.stamp.nanosec / 1'000;
+  batt->header.timestamp =
+    battery_data_.header.stamp.sec * 1'000'000 + battery_data_.header.stamp.nanosec / 1'000;
   return true;
 }
 
 bool SILBoard::gnss_read(rosflight_firmware::GnssStruct * gnss)
 {
-  if (!gnss_has_new_data_available_) { return false; }
+  if (!gnss_has_new_data_available_) {
+    return false;
+  }
   gnss_has_new_data_available_ = false;
 
   gnss->unix_seconds = gnss_data_.gnss_unix_seconds;
   gnss->unix_nanos = gnss_data_.gnss_unix_nanos;
 
   // Cast to rosflight_firmware::GNSSFixType first for error checking from enum class
-  gnss->fix_type = static_cast<uint8_t>(
-    static_cast<rosflight_firmware::GNSSFixType>(gnss_data_.fix_type));
+  gnss->fix_type =
+    static_cast<uint8_t>(static_cast<rosflight_firmware::GNSSFixType>(gnss_data_.fix_type));
 
   gnss->num_sat = gnss_data_.num_sat;
   gnss->lat = gnss_data_.lat;
@@ -311,8 +333,8 @@ bool SILBoard::gnss_read(rosflight_firmware::GnssStruct * gnss)
   gnss->vel_d = gnss_data_.vel_d;
   gnss->speed_accy = gnss_data_.speed_accuracy;
 
-  gnss->header.timestamp = gnss_data_.header.stamp.sec * 1'000'000
-    + gnss_data_.header.stamp.nanosec / 1'000;
+  gnss->header.timestamp =
+    gnss_data_.header.stamp.sec * 1'000'000 + gnss_data_.header.stamp.nanosec / 1'000;
 
   return true;
 }
@@ -350,7 +372,7 @@ void SILBoard::pwm_init(const float * rate, uint32_t channels)
 bool SILBoard::rc_read(rosflight_firmware::RcStruct * rc_struct)
 {
   if (rc_sub_->get_publisher_count() > 0) {
-    for (uint16_t i=0; i < 8; ++i) {
+    for (uint16_t i = 0; i < 8; ++i) {
       rc_struct->chan[i] = static_cast<float>(latestRC_.values[i] - 1000) / 1000.0f;
     }
 
@@ -358,7 +380,7 @@ bool SILBoard::rc_read(rosflight_firmware::RcStruct * rc_struct)
   }
 
   // no publishers, set throttle low and center everything else
-  for (uint16_t i=0; i < 8; ++i) {
+  for (uint16_t i = 0; i < 8; ++i) {
     // TODO: Change this channel to be a parameter
     if (i == 2) {
       rc_struct->chan[i] = 0.0;
@@ -372,7 +394,7 @@ bool SILBoard::rc_read(rosflight_firmware::RcStruct * rc_struct)
 
 void SILBoard::pwm_write(float * value, uint32_t channels)
 {
-  for (uint32_t i=0; i<channels; ++i) {
+  for (uint32_t i = 0; i < channels; ++i) {
     float val = value[i];
     val = (val < 0) ? 0 : val;
     val = (val > 1) ? 1 : val;

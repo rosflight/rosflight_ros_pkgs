@@ -37,14 +37,14 @@
 
 #include <cmath>
 
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp/parameter_value.hpp>
+#include <Eigen/Geometry>
 #include <geometry_msgs/msg/vector3_stamped.hpp>
 #include <geometry_msgs/msg/wrench_stamped.hpp>
-#include <Eigen/Geometry>
+#include <rclcpp/parameter_value.hpp>
+#include <rclcpp/rclcpp.hpp>
 
-#include "rosflight_sim/forces_and_moments_interface.hpp"
 #include "rosflight_msgs/msg/sim_state.hpp"
+#include "rosflight_sim/forces_and_moments_interface.hpp"
 
 namespace rosflight_sim
 {
@@ -61,9 +61,9 @@ namespace rosflight_sim
 class Fixedwing : public ForcesAndMomentsInterface
 {
 private:
-
   OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
-  rcl_interfaces::msg::SetParametersResult parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
+  rcl_interfaces::msg::SetParametersResult
+  parameters_callback(const std::vector<rclcpp::Parameter> & parameters);
 
   void update_params_from_ROS();
 
@@ -156,15 +156,15 @@ public:
    * @param act_cmds Array of actuator commands
    * @return geometry_msgs::msg::WrenchStamped object with calculated forces and moments
    */
-  geometry_msgs::msg::WrenchStamped update_forces_and_torques(rosflight_msgs::msg::SimState x,
-                                                              geometry_msgs::msg::Vector3Stamped wind,
-                                                              std::array<uint16_t, NUM_TOTAL_OUTPUTS> act_cmds) override;
+  geometry_msgs::msg::WrenchStamped
+  update_forces_and_torques(rosflight_msgs::msg::SimState x,
+                            geometry_msgs::msg::Vector3Stamped wind,
+                            std::array<uint16_t, NUM_TOTAL_OUTPUTS> act_cmds) override;
 
   /**
   * @brief Queries rosflight_io for any changed parameters
   */
   void get_firmware_parameters() override;
-
 };
 
 } // namespace rosflight_sim

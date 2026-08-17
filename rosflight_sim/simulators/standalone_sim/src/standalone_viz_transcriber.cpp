@@ -41,8 +41,8 @@
 #include <tf2_ros/transform_broadcaster.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 
-#include "standalone_viz_transcriber.hpp"
 #include "rosflight_msgs/msg/sim_state.hpp"
+#include "standalone_viz_transcriber.hpp"
 
 namespace rosflight_sim
 {
@@ -61,8 +61,8 @@ StandaloneVizTranscriber::StandaloneVizTranscriber()
     this->create_publisher<visualization_msgs::msg::Marker>("rviz/mesh_path", 5);
 
   vehicle_state_sub_ = this->create_subscription<rosflight_msgs::msg::SimState>(
-    "sim/truth_state", 10, std::bind(&StandaloneVizTranscriber::state_update_callback, this, std::placeholders::_1));
-
+    "sim/truth_state", 10,
+    std::bind(&StandaloneVizTranscriber::state_update_callback, this, std::placeholders::_1));
 
   initialize_aircraft_marker();
   aircraft_tf2_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
@@ -103,7 +103,8 @@ void StandaloneVizTranscriber::initialize_aircraft_marker()
   aircraft_.ns = "vehicle";
   aircraft_.id = 0;
   aircraft_.type = visualization_msgs::msg::Marker::MESH_RESOURCE;
-  aircraft_.mesh_resource = "package://rosflight_sim/" + this->get_parameter("sim_aircraft_file").as_string();
+  aircraft_.mesh_resource =
+    "package://rosflight_sim/" + this->get_parameter("sim_aircraft_file").as_string();
   aircraft_.mesh_use_embedded_materials = false;
   aircraft_.action = visualization_msgs::msg::Marker::ADD;
   aircraft_.pose.position.x = 0.0;
@@ -140,10 +141,12 @@ void StandaloneVizTranscriber::update_aircraft_history()
   aircraft_history_.color.a = 1.0;
 
   // Restrict length of history
-  uint64_t max_path_history = static_cast<uint64_t>(this->get_parameter("max_path_history").as_int());
+  uint64_t max_path_history =
+    static_cast<uint64_t>(this->get_parameter("max_path_history").as_int());
   if (aircraft_history_.points.size() > max_path_history) {
     uint64_t excess_points = aircraft_history_.points.size() - max_path_history;
-    aircraft_history_.points.erase(aircraft_history_.points.begin(), aircraft_history_.points.begin() + excess_points);
+    aircraft_history_.points.erase(aircraft_history_.points.begin(),
+                                   aircraft_history_.points.begin() + excess_points);
   }
 }
 

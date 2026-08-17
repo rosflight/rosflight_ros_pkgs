@@ -61,14 +61,14 @@ Multirotor::Multirotor()
 
   std::vector<double> dists = this->get_parameter("rotor_dists").as_double_array();
   std::vector<double> angles = this->get_parameter("rotor_radial_angles").as_double_array();
-  std::vector<int64_t> rotation_dirs = this->get_parameter("rotor_rotation_directions").as_integer_array();
+  std::vector<int64_t> rotation_dirs =
+    this->get_parameter("rotor_rotation_directions").as_integer_array();
 
   Motor motor_characteristics;
   motor_characteristics.prop = prop;
   motor_characteristics.R = this->get_parameter("R_motor").as_double();
   motor_characteristics.I_0 = this->get_parameter("I_0").as_double();
   motor_characteristics.KQ = this->get_parameter("KQ").as_double();
-
 
   for (int i = 0; i < num_rotors_; i++) {
     Motor motor = motor_characteristics;
@@ -116,9 +116,10 @@ void Multirotor::declare_multirotor_params()
   this->declare_parameter("ground_effect", rclcpp::PARAMETER_DOUBLE_ARRAY);
 }
 
-geometry_msgs::msg::WrenchStamped Multirotor::update_forces_and_torques(rosflight_msgs::msg::SimState x,
-                                                                        geometry_msgs::msg::Vector3Stamped wind,
-                                                                        std::array<uint16_t, 14> act_cmds)
+geometry_msgs::msg::WrenchStamped
+Multirotor::update_forces_and_torques(rosflight_msgs::msg::SimState x,
+                                      geometry_msgs::msg::Vector3Stamped wind,
+                                      std::array<uint16_t, 14> act_cmds)
 {
   // Note that the motor commands should not be unmixed here for the multirotor aircraft, since the
   // values are already raw motor outputs.
@@ -132,16 +133,16 @@ geometry_msgs::msg::WrenchStamped Multirotor::update_forces_and_torques(rosfligh
 
   // Get airspeed vector for drag force calculation (rotate wind into
   // body frame and subtract from inertial velocity in body frame)
-  Eigen::Quaterniond q_body_to_inertial(x.pose.orientation.w,
-                                        x.pose.orientation.x,
-                                        x.pose.orientation.y,
-                                        x.pose.orientation.z);
+  Eigen::Quaterniond q_body_to_inertial(x.pose.orientation.w, x.pose.orientation.x,
+                                        x.pose.orientation.y, x.pose.orientation.z);
   Eigen::Vector3d v_wind_inertial(wind.vector.x, wind.vector.y, wind.vector.z); // In inertial frame
-  Eigen::Vector3d v_wind_body = q_body_to_inertial.inverse() * v_wind_inertial; // Rotate to body frame
+  Eigen::Vector3d v_wind_body =
+    q_body_to_inertial.inverse() * v_wind_inertial; // Rotate to body frame
 
   // Compute airspeed
   // Va = [ur, vr, wr] = V_ground - V_wind
-  Eigen::Vector3d Vg(x.twist.linear.x, x.twist.linear.y, x.twist.linear.z); // Inertial velocities in body frame
+  Eigen::Vector3d Vg(x.twist.linear.x, x.twist.linear.y,
+                     x.twist.linear.z); // Inertial velocities in body frame
   Eigen::Vector3d Va = Vg - v_wind_body;
 
   // TODO: Would be better to compute the vector force/torque contributed by each motor,
@@ -153,13 +154,12 @@ geometry_msgs::msg::WrenchStamped Multirotor::update_forces_and_torques(rosfligh
 
   // Convert PWM commands to [0,1]
   for (int i = 0; i < num_rotors_; i++) {
-    double motor_cmd = (act_cmds[i] - 1000)/1000.0;
+    double motor_cmd = (act_cmds[i] - 1000) / 1000.0;
 
     // Saturate from 0 to 1 -- physical PWM constraints
     motor_cmd = sat(motor_cmd, 0, 1);
 
     motors_[i].command = motor_cmd;
-
   }
 
   for (Motor motor : motors_) {
@@ -188,13 +188,13 @@ geometry_msgs::msg::WrenchStamped Multirotor::update_forces_and_torques(rosfligh
 
     double prop_speed = ((-b + sqrt((pow((b), 2.0)) - (4 * a * c))) / (2 * a));
 
-    // Protect against singularities -- prop speed should be positive 
+    // Protect against singularities -- prop speed should be positive
     if (prop_speed < 0.0001) {
       prop_speed = 0.0001;
     }
 
     // Calculate the advance ratio.
-    double advance_ratio = (2. * M_PI * Va_along_z)/(prop_speed*motor.prop.diam);
+    double advance_ratio = (2. * M_PI * Va_along_z) / (prop_speed * motor.prop.diam);
 
     // Saturate the advance ratio at zero. The model therefore assumes that air flowing backwards
     // through the propeller has the same effect (on CT and CQ) as stationary air.
@@ -202,23 +202,27 @@ geometry_msgs::msg::WrenchStamped Multirotor::update_forces_and_torques(rosfligh
       advance_ratio = 0.0;
     }
 
-    double CT = motor.prop.CT_2*pow(advance_ratio, 2) + motor.prop.CT_1*advance_ratio + motor.prop.CT_0;
+    double CT =
+      motor.prop.CT_2 * pow(advance_ratio, 2) + motor.prop.CT_1 * advance_ratio + motor.prop.CT_0;
     if (CT <= 0.0) {
       CT = 0.0001;
     }
 
-    double motor_thrust = CT * (rho * pow(motor.prop.diam, 4))/(4*pow(M_PI,2)) * pow(prop_speed, 2);
+    double motor_thrust =
+      CT * (rho * pow(motor.prop.diam, 4)) / (4 * pow(M_PI, 2)) * pow(prop_speed, 2);
 
-    double motor_roll_torque = -motor_thrust*motor.dist*sinf(motor.radial_angle);
-    double motor_pitch_torque = motor_thrust*motor.dist*cosf(motor.radial_angle);
+    double motor_roll_torque = -motor_thrust * motor.dist * sinf(motor.radial_angle);
+    double motor_pitch_torque = motor_thrust * motor.dist * cosf(motor.radial_angle);
 
-    double CQ = motor.prop.CQ_2*pow(advance_ratio, 2) + motor.prop.CQ_1*advance_ratio + motor.prop.CQ_0;
+    double CQ =
+      motor.prop.CQ_2 * pow(advance_ratio, 2) + motor.prop.CQ_1 * advance_ratio + motor.prop.CQ_0;
     if (CQ <= 0.0) {
       CQ = 0.0001;
     }
 
     // The torque produced by the propeller spinning.
-    double prop_torque = motor.direction * CQ * (rho*pow(motor.prop.diam, 5))/(4*pow(M_PI,2)) * pow(prop_speed, 2);
+    double prop_torque = motor.direction * CQ * (rho * pow(motor.prop.diam, 5)) / (4 * pow(M_PI, 2))
+      * pow(prop_speed, 2);
 
     total_thrust += motor_thrust;
     total_roll_torque += motor_roll_torque;
@@ -243,21 +247,20 @@ geometry_msgs::msg::WrenchStamped Multirotor::update_forces_and_torques(rosfligh
   double CD_induced = this->get_parameter("CD_induced").as_double();
 
   Eigen::Matrix3d drag_matrix;
-  drag_matrix << -total_thrust*CD_induced, 0.0, 0.0,
-                 0.0, -total_thrust*CD_induced, 0.0,
-                 0.0, 0.0, 0.0;
+  drag_matrix << -total_thrust * CD_induced, 0.0, 0.0, 0.0, -total_thrust * CD_induced, 0.0, 0.0,
+    0.0, 0.0;
 
   Eigen::Vector3d induced_drag_force = drag_matrix * Va;
 
   // Apply Ground Effect
   std::vector<double> ground_effect_coeffs = this->get_parameter("ground_effect").as_double_array();
-  double ground_effect_force = max(0.0, ground_effect_coeffs[0]*pow(-x.pose.position.z, 4) +
-                                        ground_effect_coeffs[1]*pow(-x.pose.position.z, 3) +
-                                        ground_effect_coeffs[2]*pow(-x.pose.position.z, 2) +
-                                        ground_effect_coeffs[3]*-x.pose.position.z +
-                                        ground_effect_coeffs[4]);
+  double ground_effect_force =
+    max(0.0,
+        ground_effect_coeffs[0] * pow(-x.pose.position.z, 4)
+          + ground_effect_coeffs[1] * pow(-x.pose.position.z, 3)
+          + ground_effect_coeffs[2] * pow(-x.pose.position.z, 2)
+          + ground_effect_coeffs[3] * -x.pose.position.z + ground_effect_coeffs[4]);
   Eigen::Vector3d ground_effect(0.0, 0.0, -ground_effect_force);
-
 
   // Add the forces together in the body frame
   Eigen::Vector3d body_forces;
@@ -291,8 +294,7 @@ void Multirotor::get_firmware_parameters()
 
 } // namespace rosflight_sim
 
-
-int main(int argc, char** argv)
+int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
 
