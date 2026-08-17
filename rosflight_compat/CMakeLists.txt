@@ -8,6 +8,7 @@ if(DEFINED CMAKE_EXPORT_COMPILE_COMMANDS)
 endif()
 
 find_package(ament_cmake REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp REQUIRED)
 
 ###############
@@ -23,7 +24,10 @@ target_include_directories(rosflight_compat_headers INTERFACE
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
-target_link_libraries(rosflight_compat_headers INTERFACE rclcpp::rclcpp)
+target_link_libraries(rosflight_compat_headers INTERFACE
+  ament_index_cpp::ament_index_cpp
+  rclcpp::rclcpp
+)
 
 #############
 ## Install ##
