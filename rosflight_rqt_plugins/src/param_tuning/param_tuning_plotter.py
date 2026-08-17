@@ -1,14 +1,15 @@
 import threading
+
 import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
-
 from python_qt_binding.QtCore import QTimer
 from python_qt_binding.QtGui import QFont
-from python_qt_binding.QtWidgets import QWidget, QVBoxLayout, QApplication
+from python_qt_binding.QtWidgets import QApplication, QVBoxLayout, QWidget
+
 
 class ParamTuningPlotter(QWidget):
-    def __init__(self, config: dict, param_client, layout: QVBoxLayout, plot_rate: float=5):
+    def __init__(self, config: dict, param_client, layout: QVBoxLayout, plot_rate: float = 5):
         super(ParamTuningPlotter, self).__init__()
         self.setObjectName('ParamTuningPlotter')
 
@@ -59,10 +60,12 @@ class ParamTuningPlotter(QWidget):
             for plot_name in self._config[self._current_group]['plot_topics']:
                 topic_str = self._config[self._current_group]['plot_topics'][plot_name]['topic']
                 x, y = self._param_client.get_data(topic_str)
-                y = np.array(y) * self._config[self._current_group]['plot_topics'][plot_name].get('scale', 1.0)
+                y = np.array(y) * self._config[self._current_group]['plot_topics'][plot_name].get(
+                    'scale', 1.0
+                )
 
                 if plot_name not in self._lineObjects:
-                    line, = self._ax.plot(x, y, label=plot_name)
+                    (line,) = self._ax.plot(x, y, label=plot_name)
                     self._lineObjects[plot_name] = line
                 else:
                     self._lineObjects[plot_name].set_data(x, y)

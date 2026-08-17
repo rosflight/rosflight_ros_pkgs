@@ -71,9 +71,7 @@ void RealtimeConfigurator::init() noexcept
 
 int64_t RealtimeConfigurator::get_involuntary_context_switches(int who) noexcept
 {
-  struct rusage rusage
-  {
-  };
+  struct rusage rusage{};
   getrusage(who, &rusage);
   return static_cast<int64_t>(rusage.ru_nivcsw);
 }

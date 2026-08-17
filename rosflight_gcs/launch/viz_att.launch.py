@@ -9,12 +9,12 @@ Description: ROS2 launch file used to launch attitude Rviz visualization.
 from launch import LaunchDescription
 from launch.actions import GroupAction
 from launch.substitutions import PathJoinSubstitution
-from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node, PushRosNamespace
+from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    """ Launches rviz with ROSflight attitude visualization """
+    """Launches rviz with ROSflight attitude visualization"""
 
     # Get rviz config filepath
     rviz2_config_file = PathJoinSubstitution(
@@ -22,23 +22,20 @@ def generate_launch_description():
     )
 
     # Launch rviz
-    rviz = GroupAction([
-        PushRosNamespace('viz'),
-
-        Node(package='rviz2',
-             executable='rviz2',
-             name='rviz2',
-             arguments=['-d', rviz2_config_file],
-             output='screen'),
-    ])
-
-    # Launch viz node
-    viz_node = Node(
-        package='rosflight_gcs',
-        executable='viz'
+    rviz = GroupAction(
+        [
+            PushRosNamespace('viz'),
+            Node(
+                package='rviz2',
+                executable='rviz2',
+                name='rviz2',
+                arguments=['-d', rviz2_config_file],
+                output='screen',
+            ),
+        ]
     )
 
-    return LaunchDescription([
-        rviz,
-        viz_node
-    ])
+    # Launch viz node
+    viz_node = Node(package='rosflight_gcs', executable='viz')
+
+    return LaunchDescription([rviz, viz_node])

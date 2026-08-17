@@ -59,10 +59,9 @@ import pygame
 import rclpy
 from rclpy.node import Node
 from std_srvs.srv import Trigger
+from vimfly import VimFly
 
 from rosflight_msgs.msg import RCRaw
-
-from vimfly import VimFly
 
 
 # define output RC channels
@@ -153,16 +152,16 @@ class RC(Node):
         except:
             self.get_logger().info('No joystick (or display) detected, using simulated joystick')
             self.transmitter_detected = False
-        
+
         self.declare_parameter('use_vimfly', False)
         self.use_vimfly = self.get_parameter('use_vimfly').get_parameter_value().bool_value
-        
+
         # Intercept if using VimFly.
         if self.use_vimfly and not self.transmitter_detected:
             self.get_logger().info('Using VimFly...')
             self.vim_fly = VimFly(self)
             return
-        
+
         self.rc_publisher = self.create_publisher(RCRaw, 'sim/RC', 10)
         self.timer = self.create_timer(1.0 / 50, self.timer_callback)
 
@@ -206,8 +205,12 @@ class RC(Node):
             self.rc_message.values[self.OVERRIDE_CHANNEL] = self.CHANNEL_MAX
 
             # Initialize ROS components
-            self.toggle_arm_service = self.create_service(Trigger, 'toggle_arm', self.toggle_arm_callback)
-            self.toggle_override_service = self.create_service(Trigger, 'toggle_override', self.toggle_override_callback)
+            self.toggle_arm_service = self.create_service(
+                Trigger, 'toggle_arm', self.toggle_arm_callback
+            )
+            self.toggle_override_service = self.create_service(
+                Trigger, 'toggle_override', self.toggle_override_callback
+            )
 
     def timer_callback(self):
         if self.transmitter_detected:
@@ -215,7 +218,9 @@ class RC(Node):
             self.rc_message.header.stamp = self.get_clock().now().to_msg()
             pygame.event.pump()
             for chan in Channel:
-                self.rc_message.values[chan.value] = round(config[self.joy_type][chan](self.joy) * 500 + 1500)
+                self.rc_message.values[chan.value] = round(
+                    config[self.joy_type][chan](self.joy) * 500 + 1500
+                )
         else:
             self.rc_message.header.stamp = self.get_clock().now().to_msg()
 

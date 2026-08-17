@@ -1,21 +1,24 @@
 import re
-import time
 import threading
+import time
 from collections import deque
+
+from rcl_interfaces.srv import GetParameters, SetParameters
 from rclpy.node import Node
-from rclpy.parameter import ParameterType, Parameter
-from rcl_interfaces.srv import SetParameters, GetParameters
+from rclpy.parameter import Parameter, ParameterType
 from rosidl_runtime_py.utilities import get_message
 
 
-class ParameterClient():
+class ParameterClient:
     def __init__(self, config: dict, node: Node):
         self._config = config
         self._node = node
         self._hist_duration = 10.0
         self._record_data = True
         ros_time = node.get_clock().now()
-        self._initial_time = ros_time.seconds_nanoseconds()[0] + ros_time.seconds_nanoseconds()[1] * 1e-9
+        self._initial_time = (
+            ros_time.seconds_nanoseconds()[0] + ros_time.seconds_nanoseconds()[1] * 1e-9
+        )
         # Threading lock, since get_data may be called by an external thread during message processing
         self._data_lock = threading.Lock()
 
@@ -25,12 +28,20 @@ class ParameterClient():
         for group in config:
             node_name = config[group]['node']
             if node_name not in self._set_clients:
-                self._set_clients[node_name] = self._node.create_client(SetParameters, f'{node_name}/set_parameters')
+                self._set_clients[node_name] = self._node.create_client(
+                    SetParameters, f'{node_name}/set_parameters'
+                )
                 while not self._set_clients[node_name].wait_for_service(timeout_sec=1.0):
-                    self._node.get_logger().info(f'{node_name}/set_parameters service not available, waiting...')
-                self._get_clients[node_name] = self._node.create_client(GetParameters, f'{node_name}/get_parameters')
+                    self._node.get_logger().info(
+                        f'{node_name}/set_parameters service not available, waiting...'
+                    )
+                self._get_clients[node_name] = self._node.create_client(
+                    GetParameters, f'{node_name}/get_parameters'
+                )
                 while not self._get_clients[node_name].wait_for_service(timeout_sec=1.0):
-                    self._node.get_logger().info(f'{node_name}/get_parameters service not available, waiting...')
+                    self._node.get_logger().info(
+                        f'{node_name}/get_parameters service not available, waiting...'
+                    )
 
         # Initialize topics subscribers for plotting
         self._plot_subscribers = {}
@@ -38,20 +49,23 @@ class ParameterClient():
         for group in config:
             if 'plot_topics' in config[group]:
                 for plot_name in config[group]['plot_topics']:
-                    topic_name, field_name, field_index = \
-                        self._split_topic_str(config[group]['plot_topics'][plot_name]['topic'])
+                    topic_name, field_name, field_index = self._split_topic_str(
+                        config[group]['plot_topics'][plot_name]['topic']
+                    )
 
                     if topic_name not in self._plot_subscribers:
                         message_type = self._get_message_type(topic_name)
                         if message_type is None:
-                            self._node.get_logger().error(f'Failed to get message type for {topic_name},'
-                                                         f' does the topic exist?')
+                            self._node.get_logger().error(
+                                f'Failed to get message type for {topic_name},'
+                                f' does the topic exist?'
+                            )
                         else:
                             self._plot_subscribers[topic_name] = self._node.create_subscription(
                                 message_type,
                                 topic_name,
                                 lambda msg, t=topic_name: self._message_callback(msg, t),
-                                10
+                                10,
                             )
                             self._data_history[topic_name] = {(field_name, field_index): deque()}
                     else:
@@ -60,7 +74,7 @@ class ParameterClient():
     def _split_topic_str(self, topic_str: str) -> tuple:
         topic_name = topic_str.split('/')[1]
         field = topic_str.split('/')[2]
-        match = re.match(r"(\w+)\[(\d+)\]", field)
+        match = re.match(r'(\w+)\[(\d+)\]', field)
         if match:
             field_name = match.group(1)
             field_index = int(match.group(2))
@@ -84,8 +98,11 @@ class ParameterClient():
 
             msg_time = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9 - self._initial_time
             curr_time = self._node.get_clock().now()
-            curr_time = curr_time.seconds_nanoseconds()[0] + curr_time.seconds_nanoseconds()[1] * 1e-9 \
-                        - self._initial_time
+            curr_time = (
+                curr_time.seconds_nanoseconds()[0]
+                + curr_time.seconds_nanoseconds()[1] * 1e-9
+                - self._initial_time
+            )
 
             # Skip storing message if time since last message is less than minimum delta time
             first_array = next(iter(self._data_history[topic_name].values()))
@@ -97,11 +114,20 @@ class ParameterClient():
                 field_index = field[1]
 
                 # Add new values to array
-                msg_value = getattr(msg, field_name) if field_index is None else getattr(msg, field_name)[field_index]
-                self._data_history[topic_name][(field_name, field_index)].append((msg_value, msg_time))
+                msg_value = (
+                    getattr(msg, field_name)
+                    if field_index is None
+                    else getattr(msg, field_name)[field_index]
+                )
+                self._data_history[topic_name][(field_name, field_index)].append(
+                    (msg_value, msg_time)
+                )
 
                 # Remove old values
-                while curr_time - self._data_history[topic_name][(field_name, field_index)][0][1] > self._hist_duration:
+                while (
+                    curr_time - self._data_history[topic_name][(field_name, field_index)][0][1]
+                    > self._hist_duration
+                ):
                     self._data_history[topic_name][(field_name, field_index)].popleft()
 
     def get_data(self, topic_str: str) -> tuple[list, list]:
@@ -145,7 +171,9 @@ class ParameterClient():
             if future.result().values[0].type == ParameterType.PARAMETER_DOUBLE:
                 return future.result().values[0].double_value * scale
             else:
-                self._node.get_logger().error(f'Unsupported parameter type for {param}, only double is supported')
+                self._node.get_logger().error(
+                    f'Unsupported parameter type for {param}, only double is supported'
+                )
         else:
             self._node.get_logger().error('Service call failed %r' % (future.exception(),))
 
@@ -177,7 +205,9 @@ class ParameterClient():
             if future.result().results[0].successful:
                 self._node.get_logger().info(f'Set {node_name}/{param} to {value}')
             else:
-                self._node.get_logger().error(f'Failed to set {param} to {value}: {future.result().results[0].reason}')
+                self._node.get_logger().error(
+                    f'Failed to set {param} to {value}: {future.result().results[0].reason}'
+                )
         else:
             self._node.get_logger().error('Service call failed %r' % (future.exception(),))
 

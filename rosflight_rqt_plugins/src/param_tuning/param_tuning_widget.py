@@ -1,11 +1,11 @@
 import os
-import yaml
 
+import yaml
 from ament_index_python import get_resource
 from python_qt_binding import loadUi
-from python_qt_binding.QtCore import pyqtSlot, QModelIndex
-from python_qt_binding.QtGui import QStandardItemModel, QStandardItem
-from python_qt_binding.QtWidgets import QWidget, QPushButton, QFileDialog
+from python_qt_binding.QtCore import QModelIndex, pyqtSlot
+from python_qt_binding.QtGui import QStandardItem, QStandardItemModel
+from python_qt_binding.QtWidgets import QFileDialog, QPushButton, QWidget
 
 
 class ParamTuningWidget(QWidget):
@@ -23,12 +23,20 @@ class ParamTuningWidget(QWidget):
 
         # Load the UI file
         _, path = get_resource('packages', 'rosflight_rqt_plugins')
-        ui_file = os.path.join(path, 'share', 'rosflight_rqt_plugins', 'resources', 'param_tuning.ui')
+        ui_file = os.path.join(
+            path, 'share', 'rosflight_rqt_plugins', 'resources', 'param_tuning.ui'
+        )
         loadUi(ui_file, self)
 
         # Define table formatting
         self._config = config
-        self._table_headers = ['Parameter', 'Value', 'Description', 'Reset to Previous', 'Reset to Initial']
+        self._table_headers = [
+            'Parameter',
+            'Value',
+            'Description',
+            'Reset to Previous',
+            'Reset to Initial',
+        ]
         self._table_widths = [175, 125, 500, 250, 250]
 
         # Get the original values of the parameters
@@ -93,13 +101,17 @@ class ParamTuningWidget(QWidget):
 
         for i, param in enumerate(current_params):
             # Create reset to previous buttons
-            previous_button_value = self._value_stack[(self._current_group_key, param)][-2] \
-                if len(self._value_stack[(self._current_group_key, param)]) > 1 \
+            previous_button_value = (
+                self._value_stack[(self._current_group_key, param)][-2]
+                if len(self._value_stack[(self._current_group_key, param)]) > 1
                 else self._value_stack[(self._current_group_key, param)][0]
+            )
 
             button = QPushButton(str(previous_button_value))
             button.clicked.connect(
-                lambda _, g=self._current_group_key, index=i, p=param: self._reset_previous_button_callback(g, index, p)
+                lambda _, g=self._current_group_key, index=i, p=param: (
+                    self._reset_previous_button_callback(g, index, p)
+                )
             )
             index = self.param_table_view.model().index(i, 3)
             self.param_table_view.setIndexWidget(index, button)
@@ -107,7 +119,9 @@ class ParamTuningWidget(QWidget):
             # Create reset to original buttons
             button = QPushButton(str(self._value_stack[(self._current_group_key, param)][0]))
             button.clicked.connect(
-                lambda _, g=self._current_group_key, index=i, p=param: self._reset_initial_button_callback(g, index, p)
+                lambda _, g=self._current_group_key, index=i, p=param: (
+                    self._reset_initial_button_callback(g, index, p)
+                )
             )
             index = self.param_table_view.model().index(i, 4)
             self.param_table_view.setIndexWidget(index, button)
@@ -172,8 +186,9 @@ class ParamTuningWidget(QWidget):
         # Request a filepath is a param filepath hasn't already been given
         if self._param_file_path is None:
             options = QFileDialog.Options()
-            filepath, _ = QFileDialog.getSaveFileName(None, 'Save Parameters to ROS .yaml', '', 'YAML Files (*.yaml)',
-                                                      options=options)
+            filepath, _ = QFileDialog.getSaveFileName(
+                None, 'Save Parameters to ROS .yaml', '', 'YAML Files (*.yaml)', options=options
+            )
             if not filepath:
                 self._param_client.print_warning('No file selected, parameters not saved.')
                 return
@@ -216,9 +231,16 @@ class ParamTuningWidget(QWidget):
 
             # Restore the previous value
             self.param_table_view.model().dataChanged.disconnect(self._on_model_change)
-            self.param_table_view.model().itemFromIndex(top_left).setText(str(
-                self._value_stack[(self._current_group_key,
-                                   self._models[self._current_group_key].item(top_left.row(), 0).text())][-1]))
+            self.param_table_view.model().itemFromIndex(top_left).setText(
+                str(
+                    self._value_stack[
+                        (
+                            self._current_group_key,
+                            self._models[self._current_group_key].item(top_left.row(), 0).text(),
+                        )
+                    ][-1]
+                )
+            )
             self.param_table_view.model().dataChanged.connect(self._on_model_change)
             return
 

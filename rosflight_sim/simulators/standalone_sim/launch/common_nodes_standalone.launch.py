@@ -11,8 +11,8 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
@@ -23,78 +23,77 @@ def generate_launch_description():
 
     # Declare launch arguments
     use_sim_time_arg = DeclareLaunchArgument(
-        "use_sim_time",
-        default_value="false",
-        description="Whether the nodes will use sim time or not"
+        'use_sim_time',
+        default_value='false',
+        description='Whether the nodes will use sim time or not',
     )
     use_sim_time = LaunchConfiguration('use_sim_time')
 
     use_vimfly_arg = DeclareLaunchArgument(
-        "use_vimfly",
-        default_value="false",
-        description="Whether the rc node will use vimfly or not"
+        'use_vimfly',
+        default_value='false',
+        description='Whether the rc node will use vimfly or not',
     )
     use_vimfly = LaunchConfiguration('use_vimfly')
 
     dynamics_param_file_arg = DeclareLaunchArgument(
-        "dynamics_param_file",
-        default_value="",
-        description="Parameter file that contains the dynamics of the vehicle, containing the vehicle mass parameter."
+        'dynamics_param_file',
+        default_value='',
+        description='Parameter file that contains the dynamics of the vehicle, containing the vehicle mass parameter.',
     )
-    dynamics_param_file = LaunchConfiguration("dynamics_param_file")
+    dynamics_param_file = LaunchConfiguration('dynamics_param_file')
 
     # Start Rosflight SIL
     rosflight_sil_node = Node(
-        package="rosflight_sim",
-        executable="rosflight_sil_manager",
+        package='rosflight_sim',
+        executable='rosflight_sil_manager',
         name='rosflight_sil_manager',
-        output="screen",
-        parameters=[{"use_sim_time": use_sim_time, "use_timer": True}],
+        output='screen',
+        parameters=[{'use_sim_time': use_sim_time, 'use_timer': True}],
     )
 
     # Start sil_board
     sil_board_node = Node(
-        package="rosflight_sim",
-        executable="sil_board",
+        package='rosflight_sim',
+        executable='sil_board',
         name='sil_board',
-        output="screen",
-        parameters=[{"use_sim_time": use_sim_time}],
+        output='screen',
+        parameters=[{'use_sim_time': use_sim_time}],
     )
 
     # Start standalone sensors
     standalone_sensor_node = Node(
-        package="rosflight_sim",
-        executable="standalone_sensors",
+        package='rosflight_sim',
+        executable='standalone_sensors',
         name='standalone_sensors',
-        output="screen",
-        parameters=[{"use_sim_time": use_sim_time}, dynamics_param_file],
+        output='screen',
+        parameters=[{'use_sim_time': use_sim_time}, dynamics_param_file],
     )
 
     # Start rosflight_io interface node
     rosflight_io_node = Node(
-        package="rosflight_io",
-        executable="rosflight_io",
+        package='rosflight_io',
+        executable='rosflight_io',
         name='rosflight_io',
-        output="screen",
-        parameters=[{"udp": True,
-                     "use_sim_time": use_sim_time}],
+        output='screen',
+        parameters=[{'udp': True, 'use_sim_time': use_sim_time}],
     )
 
     # Start rc_joy node for RC input
     rc_joy_node = Node(
-        package="rosflight_sim",
-        executable="rc.py",
-        parameters=[{"use_vimfly": use_vimfly, "use_sim_time": use_sim_time}],
+        package='rosflight_sim',
+        executable='rc.py',
+        parameters=[{'use_vimfly': use_vimfly, 'use_sim_time': use_sim_time}],
     )
 
     # Start time manager, if applicable
     time_manager_node = Node(
-        package="rosflight_sim",
-        executable="standalone_time_manager",
+        package='rosflight_sim',
+        executable='standalone_time_manager',
         name='standalone_time_manager',
-        output="screen",
+        output='screen',
         condition=IfCondition(use_sim_time),
-        parameters=[param_file]
+        parameters=[param_file],
     )
 
     return LaunchDescription(
@@ -110,4 +109,3 @@ def generate_launch_description():
             time_manager_node,
         ]
     )
-

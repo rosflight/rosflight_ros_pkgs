@@ -149,7 +149,7 @@ public:
   * @brief Interface function for pulling the current firmware parameters from rosflight_io.
   * Mixer is pulled by default before this function gets called.
   */
-  virtual void get_firmware_parameters(){};
+  virtual void get_firmware_parameters() {};
 };
 
 } // namespace rosflight_sim
