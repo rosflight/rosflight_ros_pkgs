@@ -75,7 +75,7 @@ void StandaloneSensors::declare_parameters()
   this->declare_parameter("k_mag", 7.0);
   this->declare_parameter("inclination", 1.139436457);
   this->declare_parameter("declination", 0.185004901);
-  this->declare_parameter("total_intensity", 50716.3 / 1e9);  // nanoTesla converted to tesla.
+  this->declare_parameter("total_intensity", 50716.3 / 1e9); // nanoTesla converted to tesla.
 
   this->declare_parameter("baro_stdev", 4.0);
   this->declare_parameter("baro_bias_range", 500.0);
@@ -228,16 +228,17 @@ void StandaloneSensors::update_imu_biases()
   double T_s = 1.0 / get_imu_update_frequency();
   double k_acc = this->get_parameter("k_acc").as_double();
   Eigen::Vector3d acc_noise;
-  acc_noise << acc_bias_walk_stdev * normal_distribution_(noise_generator_)
-            , acc_bias_walk_stdev * normal_distribution_(noise_generator_)
-            , acc_bias_walk_stdev * normal_distribution_(noise_generator_);
-  acc_bias_gauss_markov_eta_ = std::exp(-k_acc*T_s) * acc_bias_gauss_markov_eta_ + T_s*acc_noise;
+  acc_noise << acc_bias_walk_stdev * normal_distribution_(noise_generator_),
+    acc_bias_walk_stdev * normal_distribution_(noise_generator_),
+    acc_bias_walk_stdev * normal_distribution_(noise_generator_);
+  acc_bias_gauss_markov_eta_ =
+    std::exp(-k_acc * T_s) * acc_bias_gauss_markov_eta_ + T_s * acc_noise;
   acc_bias_ = acc_constant_bias_ + acc_bias_gauss_markov_eta_;
 
   Eigen::Vector3d noise;
-  noise << gyro_bias_walk_stdev * normal_distribution_(noise_generator_)
-        , gyro_bias_walk_stdev * normal_distribution_(noise_generator_)
-        , gyro_bias_walk_stdev * normal_distribution_(noise_generator_);
+  noise << gyro_bias_walk_stdev * normal_distribution_(noise_generator_),
+    gyro_bias_walk_stdev * normal_distribution_(noise_generator_),
+    gyro_bias_walk_stdev * normal_distribution_(noise_generator_);
   double k_gyro = this->get_parameter("k_gyro").as_double();
   gyro_bias_gauss_markov_eta_ = std::exp(-k_gyro * T_s) * gyro_bias_gauss_markov_eta_ + T_s * noise;
 
@@ -317,11 +318,11 @@ StandaloneSensors::baro_update(const rosflight_msgs::msg::SimState & state)
   y_baro += baro_stdev * normal_distribution_(noise_generator_);
 
   // Increment the Gauss-Markov bias
-  double baro_bias_walk_stdev = this->get_parameter("baro_bias_walk_stdev").as_double(); 
+  double baro_bias_walk_stdev = this->get_parameter("baro_bias_walk_stdev").as_double();
   double noise = baro_bias_walk_stdev * normal_distribution_(noise_generator_);
-  double T_s = 1.0/get_baro_update_frequency();
+  double T_s = 1.0 / get_baro_update_frequency();
   double k_baro = this->get_parameter("k_baro").as_double();
-  baro_gauss_markov_eta_ = std::exp(-k_baro*T_s) * baro_gauss_markov_eta_ + T_s*noise;
+  baro_gauss_markov_eta_ = std::exp(-k_baro * T_s) * baro_gauss_markov_eta_ + T_s * noise;
 
   // Add bias
   y_baro += baro_bias_ + baro_gauss_markov_eta_;
@@ -458,9 +459,10 @@ StandaloneSensors::diff_pressure_update(const rosflight_msgs::msg::SimState & st
 
   // Increment the Gauss-Markov bias
   double noise = airspeed_bias_walk_stdev * normal_distribution_(noise_generator_);
-  double T_s = 1.0/get_diff_pressure_update_frequency();
+  double T_s = 1.0 / get_diff_pressure_update_frequency();
   double k_airspeed = this->get_parameter("k_airspeed").as_double();
-  airspeed_gauss_markov_eta_ = std::exp(-k_airspeed*T_s) * airspeed_gauss_markov_eta_ + T_s*noise;
+  airspeed_gauss_markov_eta_ =
+    std::exp(-k_airspeed * T_s) * airspeed_gauss_markov_eta_ + T_s * noise;
   y_as += airspeed_bias_ + airspeed_gauss_markov_eta_;
 
   // Package the return message
