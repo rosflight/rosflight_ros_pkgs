@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 vimfly - vim keybindings for your multirotor!
 
@@ -6,9 +6,11 @@ Teleoperated flying from your keyboard.
 Keys are mapped to each channel of the RCRaw message.
 
 """
+
+import time
+
 import pygame
 import rclpy
-import time
 from rclpy.node import Node
 from rosflight_msgs.msg import RCRaw
 
@@ -27,197 +29,244 @@ class VimFly:
         pygame.init()
         pygame.display.set_caption('vimfly')
         self.screen = pygame.display.set_mode((550, 200))
-        self.font = pygame.font.SysFont("monospace", 18)
+        self.font = pygame.font.SysFont('monospace', 18)
 
         # create publisher for RC commands.
         self.rc_pub = self.node.create_publisher(RCRaw, 'sim/RC', 10)
-        
+
         # TODO: swap these hardcoded vals to params
         self.rate = 30
-
-        # self.timer = self.node.create_timer(1/self.rate, self.run)
+        self.timer_period_sec = 1 / self.rate
 
         self.thrust_command = 1000
         self.thrust_step = 10
-        self.THRUST_DEBOUNCE_THRESHOLD = 0.100
+        self.THRUST_DEBOUNCE_THRESHOLD = 0.02
         self.thrust_debouncing = [False]
-        self.thrust_start_time = self.node.get_clock().now()
+        self.thrust_start_time = time.perf_counter()
 
-        self.armed = 1000 # Unarmed
-        self.ARM_DEBOUNCE_THRESHOLD = 0.500
+        self.armed = 1000  # Unarmed
         self.arm_debouncing = [False]
-        self.arm_start_time = self.node.get_clock().now()
 
-        self.RC_override = 2000 # Start under manual control
-        self.RC_OVERRIDE_DEBOUNCE_THRESHOLD = 0.500
+        self.RC_override = 2000  # Start under manual control
         self.RC_override_debouncing = [False]
-        self.RC_override_start_time = self.node.get_clock().now()
 
-        self.angle_mode = 1000 # Start in rate mode
-        self.ANGLE_MODE_DEBOUNCE_THRESHOLD = 0.500
+        self.angle_mode = 1000  # Start in rate mode
         self.angle_mode_debouncing = [False]
-        self.angle_mode_start_time = self.node.get_clock().now()
 
-        while(True):
-            self.keys = pygame.key.get_pressed()
-            self.run()
-            time.sleep(1/self.rate)
+        self.pressed_keys = set()
 
+        self.running = True
 
-    def run(self):
+        # Use a ROS timer so VimFly does not block rclpy.spin()
+        self.timer = self.node.create_timer(self.timer_period_sec, self.run_once)
+
+    def run_once(self):
+        self.process_pygame_events()
+        if not self.running:
+            return
+        msg = self.populate_rc_msg()
+        self.rc_pub.publish(msg)
+        self.update_display(msg)
+
+    def process_pygame_events(self):
+        for event in pygame.event.get():
+            # check if window was closed
+            if event.type == pygame.QUIT:
+                self.stop_running()
+                return
+
+            # reset state if focus is lost
+            elif event.type == pygame.WINDOWFOCUSLOST:
+                self.reset_input_state()
+
+            # register key presses
+            elif event.type == pygame.KEYDOWN:
+                if event.key not in self.pressed_keys:
+                    self.pressed_keys.add(event.key)
+                    if event.key in (pygame.K_a, pygame.K_s):
+                        self.increment_thrust()
+                        self.thrust_start_time = time.perf_counter()
+                        self.thrust_debouncing[0] = True
+
+            # register key releases
+            elif event.type == pygame.KEYUP:
+                self.pressed_keys.discard(event.key)
+                if event.key in (pygame.K_a, pygame.K_s):
+                    self.thrust_debouncing[0] = False
+
+    def populate_rc_msg(self):
 
         # initialize command message
         msg = RCRaw()
         msg.header.stamp = self.node.get_clock().now().to_msg()
 
-        # LEFT -- h
-        if self.keys[pygame.K_h]:
+        if pygame.K_h in self.pressed_keys:  # LEFT -- h
             msg.values[0] = 2000
-
-        # RIGHT -- l
-        elif self.keys[pygame.K_l]:
+        elif pygame.K_l in self.pressed_keys:  # RIGHT -- l
             msg.values[0] = 1000
-
         else:
             msg.values[0] = 1500
 
-        # FORWARD -- k
-        if self.keys[pygame.K_k]:
+        if pygame.K_k in self.pressed_keys:  # FORWARD -- k
             msg.values[1] = 2000
-
-        # BACKWARD -- j
-        elif self.keys[pygame.K_j]:
+        elif pygame.K_j in self.pressed_keys:  # BACKWARD -- j
             msg.values[1] = 1000
-
         else:
             msg.values[1] = 1500
 
-        # CCW -- d
-        if self.keys[pygame.K_d]:
+        if pygame.K_d in self.pressed_keys:  # CCW -- d
             msg.values[3] = 2000
-
-        # CW -- f
-        elif self.keys[pygame.K_f]:
+        elif pygame.K_f in self.pressed_keys:  # CW -- f
             msg.values[3] = 1000
-
         else:
             msg.values[3] = 1500
 
         # THRUST LOWER -- s  //  THRUST HIGHER -- a
-        if self.keys[pygame.K_a] or self.keys[pygame.K_s]:
-            self.debounce(self.thrust_debouncing, self.thrust_start_time, self.THRUST_DEBOUNCE_THRESHOLD, self.increment_thrust)
+        if pygame.K_a in self.pressed_keys or pygame.K_s in self.pressed_keys:
+            self.thrust_start_time = self.debounce(
+                self.thrust_debouncing,
+                self.thrust_start_time,
+                self.THRUST_DEBOUNCE_THRESHOLD,
+                self.increment_thrust,
+            )
         else:
             self.thrust_debouncing[0] = False
 
         # Always send an thrust command -- we don't want to drop like a brick!
         msg.values[2] = self.thrust_command
-        
+
         # Send arm commands
-        if self.keys[pygame.K_t]:
-            self.debounce(self.arm_debouncing, self.arm_start_time, self.ARM_DEBOUNCE_THRESHOLD, self.toggle_arm)
+        if pygame.K_t in self.pressed_keys:
+            self.toggle_once(self.arm_debouncing, self.toggle_arm)
         else:
             self.arm_debouncing[0] = False
-
         msg.values[4] = self.armed
-        
+
         # Send RC override commands
-        if self.keys[pygame.K_r]:
-            self.debounce(self.RC_override_debouncing, self.RC_override_start_time, self.RC_OVERRIDE_DEBOUNCE_THRESHOLD, self.toggle_RC_override)
+        if pygame.K_r in self.pressed_keys:
+            self.toggle_once(self.RC_override_debouncing, self.toggle_RC_override)
         else:
             self.RC_override_debouncing[0] = False
-        
         msg.values[5] = self.RC_override
 
         # Send angle mode commands
-        if self.keys[pygame.K_m]:
-            self.debounce(self.angle_mode_debouncing, self.angle_mode_start_time, self.ANGLE_MODE_DEBOUNCE_THRESHOLD, self.toggle_angle_mode)
+        if pygame.K_m in self.pressed_keys:
+            self.toggle_once(self.angle_mode_debouncing, self.toggle_angle_mode)
         else:
             self.angle_mode_debouncing[0] = False
-
         msg.values[6] = self.angle_mode
 
         # Pad the message with remaining channels.
         msg.values[7] = 1500
 
-        # Publish commands
-        self.rc_pub.publish(msg)
-
-        # Update the display with the current commands
-        self.update_display(msg)
-
-        # process event queue and throttle the while loop
-        pygame.event.pump()
-
+        return msg
 
     def update_display(self, msg):
         self.display_help()
 
-        msgText = "roll: {}, pitch: {}, yaw: {}, thrust: {}".format(msg.values[0], msg.values[1], msg.values[3], msg.values[2])
+        msgText = 'roll: {}, pitch: {}, yaw: {}, thrust: {}'.format(
+            msg.values[0], msg.values[1], msg.values[3], msg.values[2]
+        )
 
-        status_info = "armed: {}, RC_override: {}, angle_mode: {}".format(msg.values[4], msg.values[5], msg.values[6])
-        self.render(msgText, (0,140))
-        self.render(status_info, (0,160))
-        
+        status_info = 'armed: {}, RC_override: {}, angle_mode: {}'.format(
+            msg.values[4], msg.values[5], msg.values[6]
+        )
+        self.render(msgText, (0, 140))
+        self.render(status_info, (0, 160))
+
         pygame.display.flip()
 
-
     def display_help(self):
-        self.screen.fill((0,0,0))
+        self.screen.fill((0, 0, 0))
 
-        LINE=20
+        line = 20
+        col1 = 0
+        col2 = 250
 
-        self.render("vimfly keybindings:", (0,0))
-        self.render("- a: higher thrust", (0,1*LINE)); self.render("- h: Roll Left", (250,1*LINE))
-        self.render("- s: lower thrust", (0,2*LINE)); self.render("- j: Pitch Backward", (250,2*LINE))
-        self.render("- d: yaw CCW", (0,3*LINE)); self.render("- k: Pitch Forward", (250,3*LINE))
-        self.render("- f: yaw CW", (0,4*LINE)); self.render("- l: Roll Right", (250,4*LINE))
-        self.render("- t: arm/disarm", (0,5*LINE)); self.render("- r: RC override", (250,5*LINE))
-        self.render("- m: angle mode", (0,6*LINE))
+        # left column
+        self.render('vimfly keybindings:', (col1, 0))
+        self.render('- a: higher thrust', (col1, 1 * line))
+        self.render('- s: lower thrust', (col1, 2 * line))
+        self.render('- d: yaw CCW', (col1, 3 * line))
+        self.render('- f: yaw CW', (col1, 4 * line))
+        self.render('- t: arm/disarm', (col1, 5 * line))
+        self.render('- m: angle mode', (col1, 6 * line))
 
+        # right column
+        self.render('- h: Roll Left', (col2, 1 * line))
+        self.render('- j: Pitch Backward', (col2, 2 * line))
+        self.render('- k: Pitch Forward', (col2, 3 * line))
+        self.render('- l: Roll Right', (col2, 4 * line))
+        self.render('- r: RC override', (col2, 5 * line))
 
     def render(self, text, loc):
-        txt = self.font.render(text, 1, (255,255,255))
+        txt = self.font.render(text, 1, (255, 255, 255))
         self.screen.blit(txt, loc)
 
     def debounce(self, debounced, debounce_start_time, threshold, key_action):
+        now = time.perf_counter()
 
         if not debounced[0]:
             debounced[0] = True
-            debounce_start_time = self.node.get_clock().now()
+            debounce_start_time = now
 
-        if (self.node.get_clock().now() - debounce_start_time).nanoseconds / 1e9 > threshold:
-            
+        if now - debounce_start_time > threshold:
             # The key has been debounced once, start the process over!
             debounced[0] = False
 
             key_action()
 
+        return debounce_start_time
+
+    def toggle_once(self, debounced, key_action):
+        if not debounced[0]:
+            debounced[0] = True
+            key_action()
+
     def increment_thrust(self):
         # Increment the commanded altitude
-        if self.keys[pygame.K_a] and self.thrust_command < 2000:
+        if pygame.K_a in self.pressed_keys and self.thrust_command < 2000:
             self.thrust_command += self.thrust_step
 
-        elif self.keys[pygame.K_s] and self.thrust_command > 1000:
+        elif pygame.K_s in self.pressed_keys and self.thrust_command > 1000:
             self.thrust_command -= self.thrust_step
 
     def toggle_arm(self):
-            if self.armed == 1000:
-                self.armed = 2000
-            else:
-                self.armed = 1000
-    
+        if self.armed == 1000:
+            self.armed = 2000
+        else:
+            self.armed = 1000
+
     def toggle_RC_override(self):
-            if self.RC_override == 1000:
-                self.RC_override = 2000
-            else:
-                self.RC_override = 1000
+        if self.RC_override == 1000:
+            self.RC_override = 2000
+        else:
+            self.RC_override = 1000
 
     def toggle_angle_mode(self):
-            if self.angle_mode == 1000:
-                self.angle_mode = 2000
-            else:
-                self.angle_mode = 1000
+        if self.angle_mode == 1000:
+            self.angle_mode = 2000
+        else:
+            self.angle_mode = 1000
+
+    def reset_input_state(self):
+        self.pressed_keys.clear()
+        self.thrust_debouncing[0] = False
+        self.arm_debouncing[0] = False
+        self.RC_override_debouncing[0] = False
+        self.angle_mode_debouncing[0] = False
+
+    def stop_running(self):
+        self.running = False
+        self.reset_input_state()
+        self.timer.cancel()
+        pygame.quit()
+        rclpy.shutdown()
+
 
 if __name__ == '__main__':
     rclpy.init()
     teleop = VimFly()
+    rclpy.spin(teleop.node)
+    if rclpy.ok():
+        rclpy.shutdown()
