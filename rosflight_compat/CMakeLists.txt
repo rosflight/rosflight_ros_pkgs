@@ -57,6 +57,9 @@ install(
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 # Export public cmake package dependencies (not targets)
-ament_export_dependencies(rclcpp)
+ament_export_dependencies(
+  rclcpp
+  ament_index_cpp
+)
 
 ament_package()

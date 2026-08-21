@@ -13,7 +13,6 @@ find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
-find_package(message_filters REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(yaml-cpp REQUIRED)
@@ -50,8 +49,8 @@ add_subdirectory(
 ## Libraries ##
 ###############
 
-# mavrosflight library (internal to this file - not exported)
-add_library(mavrosflight
+# mavrosflight (private helper for rosflight_io executable - not exported)
+add_library(mavrosflight STATIC
   src/mavrosflight/mavrosflight.cpp
   src/mavrosflight/mavlink_comm.cpp
   src/mavrosflight/mavlink_serial.cpp
@@ -77,8 +76,8 @@ target_link_libraries(mavrosflight
     Threads::Threads
 )
 
-# realtime_configurator library (exported)
-add_library(realtime_configurator src/realtime_configurator.cpp)
+# realtime_configurator (exported for use in other packages)
+add_library(realtime_configurator SHARED src/realtime_configurator.cpp)
 add_library(rosflight_io::realtime_configurator ALIAS realtime_configurator)
 target_compile_features(realtime_configurator PUBLIC cxx_std_17)
 target_compile_options(realtime_configurator PRIVATE -Wall)
@@ -135,14 +134,6 @@ install(
 install(
   TARGETS realtime_configurator
   EXPORT export_${PROJECT_NAME}
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-)
-
-# Private runtime libraries, installed but not exported
-install(
-  TARGETS mavrosflight
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin

@@ -42,8 +42,8 @@ add_subdirectory(
 ## Libraries ##
 ###############
 
-# rosflight_sim::interfaces (exported for standalone_sim)
-add_library(rosflight_sim_interfaces
+# rosflight_sim::interfaces (exported for supported simulators)
+add_library(rosflight_sim_interfaces SHARED
   src/time_manager_interface.cpp
   src/forces_and_moments_interface.cpp
   src/sensor_interface.cpp
