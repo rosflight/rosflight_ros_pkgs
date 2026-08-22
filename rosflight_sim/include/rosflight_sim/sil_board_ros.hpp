@@ -77,7 +77,7 @@ private:
 
   // Components of the firmware
   std::shared_ptr<SILBoard> board_;
-  std::shared_ptr<rosflight_firmware::Mavlink> comm_;
+  std::shared_ptr<rosflight_firmware::MavlinkAdapter> comm_;
   std::shared_ptr<rosflight_firmware::ROSflight> firmware_;
 
   bool is_initialized_ = false;

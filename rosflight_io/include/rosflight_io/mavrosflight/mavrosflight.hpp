@@ -47,8 +47,6 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include <boost/function.hpp>
-
 #include <cstdint>
 #include <string>
 

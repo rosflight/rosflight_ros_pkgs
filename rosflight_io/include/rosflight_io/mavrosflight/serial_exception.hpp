@@ -41,12 +41,10 @@
 #include <sstream>
 #include <string>
 
-#include <boost/system/system_error.hpp>
-
 namespace mavrosflight
 {
 /**
- * \brief Describes an exception encountered while using the boost serial libraries
+ * \brief Describes an exception encountered while using serial communication
  */
 class SerialException : public std::exception
 {
@@ -55,7 +53,7 @@ public:
 
   explicit SerialException(const std::string & description) { init(description.c_str()); }
 
-  explicit SerialException(const boost::system::system_error & err) { init(err.what()); }
+  explicit SerialException(const std::system_error & err) { init(err.what()); }
 
   SerialException(const SerialException & other)
       : what_(other.what_)

@@ -21,19 +21,27 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
 
-  <depend>rclcpp</depend>
-  <depend>rclpy</depend>
+  <build_depend>asio</build_depend>
 
+  <depend>rclcpp</depend>
+  <depend>rclpy</depend> <!-- for holoocean sim -->
+  <depend>ament_index_cpp</depend> <!-- for standalone sim -->
+
+  <depend>std_srvs</depend>
+  <depend>std_msgs</depend>
+  <depend>rosgraph_msgs</depend>
   <depend>geometry_msgs</depend>
-  <depend>tf2_geometry_msgs</depend>
-  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>tf2_geometry_msgs</depend> <!-- for standalone sim -->
+  <depend>tf2_ros</depend> <!-- for standalone sim -->
+  <depend>visualization_msgs</depend> <!-- for standalone sim -->
   <depend>rosflight_msgs</depend>
   <depend>rosflight_compat</depend>
   <depend>python3-pygame</depend>
   <depend>eigen</depend>
 
   <export>
-    <gazebo_ros plugin_path="${prefix}/lib" gazebo_media_path="${prefix}"/>
+    <gazebo_ros plugin_path="${prefix}/lib" gazebo_media_path="${prefix}" />
     <build_type>ament_cmake</build_type>
   </export>
 </package>

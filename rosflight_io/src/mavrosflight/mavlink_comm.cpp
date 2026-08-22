@@ -36,9 +36,10 @@
 
 #include <rosflight_io/mavrosflight/mavlink_comm.hpp>
 
+#include <iostream>
+
 namespace mavrosflight
 {
-using boost::asio::serial_port_base;
 
 MavlinkComm::MavlinkComm()
     : io_context_()
@@ -57,7 +58,7 @@ void MavlinkComm::open()
 
   // start reading from the port
   async_read();
-  io_thread_ = boost::thread(boost::bind(&boost::asio::io_context::run, &this->io_context_));
+  io_thread_ = std::thread([this]() {io_context_.run();});
 }
 
 void MavlinkComm::close()
@@ -111,12 +112,13 @@ void MavlinkComm::async_read()
     return;
   }
 
-  do_async_read(boost::asio::buffer(read_buf_raw_, MAVLINK_SERIAL_READ_BUF_SIZE),
-                boost::bind(&MavlinkComm::async_read_end, this, boost::asio::placeholders::error,
-                            boost::asio::placeholders::bytes_transferred));
+  do_async_read(asio::buffer(read_buf_raw_, MAVLINK_SERIAL_READ_BUF_SIZE),
+                [this](const asio::error_code & error, size_t bytes_transferred) {
+                  async_read_end(error, bytes_transferred);
+                });
 }
 
-void MavlinkComm::async_read_end(const boost::system::error_code & error, size_t bytes_transferred)
+void MavlinkComm::async_read_end(const asio::error_code & error, size_t bytes_transferred)
 {
   if (!is_open()) {
     return;
@@ -165,13 +167,13 @@ void MavlinkComm::async_write(bool check_write_state)
 
   write_in_progress_ = true;
   WriteBuffer * buffer = write_queue_.front();
-  do_async_write(boost::asio::buffer(buffer->dpos(), buffer->nbytes()),
-                 boost::bind(&MavlinkComm::async_write_end, this, boost::asio::placeholders::error,
-                             boost::asio::placeholders::bytes_transferred));
+  do_async_write(asio::buffer(buffer->dpos(), buffer->nbytes()),
+                 [this](const asio::error_code & error, size_t bytes_transferred) {
+                   async_write_end(error, bytes_transferred);
+                 });
 }
 
-void MavlinkComm::async_write_end(const boost::system::error_code & error,
-                                  std::size_t bytes_transferred)
+void MavlinkComm::async_write_end(const asio::error_code & error, std::size_t bytes_transferred)
 {
   if (error) {
     std::cerr << error.message() << std::endl;

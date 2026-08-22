@@ -1,188 +1,127 @@
 cmake_minimum_required(VERSION 3.20...3.28)
 # Don't define own project -- use parent instead
 
-if(NOT CMAKE_C_STANDARD)
-  set(CMAKE_C_STANDARD 99)
-endif()
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-endif()
-
-add_compile_options(-Wall -fPIC)
-
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
 endif()
 
 # Find packages
 find_package(ament_cmake REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rosflight_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(visualization_msgs REQUIRED)
 
-# Rosflight Standalone sim
+#################
+## EXECUTABLES ##
+#################
+
+# Viz Transcriber
 add_executable(standalone_viz_transcriber src/standalone_viz_transcriber.cpp)
+target_compile_features(standalone_viz_transcriber PRIVATE cxx_std_17)
+target_compile_options(standalone_viz_transcriber PRIVATE -Wall)
 target_include_directories(standalone_viz_transcriber PRIVATE include)
 target_link_libraries(standalone_viz_transcriber PRIVATE
   ament_index_cpp::ament_index_cpp
   rclcpp::rclcpp
   geometry_msgs::geometry_msgs
   rosflight_msgs::rosflight_msgs
-  tf2::tf2
   tf2_ros::tf2_ros
   tf2_geometry_msgs::tf2_geometry_msgs
   visualization_msgs::visualization_msgs
 )
-ament_export_dependencies(rclcpp
-  tf2
-  tf2_ros
-  geometry_msgs
-  rosflight_msgs
-  visualization_msgs
-)
-install(
-  TARGETS standalone_viz_transcriber
-  DESTINATION lib/${PROJECT_NAME}
-)
 
 # Time Manager
-add_executable(standalone_time_manager
-  ../../src/time_manager_interface.cpp
-  src/standalone_time_manager.cpp
-)
-target_include_directories(standalone_time_manager PRIVATE
-  ../../include
-  include
-)
-target_link_libraries(standalone_time_manager PRIVATE
-  rclcpp::rclcpp
-  std_srvs::std_srvs
-)
-install(
-  TARGETS standalone_time_manager
-  DESTINATION lib/${PROJECT_NAME}
-)
+add_executable(standalone_time_manager src/standalone_time_manager.cpp)
+target_compile_features(standalone_time_manager PRIVATE cxx_std_17)
+target_compile_options(standalone_time_manager PRIVATE -Wall)
+target_include_directories(standalone_time_manager PRIVATE include)
+target_link_libraries(standalone_time_manager PRIVATE rosflight_sim::interfaces)
 
 # Multirotor Forces And Moments
 add_executable(multirotor_forces_and_moments
-  ../../src/forces_and_moments_interface.cpp
   src/multirotor_forces_and_moments.cpp
 )
-target_include_directories(multirotor_forces_and_moments PRIVATE
-  ../../include
-  include
-)
+target_compile_features(multirotor_forces_and_moments PRIVATE cxx_std_17)
+target_compile_options(multirotor_forces_and_moments PRIVATE -Wall)
+target_include_directories(multirotor_forces_and_moments PRIVATE include)
 target_link_libraries(multirotor_forces_and_moments PRIVATE
-rosflight_compat::compat_headers
-  rclcpp::rclcpp
-  std_srvs::std_srvs
+  rosflight_sim::interfaces
   geometry_msgs::geometry_msgs
   rosflight_msgs::rosflight_msgs
   Eigen3::Eigen
-)
-install(
-  TARGETS multirotor_forces_and_moments
-  DESTINATION lib/${PROJECT_NAME}
 )
 
 # FixedWing Forces And Moments
 add_executable(fixedwing_forces_and_moments
-  ../../src/forces_and_moments_interface.cpp
   src/fixedwing_forces_and_moments.cpp
 )
-target_include_directories(fixedwing_forces_and_moments PRIVATE
-  ../../include
-  include
-)
+target_compile_features(fixedwing_forces_and_moments PRIVATE cxx_std_17)
+target_compile_options(fixedwing_forces_and_moments PRIVATE -Wall)
+target_include_directories(fixedwing_forces_and_moments PRIVATE include)
 target_link_libraries(fixedwing_forces_and_moments PRIVATE
-  rosflight_compat::compat_headers
-  rclcpp::rclcpp
-  std_srvs::std_srvs
+  rosflight_sim::interfaces
   geometry_msgs::geometry_msgs
   rosflight_msgs::rosflight_msgs
   Eigen3::Eigen
-)
-install(
-  TARGETS fixedwing_forces_and_moments
-  DESTINATION lib/${PROJECT_NAME}
 )
 
 # Standalone Sensors
-add_executable(standalone_sensors
-  ../../src/sensor_interface.cpp
-  src/standalone_sensors.cpp
-)
-target_include_directories(standalone_sensors PRIVATE
-  include
-  simulators/standalone_sim/include
-)
+add_executable(standalone_sensors src/standalone_sensors.cpp)
+target_compile_features(standalone_sensors PRIVATE cxx_std_17)
+target_compile_options(standalone_sensors PRIVATE -Wall)
+target_include_directories(standalone_sensors PRIVATE include)
 target_link_libraries(standalone_sensors PRIVATE
+  rosflight_sim::interfaces
   rclcpp::rclcpp
-  sensor_msgs::sensor_msgs
   rosflight_msgs::rosflight_msgs
   geometry_msgs::geometry_msgs
   Eigen3::Eigen
 )
-install(
-  TARGETS standalone_sensors
-  DESTINATION lib/${PROJECT_NAME}
-)
 
 # Dynamics
-add_executable(standalone_dynamics
-  ../../src/dynamics_interface.cpp
-  src/standalone_dynamics.cpp
-)
-target_include_directories(standalone_dynamics PRIVATE
-  ../../include
-  include
-)
+add_executable(standalone_dynamics src/standalone_dynamics.cpp)
+target_compile_features(standalone_dynamics PRIVATE cxx_std_17)
+target_compile_options(standalone_dynamics PRIVATE -Wall)
+target_include_directories(standalone_dynamics PRIVATE include)
 target_link_libraries(standalone_dynamics PRIVATE
+  rosflight_sim::interfaces
   rclcpp::rclcpp
   rosflight_msgs::rosflight_msgs
   geometry_msgs::geometry_msgs
   tf2_geometry_msgs::tf2_geometry_msgs
-  std_srvs::std_srvs
   Eigen3::Eigen
 )
-ament_export_dependencies(standalone_dynamics
-  geometry_msgs
-  tf2_geometry_msgs
-  std_srvs
-  rclcpp
-  rosflight_msgs
-)
+
+#############
+## Install ##
+#############
+
+# C++ node executables
 install(
-  TARGETS standalone_dynamics
+  TARGETS
+    standalone_viz_transcriber
+    standalone_time_manager
+    multirotor_forces_and_moments
+    fixedwing_forces_and_moments
+    standalone_sensors
+    standalone_dynamics
   DESTINATION lib/${PROJECT_NAME}
 )
 
-
-# Other install
+# Resources
 install(
-  DIRECTORY launch
-  DESTINATION share/${PROJECT_NAME}
-)
-
-install(
-  DIRECTORY params
-  DESTINATION share/${PROJECT_NAME}
-)
-
-install(
-  DIRECTORY config
-  DESTINATION share/${PROJECT_NAME}
-)
-
-install(
-  DIRECTORY ../common_resource standalone_resource
+  DIRECTORY
+    launch
+    params
+    config
+    standalone_resource
   DESTINATION share/${PROJECT_NAME}
 )
 

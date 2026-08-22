@@ -21,8 +21,8 @@ set_target_properties(rosflight_compat_headers PROPERTIES
   EXPORT_NAME compat_headers
 )
 target_include_directories(rosflight_compat_headers INTERFACE
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
 )
 target_link_libraries(rosflight_compat_headers INTERFACE
   ament_index_cpp::ament_index_cpp
@@ -36,14 +36,14 @@ target_link_libraries(rosflight_compat_headers INTERFACE
 # Headers for exported/public libraries
 install(
   DIRECTORY include/
-  DESTINATION "include/${PROJECT_NAME}"
+  DESTINATION include/${PROJECT_NAME}
 )
 
 # Exported/public libraries
 install(
   TARGETS
     rosflight_compat_headers
-  EXPORT "export_${PROJECT_NAME}"
+  EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -54,9 +54,12 @@ install(
 ########################
 
 # Export public libraries
-ament_export_targets("export_${PROJECT_NAME}" HAS_LIBRARY_TARGET)
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 # Export public cmake package dependencies (not targets)
-ament_export_dependencies(rclcpp)
+ament_export_dependencies(
+  rclcpp
+  ament_index_cpp
+)
 
 ament_package()

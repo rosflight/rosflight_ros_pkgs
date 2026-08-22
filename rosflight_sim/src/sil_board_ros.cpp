@@ -71,7 +71,7 @@ void SILBoardROS::initialize_members()
   board_ = std::make_shared<SILBoard>(node_ptr);
   board_->init_board();
 
-  comm_ = std::make_shared<rosflight_firmware::Mavlink>(*board_);
+  comm_ = std::make_shared<rosflight_firmware::MavlinkAdapter>(*board_);
   firmware_ = std::make_shared<rosflight_firmware::ROSflight>(*board_, *comm_);
 
   // Initialize the firmware

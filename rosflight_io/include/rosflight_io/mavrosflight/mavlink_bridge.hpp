@@ -39,6 +39,6 @@
 #ifndef MAVROSFLIGHT_MAVLINK_BRIDGE_H
 #define MAVROSFLIGHT_MAVLINK_BRIDGE_H
 
-#include <mavlink/mavlink.h>
+#include <rosflight/mavlink.h>
 
 #endif // MAVROSFLIGHT_MAVLINK_BRIDGE_H

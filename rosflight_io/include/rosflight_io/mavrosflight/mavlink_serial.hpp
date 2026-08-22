@@ -39,9 +39,9 @@
 
 #include <rosflight_io/mavrosflight/mavlink_comm.hpp>
 
-#include <boost/asio.hpp>
-#include <boost/function.hpp>
+#include <asio.hpp>
 
+#include <functional>
 #include <string>
 
 namespace mavrosflight
@@ -73,23 +73,21 @@ private:
   /**
    * \brief Initiate an asynchronous read operation
    */
-  void
-  do_async_read(const boost::asio::mutable_buffer & buffer,
-                boost::function<void(const boost::system::error_code &, size_t)> handler) override;
+  void do_async_read(const asio::mutable_buffer & buffer,
+                     std::function<void(const asio::error_code &, size_t)> handler) override;
 
   /**
    * \brief Initialize an asynchronous write operation
    * \param check_write_state If true, only start another write operation if a write sequence is not already running
    */
-  void
-  do_async_write(const boost::asio::const_buffer & buffer,
-                 boost::function<void(const boost::system::error_code &, size_t)> handler) override;
+  void do_async_write(const asio::const_buffer & buffer,
+                      std::function<void(const asio::error_code &, size_t)> handler) override;
 
   //===========================================================================
   // member variables
   //===========================================================================
 
-  boost::asio::serial_port serial_port_; //!< boost serial port object
+  asio::serial_port serial_port_; //!< asio serial port object
 
   std::string port_;
   int baud_rate_;

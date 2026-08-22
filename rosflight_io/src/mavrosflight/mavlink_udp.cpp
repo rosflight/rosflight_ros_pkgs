@@ -37,11 +37,10 @@
 #include <rosflight_io/mavrosflight/mavlink_udp.hpp>
 #include <rosflight_io/mavrosflight/serial_exception.hpp>
 
-using boost::asio::ip::udp;
+using asio::ip::udp;
 
 namespace mavrosflight
 {
-using boost::asio::serial_port_base;
 
 MavlinkUDP::MavlinkUDP(std::string bind_host, uint16_t bind_port, std::string remote_host,
                        uint16_t remote_port)
@@ -74,23 +73,21 @@ void MavlinkUDP::do_open()
     socket_.set_option(udp::socket::reuse_address(true));
     socket_.set_option(udp::socket::send_buffer_size(1000 * MAVLINK_MAX_PACKET_LEN));
     socket_.set_option(udp::socket::receive_buffer_size(1000 * MAVLINK_SERIAL_READ_BUF_SIZE));
-  } catch (const boost::system::system_error & e) {
+  } catch (const asio::system_error & e) {
     throw SerialException(e);
   }
 }
 
 void MavlinkUDP::do_close() { socket_.close(); }
 
-void MavlinkUDP::do_async_read(
-  const boost::asio::mutable_buffer & buffer,
-  boost::function<void(const boost::system::error_code &, size_t)> handler)
+void MavlinkUDP::do_async_read(const asio::mutable_buffer & buffer,
+                               std::function<void(const asio::error_code &, size_t)> handler)
 {
   socket_.async_receive_from(buffer, remote_endpoint_, handler);
 }
 
-void MavlinkUDP::do_async_write(
-  const boost::asio::const_buffer & buffer,
-  boost::function<void(const boost::system::error_code &, size_t)> handler)
+void MavlinkUDP::do_async_write(const asio::const_buffer & buffer,
+                                std::function<void(const asio::error_code &, size_t)> handler)
 {
   socket_.async_send_to(buffer, remote_endpoint_, handler);
 }
