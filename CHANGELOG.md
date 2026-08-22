@@ -1,5 +1,38 @@
 # Changelog
 
+## [2.1.0](https://github.com/rosflight/rosflight_ros_pkgs/compare/v2.0.1...v2.1.0) (2026-08-22)
+
+
+### Features
+
+* add arg in compose file to select ros image ([1273b44](https://github.com/rosflight/rosflight_ros_pkgs/commit/1273b44fbe179a622ab454c977d872e4232bd56f))
+* add arg in compose file to select ros image ([c14a6e1](https://github.com/rosflight/rosflight_ros_pkgs/commit/c14a6e1ea5eba54097ddfff00f25b0d886370bdc))
+* add compatibility layer for get_package_share_path ([09dcf2a](https://github.com/rosflight/rosflight_ros_pkgs/commit/09dcf2a939bf186e378a2f6e04e09311a0239f08))
+* added attitude control switch to vimfly ([#256](https://github.com/rosflight/rosflight_ros_pkgs/issues/256)) ([516ff1b](https://github.com/rosflight/rosflight_ros_pkgs/commit/516ff1b87583756297d45c04532be80d11f5a956))
+* default camera for standalone on fixed wing is a 3rd person ([#255](https://github.com/rosflight/rosflight_ros_pkgs/issues/255)) ([739e310](https://github.com/rosflight/rosflight_ros_pkgs/commit/739e310a47d19f1718eb5be5e827411ac2c5bfbe))
+* removed visualizers and updated build. ([08f2766](https://github.com/rosflight/rosflight_ros_pkgs/commit/08f276666ca241464c9a6893f7c2e4bde8c95d60))
+* removed visualizers and updated build. ([e854a1a](https://github.com/rosflight/rosflight_ros_pkgs/commit/e854a1a3c321fa9e4d8d58532be1cb8b5832066f))
+* **rosflight_sim:** expose vimfly in standalone launches ([8abeb40](https://github.com/rosflight/rosflight_ros_pkgs/commit/8abeb407bb1c183166bc0dbc7541e512b606e12a))
+* VimFly uses single rc node ([#260](https://github.com/rosflight/rosflight_ros_pkgs/issues/260)) ([3ae7de0](https://github.com/rosflight/rosflight_ros_pkgs/commit/3ae7de01ef565d2e9681ec58ad725d989e81c9c2))
+
+
+### Bug Fixes
+
+* Add HOST_UID build arg to Dockerfile ([#262](https://github.com/rosflight/rosflight_ros_pkgs/issues/262)) ([d7d8cbd](https://github.com/rosflight/rosflight_ros_pkgs/commit/d7d8cbdb7c318fa0583deb7002217af2196a0977))
+* added back simulator_launch to LaunchDescription ([bb71da6](https://github.com/rosflight/rosflight_ros_pkgs/commit/bb71da6d046c51796f524dfa3e2c8caf23d861a0))
+* address CMake export feedback ([919e23a](https://github.com/rosflight/rosflight_ros_pkgs/commit/919e23a2b8fc107f7dbc26eb8e0d42d53c3d4c0e))
+* **boost:** update asio usage for newer Boost ([83649df](https://github.com/rosflight/rosflight_ros_pkgs/commit/83649dff4a3aa7d597f7fd601765c7b13120b2c9))
+* make backwards compatible with ROS 2 humble ([1c30662](https://github.com/rosflight/rosflight_ros_pkgs/commit/1c30662ce3c8601525f9e3a8486a35cd451a5f76))
+* make backwards compatible with ROS 2 humble ([aed892b](https://github.com/rosflight/rosflight_ros_pkgs/commit/aed892bd2ac6b9ee75f6eed2b5eaa238f2dffbc6))
+* populate result for ros service call ([1d53462](https://github.com/rosflight/rosflight_ros_pkgs/commit/1d534622b151948a39cbbb8c20983fccd8a08d8c))
+* properly exclude firmware from formatting ([17df893](https://github.com/rosflight/rosflight_ros_pkgs/commit/17df8931407b07826291dec8bf22106b847211ae))
+* remove deprecated use of bitwise operations on Eigen enum types ([8beadfc](https://github.com/rosflight/rosflight_ros_pkgs/commit/8beadfcd0504ca64d95d9425de9f1b67c72b3b68))
+* remove deprecated use of C objects for QoS ([b3e731f](https://github.com/rosflight/rosflight_ros_pkgs/commit/b3e731f10e7f030b33ca759bc1deb4599e04df69))
+* **rosflight_sim:** improve vimfly input handling ([fc40231](https://github.com/rosflight/rosflight_ros_pkgs/commit/fc40231fa4882bfefa8e8b11cd7edecb6c08450f))
+* **style:** exclude firmware from code style script ([3b6fcb2](https://github.com/rosflight/rosflight_ros_pkgs/commit/3b6fcb24b95c2661c3830ec897eed43cc4478fff))
+* **tf2:** update includes for changed headers ([a83c8b4](https://github.com/rosflight/rosflight_ros_pkgs/commit/a83c8b4d9b0d6f3c3c7449dea43fde8537a1adea))
+* update mavlink include path to match firmware config ([7cd36bd](https://github.com/rosflight/rosflight_ros_pkgs/commit/7cd36bd4db42641b08ebb935f49d90f4e4a41712))
+
 ## [2.0.1](https://github.com/rosflight/rosflight_ros_pkgs/compare/v2.0.0...v2.0.1) (2026-03-17)
 
 
