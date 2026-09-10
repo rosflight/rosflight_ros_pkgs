@@ -75,7 +75,7 @@ ForcesAndMomentsInterface::ForcesAndMomentsInterface()
   // Service clients
   client_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   firmware_param_get_client_ =
-    rosflight_compat::create_service_client<rosflight_msgs::srv::ParamGet>(*this, "sil_board/run",
+    rosflight_compat::create_service_client<rosflight_msgs::srv::ParamGet>(*this, "param_get",
                                                                            client_cb_group_);
   firmware_check_param_client_ = rosflight_compat::create_service_client<std_srvs::srv::Trigger>(
     *this, "all_params_received", client_cb_group_);
