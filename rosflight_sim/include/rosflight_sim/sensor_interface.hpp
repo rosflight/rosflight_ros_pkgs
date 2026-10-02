@@ -42,6 +42,7 @@
 #include <sensor_msgs/msg/temperature.hpp>
 #include <sensor_msgs/msg/magnetic_field.hpp>
 #include <sensor_msgs/msg/range.hpp>
+#include <std_msgs/msg/header.hpp>
 
 #include "rosflight_msgs/msg/airspeed.hpp"
 #include "rosflight_msgs/msg/barometer.hpp"
@@ -93,6 +94,7 @@ private:
   rclcpp::Publisher<rosflight_msgs::msg::Airspeed>::SharedPtr diff_pressure_pub_;
   rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr range_pub_;
   rclcpp::Publisher<rosflight_msgs::msg::BatteryStatus>::SharedPtr battery_pub_;
+  rclcpp::Publisher<std_msgs::msg::Header>::SharedPtr clock_sync_pub_;
 
   rclcpp::TimerBase::SharedPtr imu_timer_;
   rclcpp::TimerBase::SharedPtr mag_timer_;
@@ -101,6 +103,7 @@ private:
   rclcpp::TimerBase::SharedPtr diff_pressure_timer_;
   rclcpp::TimerBase::SharedPtr range_timer_;
   rclcpp::TimerBase::SharedPtr battery_timer_;
+  rclcpp::TimerBase::SharedPtr clock_sync_timer_;
 
   // Sensor characteristics
   float imu_update_frequency_;

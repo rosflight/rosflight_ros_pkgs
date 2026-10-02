@@ -13,11 +13,6 @@
             "agent_type": "FixedWing",
             "sensors": [
                 {
-                    "sensor_type": "RGBCamera",
-                    "UseRPY": false,
-                    "ros_publish": true
-                },
-                {
                     "sensor_type": "RangeFinderSensor",
                     "socket": "COM",
                     "ros_publish": true,

@@ -11,14 +11,7 @@
         {
             "agent_name": "FixedWing",
             "agent_type": "FixedWing",
-            "sensors": [
-                {
-                    "sensor_name": "RGBCamera",
-                    "sensor_type": "RGBCamera",
-                    "ros_publish": true,
-                    "UseRPY": false
-                }
-            ],
+            "sensors": [],
             "control_scheme": 2,
             "location": [0.0, 0.0, 0.1],
             "rotation": [0.0, 0.0, 0.0]

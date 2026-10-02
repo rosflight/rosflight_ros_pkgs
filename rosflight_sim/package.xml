@@ -31,10 +31,16 @@
   <depend condition="$ROS_DISTRO == 'humble'">xacro</depend>
 
   <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>rosgraph_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>std_srvs</depend>
   <depend>nav_msgs</depend>
   <depend>rosflight_msgs</depend>
   <depend>python3-pygame</depend>
   <depend>eigen</depend>
+  <exec_depend>image_view</exec_depend>
 
   <export>
     <gazebo_ros plugin_path="${prefix}/lib" gazebo_media_path="${prefix}"/>

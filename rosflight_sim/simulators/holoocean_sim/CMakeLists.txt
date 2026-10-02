@@ -37,3 +37,8 @@ install(
   DIRECTORY holoocean_main/config
   DESTINATION share/${PROJECT_NAME}
 )
+
+install(
+  FILES README.md
+  DESTINATION share/${PROJECT_NAME}/doc/holoocean_sim
+)

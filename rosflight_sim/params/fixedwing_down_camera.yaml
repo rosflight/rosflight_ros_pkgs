@@ -1,0 +1,15 @@
+/holoocean/holoocean_node:
+  ros__parameters:
+    camera.width: 1024
+    camera.height: 1024
+    camera.fov_deg: 100.0
+    # Desert starting point: two stops below HoloOcean's +4 default.
+    camera.exposure_method: AEM_Histogram
+    camera.exposure_compensation: 2.0
+    camera.rate_hz: 30
+    camera.step_hz: 600
+    camera.encoding: mono8
+    # HoloOcean body coordinates: x forward, y left, z up; meters and degrees.
+    camera.location: [0.5, 0.0, -0.15]
+    # 75 degrees pitches the camera 15 degrees forward from straight down.
+    camera.rotation: [0.0, 75.0, 0.0]

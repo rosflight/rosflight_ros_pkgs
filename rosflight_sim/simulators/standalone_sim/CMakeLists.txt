@@ -109,7 +109,7 @@ target_include_directories(standalone_sensors
     include
     simulators/standalone_sim/include)
 target_link_libraries(standalone_sensors Eigen3::Eigen)
-ament_target_dependencies(standalone_sensors rclcpp sensor_msgs rosflight_msgs geometry_msgs)
+ament_target_dependencies(standalone_sensors rclcpp sensor_msgs rosflight_msgs geometry_msgs std_msgs)
 install(
   TARGETS standalone_sensors
   DESTINATION lib/${PROJECT_NAME})
@@ -161,4 +161,3 @@ install(
   DIRECTORY ../common_resource standalone_resource
   DESTINATION share/${PROJECT_NAME}
 )
-

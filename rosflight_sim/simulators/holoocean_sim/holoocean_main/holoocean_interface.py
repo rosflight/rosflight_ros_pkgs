@@ -9,7 +9,8 @@ class HolooceanInterface():
     Lightweight wrapper around holoocean for loading a scenario file and advancing the simulation,
     returning sensor data.
     """
-    def __init__(self, scenario_path, tps=30, show_viewport=True, render_quality=None):
+    def __init__(self, scenario_path, tps=30, show_viewport=True, render_quality=None,
+                 camera_config=None):
         """
         Parameters:
             scenario_path (str or Path): Path to the scenario file
@@ -28,6 +29,24 @@ class HolooceanInterface():
         # Load scenario file.
         with open(str(scenario_path), 'r') as f:
             scenario = json.load(f)
+
+        if camera_config is not None:
+            scenario['agents'][0]['sensors'].append({
+                'sensor_name': 'DownCamera',
+                'sensor_type': 'CameraSensor',
+                'Hz': camera_config['rate_hz'],
+                'socket': 'COM',
+                'location': camera_config['location'],
+                'rotation': camera_config['rotation'],
+                'configuration': {
+                    'CaptureWidth': camera_config['width'],
+                    'CaptureHeight': camera_config['height'],
+                    'FovAngle': camera_config['fov_deg'],
+                    'ExposureMethod': camera_config['exposure_method'],
+                    'ExposureCompensation': camera_config['exposure_compensation'],
+                },
+            })
+            scenario['frames_per_sec'] = False
 
         # Define necessary sensors for detecting collisions.
         collision_sensors = [
@@ -59,7 +78,8 @@ class HolooceanInterface():
         scenario["agents"][0]["sensors"].extend(collision_sensors)
 
         # Create environment using ticks_per_sec parameter.
-        self.env = holoocean.make(scenario_cfg=scenario, show_viewport=show_viewport, ticks_per_sec=self.tps)
+        self.env = holoocean.make(scenario_cfg=scenario, show_viewport=show_viewport,
+                                  ticks_per_sec=self.tps, frames_per_sec=scenario.get('frames_per_sec', True))
         self.agent = self.env.agents[scenario["main_agent"]]
         self.sensors = self.agent.sensors
         self.ros_publish = scenario["ros_publish"]

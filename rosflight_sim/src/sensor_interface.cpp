@@ -70,6 +70,18 @@ SensorInterface::SensorInterface()
   range_pub_ = this->create_publisher<sensor_msgs::msg::Range>("sim/sensors/range", 1);
   battery_pub_ =
     this->create_publisher<rosflight_msgs::msg::BatteryStatus>("sim/sensors/battery", 1);
+  double clock_sync_frequency = this->get_parameter("clock_sync_frequency").as_double();
+  if (clock_sync_frequency > 0.0) {
+    clock_sync_pub_ = this->create_publisher<std_msgs::msg::Header>("sim/clock_sync", 1);
+    clock_sync_timer_ = rclcpp::create_timer(
+      this, this->get_clock(),
+      std::chrono::microseconds(static_cast<long long>(1.0 / clock_sync_frequency * 1'000'000)),
+      [this]() {
+        std_msgs::msg::Header msg;
+        msg.stamp = this->now();
+        clock_sync_pub_->publish(msg);
+      });
+  }
 
   // Initialize timers with the frequencies from the parameters
   imu_update_frequency_ = this->get_parameter("imu_update_frequency").as_double();
@@ -116,6 +128,8 @@ void SensorInterface::declare_parameters()
 {
   // Declare all ROS2 parameters here
   this->declare_parameter("imu_update_frequency", 400.0);
+  this->declare_parameter("clock_sync_frequency", 0.0);
+  this->declare_parameter("imu_frame_id", "");
   this->declare_parameter("mag_update_frequency", 50.0);
   this->declare_parameter("baro_update_frequency", 100.0);
   this->declare_parameter("gnss_update_frequency", 10.0);
@@ -280,6 +294,7 @@ void SensorInterface::status_callback(const rosflight_msgs::msg::Status & msg)
 void SensorInterface::imu_publish()
 {
   sensor_msgs::msg::Imu msg = imu_update(current_state_, current_forces_);
+  msg.header.frame_id = this->get_parameter("imu_frame_id").as_string();
   imu_data_pub_->publish(msg);
 
   sensor_msgs::msg::Temperature temp_msg = imu_temperature_update(current_state_);

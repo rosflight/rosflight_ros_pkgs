@@ -47,13 +47,39 @@ def generate_launch_description():
     )
     dynamics_param_file = LaunchConfiguration("dynamics_param_file")
 
+    use_firmware_timer_arg = DeclareLaunchArgument(
+        "use_firmware_timer", default_value="true",
+        description="Run the firmware from its own ROS timer"
+    )
+    use_time_manager_arg = DeclareLaunchArgument(
+        "use_time_manager", default_value=use_sim_time,
+        description="Start the standalone wall-driven simulation clock"
+    )
+    imu_frame_id_arg = DeclareLaunchArgument(
+        "imu_frame_id", default_value="",
+        description="Frame ID for the simulated IMU topic"
+    )
+    imu_update_frequency_arg = DeclareLaunchArgument(
+        "imu_update_frequency", default_value="400.0",
+        description="Simulated IMU update frequency in Hz"
+    )
+    clock_sync_frequency_arg = DeclareLaunchArgument(
+        "clock_sync_frequency", default_value="0.0",
+        description="Clock acknowledgment rate for lockstep simulation; zero disables it"
+    )
+    rosflight_io_frame_id_arg = DeclareLaunchArgument(
+        "rosflight_io_frame_id", default_value="world",
+        description="Frame ID for ROSflight IO IMU messages"
+    )
+
     # Start Rosflight SIL
     rosflight_sil_node = Node(
         package="rosflight_sim",
         executable="rosflight_sil_manager",
         name='rosflight_sil_manager',
         output="screen",
-        parameters=[{"use_sim_time": use_sim_time, "use_timer": True}],
+        parameters=[{"use_sim_time": use_sim_time,
+                     "use_timer": LaunchConfiguration("use_firmware_timer")}],
     )
 
     # Start sil_board
@@ -71,7 +97,11 @@ def generate_launch_description():
         executable="standalone_sensors",
         name='standalone_sensors',
         output="screen",
-        parameters=[{"use_sim_time": use_sim_time}, dynamics_param_file],
+        parameters=[{"use_sim_time": use_sim_time,
+                     "imu_frame_id": LaunchConfiguration("imu_frame_id"),
+                     "imu_update_frequency": LaunchConfiguration("imu_update_frequency"),
+                     "clock_sync_frequency": LaunchConfiguration("clock_sync_frequency")},
+                    dynamics_param_file],
     )
 
     # Start rosflight_io interface node
@@ -81,7 +111,8 @@ def generate_launch_description():
         name='rosflight_io',
         output="screen",
         parameters=[{"udp": True,
-                     "use_sim_time": use_sim_time}],
+                     "use_sim_time": use_sim_time,
+                     "frame_id": LaunchConfiguration("rosflight_io_frame_id")}],
     )
 
     # Start rc_joy node for RC input
@@ -97,7 +128,7 @@ def generate_launch_description():
         executable="standalone_time_manager",
         name='standalone_time_manager',
         output="screen",
-        condition=IfCondition(use_sim_time),
+        condition=IfCondition(LaunchConfiguration("use_time_manager")),
         parameters=[param_file]
     )
 
@@ -106,6 +137,12 @@ def generate_launch_description():
             use_sim_time_arg,
             use_vimfly_arg,
             dynamics_param_file_arg,
+            use_firmware_timer_arg,
+            use_time_manager_arg,
+            imu_frame_id_arg,
+            imu_update_frequency_arg,
+            clock_sync_frequency_arg,
+            rosflight_io_frame_id_arg,
             rosflight_sil_node,
             sil_board_node,
             standalone_sensor_node,
@@ -114,4 +151,3 @@ def generate_launch_description():
             time_manager_node,
         ]
     )
-
