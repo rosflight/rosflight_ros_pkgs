@@ -47,6 +47,10 @@ ForcesAndMomentsInterface::ForcesAndMomentsInterface()
   // Note that we don't define the parameter callback routine here.
   // This is so that implementation-specific details can be included there.
   this->declare_parameter("invert_mixing_matrix", true);
+  if (this->declare_parameter("lockstep", false)) {
+    state_sync_pub_ = this->create_publisher<std_msgs::msg::Header>(
+      "sim/forces/state_sync", rclcpp::QoS(1).reliable().transient_local());
+  }
 
   // Define ROS interfaces
   forces_moments_pub_ = this->create_publisher<geometry_msgs::msg::WrenchStamped>("sim/forces_and_moments", 1);
@@ -76,11 +80,22 @@ ForcesAndMomentsInterface::ForcesAndMomentsInterface()
 void ForcesAndMomentsInterface::state_callback(const rosflight_msgs::msg::SimState & msg)
 {
   current_state_ = msg;
+  publish_state_sync();
 }
 
 void ForcesAndMomentsInterface::wind_callback(const geometry_msgs::msg::Vector3Stamped & msg)
 {
   current_wind_ = msg;
+  publish_state_sync();
+}
+
+void ForcesAndMomentsInterface::publish_state_sync()
+{
+  if (state_sync_pub_ && current_state_.header.stamp == current_wind_.header.stamp) {
+    std_msgs::msg::Header msg;
+    msg.stamp = current_state_.header.stamp;
+    state_sync_pub_->publish(msg);
+  }
 }
 
 void ForcesAndMomentsInterface::firmware_output_callback(const rosflight_msgs::msg::PwmOutput & msg)
@@ -94,6 +109,7 @@ void ForcesAndMomentsInterface::firmware_output_callback(const rosflight_msgs::m
 
   // Update the forces and moments
   geometry_msgs::msg::WrenchStamped forces_moments = update_forces_and_torques(current_state_, current_wind_, msg.values);
+  forces_moments.header.stamp = msg.header.stamp;
 
   // Publish forces and moments
   forces_moments_pub_->publish(forces_moments);

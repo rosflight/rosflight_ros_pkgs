@@ -43,6 +43,7 @@ set(srv_files
   "srv/ParamGet.srv"
   "srv/ParamSet.srv"
   "srv/SetSimState.srv"
+  "srv/StepFirmware.srv"
   )
 
 rosidl_generate_interfaces(${PROJECT_NAME}

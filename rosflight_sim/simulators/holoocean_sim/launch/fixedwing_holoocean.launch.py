@@ -47,6 +47,7 @@ def generate_launch_description():
         description='Flight clock rate; match camera.step_hz'
     )
     use_sim_time = True
+    clock_qos = {"qos_overrides./clock.subscription.reliability": "reliable"}
 
     ##########
     # Launch #
@@ -82,6 +83,7 @@ def generate_launch_description():
         launch_arguments={
             'use_sim_time': 'true',
             'dynamics_param_file': dynamics_param_file,
+            'clock_reliability': 'reliable',
             'use_firmware_timer': 'false',
             'use_time_manager': 'false',
             'imu_frame_id': 'imu_frd',
@@ -107,7 +109,7 @@ def generate_launch_description():
         name='fixedwing_forces_and_moments',
         output="screen",
         parameters=[
-            {"use_sim_time": use_sim_time}, dynamics_param_file,
+            clock_qos, {"use_sim_time": use_sim_time, "lockstep": True}, dynamics_param_file,
         ],
     )
 
@@ -117,7 +119,7 @@ def generate_launch_description():
         executable="standalone_dynamics",
         name='standalone_dynamics',
         output="screen",
-        parameters=[{"use_sim_time": use_sim_time}, dynamics_param_file]
+        parameters=[clock_qos, {"use_sim_time": use_sim_time}, dynamics_param_file]
     )
 
     return LaunchDescription(

@@ -49,3 +49,17 @@ divisible by both the camera and IMU rates. The fixedwing launch also sets
 `clock_sync_frequency` to the flight step rate so the firmware waits for each
 clock update; set the `flight_step_hz` launch argument to the same value if you
 change `step_hz`.
+
+The lockstep clock uses reliable delivery for the flight nodes. If an acknowledgment
+is delayed, HoloOcean republishes the same clock timestamp without advancing the
+simulation. `/sil_board/step` accepts a timestamp and the required IMU/GNSS sample
+timestamps; it runs firmware only after its clock and those inputs are ready.
+Repeating a completed request does not run firmware again. The existing
+`/sil_board/run` service remains available for the other simulator launches.
+PWM, forces, and truth messages carry the step timestamp through the simulation.
+Firmware IMU/GNSS timestamps use the measurement timestamp relative to firmware
+boot, so a delayed local clock callback does not change their measurement time.
+Before advancing the clock again, HoloOcean waits for `/sim/sensors/state_sync`
+and `/sim/forces/state_sync` to confirm that the completed state and its inputs
+have reached both consumers. Clock and input waits fail after ten wall-clock
+seconds with the missing topic or firmware input in the error message.

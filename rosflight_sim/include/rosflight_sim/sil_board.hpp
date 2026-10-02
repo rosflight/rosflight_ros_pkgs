@@ -87,6 +87,8 @@ private:
 
   // Time variables
   rclcpp::Time boot_time_;
+  rclcpp::Time latest_imu_stamp_{0, 0, RCL_ROS_TIME};
+  rclcpp::Time latest_gnss_stamp_{0, 0, RCL_ROS_TIME};
 
   bool imu_has_new_data_available_ = false;
   bool baro_has_new_data_available_ = false;
@@ -129,6 +131,8 @@ private:
 
 public:
   SILBoard(rclcpp::Node::SharedPtr node);
+
+  bool sensors_ready(const rclcpp::Time & imu_stamp, const rclcpp::Time & gnss_stamp) const;
 
   // setup
   /**

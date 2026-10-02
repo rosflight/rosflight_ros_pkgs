@@ -72,7 +72,9 @@ SensorInterface::SensorInterface()
     this->create_publisher<rosflight_msgs::msg::BatteryStatus>("sim/sensors/battery", 1);
   double clock_sync_frequency = this->get_parameter("clock_sync_frequency").as_double();
   if (clock_sync_frequency > 0.0) {
-    clock_sync_pub_ = this->create_publisher<std_msgs::msg::Header>("sim/clock_sync", 1);
+    const auto sync_qos = rclcpp::QoS(1).reliable().transient_local();
+    clock_sync_pub_ = this->create_publisher<std_msgs::msg::Header>("sim/clock_sync", sync_qos);
+    state_sync_pub_ = this->create_publisher<std_msgs::msg::Header>("sim/sensors/state_sync", sync_qos);
     clock_sync_timer_ = rclcpp::create_timer(
       this, this->get_clock(),
       std::chrono::microseconds(static_cast<long long>(1.0 / clock_sync_frequency * 1'000'000)),
@@ -274,16 +276,30 @@ void SensorInterface::reset_battery_timer(double frequency)
 void SensorInterface::sim_state_callback(const rosflight_msgs::msg::SimState & msg)
 {
   current_state_ = msg;
+  publish_state_sync();
 }
 
 void SensorInterface::wind_callback(const geometry_msgs::msg::Vector3Stamped & msg)
 {
   current_wind_ = msg;
+  publish_state_sync();
 }
 
 void SensorInterface::forces_moments_callback(const geometry_msgs::msg::WrenchStamped & msg)
 {
   current_forces_ = msg;
+  publish_state_sync();
+}
+
+void SensorInterface::publish_state_sync()
+{
+  if (state_sync_pub_
+      && current_state_.header.stamp == current_forces_.header.stamp
+      && current_state_.header.stamp == current_wind_.header.stamp) {
+    std_msgs::msg::Header msg;
+    msg.stamp = current_state_.header.stamp;
+    state_sync_pub_->publish(msg);
+  }
 }
 
 void SensorInterface::status_callback(const rosflight_msgs::msg::Status & msg)

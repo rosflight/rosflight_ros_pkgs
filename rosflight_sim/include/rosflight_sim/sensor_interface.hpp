@@ -95,6 +95,7 @@ private:
   rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr range_pub_;
   rclcpp::Publisher<rosflight_msgs::msg::BatteryStatus>::SharedPtr battery_pub_;
   rclcpp::Publisher<std_msgs::msg::Header>::SharedPtr clock_sync_pub_;
+  rclcpp::Publisher<std_msgs::msg::Header>::SharedPtr state_sync_pub_;
 
   rclcpp::TimerBase::SharedPtr imu_timer_;
   rclcpp::TimerBase::SharedPtr mag_timer_;
@@ -178,6 +179,7 @@ private:
    * @brief Subscription to the forces and moments. Used to create sensor information.
    */
   void forces_moments_callback(const geometry_msgs::msg::WrenchStamped & msg);
+  void publish_state_sync();
   /**
    * @brief Subscription to the rosflight board status. Used to create sensor information.
    */

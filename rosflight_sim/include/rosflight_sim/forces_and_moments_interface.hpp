@@ -45,6 +45,7 @@
 #include <geometry_msgs/msg/vector3_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/bool.hpp>
+#include <std_msgs/msg/header.hpp>
 #include <std_srvs/srv/trigger.hpp>
 
 #include <rosflight_msgs/msg/pwm_output.hpp>
@@ -107,6 +108,7 @@ protected:
 
 private:
   rclcpp::Publisher<geometry_msgs::msg::WrenchStamped>::SharedPtr forces_moments_pub_;
+  rclcpp::Publisher<std_msgs::msg::Header>::SharedPtr state_sync_pub_;
   rclcpp::Subscription<geometry_msgs::msg::Vector3Stamped>::SharedPtr wind_sub_;
   rclcpp::Subscription<rosflight_msgs::msg::SimState>::SharedPtr truth_sub_;
   rclcpp::Subscription<rosflight_msgs::msg::PwmOutput>::SharedPtr firware_out_sub_;
@@ -125,6 +127,7 @@ private:
   // Callbacks
   void state_callback(const rosflight_msgs::msg::SimState & msg);
   void wind_callback(const geometry_msgs::msg::Vector3Stamped & msg);
+  void publish_state_sync();
   void firmware_output_callback(const rosflight_msgs::msg::PwmOutput & msg);
   void params_changed_callback(const std_msgs::msg::Bool & msg);
 

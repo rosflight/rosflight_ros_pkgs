@@ -831,9 +831,6 @@ geometry_msgs::msg::WrenchStamped Fixedwing::update_forces_and_torques(rosflight
   }
 
   // Package up the message and return it
-  rclcpp::Time now = this->get_clock()->now();
-  forces.header.stamp = now;
-
   return forces;
 }
 

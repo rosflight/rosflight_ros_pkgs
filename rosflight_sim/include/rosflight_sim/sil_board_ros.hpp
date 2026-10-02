@@ -42,6 +42,7 @@
 
 #include "rosflight.h"
 #include "rosflight_msgs/msg/pwm_output.hpp"
+#include "rosflight_msgs/srv/step_firmware.hpp"
 #include "rosflight_sim/sil_board.hpp"
 
 namespace rosflight_sim
@@ -58,6 +59,7 @@ public:
 
 private:
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr firmware_run_srvs_;
+  rclcpp::Service<rosflight_msgs::srv::StepFirmware>::SharedPtr firmware_step_srvs_;
   rclcpp::TimerBase::SharedPtr initialize_timer_;
   rclcpp::Publisher<rosflight_msgs::msg::PwmOutput>::SharedPtr pwm_out_pub_;
 
@@ -66,6 +68,8 @@ private:
    */
   bool run_firmware(const std_srvs::srv::Trigger::Request::SharedPtr & req,
                     const std_srvs::srv::Trigger::Response::SharedPtr & res);
+  void step_firmware(const rosflight_msgs::srv::StepFirmware::Request::SharedPtr req,
+                     const rosflight_msgs::srv::StepFirmware::Response::SharedPtr res);
 
   /**
    * @brief Initializes the board and the firmware. Since the SIL board needs a reference to the 
@@ -81,9 +85,9 @@ private:
   std::shared_ptr<rosflight_firmware::ROSflight> firmware_;
 
   bool is_initialized_ = false;
+  rosflight_msgs::msg::PwmOutput last_step_output_;
 };
 
 } // namespace rosflight_sim
 
 #endif // ROSFLIGHT_SIM_SIL_BOARD_ROS_H
-

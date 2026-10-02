@@ -1,0 +1,7 @@
+# Run one firmware step once its clock and required sensor samples are ready.
+builtin_interfaces/Time stamp
+builtin_interfaces/Time imu_stamp
+builtin_interfaces/Time gnss_stamp
+---
+bool success
+string message

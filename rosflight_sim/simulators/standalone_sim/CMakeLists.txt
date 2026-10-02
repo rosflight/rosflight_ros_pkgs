@@ -75,6 +75,7 @@ target_include_directories(multirotor_forces_and_moments
 target_link_libraries(multirotor_forces_and_moments Eigen3::Eigen)
 ament_target_dependencies(multirotor_forces_and_moments
   rclcpp
+  std_msgs
   std_srvs
   geometry_msgs
   rosflight_msgs)
@@ -93,6 +94,7 @@ target_include_directories(fixedwing_forces_and_moments
 target_link_libraries(fixedwing_forces_and_moments Eigen3::Eigen)
 ament_target_dependencies(fixedwing_forces_and_moments
   rclcpp
+  std_msgs
   std_srvs
   geometry_msgs
   rosflight_msgs)

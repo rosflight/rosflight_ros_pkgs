@@ -43,6 +43,9 @@ SILBoardROS::SILBoardROS()
 {
   firmware_run_srvs_ = this->create_service<std_srvs::srv::Trigger>("sil_board/run", 
     std::bind(&SILBoardROS::run_firmware, this, std::placeholders::_1, std::placeholders::_2));
+  firmware_step_srvs_ = this->create_service<rosflight_msgs::srv::StepFirmware>(
+    "sil_board/step", std::bind(&SILBoardROS::step_firmware, this,
+                                std::placeholders::_1, std::placeholders::_2));
 
   // Initialize publisher.
   pwm_out_pub_ = this->create_publisher<rosflight_msgs::msg::PwmOutput>("sim/pwm_output", 1);
@@ -100,6 +103,37 @@ bool SILBoardROS::run_firmware(const std_srvs::srv::Trigger::Request::SharedPtr 
   return true;
 }
 
+void SILBoardROS::step_firmware(const rosflight_msgs::srv::StepFirmware::Request::SharedPtr req,
+                                const rosflight_msgs::srv::StepFirmware::Response::SharedPtr res)
+{
+  const rclcpp::Time stamp(req->stamp);
+  const rclcpp::Time last_stamp(last_step_output_.header.stamp);
+  if (stamp.nanoseconds() <= 0 || stamp < last_stamp) {
+    res->message = "Firmware step timestamp must be positive and monotonic";
+    return;
+  }
+  // A repeated request must never integrate the same step twice.
+  if (stamp == last_stamp) {
+    res->success = true;
+    return;
+  }
+  if (!is_initialized_ || this->now() != stamp) {
+    res->message = "Waiting for firmware initialization or clock";
+    return;
+  }
+  if (!board_->sensors_ready(rclcpp::Time(req->imu_stamp), rclcpp::Time(req->gnss_stamp))) {
+    res->message = "Waiting for firmware IMU or GNSS input";
+    return;
+  }
+
+  firmware_->run();
+  firmware_->run();
+  last_step_output_.header.stamp = req->stamp;
+  last_step_output_.values = board_->get_outputs();
+  pwm_out_pub_->publish(last_step_output_);
+  res->success = true;
+}
+
 } // namespace rosflight_sim
 
 int main(int argc, char** argv)
@@ -111,4 +145,3 @@ int main(int argc, char** argv)
 
   return 0;
 }
-

@@ -2,7 +2,7 @@
 import threading
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, ReliabilityPolicy
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 from ament_index_python.packages import get_package_share_directory
 from pathlib import Path
 import os
@@ -10,6 +10,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 from rosflight_msgs.msg import SimState, RangeFinderSensor, RGBCamera
 from rosflight_msgs.msg import GNSS
+from rosflight_msgs.srv import StepFirmware
 from sensor_msgs.msg import CameraInfo, Image, Imu
 from std_msgs.msg import Header
 from rosgraph_msgs.msg import Clock
@@ -54,6 +55,8 @@ class HoloOceanNode(Node):
                 or not float(self.imu_update_frequency).is_integer()
                 or self.camera_config['step_hz'] % int(self.imu_update_frequency)):
             raise ValueError('camera.step_hz must be a multiple of imu_update_frequency')
+        if self.lockstep and self.camera_config['step_hz'] % 10:
+            raise ValueError('camera.step_hz must be a multiple of the 10 Hz GNSS rate')
 
         # --- Collision / state sharing between ROS callback thread and sim thread ---
         self._state_lock = threading.Lock()
@@ -64,6 +67,8 @@ class HoloOceanNode(Node):
         self._latest_imu_stamp = -1
         self._latest_clock_sync_stamp = -1
         self._latest_gnss_stamp = -1
+        self._latest_sensor_state_stamp = -1
+        self._latest_forces_state_stamp = -1
 
         # Debounce/cooldown so we don't spam resets on consecutive ticks
         self._last_reset_time = 0.0
@@ -116,15 +121,21 @@ class HoloOceanNode(Node):
             self.publish_camera_transform()
 
         if self.lockstep:
-            qos = QoSProfile(depth=10, reliability=ReliabilityPolicy.BEST_EFFORT)
+            qos = QoSProfile(depth=10, reliability=ReliabilityPolicy.RELIABLE)
+            sync_qos = QoSProfile(depth=1, reliability=ReliabilityPolicy.RELIABLE,
+                                  durability=DurabilityPolicy.TRANSIENT_LOCAL)
             self.clock_pub = self.create_publisher(Clock, '/clock', qos)
             self.imu_sub = self.create_subscription(
                 Imu, '/sim/sensors/imu/data', self.imu_callback, 10)
             self.clock_sync_sub = self.create_subscription(
-                Header, '/sim/clock_sync', self.clock_sync_callback, 10)
+                Header, '/sim/clock_sync', self.clock_sync_callback, sync_qos)
             self.gnss_sub = self.create_subscription(
                 GNSS, '/sim/sensors/gnss', self.gnss_callback, 10)
-            self.sil_client = self.create_client(Trigger, '/sil_board/run')
+            self.sensor_state_sub = self.create_subscription(
+                Header, '/sim/sensors/state_sync', self.sensor_state_callback, sync_qos)
+            self.forces_state_sub = self.create_subscription(
+                Header, '/sim/forces/state_sync', self.forces_state_callback, sync_qos)
+            self.sil_client = self.create_client(StepFirmware, '/sil_board/step')
 
         # Start simulation thread.
         self._sim_running = True
@@ -209,23 +220,45 @@ class HoloOceanNode(Node):
             self._latest_gnss_stamp = self.stamp_ns(msg.header.stamp)
             self._step_condition.notify_all()
 
-    def wait_for_sample(self, name, stamp_ns, timeout=10.0):
+    def sensor_state_callback(self, msg):
         with self._step_condition:
-            sample = {
-                'IMU': lambda: self._latest_imu_stamp,
-                'clock sync': lambda: self._latest_clock_sync_stamp,
-                'GNSS': lambda: self._latest_gnss_stamp,
-                'truth': lambda: self.stamp_ns(self._latest_truth.header.stamp)
-                if self._latest_truth is not None else -1,
-            }[name]
-            if not self._step_condition.wait_for(
-                    lambda: not self._sim_running or sample() >= stamp_ns, timeout):
-                raise TimeoutError(f'{name} did not arrive for simulation time {stamp_ns} ns')
-            if not self._sim_running:
-                return None
-            if sample() != stamp_ns:
-                raise RuntimeError(f'{name} skipped simulation time {stamp_ns} ns')
-            return self._latest_truth if name == 'truth' else None
+            self._latest_sensor_state_stamp = self.stamp_ns(msg.stamp)
+            self._step_condition.notify_all()
+
+    def forces_state_callback(self, msg):
+        with self._step_condition:
+            self._latest_forces_state_stamp = self.stamp_ns(msg.stamp)
+            self._step_condition.notify_all()
+
+    def wait_for_sample(self, name, stamp_ns, clock):
+        deadline = time.monotonic() + 10.0
+        sample = {
+            'IMU': lambda: self._latest_imu_stamp,
+            'clock sync': lambda: self._latest_clock_sync_stamp,
+            'GNSS': lambda: self._latest_gnss_stamp,
+            'sensor state': lambda: self._latest_sensor_state_stamp,
+            'forces state': lambda: self._latest_forces_state_stamp,
+            'truth': lambda: self.stamp_ns(self._latest_truth.header.stamp)
+            if self._latest_truth is not None else -1,
+        }[name]
+        while self._sim_running:
+            with self._step_condition:
+                if sample() >= stamp_ns:
+                    if sample() != stamp_ns:
+                        raise RuntimeError(f'{name} skipped simulation time {stamp_ns} ns')
+                    return self._latest_truth if name == 'truth' else None
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutError(
+                        f'{name} did not arrive for simulation time {stamp_ns} ns '
+                        f'(last received {sample()} ns)')
+                arrived = self._step_condition.wait_for(
+                    lambda: not self._sim_running or sample() >= stamp_ns,
+                    min(0.1, remaining))
+            # Repeating the same time recovers a missed clock without advancing timers again.
+            if not arrived:
+                self.clock_pub.publish(clock)
+        return None
 
     def lockstep_loop(self):
         try:
@@ -236,6 +269,8 @@ class HoloOceanNode(Node):
                 and self.count_publishers('/sim/clock_sync')
                 and self.count_publishers('/sim/sensors/gnss')
                 and self.count_publishers('/sim/truth_state')
+                and self.count_publishers('/sim/sensors/state_sync')
+                and self.count_publishers('/sim/forces/state_sync')
                 and self.count_subscribers('/sim/pwm_output')
                 and self.count_subscribers('/sim/forces_and_moments')
                 and self.clock_pub.get_subscription_count()
@@ -250,6 +285,8 @@ class HoloOceanNode(Node):
             steps_per_frame = step_hz // self.camera_config['rate_hz']
             steps_per_imu = step_hz // int(self.imu_update_frequency)
             steps_per_gnss = step_hz // 10
+            imu_stamp_ns = 0
+            gnss_stamp_ns = 0
             step = 0
             while self._sim_running:
                 wall_step_start = time.monotonic()
@@ -258,20 +295,42 @@ class HoloOceanNode(Node):
                 clock = Clock()
                 clock.clock.sec, clock.clock.nanosec = divmod(stamp_ns, 1_000_000_000)
                 self.clock_pub.publish(clock)
-                self.wait_for_sample('clock sync', stamp_ns)
+                self.wait_for_sample('clock sync', stamp_ns, clock)
                 if step % steps_per_imu == 0:
-                    self.wait_for_sample('IMU', stamp_ns)
+                    self.wait_for_sample('IMU', stamp_ns, clock)
+                    imu_stamp_ns = stamp_ns
                 if step % steps_per_gnss == 0:
-                    self.wait_for_sample('GNSS', stamp_ns)
+                    self.wait_for_sample('GNSS', stamp_ns, clock)
+                    gnss_stamp_ns = stamp_ns
 
-                completed = threading.Event()
-                result = self.sil_client.call_async(Trigger.Request())
-                result.add_done_callback(lambda future: completed.set())
-                if not completed.wait(10.0) or not result.result().success:
-                    raise RuntimeError(f'firmware step failed at {stamp_ns} ns')
-                truth = self.wait_for_sample('truth', stamp_ns)
+                request = StepFirmware.Request()
+                request.stamp = clock.clock
+                request.imu_stamp.sec, request.imu_stamp.nanosec = divmod(imu_stamp_ns, 1_000_000_000)
+                request.gnss_stamp.sec, request.gnss_stamp.nanosec = divmod(gnss_stamp_ns, 1_000_000_000)
+                deadline = time.monotonic() + 10.0
+                while self._sim_running:
+                    completed = threading.Event()
+                    result = self.sil_client.call_async(request)
+                    result.add_done_callback(lambda future: completed.set())
+                    while self._sim_running and not completed.wait(0.1):
+                        if time.monotonic() >= deadline:
+                            raise TimeoutError(f'Firmware service did not respond at {stamp_ns} ns')
+                        self.clock_pub.publish(clock)
+                    if not self._sim_running:
+                        return
+                    response = result.result()
+                    if response.success:
+                        break
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError(f'Firmware step at {stamp_ns} ns: {response.message}')
+                    self.clock_pub.publish(clock)
+                    time.sleep(0.001)
+                truth = self.wait_for_sample('truth', stamp_ns, clock)
                 if truth is None:
                     break
+                # Every consumer must ingest the completed step before the next clock tick.
+                self.wait_for_sample('sensor state', stamp_ns, clock)
+                self.wait_for_sample('forces state', stamp_ns, clock)
 
                 if step % steps_per_frame == 0:
                     location, rotation, velocity, angular_velocity = self.extract_state(truth)

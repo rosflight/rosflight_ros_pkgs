@@ -272,7 +272,6 @@ geometry_msgs::msg::WrenchStamped Multirotor::update_forces_and_torques(rosfligh
   // Package up message and return
   geometry_msgs::msg::WrenchStamped msg;
 
-  msg.header.stamp = this->get_clock()->now();
 
   msg.wrench.force.x = body_forces(0);
   msg.wrench.force.y = body_forces(1);

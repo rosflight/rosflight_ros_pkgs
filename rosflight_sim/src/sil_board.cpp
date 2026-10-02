@@ -150,11 +150,11 @@ void SILBoard::sensors_init()
 
 void SILBoard::imu_data_callback(const sensor_msgs::msg::Imu & msg)
 {
+  latest_imu_stamp_ = msg.header.stamp;
   imu_data_ = msg;
-  // Convert the rosflight_timestamp (the header) portion of the message to be the fcu time that
-  // we read it. Only required on gnss and imu messages since they are the only ones with timestamp
-  // passed from firmware through rosflight_io via mavlink.
-  imu_data_.header.stamp = rclcpp::Time(clock_micros() * 1'000);
+  // Convert measurement time to FCU time; the local clock callback may still be pending.
+  imu_data_.header.stamp = rclcpp::Time(
+    (latest_imu_stamp_.nanoseconds() - boot_time_.nanoseconds()) / 1'000 * 1'000);
   imu_has_new_data_available_ = true;
 }
 
@@ -177,12 +177,17 @@ void SILBoard::baro_data_callback(const rosflight_msgs::msg::Barometer & msg)
 
 void SILBoard::gnss_data_callback(const rosflight_msgs::msg::GNSS & msg)
 {
+  latest_gnss_stamp_ = msg.header.stamp;
   gnss_data_ = msg;
-  // Convert the rosflight_timestamp (the header) portion of the message to be the fcu time that
-  // we read it. Only required on gnss and imu messages since they are the only ones with timestamp
-  // passed from firmware through rosflight_io via mavlink.
-  gnss_data_.header.stamp = rclcpp::Time(clock_micros() * 1'000);
+  // Convert measurement time to FCU time; the local clock callback may still be pending.
+  gnss_data_.header.stamp = rclcpp::Time(
+    (latest_gnss_stamp_.nanoseconds() - boot_time_.nanoseconds()) / 1'000 * 1'000);
   gnss_has_new_data_available_ = true;
+}
+
+bool SILBoard::sensors_ready(const rclcpp::Time & imu_stamp, const rclcpp::Time & gnss_stamp) const
+{
+  return latest_imu_stamp_ == imu_stamp && latest_gnss_stamp_ == gnss_stamp;
 }
 
 void SILBoard::diff_pressure_data_callback(const rosflight_msgs::msg::Airspeed & msg)

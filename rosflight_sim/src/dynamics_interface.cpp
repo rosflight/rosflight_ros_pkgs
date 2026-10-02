@@ -81,13 +81,13 @@ void DynamicsInterface::forces_callback(const geometry_msgs::msg::WrenchStamped 
   // A zero-order-hold would be more realistic. Perhaps we put a timer in the forces and moments that 
   // controls how fast propagation happens.
   rosflight_msgs::msg::SimState truth = compute_truth();
-  truth.header.stamp = this->get_clock()->now();
+  truth.header.stamp = msg.header.stamp;
   truth_state_pub_->publish(truth);
 
   // Compute wind truth
   // Wind should be in the inertial frame
   geometry_msgs::msg::Vector3Stamped wind_truth = compute_wind_truth();
-  wind_truth.header.stamp = this->get_clock()->now();
+  wind_truth.header.stamp = msg.header.stamp;
   wind_truth_pub_->publish(wind_truth);
 }
 

@@ -32,6 +32,12 @@ def generate_launch_description():
         description="Whether the nodes will use sim time or not"
     )
     use_sim_time = LaunchConfiguration('use_sim_time')
+    clock_reliability_arg = DeclareLaunchArgument(
+        "clock_reliability", default_value="best_effort",
+        choices=["best_effort", "reliable"],
+        description="Reliability of the simulation clock subscriptions"
+    )
+    clock_qos = {"qos_overrides./clock.subscription.reliability": LaunchConfiguration("clock_reliability")}
 
     use_vimfly_arg = DeclareLaunchArgument(
         "use_vimfly",
@@ -78,7 +84,7 @@ def generate_launch_description():
         executable="rosflight_sil_manager",
         name='rosflight_sil_manager',
         output="screen",
-        parameters=[{"use_sim_time": use_sim_time,
+        parameters=[clock_qos, {"use_sim_time": use_sim_time,
                      "use_timer": LaunchConfiguration("use_firmware_timer")}],
     )
 
@@ -88,7 +94,7 @@ def generate_launch_description():
         executable="sil_board",
         name='sil_board',
         output="screen",
-        parameters=[{"use_sim_time": use_sim_time}],
+        parameters=[clock_qos, {"use_sim_time": use_sim_time}],
     )
 
     # Start standalone sensors
@@ -97,7 +103,7 @@ def generate_launch_description():
         executable="standalone_sensors",
         name='standalone_sensors',
         output="screen",
-        parameters=[{"use_sim_time": use_sim_time,
+        parameters=[clock_qos, {"use_sim_time": use_sim_time,
                      "imu_frame_id": LaunchConfiguration("imu_frame_id"),
                      "imu_update_frequency": LaunchConfiguration("imu_update_frequency"),
                      "clock_sync_frequency": LaunchConfiguration("clock_sync_frequency")},
@@ -110,7 +116,7 @@ def generate_launch_description():
         executable="rosflight_io",
         name='rosflight_io',
         output="screen",
-        parameters=[{"udp": True,
+        parameters=[clock_qos, {"udp": True,
                      "use_sim_time": use_sim_time,
                      "frame_id": LaunchConfiguration("rosflight_io_frame_id")}],
     )
@@ -135,6 +141,7 @@ def generate_launch_description():
     return LaunchDescription(
         [
             use_sim_time_arg,
+            clock_reliability_arg,
             use_vimfly_arg,
             dynamics_param_file_arg,
             use_firmware_timer_arg,
